@@ -12,7 +12,7 @@ const routes: RouteRecordRaw[] = [
     name: AppRouteNames.TripMain,
     component: TripMain,
     meta: {
-      layout: 'base',
+      layout: 'default',
     },
   },
   {
@@ -20,7 +20,7 @@ const routes: RouteRecordRaw[] = [
     name: AppRouteNames.NotFound,
     component: NotFound,
     meta: {
-      layout: 'base',
+      layout: 'default',
     },
   },
 ]

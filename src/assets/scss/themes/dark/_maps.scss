@@ -1,5 +1,3 @@
-@use '../shared/_maps.scss' as shared;
-
 @use '_variables.scss';
 @use '../../_functions.scss';
 
@@ -40,10 +38,4 @@ $fg-colors: (
   fg-action: variables.$fg-action-color,
 );
 
-$colors: functions.map-collect(
-  $bg-colors,
-  $border-colors,
-  $fg-colors,
-  shared.$border-status-colors,
-  shared.$fg-tone-colors
-);
+$colors: functions.map-collect($bg-colors, $border-colors, $fg-colors);

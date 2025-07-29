@@ -7,7 +7,3 @@
     --#{$colorType}-color: #{$color};
   }
 }
-
-@include mixins-theme.connectThemes(map.get(themes-theme.$font-family, 'cn'), 'cn') using ($theme, $themeName) {
-  --font-family-cn: #{$theme};
-}

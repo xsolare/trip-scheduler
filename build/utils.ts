@@ -5,9 +5,11 @@ import type { Options as AutoImportOptions } from 'unplugin-auto-import/types'
 export const autoImportOptions: AutoImportOptions = {
   imports: ['vue-router', '@vueuse/core', 'vue', 'pinia'],
   dirs: [
-    './components/domain/',
-    './components/modules/',
-    './components/shared/',
+    './components/01.kit/',
+    './components/02.domain/',
+    './components/03.shared/',
+    './components/04.modules/',
+    './components/05.layouts/',
     //
     './src/shared/lib/',
     './src/shared/types/',

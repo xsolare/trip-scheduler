@@ -1,13 +1,10 @@
-:root {
-  font-family: 'Rubik', 'MapleMono-CN', 'Noto Serif SC', sans-serif;
-}
+@use 'sass:map';
 
 html {
   padding: 0;
   margin: 0;
   height: 100%;
   border: none;
-  font-size: #{$font-size-base};
 }
 
 body {
@@ -17,7 +14,16 @@ body {
   border: none;
   background-color: var(--bg-primary-color);
   color: var(--fg-primary-color);
-  font-size: #{$font-size-base};
+  font-size: map.get($font-sizes, 'base');
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    overscroll-behavior: none;
+    text-decoration-color: var(--fg-primary-color);
+    caret-color: var(--fg-primary-color);
+  }
 }
 
 *,

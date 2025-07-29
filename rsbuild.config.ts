@@ -38,12 +38,14 @@ export default defineConfig({
   html: {
     template: './index.html',
   },
+  resolve: {
+    alias: {
+      '~': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   source: {
     entry: {
       index: './src/main.ts',
-    },
-    alias: {
-      '~': fileURLToPath(new URL('./src', import.meta.url)),
     },
     include: ['**/*.js', '**/*.json', '**/*.jsx', '**/*.mjs', '**/*.ts', '**/*.tsx', '**/*.vue'],
   },

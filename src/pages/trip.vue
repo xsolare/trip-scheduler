@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TripContent } from '~/components/modules/trip'
+import { TripContent } from '~/components/04.modules/trip'
 </script>
 
 <template>
@@ -7,7 +7,3 @@ import { TripContent } from '~/components/modules/trip'
     <TripContent />
   </section>
 </template>
-
-<style scoped>
-
-</style>
