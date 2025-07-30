@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
-import { HaoticLines } from '~/components/02.domain/haotic-lines'
+import { HaoticLines } from '~/components/03.domain/haotic-lines'
 
 const sentinelEl = ref<HTMLElement>()
 const headerEl = ref<HTMLElement>()
@@ -35,10 +35,7 @@ onMounted(() => {
     class="header"
     :class="{ blurred: !isSticky }"
   >
-    <ClientOnly>
-      <HaoticLines :viewport-el="headerEl" />
-    </ClientOnly>
-
+    <HaoticLines :viewport-el="headerEl" />
     <div class="header-content">
       <div class="header-nav">
         <div class="logo">

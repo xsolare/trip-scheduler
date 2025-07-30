@@ -1,0 +1,9 @@
+<script setup lang="ts">
+import { PlanContent } from '~/components/04.modules/index'
+</script>
+
+<template>
+  <section class="content-wrapper">
+    <PlanContent />
+  </section>
+</template>

@@ -1,12 +1,30 @@
 import type { Router, RouteRecordRaw } from 'vue-router'
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 import { AppRouteNames, AppRoutePaths } from '~/shared/types/routes'
 
+const Index = () => import('~/pages/index.vue')
+const Plan = () => import('~/pages/plans/[id]/plan-id.vue')
 const TripMain = () => import('~/pages/trip.vue')
 const NotFound = () => import('~/pages/not-found.vue')
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: AppRoutePaths.Index,
+    name: AppRouteNames.Index,
+    component: Index,
+    meta: {
+      layout: 'default',
+    },
+  },
+  {
+    path: AppRoutePaths.Plan(':id'),
+    name: AppRouteNames.Plan,
+    component: Plan,
+    meta: {
+      layout: 'default',
+    },
+  },
   {
     path: AppRoutePaths.TripMain,
     name: AppRouteNames.TripMain,
@@ -26,7 +44,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router: Router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHistory('/'),
   routes,
 })
 
