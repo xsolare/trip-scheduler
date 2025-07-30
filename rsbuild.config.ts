@@ -27,6 +27,14 @@ export default defineConfig({
     host: host || 'localhost',
   },
 
+  // performance: {
+  //   bundleAnalyze: {
+  //     generateStatsFile: true,
+  //     openAnalyzer: true,
+  //     analyzerMode: 'static',
+  //   },
+  // },
+
   dev: {
     hmr: !!host,
     client: {
@@ -52,7 +60,9 @@ export default defineConfig({
 
   tools: {
     rspack: {
-      plugins: [pluginAutoImport(autoImportOptions)],
+      plugins: [
+        pluginAutoImport(autoImportOptions),
+      ],
     },
     lightningcssLoader: false,
   },

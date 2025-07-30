@@ -1,6 +1,4 @@
 import type { Activity, Day } from '../models/activity'
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
 import { MOCK_DAYS } from '../mock'
 import { timeToMinutes } from '../models/activity'
 
@@ -51,7 +49,6 @@ export const useTripStore = defineStore('trip', () => {
     })
 
     if (hasOverlap) {
-      // В реальном приложении здесь лучше показывать уведомление пользователю
       console.error('Активность пересекается с существующей по времени')
       return
     }
@@ -101,8 +98,6 @@ export const useTripStore = defineStore('trip', () => {
     if (!day)
       return
 
-    // Простая замена массива с сохранением порядка
-    // Более сложная логика с пересчетом времени может быть добавлена здесь при необходимости
     day.activities = newOrder
   }
 

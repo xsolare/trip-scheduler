@@ -1,13 +1,19 @@
 export enum AppRouteNames {
-  Index = 'Index',
-  Plan = 'Plan',
-  TripMain = 'TripMain',
-  NotFound = 'NotFound',
+  Root = 'root',
+
+  NotFound = 'not-found',
+
+  TripInfo = 'trip-unfo',
+  TripList = 'trip-list',
 }
 
 export const AppRoutePaths = {
-  Index: '/',
-  Plan: (id: string) => `/plans/${id}`,
-  TripMain: '/trip',
-  NotFound: '/not-found',
+  Root: '/',
+
+  NotFound: '/:catchAll(.*)?',
+
+  Trip: {
+    List: `/trips`,
+    Info: (id: string) => `/trip/${id}`,
+  },
 }

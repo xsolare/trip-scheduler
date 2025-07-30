@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ITravelPlan } from '~/components/04.modules/index/models/plan'
+import type { ITravelPlan } from '~/components/04.modules/trip-list/models/plan'
 import { Icon } from '@iconify/vue'
 
 type Props = ITravelPlan
@@ -9,7 +9,7 @@ const props = defineProps<Props>()
 const router = useRouter()
 
 function goTo() {
-  router.push(AppRoutePaths.Plan(props.id.toString()))
+  router.push(AppRoutePaths.Trip.Info(`${props.id}`))
 }
 </script>
 

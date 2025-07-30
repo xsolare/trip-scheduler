@@ -3,32 +3,23 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { AppRouteNames, AppRoutePaths } from '~/shared/types/routes'
 
-const Index = () => import('~/pages/index.vue')
-const Plan = () => import('~/pages/plans/[id]/plan-id.vue')
-const TripMain = () => import('~/pages/trip.vue')
+const TripInfo = () => import('~/pages/trip/[id]/index.vue')
+const TripList = () => import('~/pages/trip/list.vue')
 const NotFound = () => import('~/pages/not-found.vue')
 
 const routes: RouteRecordRaw[] = [
   {
-    path: AppRoutePaths.Index,
-    name: AppRouteNames.Index,
-    component: Index,
+    path: AppRoutePaths.Trip.List,
+    name: AppRouteNames.TripList,
+    component: TripList,
     meta: {
       layout: 'default',
     },
   },
   {
-    path: AppRoutePaths.Plan(':id'),
-    name: AppRouteNames.Plan,
-    component: Plan,
-    meta: {
-      layout: 'default',
-    },
-  },
-  {
-    path: AppRoutePaths.TripMain,
-    name: AppRouteNames.TripMain,
-    component: TripMain,
+    path: AppRoutePaths.Trip.Info(':id'),
+    name: AppRouteNames.TripInfo,
+    component: TripInfo,
     meta: {
       layout: 'default',
     },

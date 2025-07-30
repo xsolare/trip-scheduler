@@ -36,7 +36,6 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.vue",
-    "src/components/04.modules/trip/store/trip.store.ts"
+    "src/**/*.vue"
   ]
 }

@@ -3,7 +3,12 @@ import type { Options as AutoImportOptions } from 'unplugin-auto-import/types'
 // Plugins options
 
 export const autoImportOptions: AutoImportOptions = {
-  imports: ['vue-router', '@vueuse/core', 'vue', 'pinia'],
+  imports: [
+    'vue-router',
+    '@vueuse/core',
+    'vue',
+    'pinia',
+  ],
   dirs: [
     './components/01.kit/',
     './components/02.domain/',
@@ -13,6 +18,11 @@ export const autoImportOptions: AutoImportOptions = {
     //
     './src/shared/lib/',
     './src/shared/types/',
+  ],
+  exclude: [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/src-tauri/**', 
   ],
   dts: './src/types/dts/auto-imports.d.ts',
 }

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Activity } from '~/components/04.modules/trip/models/activity'
+import type { Activity } from '~/components/04.modules/trip-info/models/activity'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { timeToMinutes } from '~/components/04.modules/trip/models/activity'
+import { timeToMinutes } from '~/components/04.modules/trip-info/models/activity'
+import TimeField from '~/components/01.kit/time-field/ui/time-field.vue';
 
 interface ActivityItemProps {
   activity: Activity
@@ -69,20 +70,18 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     <div class="activity-header">
       <div class="activity-time">
         <!-- Режим редактирования -->
-        <div
+         <div
           v-if="isTimeEditing"
           ref="timeEditorRef"
           class="time-editor"
           @keydown.esc.prevent="cancelTimeEditing"
         >
-          <input v-model="editableStartTime" type="time" class="time-input">
+          <TimeField v-model="editableStartTime" />
           <span class="time-separator">-</span>
-          <input
+          <TimeField
             v-model="editableEndTime"
-            type="time"
-            class="time-input"
             @keydown.enter.prevent="saveTimeChanges"
-          >
+          />
         </div>
 
         <!-- Режим отображения -->
@@ -106,10 +105,10 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 
     <div class="activity-content">
       <InlineEditorWrapper
-        :model-value="activity.description"
+        :model-value="activity.title"
         placeholder="Описание активности"
         class="activity-title"
-        @update:model-value="newDesc => updateActivity({ description: newDesc })"
+        @update:model-value="newDesc => updateActivity({ title: newDesc })"
       />
     </div>
   </div>
@@ -122,7 +121,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   width: 100%;
   position: relative;
   transition: all 0.3s ease;
-  margin: 12px 0;
+  margin: 24px 0;
 
   &:hover {
     .activity-header {
