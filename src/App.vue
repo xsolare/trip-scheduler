@@ -11,6 +11,7 @@ import '@milkdown/crepe/theme/frame.css'
 
 const route = useRoute()
 const layout = computed(() => route.meta.layout || 'default')
+const transition = computed(() => route.meta.transition || 'smooth-appear')
 
 const layouts = {
   default: DefaultLayout,
@@ -19,6 +20,10 @@ const layouts = {
 
 <template>
   <component :is="layouts[layout]">
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <transition :name="transition">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </component>
 </template>

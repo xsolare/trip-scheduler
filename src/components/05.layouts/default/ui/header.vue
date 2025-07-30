@@ -35,10 +35,7 @@ onMounted(() => {
     class="header"
     :class="{ blurred: !isSticky }"
   >
-    <ClientOnly>
-      <HaoticLines :viewport-el="headerEl" />
-    </ClientOnly>
-
+    <HaoticLines :viewport-el="headerEl" />
     <div class="header-content">
       <div class="header-nav">
         <div class="logo">
