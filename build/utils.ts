@@ -22,7 +22,7 @@ export const autoImportOptions: AutoImportOptions = {
   exclude: [
     '**/node_modules/**',
     '**/dist/**',
-    '**/src-tauri/**', 
+    '**/src-tauri/**',
   ],
   dts: './src/types/dts/auto-imports.d.ts',
 }

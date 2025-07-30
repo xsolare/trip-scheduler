@@ -29,12 +29,6 @@ p {
   flex-direction: column;
 }
 
-.v-tooltip > .v-overlay__content {
-  background: var(--bg-tertiary-color) !important;
-  border: 1px solid var(--border-primary-color);
-  color: var(--fg-primary-color) !important;
-}
-
 ::-webkit-scrollbar {
   width: 4px;
   height: 100%;
@@ -82,4 +76,71 @@ hr {
 
 .milkdown {
   --crepe-color-background: transparent; /* Main background color */
+
+  /* Background Colors */
+  --crepe-color-background: transparent; /* Main background color */
+  --crepe-color-surface: var(--bg-secondary-color); /* Surface color for cards/panels */
+  --crepe-color-surface-low: var(--bg-tertiary-color); /* Lower surface color for depth */
+
+  /* Text Colors */
+  --crepe-color-on-background: var(--fg-primary-color); /* Text color on background */
+  --crepe-color-on-surface: var(--fg-secondary-color); /* Text color on surface */
+  --crepe-color-on-surface-variant: var(--fg-accent-color); /* Secondary text color */
+
+  /* Accent Colors */
+  --crepe-color-primary: var(--fg-primary-color); /* Primary brand color */
+  --crepe-color-secondary: var(--fg-secondary-color); /* Secondary accent color */
+  --crepe-color-on-secondary: var(--fg-accent-color); /* Text color on secondary */
+
+  /* UI Colors */
+  --crepe-color-outline: var(--fg-primary-color); /* Border/outline color */
+  --crepe-color-inverse: var(--fg-secondary-color); /* Inverse color for contrast */
+  --crepe-color-on-inverse: var(--fg-tertiary-color); /* Text color on inverse */
+  --crepe-color-inline-code: var(--bg-error-color); /* Inline code color */
+  --crepe-color-error: var(--bg-error-color); /* Error state color */
+
+  /* Interactive Colors */
+  --crepe-color-hover: var(--bg-action-hover-color); /* Hover state color */
+  --crepe-color-selected: var(--bg-accent-overlay-color); /* Selected state color */
+  --crepe-color-inline-area: var(--bg-accent-color); /* Inline editing area color */
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--fg-secondary-color);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  font-weight: 500;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-secondary-color);
+  }
+
+  &::before {
+    margin-right: 0.5em;
+  }
+
+  &::after {
+    margin-left: 0.5em;
+  }
+}
+
+.milkdown-toolbar {
+  padding: 4px !important;
+  .toolbar-item {
+    margin: 0px !important;
+  }
+  .divider {
+    height: 12px !important;
+  }
+}
+
+.milkdown-slash-menu {
+  padding: 4px !important;
 }

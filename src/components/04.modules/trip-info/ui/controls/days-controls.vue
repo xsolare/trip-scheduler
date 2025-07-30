@@ -40,7 +40,6 @@ function selectDay(dayId: string) {
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid var(--border-secondary-color);
 
   .days-selector {
     display: flex;

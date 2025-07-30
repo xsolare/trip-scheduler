@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Activity } from '~/components/04.modules/trip-info/models/activity'
+import { Time } from '@internationalized/date'
+import { onClickOutside } from '@vueuse/core'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { timeToMinutes } from '~/components/04.modules/trip-info/models/activity'
-import TimeField from '~/components/01.kit/time-field/ui/time-field.vue';
+import { TimeField } from '~/components/01.kit/time-field'
 
 interface ActivityItemProps {
   activity: Activity
@@ -11,52 +12,39 @@ interface ActivityItemProps {
 const props = defineProps<ActivityItemProps>()
 const emit = defineEmits(['edit', 'delete', 'update'])
 
-const showDetails = ref(true)
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
-const editableStartTime = ref('')
-const editableEndTime = ref('')
 
-function handleEdit() {
-  emit('edit', props.activity)
-}
-
-function handleDelete() {
-  // eslint-disable-next-line no-alert
-  if (confirm('Вы уверены, что хотите удалить эту активность?')) {
-    emit('delete', props.activity.id)
-  }
-}
+const editingStartTime = shallowRef<Time | null>(null)
+const editingEndTime = shallowRef<Time | null>(null)
 
 function updateActivity(newActivityData: Partial<Activity>) {
   emit('update', { ...props.activity, ...newActivityData })
 }
 
-function toggleDetails() {
-  showDetails.value = !showDetails.value
+function parseTime(timeStr: string): Time {
+  const [hour, minute] = timeStr.split(':').map(Number)
+  return new Time(hour, minute)
 }
 
-function startTimeEditing() {
-  editableStartTime.value = props.activity.startTime
-  editableEndTime.value = props.activity.endTime
+function editTime() {
   isTimeEditing.value = true
-}
-
-function cancelTimeEditing() {
-  isTimeEditing.value = false
+  editingStartTime.value = parseTime(props.activity.startTime)
+  editingEndTime.value = parseTime(props.activity.endTime)
 }
 
 function saveTimeChanges() {
-  if (timeToMinutes(editableStartTime.value) >= timeToMinutes(editableEndTime.value)) {
-    console.warn('Время окончания должно быть больше времени начала.')
+  if (!isTimeEditing.value)
     return
-  }
 
-  emit('update', {
-    ...props.activity,
-    startTime: editableStartTime.value,
-    endTime: editableEndTime.value,
-  })
+  const newStartTime = `${editingStartTime.value?.hour.toString().padStart(2, '0')}:${editingStartTime.value?.minute.toString().padStart(2, '0')}`
+  const newEndTime = `${editingEndTime.value?.hour.toString().padStart(2, '0')}:${editingEndTime.value?.minute.toString().padStart(2, '0')}`
+
+  updateActivity({ startTime: newStartTime, endTime: newEndTime })
+  isTimeEditing.value = false
+}
+
+function cancelTimeEditing() {
   isTimeEditing.value = false
 }
 
@@ -70,36 +58,27 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     <div class="activity-header">
       <div class="activity-time">
         <!-- Режим редактирования -->
-         <div
+        <div
           v-if="isTimeEditing"
           ref="timeEditorRef"
           class="time-editor"
           @keydown.esc.prevent="cancelTimeEditing"
         >
-          <TimeField v-model="editableStartTime" />
+          <TimeField
+            v-if="editingStartTime"
+            v-model="editingStartTime"
+          />
           <span class="time-separator">-</span>
           <TimeField
-            v-model="editableEndTime"
-            @keydown.enter.prevent="saveTimeChanges"
+            v-if="editingEndTime"
+            v-model="editingEndTime"
           />
         </div>
 
         <!-- Режим отображения -->
-        <div v-else class="time-display" @click="startTimeEditing">
+        <div v-else class="time-display" @click="editTime">
           {{ activity.startTime }} - {{ activity.endTime }}
         </div>
-      </div>
-
-      <div class="activity-actions">
-        <button class="icon-button" @click="handleEdit">
-          <i class="pi pi-pencil" />
-        </button>
-        <button class="icon-button delete" @click="handleDelete">
-          <i class="pi pi-trash" />
-        </button>
-        <button class="icon-button" @click="toggleDetails">
-          <i :class="showDetails ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" />
-        </button>
       </div>
     </div>
 
@@ -121,7 +100,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   width: 100%;
   position: relative;
   transition: all 0.3s ease;
-  margin: 24px 0;
+  margin: 12px 0;
 
   &:hover {
     .activity-header {
@@ -193,39 +172,15 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           background-color: var(--bg-hover-color);
         }
       }
-      .time-display {
-        cursor: pointer;
-        padding: 2px 4px;
-        margin: -2px -4px;
-        border-radius: 4px;
-        transition: background-color 0.2s ease;
 
-        &:hover {
-          background-color: var(--bg-hover-color);
-        }
-      }
-    }
+      .time-editor {
+        display: flex;
+        align-items: center;
+        gap: 4px;
 
-    .activity-actions {
-      display: flex;
-      gap: 4px;
-
-      .icon-button {
-        background: none;
-        border: none;
-        padding: 4px;
-        cursor: pointer;
-        color: var(--fg-secondary-color);
-        transition: all 0.2s ease;
-        border-radius: 50%;
-
-        &:hover {
-          color: var(--fg-accent-color);
-          background-color: var(--bg-hover-color);
-        }
-
-        &.delete:hover {
-          color: var(--red-500);
+        .time-separator {
+          color: var(--fg-secondary-color);
+          padding: 0 2px;
         }
       }
     }

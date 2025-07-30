@@ -31,6 +31,7 @@ useEditor((root) => {
       },
     },
     features: props.features,
+
   })
 
   crepe.editor

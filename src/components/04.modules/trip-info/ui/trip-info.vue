@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTripStore } from '../store/trip.store'
-import DaysControls from './controls/index.vue'
+import AddDayActivity from './controls/add-day-activity.vue'
+import DaysControls from './controls/days-controls.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
 
@@ -10,8 +11,16 @@ const tripStore = useTripStore()
 <template>
   <div v-if="tripStore.days.length" class="trip-info">
     <DaysControls />
+    <div class="divider">
+      о дне
+    </div>
     <DayHeader />
+    <div class="divider">
+      маршрут
+    </div>
     <DayActivitiesList />
+
+    <AddDayActivity />
   </div>
 
   <div v-else class="trip-content-empty">

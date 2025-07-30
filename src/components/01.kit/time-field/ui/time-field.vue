@@ -1,75 +1,76 @@
 <script setup lang="ts">
-import {
-  TimeFieldInput,
-  TimeFieldRoot,
-} from 'reka-ui'
-import { Time } from '@internationalized/date'
+import type { Time } from '@internationalized/date'
+import { TimeFieldInput, TimeFieldRoot } from 'reka-ui'
 
-const model = defineModel<string>({ required: true })
+interface Props {
+  placeholder?: string
+  disabled?: boolean
+  readonly?: boolean
+  hourCycle?: '12' | '24'
+}
 
-const timeValue = computed({
-  get() {
-    if (!model.value || !/^\d{2}:\d{2}$/.test(model.value))
-      return null
-    const [hour, minute] = model.value.split(':').map(Number)
-    return new Time(hour, minute)
-  },
-  set(v) {
-    if (v)
-      model.value = `${String(v.hour).padStart(2, '0')}:${String(v.minute).padStart(2, '0')}`
-  },
+withDefaults(defineProps<Props>(), {
+  placeholder: '--:--',
+  hourCycle: '24',
 })
+
+const model = defineModel<Time | null | undefined>({ required: true })
 </script>
 
 <template>
-  <TimeFieldRoot v-model="timeValue" class="time-field-root">
-    <TimeFieldInput
-      class="time-field-input"
+  <div class="time-field-wrapper">
+    <TimeFieldRoot
+      id="time-field"
+      v-slot="{ segments }"
+      v-model="model"
+      granularity="minute"
+      :disabled="disabled"
+      :readonly="readonly"
+      class="time-field"
+      :hour-cycle="24"
       part="dayPeriod"
-      hour-cycle="24"
-    />
-  </TimeFieldRoot>
+    >
+      <template
+        v-for="item in segments"
+        :key="item.part"
+      >
+        <TimeFieldInput
+          v-if="item.part === 'literal'"
+          :part="item.part"
+        >
+          {{ item.value }}
+        </TimeFieldInput>
+        <TimeFieldInput
+          v-else
+          :part="item.part"
+        >
+          {{ item.value }}
+        </TimeFieldInput>
+      </template>
+    </TimeFieldRoot>
+  </div>
 </template>
 
 <style scoped lang="scss">
-.time-field-root {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border: 1px solid var(--border-secondary-color);
-  border-radius: 6px;
-  background-color: var(--bg-secondary-color);
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    border-color: var(--border-primary-color);
-  }
-
-  &[data-focus-within] {
-    border-color: var(--fg-accent-color);
-    box-shadow: 0 0 0 1px var(--fg-accent-color);
-  }
+.time-field-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
-.time-field-input {
-  :deep([data-radix-vue-collection-item]) {
-    padding: 2px;
-    border-radius: 2px;
-    font-variant-numeric: tabular-nums;
+.time-field {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border-radius: 4px;
+  border-width: 1px;
+  text-align: center;
+  background-color: var(--bg-tertiary-color);
+  user-select: none;
 
-    &[data-focused] {
-      background-color: var(--fg-accent-color);
-      color: var(--bg-primary-color);
-      outline: none;
+  .TimeFieldLiteral {
+    &:last-of-type {
+      display: none;
     }
-
-    &[data-placeholder] {
-      color: var(--fg-secondary-color);
-    }
-  }
-
-  :deep([data-segment="literal"]) {
-    margin: 0 1px;
   }
 }
 </style>
