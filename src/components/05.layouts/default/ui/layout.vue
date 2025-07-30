@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { BackgroundEffects } from '~/components/03.shared/background-effects'
+import { BackgroundEffects } from '~/components/02.shared/background-effects'
 import Footer from './footer.vue'
 import Header from './header.vue'
 </script>

@@ -2,7 +2,7 @@
 import type { Activity } from '../models/activity'
 import { Icon } from '@iconify/vue'
 import draggable from 'vuedraggable'
-import { InlineEditor } from '~/components/01.kit/inline-editor'
+import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
 import { useTripStore } from '../store/trip.store'
 import ActivityItem from './activity/activity-item.vue'
 
@@ -91,19 +91,16 @@ function addNewActivity() {
 
     <!-- Блок с заголовком и описанием дня -->
     <div v-if="selectedDay" class="day-header">
-      <InlineEditor
+      <InlineEditorWrapper
         :model-value="selectedDay.title"
-        tag="h2"
-        input-type="input"
         placeholder="Название дня"
         class="day-title"
+
         @update:model-value="newTitle => updateDayDetails({ title: newTitle })"
       />
-      <InlineEditor
+      <InlineEditorWrapper
         :model-value="selectedDay.description || ''"
-        tag="div"
-        mode="markdown"
-        placeholder="Добавьте описание для этого дня (поддерживается Markdown)..."
+        placeholder="Добавьте описание"
         class="day-description"
         @update:model-value="newDesc => updateDayDetails({ description: newDesc })"
       />
@@ -200,7 +197,7 @@ function addNewActivity() {
   }
 
   .day-header {
-    padding: 16px;
+    padding: 0px;
     background-color: var(--bg-secondary-color);
     border-radius: 8px;
     border: 1px solid var(--border-secondary-color);

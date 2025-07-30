@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { Activity, ActivityBlock } from '~/components/04.modules/trip/models/activity'
-import { InlineEditor } from '~/components/01.kit/inline-editor'
-import { ActivityType, activityTypeIcons, timeToMinutes } from '~/components/04.modules/trip/models/activity'
+import type { Activity } from '~/components/04.modules/trip/models/activity'
+import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
+import { timeToMinutes } from '~/components/04.modules/trip/models/activity'
 
 interface ActivityItemProps {
   activity: Activity
@@ -27,37 +27,12 @@ function handleDelete() {
   }
 }
 
-function updateActivityBlock(blockId: string, updatedBlockData: Partial<ActivityBlock>) {
-  const blockIndex = props.activity.blocks?.findIndex(b => b.id === blockId)
-  if (props.activity.blocks && blockIndex !== -1) {
-    const newBlocks = [...props.activity.blocks]
-    // @ts-expect-error nvm
-    newBlocks[blockIndex] = { ...newBlocks[blockIndex], ...updatedBlockData }
-    emit('update', { ...props.activity, blocks: newBlocks })
-  }
-}
-
 function updateActivity(newActivityData: Partial<Activity>) {
   emit('update', { ...props.activity, ...newActivityData })
 }
 
 function toggleDetails() {
   showDetails.value = !showDetails.value
-}
-
-function getActivityTypeColor(type: ActivityType | undefined) {
-  if (!type)
-    return ''
-
-  const colors = {
-    [ActivityType.TRANSPORT]: 'var(--blue-50)',
-    [ActivityType.WALK]: 'var(--green-50)',
-    [ActivityType.FOOD]: 'var(--yellow-50)',
-    [ActivityType.ATTRACTION]: 'var(--purple-50)',
-    [ActivityType.RELAX]: 'var(--cyan-50)',
-  }
-
-  return colors[type] || ''
 }
 
 function startTimeEditing() {
@@ -130,47 +105,12 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     </div>
 
     <div class="activity-content">
-      <InlineEditor
+      <InlineEditorWrapper
         :model-value="activity.description"
-        tag="h3"
-        input-type="textarea"
         placeholder="Описание активности"
         class="activity-title"
         @update:model-value="newDesc => updateActivity({ description: newDesc })"
       />
-
-      <div v-if="showDetails && activity.blocks && activity.blocks.length" class="activity-blocks">
-        <div
-          v-for="block in activity.blocks"
-          :key="block.id"
-          class="activity-block"
-          :style="{ backgroundColor: getActivityTypeColor(block.type) }"
-        >
-          <div v-if="block.type" class="block-header">
-            <i :class="activityTypeIcons[block.type]" />
-            <span v-if="block.startTime" class="block-time">{{ block.startTime }}</span>
-          </div>
-
-          <InlineEditor
-            :model-value="block.description"
-            tag="div"
-            mode="markdown"
-            placeholder="Описание блока..."
-            class="block-description"
-            @update:model-value="newDesc => updateActivityBlock(block.id, { description: newDesc })"
-          />
-
-          <div v-if="block.images && block.images.length" class="block-images">
-            <img
-              v-for="(image, idx) in block.images"
-              :key="idx"
-              :src="image"
-              alt="Изображение активности"
-              class="block-image"
-            >
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -295,7 +235,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   .activity-content {
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-secondary-color);
-    padding: 12px;
+    padding: 0px;
     border-radius: 8px;
     transition:
       box-shadow 0.2s ease,
@@ -322,94 +262,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       font-weight: 400;
       margin: 0;
       color: var(--fg-primary-color);
-    }
-
-    .activity-blocks {
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-
-      .activity-block {
-        padding: 10px;
-        border-radius: 6px;
-        border: 1px solid var(--border-secondary-color);
-        transition: all 0.2s ease;
-        .block-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 6px;
-
-          i {
-            font-size: 1rem;
-            color: var(--fg-secondary-color);
-          }
-          .block-time {
-            font-size: 0.85rem;
-            color: var(--fg-secondary-color);
-            margin-left: auto;
-          }
-        }
-
-        .block-description {
-          font-size: 0.95rem;
-          color: var(--fg-primary-color);
-          &:deep() {
-            > p {
-              padding: 0;
-              margin: 0;
-              margin-bottom: 8px;
-
-              &:last-child {
-                margin-bottom: 0;
-              }
-            }
-
-            a img {
-              max-width: 100%;
-              height: auto;
-              border-radius: 4px;
-            }
-
-            blockquote {
-              border-left: 3px solid var(--border-primary-color);
-              margin-left: 0;
-              padding-left: 16px;
-              color: var(--fg-secondary-color);
-            }
-
-            details {
-              padding: 8px;
-              border: 1px solid var(--border-secondary-color);
-              border-radius: 4px;
-              background-color: var(--bg-tertiary-color);
-
-              summary {
-                cursor: pointer;
-                user-select: none;
-                font-weight: 500;
-              }
-            }
-          }
-        }
-
-        .block-images {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 8px;
-
-          .block-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-          }
-        }
-      }
     }
   }
 }
