@@ -1,3 +1,3 @@
-import PlanContent from './content.vue'
+import TripList from './trip-list.vue'
 
-export { PlanContent }
+export { TripList }

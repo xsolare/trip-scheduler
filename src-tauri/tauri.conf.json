@@ -21,6 +21,13 @@
       "csp": null
     }
   },
+  "plugins": {
+    "sql": {
+      "preload": [
+        "sqlite:trip-scheduler.db"
+      ]
+    }
+  },
   "bundle": {
     "active": true,
     "targets": [

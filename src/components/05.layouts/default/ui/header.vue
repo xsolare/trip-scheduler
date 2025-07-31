@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
+import { SyncIndicator } from '~/components/02.shared/sync-indicator'
 
 const sentinelEl = ref<HTMLElement>()
 const headerEl = ref<HTMLElement>()
@@ -42,7 +43,10 @@ onMounted(() => {
         </div>
       </div>
 
+      <div class="header-center" />
+
       <div class="header-utils">
+        <SyncIndicator />
         <div class="vr" />
 
         <div class="profile">
@@ -95,65 +99,35 @@ onMounted(() => {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     margin: 0 auto;
     z-index: 6;
     font-family: 'Rubik';
     padding: 0 8px;
-
-    > div {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
   }
 
   &-nav {
+    display: flex;
+    align-items: center;
+
     .logo {
       display: inline-flex;
       align-items: center;
       margin: 0 8px;
       gap: 8px;
-
-      &-title {
-        margin-left: 8px;
-      }
-    }
-
-    ul {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 4px;
-      padding: 0 10px;
-
-      li {
-        list-style: none;
-        text-decoration: none;
-
-        span {
-          margin-right: 4px;
-        }
-      }
-    }
-
-    .link {
-      color: var(--fg-primary-color);
       cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.2s ease-in-out;
-      padding: 2px 8px;
-
-      &:hover {
-        color: var(--fg-action-color);
-        background-color: var(--bg-tertiary-color);
-        box-shadow: 0px 0px 0px 1px var(--border-accent-color);
-      }
-
-      &.actived {
-        color: var(--fg-accent-color);
-      }
     }
+  }
+
+  &-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  &-utils {
+    display: flex;
+    align-items: center;
   }
 
   .profile {
@@ -172,20 +146,20 @@ onMounted(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-
       transition: border 0.2s ease-in-out;
+
       &:hover {
         border: 2px solid var(--border-accent-color);
       }
     }
   }
-}
 
-.vr {
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  letter-spacing: normal;
-  font-weight: 400;
-  color: var(--fg-muted-color);
+  .vr {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    letter-spacing: normal;
+    font-weight: 400;
+    color: var(--fg-muted-color);
+  }
 }
 </style>

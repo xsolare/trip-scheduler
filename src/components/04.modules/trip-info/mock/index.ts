@@ -1,4 +1,4 @@
-import type { Day } from '../models/activity'
+import type { IDay } from '../models/types'
 import { v4 as uuidv4 } from 'uuid'
 
 export const MOCK_DAYS = [
@@ -61,4 +61,4 @@ export const MOCK_DAYS = [
     title: 'Свободный день',
     activities: [],
   },
-] as Day[]
+] as IDay[]

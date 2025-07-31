@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Activity } from '../../models/activity'
+import type { Activity } from '../../../../../shared/types/models/activity'
 import draggable from 'vuedraggable'
 import { useTripStore } from '../../store/trip.store'
 import ActivityItem from './item.vue'

@@ -1,23 +1,23 @@
-import type { Activity, Day } from '../models/activity'
+import type { IActivity, IDay } from '../models/types'
+import { timeToMinutes } from '../lib/helpers'
 import { MOCK_DAYS } from '../mock'
-import { timeToMinutes } from '../models/activity'
 
 export const useTripStore = defineStore('trip', () => {
   // --- State ---
   const sortedDays = MOCK_DAYS.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  const days = ref<Day[]>(sortedDays)
+  const days = ref<IDay[]>(sortedDays)
   const currentDayId = ref<string | null>(sortedDays.length > 0 ? sortedDays[0].id : null)
 
   // --- Getters ---
-  const getAllDays = computed((): Day[] => days.value)
+  const getAllDays = computed((): IDay[] => days.value)
 
-  const getSelectedDay = computed((): Day | null => {
+  const getSelectedDay = computed((): IDay | null => {
     if (!currentDayId.value)
       return null
     return days.value.find(day => day.id === currentDayId.value) ?? null
   })
 
-  const getActivitiesForSelectedDay = computed((): Activity[] => {
+  const getActivitiesForSelectedDay = computed((): IActivity[] => {
     return getSelectedDay.value?.activities
       .slice()
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)) ?? []
@@ -34,7 +34,7 @@ export const useTripStore = defineStore('trip', () => {
       days.value[dayIndex] = { ...days.value[dayIndex], ...details }
   }
 
-  function addActivity(dayId: string, activity: Activity): void {
+  function addActivity(dayId: string, activity: IActivity): void {
     const day = days.value.find(d => d.id === dayId)
     if (!day)
       return
@@ -65,7 +65,7 @@ export const useTripStore = defineStore('trip', () => {
     }
   }
 
-  function updateActivity(dayId: string, updatedActivity: Activity): void {
+  function updateActivity(dayId: string, updatedActivity: IActivity): void {
     const day = days.value.find(d => d.id === dayId)
     if (!day)
       return
@@ -93,7 +93,7 @@ export const useTripStore = defineStore('trip', () => {
     day.activities[activityIndex] = updatedActivity
   }
 
-  function reorderActivities(dayId: string, newOrder: Activity[]): void {
+  function reorderActivities(dayId: string, newOrder: IActivity[]): void {
     const day = days.value.find(d => d.id === dayId)
     if (!day)
       return

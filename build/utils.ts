@@ -1,7 +1,5 @@
 import type { Options as AutoImportOptions } from 'unplugin-auto-import/types'
 
-// Plugins options
-
 export const autoImportOptions: AutoImportOptions = {
   imports: [
     'vue-router',
@@ -18,6 +16,7 @@ export const autoImportOptions: AutoImportOptions = {
     //
     './src/shared/lib/',
     './src/shared/types/',
+    './src/shared/composables/',
   ],
   exclude: [
     '**/node_modules/**',

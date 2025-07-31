@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Activity } from '~/components/04.modules/trip-info/models/activity'
+import type { Activity } from '~/shared/types/models/activity'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'

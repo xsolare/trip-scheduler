@@ -6,11 +6,12 @@
 // biome-ignore lint: disable
 export {}
 declare global {
-  const AppRouteNames: typeof import('../../shared/types/routes')['AppRouteNames']
-  const AppRoutePaths: typeof import('../../shared/types/routes')['AppRoutePaths']
+  const AppRouteNames: typeof import('../routes')['AppRouteNames']
+  const AppRoutePaths: typeof import('../routes')['AppRoutePaths']
   const EffectScope: typeof import('vue')['EffectScope']
-  const SyncManager: typeof import('../../shared/lib/sync')['SyncManager']
+  const PrimeVueConfig: typeof import('../../shared/lib/primevue-theme')['PrimeVueConfig']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
+  const addActivity: typeof import('../../lib/db')['addActivity']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const computed: typeof import('vue')['computed']
@@ -20,9 +21,7 @@ declare global {
   const computedWithControl: typeof import('@vueuse/core')['computedWithControl']
   const controlledComputed: typeof import('@vueuse/core')['controlledComputed']
   const controlledRef: typeof import('@vueuse/core')['controlledRef']
-  const createActivity: typeof import('../../shared/lib/db')['createActivity']
   const createApp: typeof import('vue')['createApp']
-  const createDay: typeof import('../../shared/lib/db')['createDay']
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
   const createGlobalState: typeof import('@vueuse/core')['createGlobalState']
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
@@ -32,7 +31,6 @@ declare global {
   const createReusableTemplate: typeof import('@vueuse/core')['createReusableTemplate']
   const createSharedComposable: typeof import('@vueuse/core')['createSharedComposable']
   const createTemplatePromise: typeof import('@vueuse/core')['createTemplatePromise']
-  const createTrip: typeof import('../../shared/lib/db')['createTrip']
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const customRef: typeof import('vue')['customRef']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
@@ -40,17 +38,15 @@ declare global {
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
   const defineStore: typeof import('pinia')['defineStore']
-  const deleteActivity: typeof import('../../shared/lib/db')['deleteActivity']
   const eagerComputed: typeof import('@vueuse/core')['eagerComputed']
   const effectScope: typeof import('vue')['effectScope']
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const getActivePinia: typeof import('pinia')['getActivePinia']
-  const getActivitiesForDay: typeof import('../../shared/lib/db')['getActivitiesForDay']
-  const getAllTrips: typeof import('../../shared/lib/db')['getAllTrips']
+  const getActivitiesForDay: typeof import('../../lib/db')['getActivitiesForDay']
+  const getAllTrips: typeof import('../../lib/db')['getAllTrips']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
-  const getDaysForTrip: typeof import('../../shared/lib/db')['getDaysForTrip']
-  const getUnsyncedChanges: typeof import('../../shared/lib/db')['getUnsyncedChanges']
+  const getDaysForTrip: typeof import('../../lib/db')['getDaysForTrip']
   const h: typeof import('vue')['h']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
@@ -66,7 +62,6 @@ declare global {
   const mapState: typeof import('pinia')['mapState']
   const mapStores: typeof import('pinia')['mapStores']
   const mapWritableState: typeof import('pinia')['mapWritableState']
-  const markAsSynced: typeof import('../../shared/lib/db')['markAsSynced']
   const markRaw: typeof import('vue')['markRaw']
   const nextTick: typeof import('vue')['nextTick']
   const onActivated: typeof import('vue')['onActivated']
@@ -109,7 +104,7 @@ declare global {
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
-  const router: typeof import('../../shared/lib/router')['default']
+  const router: typeof import('../../lib/router')['default']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
   const shallowReactive: typeof import('vue')['shallowReactive']
@@ -119,7 +114,6 @@ declare global {
   const syncRef: typeof import('@vueuse/core')['syncRef']
   const syncRefs: typeof import('@vueuse/core')['syncRefs']
   const templateRef: typeof import('@vueuse/core')['templateRef']
-  const testDbConnection: typeof import('../../shared/lib/db')['testDbConnection']
   const throttledRef: typeof import('@vueuse/core')['throttledRef']
   const throttledWatch: typeof import('@vueuse/core')['throttledWatch']
   const toRaw: typeof import('vue')['toRaw']
@@ -136,8 +130,9 @@ declare global {
   const unref: typeof import('vue')['unref']
   const unrefElement: typeof import('@vueuse/core')['unrefElement']
   const until: typeof import('@vueuse/core')['until']
-  const updateActivity: typeof import('../../shared/lib/db')['updateActivity']
-  const updateTrip: typeof import('../../shared/lib/db')['updateTrip']
+  const updateActivity: typeof import('../../lib/db')['updateActivity']
+  const updateActivityInDb: typeof import('../../lib/db')['updateActivityInDb']
+  const updateActivityTitle: typeof import('../../lib/db')['updateActivityTitle']
   const useActiveElement: typeof import('@vueuse/core')['useActiveElement']
   const useAnimate: typeof import('@vueuse/core')['useAnimate']
   const useArrayDifference: typeof import('@vueuse/core')['useArrayDifference']
@@ -273,7 +268,6 @@ declare global {
   const useStyleTag: typeof import('@vueuse/core')['useStyleTag']
   const useSupported: typeof import('@vueuse/core')['useSupported']
   const useSwipe: typeof import('@vueuse/core')['useSwipe']
-  const useSync: typeof import('../../shared/composables/use-sync')['useSync']
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useTemplateRefsList: typeof import('@vueuse/core')['useTemplateRefsList']
   const useTextDirection: typeof import('@vueuse/core')['useTextDirection']
@@ -329,9 +323,6 @@ declare global {
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { SyncManager } from '../../shared/lib/sync'
-  import('../../shared/lib/sync')
-  // @ts-ignore
   export type { AppRouteNames } from '../../shared/types/routes'
-  import('../../shared/types/routes')
+  import('../routes')
 }
