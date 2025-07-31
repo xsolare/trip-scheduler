@@ -175,6 +175,7 @@ declare global {
   const useCurrentElement: typeof import('@vueuse/core')['useCurrentElement']
   const useCycleList: typeof import('@vueuse/core')['useCycleList']
   const useDark: typeof import('@vueuse/core')['useDark']
+  const useDatabase: typeof import('../../shared/composables/use-database')['useDatabase']
   const useDateFormat: typeof import('@vueuse/core')['useDateFormat']
   const useDebounce: typeof import('@vueuse/core')['useDebounce']
   const useDebounceFn: typeof import('@vueuse/core')['useDebounceFn']
@@ -329,9 +330,9 @@ declare global {
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { SyncManager } from '../../shared/lib/sync'
-  import('../../shared/lib/sync')
-  // @ts-ignore
   export type { AppRouteNames } from '../../shared/types/routes'
   import('../../shared/types/routes')
+  // @ts-ignore
+  export type { UseDatabaseOptions, UseDatabaseReturn } from '../../shared/composables/use-database'
+  import('../../shared/composables/use-database')
 }

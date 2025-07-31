@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import type { Activity } from '../../../../../shared/types/models/activity'
+import type { IActivity } from '../../models/types'
 import draggable from 'vuedraggable'
-import { useTripStore } from '../../store/trip.store'
+import { useTrip } from '../../composables/use-trip'
 import ActivityItem from './item.vue'
 
-const tripStore = useTripStore()
+const tripComposable = useTrip()
 
-const selectedDay = computed(() => tripStore.getSelectedDay)
-const activitiesForDay = computed(() => tripStore.getActivitiesForSelectedDay)
+const selectedDay = computed(() => tripComposable.getSelectedDay.value)
+const activitiesForDay = computed(() => tripComposable.getActivitiesForSelectedDay.value)
 
 const draggableActivities = computed({
   get: () => activitiesForDay.value,
-  set: (newOrder: Activity[]) => {
+  set: (newOrder: IActivity[]) => {
     if (selectedDay.value) {
-      tripStore.reorderActivities(selectedDay.value.id, newOrder)
+      tripComposable.reorderActivities(selectedDay.value.id, newOrder)
     }
   },
 })
 
-function updateActivity(updatedActivity: Activity) {
+function updateActivity(updatedActivity: IActivity) {
   if (selectedDay.value) {
-    tripStore.updateActivity(selectedDay.value.id, updatedActivity)
+    tripComposable.updateActivity(selectedDay.value.id, updatedActivity)
   }
 }
 </script>

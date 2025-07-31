@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { useTripStore } from '../store/trip.store'
+import { useTrip } from '../composables/use-trip'
 import AddDayActivity from './controls/add-day-activity.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
 
-const tripStore = useTripStore()
+const { days, fetchDaysForTrip } = useTrip()
+
+onMounted(() => fetchDaysForTrip)
 </script>
 
 <template>
-  <div v-if="tripStore.days.length" class="trip-info">
+  <div v-if="days.length" class="trip-info">
     <DaysControls />
     <div class="divider">
       о дне

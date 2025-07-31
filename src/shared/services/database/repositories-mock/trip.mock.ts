@@ -1,6 +1,6 @@
-import type { ITrip } from '../models/types'
+import type { Trip } from '~/shared/types/models/trip'
 
-export const PLANS: ITrip[] = [
+export const MOCK_TRIPS: Trip[] = [
   {
     id: '1',
     title: 'Покорение Алтая',

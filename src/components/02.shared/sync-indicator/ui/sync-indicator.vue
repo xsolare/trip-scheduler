@@ -1,6 +1,6 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useSync } from '~/shared/composables/use-sync'
 
 const { isOnline, isSyncing, syncStatus, manualSync } = useSync()
 
@@ -8,11 +8,9 @@ async function handleManualSync() {
   const result = await manualSync()
 
   if (result.success) {
-    // Можно показать уведомление об успехе
     console.log(result.message)
   }
   else {
-    // Можно показать уведомление об ошибке
     console.error(result.message)
   }
 }

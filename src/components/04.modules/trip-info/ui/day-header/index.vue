@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { useTripStore } from '../../store/trip.store'
+import { useTrip } from '../../composables/use-trip'
 
-const tripStore = useTripStore()
+const tripComposable = useTrip()
 
-const selectedDay = computed(() => tripStore.getSelectedDay)
+const selectedDay = computed(() => tripComposable.getSelectedDay.value)
 
 function updateDayDetails(details: { title?: string, description?: string }) {
   if (selectedDay.value) {
-    tripStore.updateDayDetails(selectedDay.value.id, details)
+    tripComposable.updateDayDetails(selectedDay.value.id, details)
   }
 }
 </script>

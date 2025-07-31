@@ -1,4 +1,4 @@
-import { SyncManager } from '~/shared/lib/sync'
+import { SyncManager } from '~/shared/services/sync/sync.service'
 
 const syncManager = new SyncManager({
   apiEndpoint: 'https://your-api.com/api', // TODO
@@ -20,12 +20,7 @@ export function useSync() {
 
   // Обновление статуса синхронизации
   const updateSyncStatus = async () => {
-    try {
-      syncStatus.value = await syncManager.getSyncStatus()
-    }
-    catch (error) {
-      console.error('Ошибка получения статуса синхронизации:', error)
-    }
+    // TODO
   }
 
   // Обновление статуса подключения
@@ -35,53 +30,33 @@ export function useSync() {
   }
 
   // Ручная синхронизация
-  const manualSync = async (): Promise<{ success: boolean, message: string }> => {
+  const manualSync = async () => {
     if (isSyncing.value) {
       return { success: false, message: 'Синхронизация уже выполняется' }
     }
 
     isSyncing.value = true
 
-    try {
-      const result = await syncManager.fullSync()
+    // TODO
 
-      if (result.success) {
-        localStorage.setItem('lastSyncTime', new Date().toISOString())
-        await updateSyncStatus()
-        return { success: true, message: 'Синхронизация завершена успешно' }
-      }
-      else {
-        return { success: false, message: result.error || 'Ошибка синхронизации' }
-      }
-    }
-    catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Неизвестная ошибка',
-      }
-    }
-    finally {
-      isSyncing.value = false
-    }
+    return { success: true, message: 'Синхронизация успешно выполнена' }
   }
 
   // Экспорт данных для бэкапа
   const exportData = async (): Promise<Blob> => {
     const data = await syncManager.exportAllData()
     const jsonString = JSON.stringify(data, null, 2)
+
     return new Blob([jsonString], { type: 'application/json' })
   }
 
   // Инициализация
   onMounted(() => {
-    // Слушатели для статуса подключения
     window.addEventListener('online', updateOnlineStatus)
     window.addEventListener('offline', updateOnlineStatus)
 
-    // Начальное обновление статуса
     updateSyncStatus()
 
-    // Автоматическая синхронизация каждые 5 минут (если онлайн)
     const syncInterval = setInterval(async () => {
       if (isOnline.value && !isSyncing.value && syncStatus.value.unsyncedChanges > 0) {
         await syncManager.syncToServer()

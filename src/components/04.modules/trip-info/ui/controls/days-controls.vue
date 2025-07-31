@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useTripStore } from '../../store/trip.store'
+import { useTrip } from '../../composables/use-trip'
 
-const tripStore = useTripStore()
+const tripComposable = useTrip()
 
-const allDays = computed(() => tripStore.getAllDays)
-const selectedDay = computed(() => tripStore.getSelectedDay)
+const allDays = computed(() => tripComposable.getAllDays.value)
+const selectedDay = computed(() => tripComposable.getSelectedDay.value)
 
 function selectDay(dayId: string) {
-  tripStore.setCurrentDay(dayId)
+  tripComposable.setCurrentDay(dayId)
 }
 </script>
 
