@@ -1,12 +1,33 @@
 <script setup lang="ts">
-import { MOCK_TRIPS } from '../../../../shared/services/database/repositories-mock/trip.mock'
-import TripCard from './trip-card/index.vue'
+import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { useTripList } from '../composables/use-trip-list'
+
+import TripListEmpty from './states/trip-list-empty.vue'
+import TripListSkeleton from './states/trip-list-skeleton.vue'
+import TripListContent from './trip-list-content.vue'
+
+const { trips, isLoading, fetchError, fetchTrips } = useTripList()
+
+const displayData = computed(() => (trips.value && trips.value.length > 0) ? trips.value : null)
 </script>
 
 <template>
-  <TripCard
-    v-for="plan in MOCK_TRIPS"
-    :key="plan.id"
-    :="plan"
-  />
+  <AsyncStateWrapper
+    :loading="isLoading"
+    :error="fetchError"
+    :data="displayData"
+    :retry-handler="fetchTrips"
+  >
+    <template #loading>
+      <TripListSkeleton />
+    </template>
+
+    <template #success="{ data }">
+      <TripListContent :trips="data" />
+    </template>
+
+    <template #empty>
+      <TripListEmpty />
+    </template>
+  </AsyncStateWrapper>
 </template>

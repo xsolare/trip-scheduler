@@ -1,42 +1,19 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import { SyncIndicator } from '~/components/02.shared/sync-indicator'
+import { AppRoutePaths } from '~/shared/types/routes'
 
-const sentinelEl = ref<HTMLElement>()
 const headerEl = ref<HTMLElement>()
-const isSticky = ref<boolean>(false)
-
-onMounted(() => {
-  if (sentinelEl.value) {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isSticky.value = entry.isIntersecting
-      },
-      {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0,
-      },
-    )
-
-    observer.observe(sentinelEl.value)
-
-    onBeforeUnmount(() => {
-      observer.disconnect()
-    })
-  }
-})
+const router = useRouter()
 </script>
 
 <template>
-  <div ref="sentinelEl" class="sentinel" />
   <header
     ref="headerEl"
-    class="header"
-    :class="{ blurred: !isSticky }"
+    class="header glass"
   >
     <div class="header-content">
-      <div class="header-nav">
+      <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
           <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 32px;" />
           Trip Scheduler
@@ -63,33 +40,70 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.sentinel {
+.glass {
+  --filter-glass3d: blur(16px) brightness(1) saturate(2);
+  --color-glass3d: hsla(180, 6%, 87%, 0.3);
+  --noise-glass3d: url('../../../../assets/images/egg-shell.png');
+
+  position: relative;
+  z-index: 4;
+}
+
+.glass::before {
+  content: '';
   position: absolute;
-  top: 0;
-  height: 0;
-  width: 100%;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 3;
+  -webkit-backdrop-filter: var(--filter-glass3d);
+  backdrop-filter: var(--filter-glass3d);
+  background-color: var(--color-glass3d);
+  background-image: var(--noise-glass3d);
+  background-size: 100px;
+  background-repeat: repeat;
+}
+
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 5;
+
+  box-shadow:
+    inset 2px 2px 1px -3px hsl(205 20% 90% / 0.8),
+    inset 4px 4px 2px -6px hsl(205 20% 90% / 0.3),
+    inset 1.5px 1.5px 1.5px -0.75px hsl(205 20% 90% / 0.15),
+    inset 1.5px 1.5px 0.25px hsl(205 20% 90% / 0.03),
+    inset 0 0 0.25px 0.5px hsl(205 20% 90% / 0.03);
+}
+
+.glass > * {
+  position: relative;
+  z-index: 6;
 }
 
 .header {
   position: sticky;
   top: 0;
   display: flex;
-  flex-direction: column;
   flex-direction: row;
   border-bottom: 1px solid var(--border-primary-color);
-  height: 56px;
-  background-color: rgb(var(--bg-header-color));
+  height: 48px;
   width: 100%;
-  overflow: hidden;
   z-index: 100;
   transition:
     background-color 0.3s ease,
     backdrop-filter 0.3s ease;
 
-  &.blurred {
-    background-color: rgba(var(--bg-header-color), 0.5);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+  background-color: rgb(var(--bg-header-color));
+
+  &.glass {
+    background-color: transparent;
   }
 
   &-content {
@@ -101,7 +115,6 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     margin: 0 auto;
-    z-index: 6;
     font-family: 'Rubik';
     padding: 0 8px;
   }

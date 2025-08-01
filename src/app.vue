@@ -1,5 +1,6 @@
 <script setup>
 import { DefaultLayout } from '~/components/05.layouts/default'
+import { EmptyLayout } from '~/components/05.layouts/empty'
 
 import '~/assets/scss/global.scss'
 import '~/assets/scss/atomic.scss'
@@ -10,18 +11,19 @@ import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
 const route = useRoute()
-const layout = computed(() => route.meta.layout || 'default')
+const layout = computed(() => route.meta.layout || 'empty')
 const transition = computed(() => route.meta.transition || 'smooth-appear')
 
 const layouts = {
   default: DefaultLayout,
+  empty: EmptyLayout,
 }
 </script>
 
 <template>
   <component :is="layouts[layout]">
     <router-view v-slot="{ Component }">
-      <transition :name="transition">
+      <transition :name="transition" mode="out-in">
         <component :is="Component" />
       </transition>
     </router-view>

@@ -1,20 +1,39 @@
 <script lang="ts" setup>
-function getRandomChar() {
-  const rangeStart = 0x4E00
-  const rangeEnd = 0x62FF
+import { Icon } from '@iconify/vue'
 
-  return String.fromCodePoint(
-    Math.floor(Math.random() * (rangeEnd - rangeStart) + rangeStart),
-  )
+const travelIcons = [
+  'mdi:airplane',
+  'mdi:map-marker-outline',
+  'mdi:compass-outline',
+  'mdi:wallet-travel',
+  'mdi:camera-outline',
+  'mdi:food-fork-drink',
+  'mdi:bed',
+  'mdi:car',
+  'mdi:train',
+  'mdi:beach',
+  'mdi:mountain-uphill',
+  'mdi:ticket-confirmation-outline',
+  'mdi:passport',
+  'mdi:briefcase-outline',
+  'mdi:earth',
+  'mdi:sun-compass',
+  'mdi:sunglasses',
+  'mdi:ship-wheel',
+  'mdi:flag-variant-outline',
+]
+
+function getRandomIcon() {
+  return travelIcons[Math.floor(Math.random() * travelIcons.length)]
 }
 
 const symbols = Array.from({ length: 40 }, () => ({
-  char: getRandomChar(),
+  icon: getRandomIcon(),
   top: Math.random() * 100,
   left: Math.random() * 100,
-  delay: Math.random() * 5,
-  duration: 5 + Math.random() * 15,
-  size: 1 + Math.random() * 0.4,
+  delay: Math.random() * 1,
+  duration: 10 + Math.random() * 15,
+  size: 1 + Math.random() * 0.8,
 }))
 </script>
 
@@ -32,7 +51,7 @@ const symbols = Array.from({ length: 40 }, () => ({
         fontSize: `${symbol.size}rem`,
       }"
     >
-      {{ symbol.char }}
+      <Icon :icon="symbol.icon" />
     </div>
   </div>
 </template>
@@ -52,10 +71,9 @@ const symbols = Array.from({ length: 40 }, () => ({
 
   .symbol {
     position: absolute;
-    color: var(--fg-seconday-color);
+    color: var(--fg-secondary-color);
     animation: floatEffect linear infinite;
     user-select: none;
-    font-family: 'Arial', sans-serif;
     opacity: 0;
   }
 }
@@ -63,17 +81,15 @@ const symbols = Array.from({ length: 40 }, () => ({
 @keyframes floatEffect {
   0% {
     opacity: 0;
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(20px) rotate(0deg);
   }
-  20% {
-    opacity: 0.3;
+  5%,
+  95% {
+    opacity: 0.2;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.4;
     transform: translateY(-40px) rotate(180deg);
-  }
-  80% {
-    opacity: 0.3;
   }
   100% {
     opacity: 0;

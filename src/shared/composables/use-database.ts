@@ -98,6 +98,7 @@ export function useDatabase<T>(
   const execute = async () => {
     status.value = 'pending'
     error.value = null
+
     try {
       const dbService = await databaseServicePromise
       const result = await fn(dbService)

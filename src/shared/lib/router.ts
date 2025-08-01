@@ -5,9 +5,16 @@ import { AppRouteNames, AppRoutePaths } from '~/shared/types/routes'
 
 const TripInfo = () => import('~/pages/trip/[id]/index.vue')
 const TripList = () => import('~/pages/trip/list.vue')
+
 const NotFound = () => import('~/pages/not-found.vue')
+const Root = () => import('~/pages/root.vue')
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: AppRoutePaths.Root,
+    name: AppRouteNames.Root,
+    component: Root,
+  },
   {
     path: AppRoutePaths.Trip.List,
     name: AppRouteNames.TripList,

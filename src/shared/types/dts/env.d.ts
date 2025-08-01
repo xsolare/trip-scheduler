@@ -10,7 +10,3 @@ declare module '*.vue' {
 interface ImportMetaEnv {
   readonly RSBUILD_APP_MOCK_MODE: string
 }
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
