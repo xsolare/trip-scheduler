@@ -4,6 +4,8 @@ import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginVue } from '@rsbuild/plugin-vue'
 import pluginAutoImport from 'unplugin-auto-import/rspack'
+import { FileSystemIconLoader } from 'unplugin-icons/loaders'
+import Icons from 'unplugin-icons/rspack'
 import { autoImportOptions } from './build/utils'
 
 // eslint-disable-next-line node/prefer-global/process
@@ -62,6 +64,15 @@ export default defineConfig({
     rspack: {
       plugins: [
         pluginAutoImport(autoImportOptions),
+        Icons({
+          compiler: 'vue3',
+          customCollections: {
+            custom: FileSystemIconLoader(
+              fileURLToPath(new URL('./src/assets/svg', import.meta.url)),
+              svg => svg.replace(/\.svg$/, ''),
+            ),
+          },
+        }),
       ],
     },
     lightningcssLoader: false,

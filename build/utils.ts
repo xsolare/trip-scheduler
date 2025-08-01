@@ -1,4 +1,5 @@
 import type { Options as AutoImportOptions } from 'unplugin-auto-import/types'
+import IconsResolver from 'unplugin-icons/resolver'
 
 export const autoImportOptions: AutoImportOptions = {
   imports: [
@@ -22,6 +23,12 @@ export const autoImportOptions: AutoImportOptions = {
     '**/node_modules/**',
     '**/dist/**',
     '**/src-tauri/**',
+  ],
+  resolvers: [
+    IconsResolver({
+      prefix: 'Icon',
+      customCollections: ['custom'],
+    }),
   ],
   dts: './src/types/dts/auto-imports.d.ts',
 }
