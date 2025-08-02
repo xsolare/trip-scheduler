@@ -1,53 +1,85 @@
 <script setup lang="ts">
-import { useTrip } from '../composables/use-trip'
+import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { useTripStore } from '../store/trip-store'
 import AddDayActivity from './controls/add-day-activity.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
+import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
-const { days, fetchDaysForTrip } = useTrip()
+const tripStore = useTripStore()
+const route = useRoute()
 
-onMounted(() => fetchDaysForTrip)
+const {
+  days,
+  isLoading,
+  fetchError,
+  getActivitiesForSelectedDay,
+} = storeToRefs(tripStore)
+
+const tripId = computed(() => route.params.id as string)
+
+const dayActivitiesListRef = ref<InstanceType<typeof DayActivitiesList> | null>(null)
+
+function handleAddNewDay() {
+  tripStore.addNewDay()
+}
+
+function handleAddNewActivity() {
+  dayActivitiesListRef.value?.handleAddNewActivity()
+}
+
+onMounted(() => {
+  if (tripId.value)
+    tripStore.fetchDaysForTrip(tripId.value)
+})
 </script>
 
 <template>
-  <div v-if="days.length" class="trip-info">
-    <DaysControls />
-    <div class="divider">
-      о дне
-    </div>
-    <DayHeader />
-    <div class="divider">
-      маршрут
-    </div>
-    <DayActivitiesList />
+  <AsyncStateWrapper
+    :loading="isLoading"
+    :error="fetchError"
+    :data="days"
+    :retry-handler="() => tripStore.fetchDaysForTrip(tripId)"
+    class="trip-info-wrapper"
+  >
+    <template #loading>
+      <TripInfoSkeleton />
+    </template>
 
-    <AddDayActivity />
-  </div>
+    <template #success>
+      <div class="trip-info">
+        <DaysControls />
 
-  <div v-else class="trip-content-empty">
-    <p>Пока не создано ни одного дня для вашего путешествия.</p>
-    <button class="g-button-primary">
-      Создать первый день
-    </button>
-  </div>
+        <div class="divider">
+          о дне
+        </div>
+
+        <DayHeader />
+
+        <div class="divider">
+          маршрут
+        </div>
+
+        <DayActivitiesList
+          ref="dayActivitiesListRef"
+          @add="handleAddNewActivity"
+        />
+
+        <AddDayActivity
+          v-if="getActivitiesForSelectedDay.length"
+          @add="handleAddNewActivity"
+        />
+      </div>
+    </template>
+
+    <template #empty>
+      <div class="trip-content-empty">
+        <p>Пока не создано ни одного дня для вашего путешествия.</p>
+        <button class="g-button-primary" @click="handleAddNewDay">
+          Создать первый день
+        </button>
+      </div>
+    </template>
+  </AsyncStateWrapper>
 </template>
-
-<style scoped lang="scss">
-.trip-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-
-  &-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 16px;
-    color: var(--fg-secondary-color);
-  }
-}
-</style>

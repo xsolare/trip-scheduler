@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { useTrip } from '../../composables/use-trip'
+import { useTripStore } from '../../store/trip-store'
 
-const tripComposable = useTrip()
-
-const selectedDay = computed(() => tripComposable.getSelectedDay.value)
+const tripStore = useTripStore()
+const { getSelectedDay: selectedDay } = storeToRefs(tripStore)
 
 function updateDayDetails(details: { title?: string, description?: string }) {
   if (selectedDay.value) {
-    tripComposable.updateDayDetails(selectedDay.value.id, details)
+    tripStore.updateDayDetails(selectedDay.value.id, details)
   }
 }
 </script>
@@ -19,7 +19,6 @@ function updateDayDetails(details: { title?: string, description?: string }) {
       :model-value="selectedDay.title"
       placeholder="Название дня"
       class="day-title"
-
       @update:model-value="newTitle => updateDayDetails({ title: newTitle })"
     />
     <InlineEditorWrapper
@@ -33,10 +32,11 @@ function updateDayDetails(details: { title?: string, description?: string }) {
 
 <style scoped lang="scss">
 .day-header {
-  padding: 0px;
   background-color: var(--bg-secondary-color);
   border-radius: 8px;
   border: 1px solid var(--border-secondary-color);
+  margin-top: 16px;
+  margin-bottom: 32px;
 
   .day-title {
     font-size: 1.5rem;

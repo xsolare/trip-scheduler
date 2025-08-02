@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Activity } from '~/shared/types/models/activity'
+import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
@@ -10,7 +11,7 @@ interface ActivityItemProps {
 }
 
 const props = defineProps<ActivityItemProps>()
-const emit = defineEmits(['edit', 'delete', 'update'])
+const emit = defineEmits(['update', 'delete'])
 
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
@@ -21,6 +22,10 @@ const editingEndTime = shallowRef<Time | null>(null)
 function updateActivity(newActivityData: Partial<Activity>) {
   emit('update', { ...props.activity, ...newActivityData })
 }
+
+// function deleteActivity() {
+//   emit('delete', props.activity.id)
+// }
 
 function parseTime(timeStr: string): Time {
   const [hour, minute] = timeStr.split(':').map(Number)
@@ -82,13 +87,19 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       </div>
     </div>
 
-    <div class="activity-content">
+    <div class="activity-title">
+      <Icon icon="mdi:chevron-right" />
       <InlineEditorWrapper
         :model-value="activity.title"
         placeholder="Описание активности"
-        class="activity-title"
-        @update:model-value="newDesc => updateActivity({ title: newDesc })"
+        class="activity-title-editor"
+        :features="{ 'block-edit': false }
+        "@update:model-value="newDesc => updateActivity({ title: newDesc })"
       />
+    </div>
+
+    <div class="activity-sections">
+      <!-- NOT IMPLEMENTED -->
     </div>
   </div>
 </template>
@@ -100,11 +111,13 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   width: 100%;
   position: relative;
   transition: all 0.3s ease;
-  margin: 12px 0;
+  margin: 32px 0;
 
   &:hover {
     .activity-header {
       .activity-time {
+        width: 140px;
+
         &::before {
           opacity: 1;
           color: var(--fg-accent-color);
@@ -112,7 +125,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       }
     }
 
-    .activity-content {
+    .activity-sections {
       box-shadow: 0 2px 8px var(--border-secondary-color);
 
       &::before {
@@ -186,37 +199,59 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     }
   }
 
+  .activity-title {
+    display: flex;
+    gap: 8px;
+    color: var(--fg-primary-color);
+
+    .iconify {
+      height: 24px;
+      opacity: 0.5;
+      color: var(--fg-secondary-color);
+    }
+
+    &-editor {
+      width: 100%;
+
+      :deep(.milkdown) {
+        > div {
+          flex-grow: 1;
+          font-size: 1rem;
+          font-weight: 400;
+          margin: 0;
+          padding: 0;
+          color: var(--fg-primary-color);
+        }
+      }
+    }
+  }
+
   .activity-content {
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-secondary-color);
-    padding: 0px;
+    padding: 0;
     border-radius: 8px;
     transition:
       box-shadow 0.2s ease,
       transform 0.2s ease;
     position: relative;
     overflow: visible !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-    &::before {
-      position: absolute;
-      left: -12px;
-      top: 0px;
-      content: '';
-      color: var(--fg-accent-color);
-      font-size: 0.8rem;
-      color: var(--fg-secondary-color);
-      height: 100%;
-      width: 2px;
-      background-color: var(--border-secondary-color);
-      transition: background-color 0.2s ease;
-    }
-
-    .activity-title {
-      font-size: 1rem;
-      font-weight: 400;
-      margin: 0;
-      color: var(--fg-primary-color);
-    }
+  &::before {
+    position: absolute;
+    left: -10px;
+    top: 30px;
+    content: '';
+    font-size: 0.8rem;
+    color: var(--fg-secondary-color);
+    height: calc(100% - 30px);
+    width: 2px;
+    background-color: var(--border-secondary-color);
+    transition: background-color 0.2s ease;
   }
 }
 </style>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+
+const emit = defineEmits(['add'])
 </script>
 
 <template>
   <div class="add-day-activity">
-    <button class="add-button">
+    <button class="add-button" @click="emit('add')">
       <Icon icon="mdi:plus" />
       <span>Добавить активность</span>
     </button>

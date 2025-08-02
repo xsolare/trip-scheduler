@@ -15,8 +15,6 @@ interface Props {
 const props = defineProps<Props>()
 const markdown = defineModel<string>({ required: true })
 
-const attributes = useAttrs()
-
 if (markdown.value === undefined) {
   markdown.value = ``
 }
@@ -29,9 +27,12 @@ useEditor((root) => {
       [Crepe.Feature.Placeholder]: {
         text: props.placeholder || 'Начните вводить текст...',
       },
-    },
-    features: props.features,
 
+    },
+    features: {
+      ...props.features,
+      [Crepe.Feature.Latex]: false,
+    },
   })
 
   crepe.editor
@@ -76,7 +77,7 @@ useEditor((root) => {
 </script>
 
 <template>
-  <div :class="{ 'milkdown-disabled': disabled }" :attributes>
+  <div :class="{ 'milkdown-disabled': disabled }">
     <Milkdown />
   </div>
 </template>
@@ -90,7 +91,19 @@ useEditor((root) => {
 :deep() {
   .milkdown {
     > div {
-      padding: 16px;
+      padding: 8px;
+    }
+    p {
+      margin: 0;
+      padding: 0;
+    }
+  }
+  .milkdown-block-handle {
+    padding: 4px !important;
+    .operation-item {
+      &:last-of-type {
+        display: none !important;
+      }
     }
   }
 }

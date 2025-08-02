@@ -23,6 +23,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "vue-tsc --noEmit",
+    "--------------------------------<     HELPERS   >---------------------------------": "",
     "postinstall": "simple-git-hooks"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "@milkdown/crepe": "^7.15.2",
     "@milkdown/vue": "^7.15.2",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/cli": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-sql": "^2.3.0",
     "@vueuse/core": "^13.6.0",

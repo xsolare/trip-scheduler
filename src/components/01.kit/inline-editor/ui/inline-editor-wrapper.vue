@@ -11,16 +11,16 @@ interface Props {
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const props = defineProps<Props>()
-const attributes = useAttrs()
 const model = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <MilkdownProvider>
-    <InlineEditor
-      v-model="model"
-      :attributes
-      :="props"
-    />
-  </MilkdownProvider>
+  <div>
+    <MilkdownProvider>
+      <InlineEditor
+        v-model="model"
+        :="props"
+      />
+    </MilkdownProvider>
+  </div>
 </template>

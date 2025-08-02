@@ -1,28 +1,52 @@
 <script setup lang="ts">
 import type { IActivity } from '../../models/types'
 import draggable from 'vuedraggable'
-import { useTrip } from '../../composables/use-trip'
+import { minutesToTime, timeToMinutes } from '../../lib/helpers'
+import { EActivityTag } from '../../models/types'
+import { useTripStore } from '../../store/trip-store'
 import ActivityItem from './item.vue'
 
-const tripComposable = useTrip()
-
-const selectedDay = computed(() => tripComposable.getSelectedDay.value)
-const activitiesForDay = computed(() => tripComposable.getActivitiesForSelectedDay.value)
+const tripStore = useTripStore()
+const { getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(tripStore)
+const { reorderActivities, updateActivity, removeActivity, addActivity } = tripStore
 
 const draggableActivities = computed({
-  get: () => activitiesForDay.value,
+  get: () => getActivitiesForSelectedDay.value,
   set: (newOrder: IActivity[]) => {
-    if (selectedDay.value) {
-      tripComposable.reorderActivities(selectedDay.value.id, newOrder)
-    }
+    if (getSelectedDay.value)
+      reorderActivities(getSelectedDay.value.id, newOrder)
   },
 })
 
-function updateActivity(updatedActivity: IActivity) {
-  if (selectedDay.value) {
-    tripComposable.updateActivity(selectedDay.value.id, updatedActivity)
-  }
+function onUpdateActivity(updatedActivity: IActivity) {
+  if (getSelectedDay.value)
+    updateActivity(getSelectedDay.value.id, updatedActivity)
 }
+
+function onDeleteActivity(activityId: string) {
+  if (getSelectedDay.value)
+    removeActivity(getSelectedDay.value.id, activityId)
+}
+
+defineExpose({
+  handleAddNewActivity: () => {
+    if (!getSelectedDay.value)
+      return
+
+    const lastActivity = getActivitiesForSelectedDay.value.at(-1)
+    const startTimeMinutes = lastActivity ? timeToMinutes(lastActivity.endTime) + 15 : 9 * 60 // 9:00
+    const endTimeMinutes = startTimeMinutes + 60
+
+    const newActivity: Omit<IActivity, 'id'> = {
+      title: 'Новая активность',
+      startTime: minutesToTime(startTimeMinutes),
+      endTime: minutesToTime(endTimeMinutes),
+      tag: EActivityTag.ATTRACTION,
+      sections: [],
+    }
+    addActivity(getSelectedDay.value.id, newActivity)
+  },
+})
 </script>
 
 <template>
@@ -35,18 +59,20 @@ function updateActivity(updatedActivity: IActivity) {
         animation="300"
         item-key="id"
         handle=".drag-handle"
+        class="draggable-area"
       >
         <template #item="{ element: activity }">
           <ActivityItem
             :activity="activity"
-            @update="updateActivity"
+            @update="onUpdateActivity"
+            @delete="onDeleteActivity"
           />
         </template>
       </draggable>
 
-      <div v-if="activitiesForDay.length === 0" class="empty-state">
+      <div v-if="getActivitiesForSelectedDay.length === 0" class="empty-state">
         <p>На этот день нет запланированных активностей</p>
-        <button>
+        <button class="g-button" @click="$emit('add')">
           Добавить активность
         </button>
       </div>
@@ -59,6 +85,11 @@ function updateActivity(updatedActivity: IActivity) {
   .activities-container {
     width: 100%;
     position: relative;
+    min-height: 100px; /* Чтобы область для перетаскивания была даже в пустом списке */
+
+    .draggable-area {
+      min-height: 1px; /* Необходимо для vuedraggable */
+    }
 
     .empty-state {
       display: flex;
@@ -69,6 +100,7 @@ function updateActivity(updatedActivity: IActivity) {
       border: 2px dashed var(--border-secondary-color);
       border-radius: 8px;
       margin-top: 20px;
+      text-align: center;
 
       p {
         margin-bottom: 20px;

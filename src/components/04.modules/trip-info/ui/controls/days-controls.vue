@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useTrip } from '../../composables/use-trip'
+import { storeToRefs } from 'pinia'
+import { useTripStore } from '../../store/trip-store'
 
-const tripComposable = useTrip()
-
-const allDays = computed(() => tripComposable.getAllDays.value)
-const selectedDay = computed(() => tripComposable.getSelectedDay.value)
+const tripStore = useTripStore()
+const { getAllDays, getSelectedDay } = storeToRefs(tripStore)
+const { setCurrentDay, addNewDay } = tripStore
 
 function selectDay(dayId: string) {
-  tripComposable.setCurrentDay(dayId)
+  setCurrentDay(dayId)
+}
+
+function onAddNewDay() {
+  addNewDay()
 }
 </script>
 
@@ -16,18 +20,18 @@ function selectDay(dayId: string) {
   <div class="controls">
     <div class="days-selector">
       <button
-        v-for="day in allDays"
+        v-for="day in getAllDays"
         :key="day.id"
         class="day-chip"
-        :class="{ active: selectedDay?.id === day.id }"
+        :class="{ active: getSelectedDay?.id === day.id }"
         @click="selectDay(day.id)"
       >
-        {{ new Date(day.date).getDate() }}
+        {{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) }}
       </button>
     </div>
 
     <div class="actions">
-      <button>
+      <button title="Добавить новый день" @click="onAddNewDay">
         <Icon icon="mdi:plus" />
       </button>
     </div>
@@ -70,8 +74,22 @@ function selectDay(dayId: string) {
   }
 
   .actions {
-    display: flex;
-    gap: 8px;
+    button {
+      background: transparent;
+      border: 1px solid var(--border-secondary-color);
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--fg-secondary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        color: var(--fg-accent-color);
+        border-color: var(--fg-accent-color);
+      }
+    }
   }
 }
 </style>
