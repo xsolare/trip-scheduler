@@ -40,7 +40,6 @@ useEditor((root) => {
       ctx.update(editorViewOptionsCtx, prev => ({
         ...prev,
         editable: () => !props.disabled,
-
       }))
 
       const listenerValue = ctx.get(listenerCtx)
@@ -77,7 +76,7 @@ useEditor((root) => {
 </script>
 
 <template>
-  <div :class="{ 'milkdown-disabled': disabled }">
+  <div :class="{ 'milkdown-disabled': disabled, 'has-content': !!markdown }">
     <Milkdown />
   </div>
 </template>
@@ -86,6 +85,10 @@ useEditor((root) => {
 .milkdown-disabled {
   opacity: 0.7;
   pointer-events: none;
+}
+
+.has-content :deep(.crepe-placeholder) {
+  opacity: 0;
 }
 
 :deep() {

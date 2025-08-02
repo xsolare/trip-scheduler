@@ -15,7 +15,7 @@ const emit = defineEmits(['add'])
 
 <style scoped lang="scss">
 .add-day-activity {
-  margin-top: 20px;
+  margin: 32px 0;
   display: flex;
   justify-content: center;
 

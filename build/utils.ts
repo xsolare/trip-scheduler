@@ -3,10 +3,10 @@ import IconsResolver from 'unplugin-icons/resolver'
 
 export const autoImportOptions: AutoImportOptions = {
   imports: [
-    'vue-router',
-    '@vueuse/core',
     'vue',
+    'vue-router',
     'pinia',
+    '@vueuse/core',
   ],
   dirs: [
     './components/01.kit/',
@@ -31,4 +31,9 @@ export const autoImportOptions: AutoImportOptions = {
     }),
   ],
   dts: './src/types/dts/auto-imports.d.ts',
+  vueTemplate: true,
+  eslintrc: {
+    enabled: true,
+    filepath: './.eslintrc-auto-import.json',
+  },
 }

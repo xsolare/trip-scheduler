@@ -85,10 +85,10 @@ defineExpose({
   .activities-container {
     width: 100%;
     position: relative;
-    min-height: 100px; /* Чтобы область для перетаскивания была даже в пустом списке */
+    min-height: 100px;
 
     .draggable-area {
-      min-height: 1px; /* Необходимо для vuedraggable */
+      min-height: 1px; 
     }
 
     .empty-state {

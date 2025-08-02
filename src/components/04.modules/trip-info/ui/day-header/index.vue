@@ -17,13 +17,15 @@ function updateDayDetails(details: { title?: string, description?: string }) {
   <div v-if="selectedDay" class="day-header">
     <InlineEditorWrapper
       :model-value="selectedDay.title"
-      placeholder="Название дня"
+      placeholder="Название дня..."
+      :features="{ 'block-edit': false }"
       class="day-title"
       @update:model-value="newTitle => updateDayDetails({ title: newTitle })"
     />
     <InlineEditorWrapper
       :model-value="selectedDay.description || ''"
-      placeholder="Добавьте описание"
+      placeholder="Добавьте описание..."
+      :features="{ 'block-edit': false }"
       class="day-description"
       @update:model-value="newDesc => updateDayDetails({ description: newDesc })"
     />
@@ -32,24 +34,72 @@ function updateDayDetails(details: { title?: string, description?: string }) {
 
 <style scoped lang="scss">
 .day-header {
+  position: relative;
   background-color: var(--bg-secondary-color);
-  border-radius: 8px;
   border: 1px solid var(--border-secondary-color);
-  margin-top: 16px;
+  border-radius: 4px 4px 16px 16px;
+  padding: 32px;
   margin-bottom: 32px;
+  margin-top: 16px;
+  overflow: hidden;
 
-  .day-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--fg-primary-color);
-    margin: 0 0 8px 0;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--fg-accent-color), transparent);
+    opacity: 0.7;
   }
+}
 
-  .day-description {
-    font-size: 1rem;
-    color: var(--fg-secondary-color);
-    margin: 0;
-    line-height: 1.5;
+.day-title,
+.day-description {
+  width: 100%;
+
+  :deep(.milkdown) {
+    > div {
+      padding: 8px 12px;
+      margin: -8px -12px;
+      border-radius: 12px;
+      cursor: text;
+      transition: background-color 0.2s ease-in-out;
+
+      &:hover {
+        background-color: var(--bg-hover-color);
+      }
+    }
+  }
+}
+
+.day-title {
+  margin-bottom: 1rem;
+
+  :deep() {
+    .ProseMirror {
+      h1,
+      p {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--fg-primary-color);
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.day-description {
+  :deep() {
+    .ProseMirror p {
+      color: var(--fg-secondary-color);
+      line-height: 1.7;
+      font-size: 0.9rem;
+      margin: 0;
+    }
   }
 }
 </style>

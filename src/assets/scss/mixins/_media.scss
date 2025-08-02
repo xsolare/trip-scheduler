@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../_variables.scss' as *;
 
 //* ---- Media Mixins ---------------------------------------------------------------------- *//
@@ -25,7 +26,7 @@
  * @example @include media-down(md) { ... } // Сработает на экранах < 960px
  */
 @mixin media-down($name) {
-  $max-width: map-get($breakpoints, $name);
+  $max-width: map.get($breakpoints, $name);
 
   @if $max-width > 0 {
     @media (max-width: #{$max-width - 1}) {
@@ -67,18 +68,5 @@
     @media (min-width: $min-width) {
       @content;
     }
-  }
-}
-
-//* ---- Compatibility & Alias Mixins ------------------------------------------------------ *//
-
-/**
- * Алиас для стилей на экранах меньше 600px.
- * Предназначен для удобства и обратной совместимости.
- * Эквивалентен `@include media-down(sm)` или `@include media-only(xs)`.
- */
-@mixin mobile {
-  @include media-down(sm) {
-    @content;
   }
 }

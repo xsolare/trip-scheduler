@@ -21,7 +21,7 @@ import { Root } from '~/components/04.modules/root'
   width: 100%;
   margin: 0 auto;
 
-  @include mobile {
+  @include media-down(sm) {
     padding: 4px;
   }
 }

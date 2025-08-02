@@ -53,6 +53,11 @@ function cancelTimeEditing() {
   isTimeEditing.value = false
 }
 
+const activityTitle = computed({
+  get: () => props.activity.title,
+  set: newTitle => updateActivity({ title: newTitle }),
+})
+
 onClickOutside(timeEditorRef, saveTimeChanges)
 </script>
 
@@ -90,11 +95,10 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     <div class="activity-title">
       <Icon icon="mdi:chevron-right" />
       <InlineEditorWrapper
-        :model-value="activity.title"
+        v-model="activityTitle"
         placeholder="Описание активности"
         class="activity-title-editor"
-        :features="{ 'block-edit': false }
-        "@update:model-value="newDesc => updateActivity({ title: newDesc })"
+        :features="{ 'block-edit': false }"
       />
     </div>
 
