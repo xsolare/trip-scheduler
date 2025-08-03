@@ -6,8 +6,13 @@ export enum ActivityTag {
   RELAX = 'relax',
 }
 
+export enum ActivitySectionType {
+  DESCRIPTION = 'description',
+}
+
 export interface ActivitySection {
   id: string
+  type: ActivitySectionType
   //
   tag?: ActivityTag
   startTime?: string

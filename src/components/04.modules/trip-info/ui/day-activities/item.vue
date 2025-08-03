@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import type { Activity } from '~/shared/types/models/activity'
+import type { Activity, ActivitySection, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
+import { v4 as uuidv4 } from 'uuid'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
+import { KitBtn } from '~/components/01.kit/kit-btn'
 import { TimeField } from '~/components/01.kit/time-field'
+import { ActivitySectionType } from '~/shared/types/models/activity'
+import { ActivitySectionRenderer } from './sections'
 
 interface ActivityItemProps {
   activity: Activity
@@ -59,6 +63,30 @@ const activityTitle = computed({
 })
 
 onClickOutside(timeEditorRef, saveTimeChanges)
+
+function updateSection(sectionIndex: number, newSectionData: ActivitySection) {
+  const newSections = [...(props.activity.sections || [])]
+  newSections[sectionIndex] = newSectionData
+  updateActivity({ sections: newSections })
+}
+
+function addSection(type: ActivitySectionType) {
+  if (type === ActivitySectionType.DESCRIPTION) {
+    const newSection: ActivitySectionText = {
+      id: uuidv4(),
+      type: ActivitySectionType.DESCRIPTION,
+      text: '',
+    }
+    const newSections = [...(props.activity.sections || []), newSection]
+    updateActivity({ sections: newSections })
+  }
+}
+
+function deleteSection(sectionIndex: number) {
+  const newSections = [...(props.activity.sections || [])]
+  newSections.splice(sectionIndex, 1)
+  updateActivity({ sections: newSections })
+}
 </script>
 
 <template>
@@ -103,7 +131,25 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     </div>
 
     <div class="activity-sections">
-      <!-- NOT IMPLEMENTED -->
+      <div v-if="activity.sections && activity.sections.length > 0" class="sections-list">
+        <ActivitySectionRenderer
+          v-for="(section, index) in activity.sections"
+          :key="section.id"
+          :section="section"
+          @update:section="newSectionData => updateSection(index, newSectionData)"
+          @delete:section="deleteSection(index)"
+        />
+      </div>
+      <div class="add-section-controls">
+        <KitBtn
+          variant="outlined"
+          color="secondary"
+          @click="addSection(ActivitySectionType.DESCRIPTION)"
+        >
+          <Icon icon="mdi:text-box-plus-outline" />
+          Добавить заметку
+        </KitBtn>
+      </div>
     </div>
   </div>
 </template>
@@ -129,12 +175,8 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       }
     }
 
-    .activity-sections {
-      box-shadow: 0 2px 8px var(--border-secondary-color);
-
-      &::before {
-        background-color: var(--fg-accent-color);
-      }
+    &::before {
+      background-color: var(--fg-accent-color);
     }
   }
 
@@ -205,6 +247,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 
   .activity-title {
     display: flex;
+    margin-top: 4px;
     gap: 8px;
     color: var(--fg-primary-color);
 
@@ -230,19 +273,39 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     }
   }
 
-  .activity-content {
-    background-color: var(--bg-secondary-color);
-    border: 1px solid var(--border-secondary-color);
-    padding: 0;
-    border-radius: 8px;
-    transition:
-      box-shadow 0.2s ease,
-      transform 0.2s ease;
+  .activity-sections {
+    margin-top: 12px;
+    padding-left: 8px;
+  }
+
+  .sections-list {
     position: relative;
-    overflow: visible !important;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    &:has(:nth-child(2)) {
+      &::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        right: 4%;
+        width: 8px;
+        background-color: var(--bg-primary-color);
+        transition: background-color 0.2s ease;
+        border-left: 3px solid var(--border-secondary-color);
+        border-right: 3px solid var(--border-secondary-color);
+      }
+    }
+  }
+
+  .add-section-controls {
+    :deep(.kit-btn) {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+    }
   }
 
   &::before {

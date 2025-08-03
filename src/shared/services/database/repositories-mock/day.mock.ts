@@ -1,5 +1,6 @@
 import type { Day } from '~/shared/types/models/activity'
 import { v4 as uuidv4 } from 'uuid'
+import { ActivitySectionType } from '~/shared/types/models/activity'
 
 export const MOCK_DAYS = [
   {
@@ -16,6 +17,7 @@ export const MOCK_DAYS = [
         title: 'Прибытие в Международный аэропорт Чжанцзяцзе-Хэхуа (*DYG*)',
         sections: [{
           id: uuidv4(),
+          type: ActivitySectionType.DESCRIPTION,
           text: '*   _Примечание:_ Вы прилетаете внутренним рейсом из Гуанчжоу. Все пограничные и транзитные формальности уже пройдены в аэропорту Гуанчжоу. В Чжанцзяцзе вам останется только получить багаж.',
         }],
       },
