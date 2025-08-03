@@ -1,0 +1,45 @@
+{
+  "name": "@xsolare/trip-scheduler-server",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.2.19",
+  "engines": {
+    "bun": ">=1.1.30"
+  },
+  "scripts": {
+    "--------------------------------<      DEV       >--------------------------------": "",
+    "dev": "bun run --hot --watch src/server.ts",
+    "dev:debug": "bun --inspect run --hot --watch src/server.ts",
+    "--------------------------------<      BUILD     >--------------------------------": "",
+    "build": "bunx --bun tsup --config build/build-server.ts",
+    "start": "bun --bun run dist/index.js",
+    "--------------------------------<   DATABASE    >---------------------------------": "",
+    "db:migrate": "bun run src/db/migrate.ts",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:seed": "bun run src/db/seed.ts",
+    "db:reset": "rm -f ./sqlite.db && bun run db:migrate && bun run db:seed",
+    "--------------------------------< LINT & FORMAT >---------------------------------": "",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/trpc-server": "^0.4.0",
+    "@trpc/server": "^11.4.3",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.4",
+    "hono": "^4.8.12",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "5.1.0",
+    "@types/bun": "latest",
+    "bun": "^1.1.33",
+    "bun-types": "^1.2.19",
+    "eslint": "9.32.0",
+    "eslint-plugin-format": "1.0.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}

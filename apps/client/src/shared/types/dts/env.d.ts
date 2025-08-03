@@ -9,4 +9,5 @@ declare module '*.vue' {
 
 interface ImportMetaEnv {
   readonly VITE_APP_MOCK_MODE: string
+  readonly VITE_APP_TRPC_MODE: string
 }

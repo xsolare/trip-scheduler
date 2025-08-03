@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ES2020",
     "jsx": "preserve",
     "lib": [
@@ -14,6 +15,9 @@
     "paths": {
       "~/*": [
         "./src/*"
+      ],
+      "@xsolare/trip-scheduler-server/*": [
+        "../server/src/*"
       ]
     },
     "resolveJsonModule": true,
@@ -30,6 +34,9 @@
   "references": [
     {
       "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "../server/tsconfig.json"
     }
   ],
   "include": [

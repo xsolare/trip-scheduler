@@ -11,8 +11,12 @@
     "apps/*"
   ],
   "scripts": {
+    "--------------------------------<      DEV       >--------------------------------": "",
     "dev:client": "bun --parallel run --filter='./apps/client' dev:web",
+    "dev:server": "bun --cwd ./apps/server dev",
+    "--------------------------------<      BUILD     >--------------------------------": "",
     "build": "bun run --filter='./apps/*' build",
+    "--------------------------------< LINT & FORMAT >---------------------------------": "",
     "lint": "bun run --filter='./apps/*' lint",
     "typecheck": "bun run --filter='./apps/*' typecheck",
     "--------------------------------<     HELPERS   >---------------------------------": "",
