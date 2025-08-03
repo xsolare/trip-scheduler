@@ -1,0 +1,275 @@
+<script setup lang="ts">
+import type { Day } from '~/shared/types/models/activity'
+import { Icon } from '@iconify/vue'
+
+interface Props {
+  days: Day[]
+  selectedDayId?: string
+  isOpen: boolean
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  (e: 'selectDay', dayId: string): void
+  (e: 'addNewDay'): void
+  (e: 'close'): void
+}>()
+
+function onSelectDay(dayId: string) {
+  emit('selectDay', dayId)
+  emit('close')
+}
+
+// Утилита для форматирования дня недели в короткий верхний регистр (ПН, ВТ...)
+function getShortWeekday(date: string): string {
+  return new Date(date).toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase()
+}
+</script>
+
+<template>
+  <div>
+    <!-- Затемняющий фон -->
+    <div
+      v-if="isOpen"
+      class="backdrop"
+      @click="$emit('close')"
+    />
+
+    <!-- Сама панель -->
+    <aside class="panel" :class="{ open: isOpen }">
+      <header class="panel-header">
+        <h2>Дни путешествия</h2>
+        <button class="close-btn" title="Закрыть" @click="$emit('close')">
+          <Icon icon="mdi:close" />
+        </button>
+      </header>
+
+      <div class="panel-content">
+        <ul class="days-list">
+          <li v-for="(day, index) in days" :key="day.id">
+            <button
+              class="day-item"
+              :class="{ active: selectedDayId === day.id }"
+              @click="onSelectDay(day.id)"
+            >
+              <!-- Левая часть: Номер и Название -->
+              <div class="day-item-main">
+                <span class="day-number">{{ index + 1 }}</span>
+                <span class="day-title">{{ day.title || `День ${index + 1}` }}</span>
+              </div>
+
+              <!-- Правая часть: Дата и Бейдж дня недели -->
+              <div class="day-item-meta">
+                <span class="day-date">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) }}</span>
+                <span class="day-weekday-badge">{{ getShortWeekday(day.date) }}</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <footer class="panel-footer">
+        <button class="add-day-btn" @click="$emit('addNewDay')">
+          <Icon icon="mdi:plus" />
+          <span>Добавить новый день</span>
+        </button>
+      </footer>
+    </aside>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 400px;
+  height: 100%;
+  background-color: var(--bg-primary-color);
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+
+  &.open {
+    opacity: 1;
+    transform: translateX(0);
+    box-shadow: 4px 0px 15px var(--color-background-content);
+  }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-secondary-color);
+  flex-shrink: 0;
+
+  h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--fg-secondary-color);
+
+  &:hover {
+    color: var(--fg-primary-color);
+  }
+}
+
+.panel-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.days-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.day-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--bg-hover-color);
+  }
+
+  &-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .day-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background-color: var(--bg-secondary-color);
+    color: var(--fg-secondary-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .day-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--fg-primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // --- Стили для правой части ---
+  &-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .day-date {
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: var(--fg-secondary-color);
+    white-space: nowrap;
+  }
+
+  .day-weekday-badge {
+    background-color: var(--bg-secondary-color);
+    color: var(--fg-secondary-color);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  // --- Активное состояние ---
+  &.active {
+    background-color: var(--bg-accent-color-translucent);
+
+    .day-number {
+      background-color: var(--fg-accent-color);
+      color: white;
+    }
+    .day-title {
+      color: var(--fg-accent-color);
+      font-weight: 600;
+    }
+    .day-date,
+    .day-weekday-badge {
+      color: var(--fg-accent-color);
+    }
+    .day-weekday-badge {
+      background-color: var(--bg-accent-color-translucent-heavy, rgba(0, 122, 255, 0.2));
+    }
+  }
+}
+
+.panel-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-secondary-color);
+  flex-shrink: 0;
+}
+
+.add-day-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-secondary-color);
+  background-color: transparent;
+  color: var(--fg-secondary-color);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--fg-accent-color);
+    border-color: var(--fg-accent-color);
+  }
+}
+</style>
