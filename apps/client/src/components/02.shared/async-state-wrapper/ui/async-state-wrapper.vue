@@ -3,23 +3,20 @@ import type { Ref } from 'vue'
 import { SkeletonWrapper } from '~/components/01.kit/skeleton'
 import { ErrorPlaceholder } from '~/components/02.shared/error-placeholder'
 
-withDefaults(defineProps<{
+export interface AsyncStateWrapperProps<T = unknown> {
   loading?: boolean
   error?: unknown | null | Ref<unknown | null>
   data?: T | null
   retryHandler?: () => void | Promise<void> | Promise<unknown>
   transition?: string
-}>(), {
-  loading: false,
-  data: null,
-  retryHandler: undefined,
-  transition: 'none',
-})
+}
+
+defineProps<AsyncStateWrapperProps<T>>()
 </script>
 
 <template>
   <SkeletonWrapper
-    :loading="loading"
+    :loading="loading ?? false"
     class="async-state-wrapper"
     :name="transition"
   >

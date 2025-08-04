@@ -6,12 +6,12 @@ export default class Database {
     return new Database()
   }
 
-  async select(query: string, bindings?: unknown[]): Promise<any[]> {
+  async select(_query: string, _bindings?: unknown[]): Promise<any[]> {
     console.warn(`[WEB-STUB] DB.select called. Not available in web build.`)
     return Promise.resolve([])
   }
 
-  async execute(query: string, bindings?: unknown[]): Promise<{ rowsAffected: number, lastInsertId: number }> {
+  async execute(_query: string, _bindings?: unknown[]): Promise<{ rowsAffected: number, lastInsertId: number }> {
     console.warn(`[WEB-STUB] DB.execute called. Not available in web build.`)
     return Promise.resolve({ rowsAffected: 0, lastInsertId: 0 })
   }

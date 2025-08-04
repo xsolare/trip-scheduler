@@ -69,7 +69,7 @@ export default defineConfig(mergeConfig(baseConfig, {
   resolve: {
     alias: {
       '~': fileURLToPath(new URL('../src', import.meta.url)),
-      '@tauri-apps/plugin-sql': fileURLToPath(new URL('../mocks/tauri-sql-stub.ts', import.meta.url)),
+      '@tauri-apps/plugin-sql': fileURLToPath(new URL('../stubs/tauri-sql-stub.ts', import.meta.url)),
     },
   },
   build: {
