@@ -144,8 +144,8 @@ function deleteSection(sectionIndex: number) {
           v-for="(section, index) in activity.sections"
           :key="section.id"
           :section="section"
-          @update:section="newSectionData => updateSection(index, newSectionData)"
-          @delete:section="deleteSection(index)"
+          @update-section="newSectionData => updateSection(index, newSectionData)"
+          @delete-section="deleteSection(index)"
         />
       </div>
       <div v-if="!isViewMode" class="add-section-controls">

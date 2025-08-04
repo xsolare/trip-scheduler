@@ -1,5 +1,5 @@
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'bun'
-import { resolve } from 'path'
 
 export function alias(path: string): string {
   return fileURLToPath(new URL(resolve(import.meta.dir, path), import.meta.url))

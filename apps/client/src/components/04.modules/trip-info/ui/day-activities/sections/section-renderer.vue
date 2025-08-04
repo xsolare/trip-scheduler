@@ -9,12 +9,12 @@ interface Props {
   section: ActivitySection
 }
 defineProps<Props>()
-const emit = defineEmits(['update:section', 'delete:section'])
+const emit = defineEmits(['updateSection', 'deleteSection'])
 const tripStore = useTripStore()
 const { isViewMode } = storeToRefs(tripStore)
 
 function onUpdate(data: ActivitySection) {
-  emit('update:section', data)
+  emit('updateSection', data)
 }
 </script>
 
@@ -30,7 +30,7 @@ function onUpdate(data: ActivitySection) {
       v-if="!isViewMode"
       class="delete-btn"
       title="Удалить секцию"
-      @click="emit('delete:section')"
+      @click="emit('deleteSection')"
     >
       <Icon icon="mdi:close" />
     </button>

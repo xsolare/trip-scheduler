@@ -2,10 +2,6 @@
 import { db } from './index'
 import { activities, days, trips } from './schema'
 
-/*
- * Исходные моковые данные
- * Скопированы из ваших файлов для наглядности
-*/
 const MOCK_TRIPS = [
   {
     id: '1',

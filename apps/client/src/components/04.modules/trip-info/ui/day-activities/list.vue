@@ -1,22 +1,14 @@
 <script setup lang="ts">
 import type { IActivity } from '~/components/04.modules/trip-info//models/types'
 import draggable from 'vuedraggable'
-import { minutesToTime, timeToMinutes } from '~/components/04.modules/trip-info//lib/helpers'
-import { EActivityTag } from '~/components/04.modules/trip-info/models/types'
 import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 import ActivityItem from './item.vue'
 
+defineEmits(['add'])
+
 const tripStore = useTripStore()
 const { getActivitiesForSelectedDay, getSelectedDay, isViewMode } = storeToRefs(tripStore)
-const { reorderActivities, updateActivity, removeActivity, addActivity } = tripStore
-
-const draggableActivities = computed({
-  get: () => getActivitiesForSelectedDay.value,
-  set: (newOrder: IActivity[]) => {
-    if (getSelectedDay.value)
-      reorderActivities(getSelectedDay.value.id, newOrder)
-  },
-})
+const { reorderActivities, updateActivity, removeActivity } = tripStore
 
 function onUpdateActivity(updatedActivity: IActivity) {
   if (getSelectedDay.value)
@@ -28,23 +20,11 @@ function onDeleteActivity(activityId: string) {
     removeActivity(getSelectedDay.value.id, activityId)
 }
 
-defineExpose({
-  handleAddNewActivity: () => {
-    if (!getSelectedDay.value)
-      return
-
-    const lastActivity = getActivitiesForSelectedDay.value.at(-1)
-    const startTimeMinutes = lastActivity ? timeToMinutes(lastActivity.endTime) + 15 : 9 * 60 // 9:00
-    const endTimeMinutes = startTimeMinutes + 60
-
-    const newActivity: Omit<IActivity, 'id'> = {
-      title: 'Новая активность',
-      startTime: minutesToTime(startTimeMinutes),
-      endTime: minutesToTime(endTimeMinutes),
-      tag: EActivityTag.ATTRACTION,
-      sections: [],
-    }
-    addActivity(getSelectedDay.value.id, newActivity)
+const draggableActivities = computed({
+  get: () => getActivitiesForSelectedDay.value,
+  set: (newOrder: IActivity[]) => {
+    if (getSelectedDay.value)
+      reorderActivities(getSelectedDay.value.id, newOrder)
   },
 })
 </script>
@@ -73,7 +53,10 @@ defineExpose({
 
       <div v-if="getActivitiesForSelectedDay.length === 0" class="empty-state">
         <p>На этот день нет запланированных активностей</p>
-        <button v-if="!isViewMode" class="g-button" @click="$emit('add')">
+        <button
+          v-if="!isViewMode"
+          @click="$emit('add')"
+        >
           Добавить активность
         </button>
       </div>

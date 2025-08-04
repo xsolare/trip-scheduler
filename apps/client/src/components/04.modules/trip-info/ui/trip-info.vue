@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import type { IActivity } from '../models/types'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { minutesToTime, timeToMinutes } from '../lib/helpers'
+import { EActivityTag } from '../models/types'
 import { useTripStore } from '../store/trip-store'
 import AddDayActivity from './controls/add-day-activity.vue'
 import DaysControls from './controls/days-controls.vue'
@@ -16,6 +19,7 @@ const {
   fetchError,
   getActivitiesForSelectedDay,
   isViewMode,
+  getSelectedDay,
 } = storeToRefs(tripStore)
 
 const tripId = computed(() => route.params.id as string)
@@ -27,7 +31,21 @@ function handleAddNewDay() {
 }
 
 function handleAddNewActivity() {
-  dayActivitiesListRef.value?.handleAddNewActivity()
+  if (!getSelectedDay.value)
+    return
+
+  const lastActivity = getActivitiesForSelectedDay.value.at(-1)
+  const startTimeMinutes = lastActivity ? timeToMinutes(lastActivity.endTime) + 15 : 9 * 60 // 9:00
+  const endTimeMinutes = startTimeMinutes + 60
+
+  const newActivity: Omit<IActivity, 'id'> = {
+    title: 'Новая активность',
+    startTime: minutesToTime(startTimeMinutes),
+    endTime: minutesToTime(endTimeMinutes),
+    tag: EActivityTag.ATTRACTION,
+    sections: [],
+  }
+  addActivity(getSelectedDay.value.id, newActivity)
 }
 
 onMounted(() => {

@@ -13,10 +13,10 @@ export default defineConfig(mergeConfig(baseConfig, {
     host: host || 'localhost',
     hmr: host
       ? {
-        protocol: 'ws',
-        host,
-        port: 1420,
-      }
+          protocol: 'ws',
+          host,
+          port: 1420,
+        }
       : true,
   },
   resolve: {

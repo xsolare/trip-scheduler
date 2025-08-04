@@ -58,7 +58,7 @@ interface ApiCacheRule {
 const API_CACHE_RULES: ApiCacheRule[] = [
   {
     // Правило для списка всех путешествий
-    path: '/api/trip/list', 
+    path: '/api/trip/list',
     cacheName: 'trip-scheduler-api-trips',
     strategy: 'NetworkFirst',
     maxAgeSeconds: 24 * 60 * 60, // Кэшировать на 1 день
