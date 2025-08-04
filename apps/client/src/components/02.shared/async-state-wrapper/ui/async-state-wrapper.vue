@@ -1,18 +1,18 @@
 <script setup lang="ts" generic="T">
+import type { Ref } from 'vue'
 import { SkeletonWrapper } from '~/components/01.kit/skeleton'
 import { ErrorPlaceholder } from '~/components/02.shared/error-placeholder'
 
-interface Props {
+withDefaults(defineProps<{
   loading?: boolean
   error?: unknown | null | Ref<unknown | null>
   data?: T | null
   retryHandler?: () => void | Promise<void> | Promise<unknown>
   transition?: string
-}
-
-withDefaults(defineProps<Props>(), {
+}>(), {
   loading: false,
   data: null,
+  retryHandler: undefined,
   transition: 'none',
 })
 </script>

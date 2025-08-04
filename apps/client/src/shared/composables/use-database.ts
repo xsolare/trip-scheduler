@@ -1,5 +1,5 @@
+import type { ComputedRef, Ref } from 'vue'
 import type { IDatabaseClient } from '~/shared/services/database/model/types'
-import { computed, ref } from 'vue'
 import databaseServicePromise from '~/shared/services/database'
 
 /** Возможные статусы асинхронной операции */

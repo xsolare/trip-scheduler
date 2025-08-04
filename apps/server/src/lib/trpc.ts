@@ -1,23 +1,19 @@
-import type { OpenApiMeta } from 'trpc-openapi'
 import { initTRPC, TRPCError } from '@trpc/server'
 
-// const t = initTRPC
-//   .meta<OpenApiMeta>()
-//   .context<object>()
-//   .create({
-//     errorFormatter({ shape, error }) {
-//       return {
-//         ...shape,
-//         data: {
-//           ...shape.data,
-//           code: error.code,
-//           httpStatus: shape.data.httpStatus,
-//         },
-//       }
-//     },
-//   })
-
-const t = initTRPC.create()
+const t = initTRPC
+  .context<object>()
+  .create({
+    errorFormatter({ shape, error }) {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          code: error.code,
+          httpStatus: shape.data.httpStatus,
+        },
+      }
+    },
+  })
 
 // Переиспользуемый middleware для валидации
 export const middleware = t.middleware

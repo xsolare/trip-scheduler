@@ -15,6 +15,7 @@ const {
   isLoading,
   fetchError,
   getActivitiesForSelectedDay,
+  isViewMode,
 } = storeToRefs(tripStore)
 
 const tripId = computed(() => route.params.id as string)
@@ -67,7 +68,7 @@ onMounted(() => {
         />
 
         <AddDayActivity
-          v-if="getActivitiesForSelectedDay.length"
+          v-if="getActivitiesForSelectedDay.length && !isViewMode"
           @add="handleAddNewActivity"
         />
       </div>

@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import {
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuItemIndicator,
   DropdownMenuPortal,
   DropdownMenuRoot,
   DropdownMenuSeparator,
@@ -163,22 +161,6 @@ async function handleClearCache() {
             {{ syncStore.autoSyncEnabled ? 'Приостановить' : 'Возобновить' }} авто-синхронизацию
           </span>
         </DropdownMenuItem>
-
-        <DropdownMenuSeparator class="dropdown-separator" />
-
-        <!-- Настройки -->
-        <div class="sync-settings">
-          <DropdownMenuCheckboxItem
-            v-model="syncStore.wifiOnlySync"
-            class="sync-setting-item"
-          >
-            <DropdownMenuItemIndicator class="setting-indicator">
-              <Icon icon="mdi:check" />
-            </DropdownMenuItemIndicator>
-            <Icon icon="mdi:wifi" class="setting-icon" />
-            <span>Только по Wi-Fi</span>
-          </DropdownMenuCheckboxItem>
-        </div>
 
         <DropdownMenuSeparator class="dropdown-separator" />
 
@@ -347,49 +329,6 @@ async function handleClearCache() {
 
   .action-icon {
     font-size: 14px;
-  }
-}
-
-.sync-settings {
-  padding: 4px 8px;
-}
-
-.sync-setting-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  color: var(--fg-secondary-color);
-  cursor: pointer;
-  user-select: none;
-  outline: none;
-  position: relative;
-  padding-left: 25px;
-
-  &[data-highlighted] {
-    background-color: var(--bg-hover-color);
-  }
-
-  .setting-icon {
-    font-size: 14px;
-    color: var(--fg-muted-color);
-  }
-}
-
-.setting-indicator {
-  position: absolute;
-  left: 8px;
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  svg {
-    font-size: 12px;
-    color: var(--color-primary);
   }
 }
 

@@ -18,14 +18,13 @@
     "build": "bun run --filter='./apps/*' build",
     "--------------------------------< LINT & FORMAT >---------------------------------": "",
     "lint": "bun run --filter='./apps/*' lint",
-    "typecheck": "bun run --filter='./apps/*' typecheck",
+    "typecheck": "bun --filter='./apps/*' typecheck",
     "--------------------------------<     HELPERS   >---------------------------------": "",
     "postinstall": "simple-git-hooks"
   },
   "devDependencies": {
     "lint-staged": "^16.1.2",
-    "simple-git-hooks": "^2.13.1",
-    "typescript": "~5.9.2"
+    "simple-git-hooks": "^2.13.1"
   },
   "simple-git-hooks": {
     "pre-commit": "lint-staged && bun run typecheck",

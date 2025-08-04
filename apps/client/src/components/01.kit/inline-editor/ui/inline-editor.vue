@@ -107,10 +107,18 @@ useEditor((root) => {
       margin: 0;
       padding: 0;
     }
-    h1, h2, h3, h4, h5, h6, p, em, code{
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    em,
+    code {
       font-family: 'Rubik';
     }
-    blockquote{
+    blockquote {
       padding-left: 16px;
     }
     .list-item {

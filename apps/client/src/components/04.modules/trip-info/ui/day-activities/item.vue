@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { TimeField } from '~/components/01.kit/time-field'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 import { ActivitySectionType } from '~/shared/types/models/activity'
 import { ActivitySectionRenderer } from './sections'
 
@@ -16,6 +17,9 @@ interface ActivityItemProps {
 
 const props = defineProps<ActivityItemProps>()
 const emit = defineEmits(['update', 'delete'])
+
+const tripStore = useTripStore()
+const { isViewMode } = storeToRefs(tripStore)
 
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
@@ -37,6 +41,9 @@ function parseTime(timeStr: string): Time {
 }
 
 function editTime() {
+  if (isViewMode.value)
+    return
+
   isTimeEditing.value = true
   editingStartTime.value = parseTime(props.activity.startTime)
   editingEndTime.value = parseTime(props.activity.endTime)
@@ -90,8 +97,8 @@ function deleteSection(sectionIndex: number) {
 </script>
 
 <template>
-  <div class="activity-item">
-    <div class="drag-handle" />
+  <div class="activity-item" :class="{ 'view-mode': isViewMode }">
+    <div v-if="!isViewMode" class="drag-handle" />
 
     <div class="activity-header">
       <div class="activity-time">
@@ -125,6 +132,7 @@ function deleteSection(sectionIndex: number) {
       <InlineEditorWrapper
         v-model="activityTitle"
         placeholder="Описание активности"
+        :disabled="isViewMode"
         class="activity-title-editor"
         :features="{ 'block-edit': false }"
       />
@@ -140,7 +148,7 @@ function deleteSection(sectionIndex: number) {
           @delete:section="deleteSection(index)"
         />
       </div>
-      <div class="add-section-controls">
+      <div v-if="!isViewMode" class="add-section-controls">
         <KitBtn
           variant="outlined"
           color="secondary"
@@ -163,6 +171,22 @@ function deleteSection(sectionIndex: number) {
   transition: all 0.3s ease;
   margin: 32px 0;
 
+  &.view-mode {
+    .time-display {
+      cursor: default;
+      &:hover {
+        background-color: transparent;
+      }
+    }
+    &:hover {
+      .activity-header .activity-time::before {
+        color: var(--fg-secondary-color);
+      }
+      &::before {
+        background-color: var(--border-secondary-color);
+      }
+    }
+  }
   &:hover {
     .activity-header {
       .activity-time {

@@ -5,15 +5,17 @@ import { appRouter } from './router'
 
 const app = new Hono()
 
-// CORS middleware
-app.use('*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true,
-}))
-
 // tRPC middleware
 app.use(
   '/trpc/*',
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:1420',
+      'tauri://localhost',
+    ],
+    credentials: true,
+  }),
   trpcServer({
     router: appRouter,
     createContext: () => ({}),
@@ -23,15 +25,6 @@ app.use(
   }),
 )
 
-// Health check
-app.get('/', c => c.json({
-  name: 'Trip Scheduler API',
-  version: '1.0.0',
-  status: 'healthy',
-  timestamp: new Date().toISOString(),
-  docs: '/docs',
-}))
-
 // 404 handler
 app.notFound(c => c.json({ error: 'Not Found' }, 404))
 
@@ -40,6 +33,7 @@ app.onError((error, c) => {
   console.error('Application error:', error)
   return c.json({
     error: 'Internal Server Error',
+    // eslint-disable-next-line node/prefer-global/process
     message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
   }, 500)
 })

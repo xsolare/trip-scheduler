@@ -17,9 +17,15 @@ export const useTripStore = defineStore('tripInfo', () => {
   const fetchStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
   const fetchError = ref<unknown | null>(null)
 
+  // UI State
+  const isDaysPanelOpen = ref<boolean>(false)
+  const isDaysPanelPinned = ref<boolean>(false)
+  const interactionMode = ref<'view' | 'edit'>('edit')
+
   // --- GETTERS ---
 
   const isLoading = computed(() => fetchStatus.value === 'pending')
+  const isViewMode = computed(() => interactionMode.value === 'view')
   const getAllDays = computed((): IDay[] => days.value)
   const getSelectedDay = computed((): IDay | null => {
     if (!currentDayId.value)
@@ -44,6 +50,34 @@ export const useTripStore = defineStore('tripInfo', () => {
   }
 
   // --- ACTIONS ---
+
+  /**
+   * Открывает панель дней.
+   */
+  function openDaysPanel() {
+    isDaysPanelOpen.value = true
+  }
+
+  /**
+   * Закрывает панель дней.
+   */
+  function closeDaysPanel() {
+    isDaysPanelOpen.value = false
+  }
+
+  /**
+   * Переключает состояние закрепления панели.
+   */
+  function toggleDaysPanelPinned() {
+    isDaysPanelPinned.value = !isDaysPanelPinned.value
+  }
+
+  /**
+   * Устанавливает режим взаимодействия.
+   */
+  function setInteractionMode(mode: 'view' | 'edit') {
+    interactionMode.value = mode
+  }
 
   /**
    * Загружает дни для указанного путешествия.
@@ -264,14 +298,21 @@ export const useTripStore = defineStore('tripInfo', () => {
     currentDayId,
     fetchStatus,
     fetchError,
+    isDaysPanelOpen,
+    isDaysPanelPinned,
+    interactionMode,
 
     // Getters
     isLoading,
     getAllDays,
     getSelectedDay,
     getActivitiesForSelectedDay,
+    isViewMode,
 
     // Actions
+    openDaysPanel,
+    closeDaysPanel,
+    toggleDaysPanelPinned,
     addNewDay,
     fetchDaysForTrip,
     setCurrentDay,
@@ -280,5 +321,6 @@ export const useTripStore = defineStore('tripInfo', () => {
     removeActivity,
     updateActivity,
     reorderActivities,
+    setInteractionMode,
   }
 })

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { IActivity } from '../../models/types'
+import type { IActivity } from '~/components/04.modules/trip-info//models/types'
 import draggable from 'vuedraggable'
-import { minutesToTime, timeToMinutes } from '../../lib/helpers'
-import { EActivityTag } from '../../models/types'
-import { useTripStore } from '../../store/trip-store'
+import { minutesToTime, timeToMinutes } from '~/components/04.modules/trip-info//lib/helpers'
+import { EActivityTag } from '~/components/04.modules/trip-info/models/types'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 import ActivityItem from './item.vue'
 
 const tripStore = useTripStore()
-const { getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(tripStore)
+const { getActivitiesForSelectedDay, getSelectedDay, isViewMode } = storeToRefs(tripStore)
 const { reorderActivities, updateActivity, removeActivity, addActivity } = tripStore
 
 const draggableActivities = computed({
@@ -59,6 +59,7 @@ defineExpose({
         animation="300"
         item-key="id"
         handle=".drag-handle"
+        :disabled="isViewMode"
         class="draggable-area"
       >
         <template #item="{ element: activity }">
@@ -72,7 +73,7 @@ defineExpose({
 
       <div v-if="getActivitiesForSelectedDay.length === 0" class="empty-state">
         <p>На этот день нет запланированных активностей</p>
-        <button class="g-button" @click="$emit('add')">
+        <button v-if="!isViewMode" class="g-button" @click="$emit('add')">
           Добавить активность
         </button>
       </div>

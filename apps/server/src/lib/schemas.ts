@@ -54,7 +54,7 @@ export const DaySchema = z.object({
   tripId: z.string(),
   date: z.string(),
   title: z.string(),
-  description: z.string().optional().nullable(),
+  description: z.string(),
   activities: z.array(ActivitySchema),
 })
 

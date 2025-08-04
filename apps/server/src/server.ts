@@ -7,7 +7,6 @@ const host = process.env.HOST || '0.0.0.0'
 
 console.log(`🚀 Trip Scheduler API starting...`)
 console.log(`📍 Server running at http://${host}:${port}`)
-console.log(`📚 API Documentation available at http://${host}:${port}/docs`)
 
 export default {
   port,

@@ -24,7 +24,6 @@ const emit = defineEmits<{ (e: 'action'): void }>()
       :src="imageSrc"
       class="image"
       alt=""
-      width="180"
       height="180"
       aria-hidden="true"
     >

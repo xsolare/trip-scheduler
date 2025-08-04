@@ -9,6 +9,13 @@ import {
 import { Calendar } from '~/components/01.kit/calendar'
 import { useCalendarPopover } from '../composables/use-calendar-popover'
 
+interface Props {
+  disabled?: boolean
+
+}
+
+defineProps<Props>()
+
 const model = defineModel<CalendarDate | null>({ required: true })
 const { isOpen, handleDateSelect } = useCalendarPopover()
 
@@ -22,6 +29,7 @@ function handleUpdateValue(value: CalendarDate | null) {
     <PopoverTrigger
       as-child
       class="date-picker-trigger"
+      :disabled="disabled"
     >
       <slot />
     </PopoverTrigger>

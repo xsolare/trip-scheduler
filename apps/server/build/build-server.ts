@@ -7,8 +7,9 @@ export default defineConfig({
   entry: [toAbsolute('../src/index.ts')],
   outDir: toAbsolute('../dist'),
   splitting: false,
-  sourcemap: false,
+  sourcemap: true,
   shims: true,
   clean: true,
   format: 'esm',
+  external: ['bun:sqlite'],
 })

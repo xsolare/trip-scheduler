@@ -27,9 +27,5 @@ export default {
       },
     },
   },
-  resolve: {
-    alias: {
-      '~': fileURLToPath(new URL('../src', import.meta.url)),
-    },
-  },
+
 } satisfies UserConfig

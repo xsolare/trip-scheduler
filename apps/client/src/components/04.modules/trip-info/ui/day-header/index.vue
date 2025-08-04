@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { useTripStore } from '../../store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 
 const tripStore = useTripStore()
-const { getSelectedDay: selectedDay } = storeToRefs(tripStore)
+const { getSelectedDay: selectedDay, isViewMode } = storeToRefs(tripStore)
 
 function updateDayDetails(details: { title?: string, description?: string }) {
   if (selectedDay.value) {
@@ -18,12 +18,14 @@ function updateDayDetails(details: { title?: string, description?: string }) {
     <InlineEditorWrapper
       :model-value="selectedDay.title"
       placeholder="Название дня..."
+      :disabled="isViewMode"
       :features="{ 'block-edit': false }"
       class="day-title"
       @update:model-value="newTitle => updateDayDetails({ title: newTitle })"
     />
     <InlineEditorWrapper
       :model-value="selectedDay.description || ''"
+      :disabled="isViewMode"
       placeholder="Добавьте описание..."
       :features="{ 'block-edit': false }"
       class="day-description"

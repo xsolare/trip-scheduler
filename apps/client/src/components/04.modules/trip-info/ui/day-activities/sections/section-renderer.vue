@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ActivitySection, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 import { ActivitySectionType } from '~/shared/types/models/activity'
 import DescriptionSection from './description-section.vue'
 
@@ -9,6 +10,8 @@ interface Props {
 }
 defineProps<Props>()
 const emit = defineEmits(['update:section', 'delete:section'])
+const tripStore = useTripStore()
+const { isViewMode } = storeToRefs(tripStore)
 
 function onUpdate(data: ActivitySection) {
   emit('update:section', data)
@@ -24,6 +27,7 @@ function onUpdate(data: ActivitySection) {
     />
 
     <button
+      v-if="!isViewMode"
       class="delete-btn"
       title="Удалить секцию"
       @click="emit('delete:section')"

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Day } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
+import { useDisplay } from '~/shared/composables/use-display'
 
 interface Props {
   days: Day[]
@@ -16,67 +18,81 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const tripStore = useTripStore()
+const { mdAndDown } = useDisplay()
+
+const { isDaysPanelPinned, isViewMode } = storeToRefs(tripStore)
+const { toggleDaysPanelPinned } = tripStore
+
 function onSelectDay(dayId: string) {
   emit('selectDay', dayId)
-  emit('close')
+  if (!isDaysPanelPinned.value)
+    emit('close')
 }
 
-// Утилита для форматирования дня недели в короткий верхний регистр (ПН, ВТ...)
 function getShortWeekday(date: string): string {
   return new Date(date).toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase()
 }
 </script>
 
 <template>
-  <div>
-    <!-- Затемняющий фон -->
-    <div
-      v-if="isOpen"
-      class="backdrop"
-      @click="$emit('close')"
-    />
+  <!-- Затемняющий фон (только для всплывающей панели) -->
+  <div
+    v-if="(isOpen && !isDaysPanelPinned) || (isOpen && mdAndDown)"
+    class="backdrop"
+    @click="$emit('close')"
+  />
 
-    <!-- Сама панель -->
-    <aside class="panel" :class="{ open: isOpen }">
-      <header class="panel-header">
-        <h2>Дни путешествия</h2>
+  <!-- Сама панель -->
+  <aside class="panel" :class="{ open: isOpen, pinned: !mdAndDown && isDaysPanelPinned }">
+    <header class="panel-header">
+      <h2>Дни путешествия</h2>
+      <div class="header-buttons">
+        <button
+          v-if="!mdAndDown"
+          class="pin-btn"
+          :title="isDaysPanelPinned ? 'Открепить панель' : 'Закрепить панель'"
+          @click="toggleDaysPanelPinned"
+        >
+          <Icon :icon="isDaysPanelPinned ? 'mdi:pin-off' : 'mdi:pin'" />
+        </button>
         <button class="close-btn" title="Закрыть" @click="$emit('close')">
           <Icon icon="mdi:close" />
         </button>
-      </header>
-
-      <div class="panel-content">
-        <ul class="days-list">
-          <li v-for="(day, index) in days" :key="day.id">
-            <button
-              class="day-item"
-              :class="{ active: selectedDayId === day.id }"
-              @click="onSelectDay(day.id)"
-            >
-              <!-- Левая часть: Номер и Название -->
-              <div class="day-item-main">
-                <span class="day-number">{{ index + 1 }}</span>
-                <span class="day-title">{{ day.title || `День ${index + 1}` }}</span>
-              </div>
-
-              <!-- Правая часть: Дата и Бейдж дня недели -->
-              <div class="day-item-meta">
-                <span class="day-date">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) }}</span>
-                <span class="day-weekday-badge">{{ getShortWeekday(day.date) }}</span>
-              </div>
-            </button>
-          </li>
-        </ul>
       </div>
+    </header>
 
-      <footer class="panel-footer">
-        <button class="add-day-btn" @click="$emit('addNewDay')">
-          <Icon icon="mdi:plus" />
-          <span>Добавить новый день</span>
-        </button>
-      </footer>
-    </aside>
-  </div>
+    <div class="panel-content">
+      <ul class="days-list">
+        <li v-for="(day, index) in days" :key="day.id">
+          <button
+            class="day-item"
+            :class="{ active: selectedDayId === day.id }"
+            @click="onSelectDay(day.id)"
+          >
+            <!-- Левая часть: Номер и Название -->
+            <div class="day-item-main">
+              <span class="day-number">{{ index + 1 }}</span>
+              <span class="day-title">{{ day.title || `День ${index + 1}` }}</span>
+            </div>
+
+            <!-- Правая часть: Дата и Бейдж дня недели -->
+            <div class="day-item-meta">
+              <span class="day-date">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) }}</span>
+              <span class="day-weekday-badge">{{ getShortWeekday(day.date) }}</span>
+            </div>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <footer v-if="!isViewMode" class="panel-footer">
+      <button class="add-day-btn" @click="$emit('addNewDay')">
+        <Icon icon="mdi:plus" />
+        <span>Добавить новый день</span>
+      </button>
+    </footer>
+  </aside>
 </template>
 
 <style scoped lang="scss">
@@ -109,6 +125,20 @@ function getShortWeekday(date: string): string {
     transform: translateX(0);
     box-shadow: 4px 0px 15px var(--color-background-content);
   }
+
+  &.pinned {
+    position: fixed;
+    transform: none;
+    top: 44px;
+    height: calc(100% - 44px - 47px);
+    opacity: 1;
+    box-shadow: none;
+    border-right: 1px solid var(--border-secondary-color);
+
+    .close-btn {
+      display: none;
+    }
+  }
 }
 
 .panel-header {
@@ -126,12 +156,23 @@ function getShortWeekday(date: string): string {
   }
 }
 
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pin-btn,
 .close-btn {
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 4px;
   color: var(--fg-secondary-color);
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
 
   &:hover {
     color: var(--fg-primary-color);
@@ -199,7 +240,6 @@ function getShortWeekday(date: string): string {
     text-overflow: ellipsis;
   }
 
-  // --- Стили для правой части ---
   &-meta {
     display: flex;
     align-items: center;
@@ -224,7 +264,6 @@ function getShortWeekday(date: string): string {
     line-height: 1;
   }
 
-  // --- Активное состояние ---
   &.active {
     background-color: var(--bg-accent-color-translucent);
 

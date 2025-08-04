@@ -3,13 +3,12 @@ import type { CalendarDate } from '@internationalized/date'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { CalendarPopover } from '~/components/01.kit/calendar-popover'
-import { useTripStore } from '../../store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 import DaysPanel from './days-panel.vue'
-
-const isPanelOpen = ref<boolean>(false)
+import ModeSwitcher from './mode-switcher.vue'
 
 const tripStore = useTripStore()
-const { getAllDays, getSelectedDay } = storeToRefs(tripStore)
+const { getAllDays, getSelectedDay, isDaysPanelPinned, isDaysPanelOpen, isViewMode } = storeToRefs(tripStore)
 const { setCurrentDay, addNewDay, updateDayDetails } = tripStore
 
 const selectedCalendarDate = computed<CalendarDate | null>({
@@ -50,26 +49,34 @@ const selectedCalendarDate = computed<CalendarDate | null>({
 
 <template>
   <div class="controls">
-    <button class="menu-btn" title="Открыть меню дней" @click="isPanelOpen = true">
-      <Icon icon="mdi:menu" />
-    </button>
+    <div class="left-controls">
+      <button
+        v-if="!isDaysPanelPinned"
+        class="menu-btn" title="Открыть меню дней"
+        @click="isDaysPanelOpen = !isDaysPanelOpen"
+      >
+        <Icon icon="mdi:menu" />
+      </button>
 
-    <CalendarPopover v-model="selectedCalendarDate">
-      <div class="current-day-info" role="button">
-        <h3 v-if="getSelectedDay">
-          {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
-        </h3>
-        <span v-if="getSelectedDay">
-          {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
-        </span>
-      </div>
-    </CalendarPopover>
+      <CalendarPopover v-model="selectedCalendarDate" :disabled="isViewMode">
+        <div class="current-day-info" role="button" :class="{ disabled: isViewMode }">
+          <h3 v-if="getSelectedDay">
+            {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
+          </h3>
+          <span v-if="getSelectedDay">
+            {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
+          </span>
+        </div>
+      </CalendarPopover>
+    </div>
+    <div class="spacer" />
+    <ModeSwitcher />
 
     <DaysPanel
-      :is-open="isPanelOpen"
+      :is-open="isDaysPanelOpen"
       :days="getAllDays"
       :selected-day-id="getSelectedDay?.id"
-      @close="isPanelOpen = false"
+      @close="isDaysPanelOpen = false"
       @select-day="setCurrentDay"
       @add-new-day="addNewDay"
     />
@@ -82,6 +89,14 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   align-items: center;
   gap: 16px;
   padding: 16px 0;
+}
+.left-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.spacer {
+  flex-grow: 1;
 }
 
 .menu-btn {
@@ -113,6 +128,10 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   span {
     color: var(--fg-secondary-color);
     text-transform: capitalize;
+  }
+  &.disabled {
+    cursor: default;
+    opacity: 0.7;
   }
 }
 </style>
