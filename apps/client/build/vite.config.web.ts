@@ -64,7 +64,7 @@ export default defineConfig(mergeConfig(baseConfig, {
     }),
   ],
   server: {
-    port: 3000,
+    port: 1420,
   },
   resolve: {
     alias: {

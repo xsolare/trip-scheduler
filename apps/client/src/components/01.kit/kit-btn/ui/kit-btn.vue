@@ -54,10 +54,6 @@ const componentClasses = computed(() => [
     pointer-events: none;
   }
 
-  &:not(:disabled):active {
-    transform: scale(0.98);
-  }
-
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;

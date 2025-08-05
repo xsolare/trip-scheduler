@@ -5,6 +5,7 @@ import { InlineEditor } from '~/components/01.kit/inline-editor'
 
 interface Props {
   disabled?: boolean
+  readonly?: boolean
   placeholder?: string
   features?: Partial<Record<CrepeFeature, boolean>>
 }

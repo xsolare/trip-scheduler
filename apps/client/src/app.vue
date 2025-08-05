@@ -8,6 +8,7 @@ import '@milkdown/crepe/theme/frame.css'
 import '~/assets/scss/global.scss'
 import '~/assets/scss/atomic.scss'
 import '~/assets/scss/normalize.scss'
+import '~/assets/scss/animation.scss'
 import '~/assets/scss/fonts.scss'
 
 const route = useRoute()

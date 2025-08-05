@@ -1,46 +1,78 @@
 import { relations } from 'drizzle-orm'
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import {
+  date,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core'
+
+interface ActivitySectionText { id: string, type: 'description', text: string }
+interface ActivitySectionGallery { id: string, type: 'gallery', imageUrls: string[] }
+export type ActivitySection = ActivitySectionText | ActivitySectionGallery
+export const statusEnum = pgEnum('status', ['completed', 'planned', 'draft'])
+export const visibilityEnum = pgEnum('visibility', ['public', 'private'])
+export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery'])
 
 // Таблица для путешествий (Trips)
-export const trips = sqliteTable('trips', {
-  id: text('id').primaryKey(),
+export const trips = pgTable('trips', {
+  id: uuid('id').primaryKey(),
   title: text('title').notNull(),
   imageUrl: text('image_url'),
   description: text('description'),
-  days: integer('days').default(0),
-  startDate: text('start_date'),
-  endDate: text('end_date'),
-  cities: text('cities', { mode: 'json' }).$type<string[]>(),
-  participants: text('participants', { mode: 'json' }).$type<string[]>(),
-  tags: text('tags', { mode: 'json' }).$type<string[]>(),
-  status: text('status', { enum: ['completed', 'planned', 'draft'] }).default('draft'),
-  budget: real('budget').default(0),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date').notNull(),
+  cities: jsonb('cities').$type<string[]>().notNull().default([]),
+  status: statusEnum('status').notNull().default('draft'),
+  budget: real('budget'),
   currency: text('currency').default('RUB'),
-  visibility: text('visibility', { enum: ['public', 'private'] }).default('private'),
+  participants: jsonb('participants').$type<string[]>().notNull().default([]),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  visibility: visibilityEnum('visibility').notNull().default('private'),
+  days: integer('days').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const tripImages = pgTable('trip_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  url: text('url').notNull(),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // Таблица для дней (Days)
-export const days = sqliteTable('days', {
-  id: text('id').primaryKey(),
-  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
-  date: text('date').notNull(),
+export const days = pgTable('days', {
+  id: uuid('id').primaryKey(),
+  date: date('date').notNull(),
   title: text('title').notNull(),
   description: text('description'),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // Таблица для активностей (Activities)
-export const activities = sqliteTable('activities', {
-  id: text('id').primaryKey(),
-  dayId: text('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
-  startTime: text('start_time'),
-  endTime: text('end_time'),
+export const activities = pgTable('activities', {
+  id: uuid('id').primaryKey(),
+  startTime: text('start_time').notNull(),
+  endTime: text('end_time').notNull(),
   title: text('title').notNull(),
-  sections: text('sections', { mode: 'json' }).$type<Array<{ id: string, type: string, text: string }>>(),
+  sections: jsonb('sections').$type<ActivitySection[]>().notNull().default([]),
+  dayId: uuid('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-// Определяем отношения между таблицами
+// Отношения
 export const tripsRelations = relations(trips, ({ many }) => ({
   days: many(days),
+  images: many(tripImages),
 }))
 
 export const daysRelations = relations(days, ({ one, many }) => ({
@@ -55,5 +87,12 @@ export const activitiesRelations = relations(activities, ({ one }) => ({
   day: one(days, {
     fields: [activities.dayId],
     references: [days.id],
+  }),
+}))
+
+export const tripImagesRelations = relations(tripImages, ({ one }) => ({
+  trip: one(trips, {
+    fields: [tripImages.tripId],
+    references: [trips.id],
   }),
 }))

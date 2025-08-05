@@ -1,72 +1,68 @@
 import { z } from 'zod'
 
-// Trip schemas
-export const TripSchema = z.object({
+const ActivitySectionTextSchema = z.object({
   id: z.string(),
-  title: z.string(),
-  imageUrl: z.string(),
-  description: z.string(),
-  days: z.number(),
-  startDate: z.string(),
-  endDate: z.string(),
-  cities: z.array(z.string()),
-  status: z.enum(['completed', 'planned', 'draft']),
-  budget: z.number(),
-  currency: z.string(),
-  participants: z.array(z.string()),
-  tags: z.array(z.string()),
-  visibility: z.enum(['public', 'private']),
-})
-
-export const CreateTripSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  cities: z.array(z.string()).optional(),
-})
-
-export const UpdateTripSchema = z.object({
-  id: z.string(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-})
-
-// Day schemas
-export const ActivitySectionSchema = z.object({
-  id: z.string(),
-  type: z.string(),
+  type: z.literal('description'),
   text: z.string(),
 })
 
-export const ActivitySchema = z.object({
+const ActivitySectionGallerySchema = z.object({
   id: z.string(),
+  type: z.literal('gallery'),
+  imageUrls: z.array(z.string()),
+})
+
+export const ActivitySectionSchema = z.discriminatedUnion('type', [
+  ActivitySectionTextSchema,
+  ActivitySectionGallerySchema,
+])
+
+export const ActivitySchema = z.object({
+  id: z.string().uuid(),
   startTime: z.string(),
   endTime: z.string(),
   title: z.string(),
   sections: z.array(ActivitySectionSchema),
+  dayId: z.string().uuid(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 })
 
 export const DaySchema = z.object({
-  id: z.string(),
-  tripId: z.string(),
-  date: z.string(),
+  id: z.string().uuid(),
+  date: z.union([z.date(), z.string()]),
   title: z.string(),
-  description: z.string(),
-  activities: z.array(ActivitySchema),
+  description: z.string().nullable(),
+  tripId: z.string().uuid(),
+  activities: z.array(ActivitySchema).optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 })
 
-// Common schemas
-export const IdParamSchema = z.object({
-  id: z.string(),
+export const TripSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  imageUrl: z.string().nullable(),
+  description: z.string().nullable(),
+  startDate: z.union([z.date(), z.string()]),
+  endDate: z.union([z.date(), z.string()]),
+  cities: z.array(z.string()),
+  status: z.enum(['completed', 'planned', 'draft']),
+  budget: z.number().nullable(),
+  currency: z.string().nullable(),
+  participants: z.array(z.string()),
+  tags: z.array(z.string()),
+  visibility: z.enum(['public', 'private']),
+  days: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 })
 
-export const TripIdParamSchema = z.object({
-  tripId: z.string(),
+export const TripWithDaysSchema = TripSchema.extend({
+  days: z.array(DaySchema),
 })
 
-export const SuccessResponseSchema = z.object({
-  success: z.boolean(),
+// Входные схемы
+export const GetTripsByIdInputSchema = z.object({
+  tripId: z.string().uuid(),
 })

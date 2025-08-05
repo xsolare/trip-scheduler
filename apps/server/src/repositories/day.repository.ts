@@ -1,30 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { db } from '~/db'
-import { days } from '~/db/schema'
-
-// eslint-disable-next-line unused-imports/no-unused-vars
-const queryForTypeInference = db.query.days.findMany({
-  with: {
-    activities: true,
-  },
-})
-
-type DayWithActivities = Awaited<typeof queryForTypeInference>[number]
-
-function transformDay(day: DayWithActivities) {
-  return {
-    ...day,
-    description: day.description ?? '',
-    activities: day.activities.map((activity) => {
-      return {
-        ...activity,
-        startTime: activity.startTime ?? '',
-        endTime: activity.endTime ?? '',
-        sections: activity.sections ?? [],
-      }
-    }),
-  }
-}
+import { activities, days } from '~/db/schema'
 
 export const dayRepository = {
   /**
@@ -33,33 +9,28 @@ export const dayRepository = {
    * @returns Массив дней с вложенными активностями.
    */
   async getByTripId(tripId: string) {
-    const result: DayWithActivities[] = await db.query.days.findMany({
+    return await db.query.days.findMany({
       where: eq(days.tripId, tripId),
+      orderBy: days.date,
       with: {
-        activities: true,
+        activities: {
+          orderBy: activities.startTime,
+        },
       },
     })
-
-    return result.map(transformDay)
   },
 
   /**
-   * Получает один день по его ID.
-   * @param id - ID дня.
-   * @returns Объект дня с активностями или null, если не найден.
+   * Получает день по ID с активностями.
    */
   async getById(id: string) {
-    const result: DayWithActivities | undefined = await db.query.days.findFirst({
+    return await db.query.days.findFirst({
       where: eq(days.id, id),
       with: {
-        activities: true,
+        activities: {
+          orderBy: activities.startTime,
+        },
       },
     })
-
-    if (!result) {
-      return null
-    }
-
-    return transformDay(result)
   },
 }

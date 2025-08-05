@@ -8,22 +8,34 @@ export enum ActivityTag {
 
 export enum ActivitySectionType {
   DESCRIPTION = 'description',
+  GALLERY = 'gallery',
+  GEOLOCATION = 'geolocation',
 }
 
 export interface ActivitySection {
   id: string
   type: ActivitySectionType
-  //
-  tag?: ActivityTag
-  startTime?: string
-  endTime?: string
+  isAttached?: boolean
 }
 
 export interface ActivitySectionText extends ActivitySection {
+  type: ActivitySectionType.DESCRIPTION
   text: string
 }
 
-type ActivitySections = (ActivitySection)[]
+export interface ActivitySectionGallery extends ActivitySection {
+  type: ActivitySectionType.GALLERY
+  imageUrls: string[]
+}
+
+export interface ActivitySectionGeolocation extends ActivitySection {
+  type: ActivitySectionType.GEOLOCATION
+  latitude: number
+  longitude: number
+  address: string
+}
+
+export type ActivitySections = (ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation)[]
 
 export interface Activity {
   id: string

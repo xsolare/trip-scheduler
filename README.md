@@ -78,7 +78,7 @@
     ```bash
     bun --cwd ./apps/server dev
     ```
-    Сервер tRPC будет доступен по адресу `http://localhost:3000`.
+    Сервер tRPC будет доступен по адресу `http://localhost:8080`.
 
 2.  **Запустите клиент (Tauri):**
     ```bash

@@ -203,7 +203,6 @@ function getShortWeekday(date: string): string {
   cursor: pointer;
   text-align: left;
   transition: background-color 0.2s ease;
-
   &:hover {
     background-color: var(--bg-hover-color);
   }
@@ -229,6 +228,7 @@ function getShortWeekday(date: string): string {
     font-size: 0.85rem;
     font-weight: 600;
     transition: all 0.2s ease;
+    font-family: 'Sansation';
   }
 
   .day-title {
@@ -238,6 +238,7 @@ function getShortWeekday(date: string): string {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-family: 'Sansation';
   }
 
   &-meta {
@@ -252,6 +253,7 @@ function getShortWeekday(date: string): string {
     font-size: 0.8rem;
     color: var(--fg-secondary-color);
     white-space: nowrap;
+    font-family: 'Sansation';
   }
 
   .day-weekday-badge {
@@ -260,8 +262,9 @@ function getShortWeekday(date: string): string {
     padding: 3px 8px;
     border-radius: 6px;
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1;
+    font-family: 'Sansation';
   }
 
   &.active {

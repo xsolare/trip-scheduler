@@ -53,25 +53,6 @@ p {
   background: var(--bg-accent-overlay-color);
 }
 
-.smooth-appear-enter-active,
-.smooth-appear-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease-in-out;
-}
-
-.smooth-appear-enter-from,
-.smooth-appear-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.smooth-appear-enter-to,
-.smooth-appear-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 hr {
   margin: 16px 0;
   width: 100%;

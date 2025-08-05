@@ -1,10 +1,31 @@
-/* eslint-disable antfu/no-top-level-await */
 /* eslint-disable no-console */
 /* eslint-disable node/prefer-global/process */
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator'
-import { db } from '.'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { migrate } from 'drizzle-orm/node-postgres/migrator'
+import { Pool } from 'pg'
 
-await migrate(db, { migrationsFolder: './drizzle' })
+const migrationClient = new Pool({
+  connectionString: 'postgresql://trip-scheduler:trip-scheduler@localhost:5432/trip_scheduler_dev',
+  max: 1,
+})
 
-console.log('Migrations applied successfully!')
-process.exit(0)
+const db = drizzle(migrationClient)
+
+async function runMigrations() {
+  console.log('🏁 Starting migrations...')
+  try {
+    await migrate(db, { migrationsFolder: './drizzle' })
+    console.log('✅ Migrations applied successfully!')
+  }
+  catch (error) {
+    console.error('❌ Error applying migrations:', error)
+    process.exit(1)
+  }
+  finally {
+    await migrationClient.end()
+    console.log('👋 Migration client disconnected.')
+    process.exit(0)
+  }
+}
+
+runMigrations()

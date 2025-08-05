@@ -17,17 +17,17 @@ function updateDayDetails(details: { title?: string, description?: string }) {
   <div v-if="selectedDay" class="day-header">
     <InlineEditorWrapper
       :model-value="selectedDay.title"
-      placeholder="Название дня..."
-      :disabled="isViewMode"
+      :readonly="isViewMode"
       :features="{ 'block-edit': false }"
+      placeholder="Название дня..."
       class="day-title"
       @update:model-value="newTitle => updateDayDetails({ title: newTitle })"
     />
     <InlineEditorWrapper
       :model-value="selectedDay.description || ''"
-      :disabled="isViewMode"
-      placeholder="Добавьте описание..."
+      :readonly="isViewMode"
       :features="{ 'block-edit': false }"
+      placeholder="Добавьте описание..."
       class="day-description"
       @update:model-value="newDesc => updateDayDetails({ description: newDesc })"
     />

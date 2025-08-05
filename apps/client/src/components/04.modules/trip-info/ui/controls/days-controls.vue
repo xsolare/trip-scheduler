@@ -59,7 +59,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
       </button>
 
       <CalendarPopover v-model="selectedCalendarDate" :disabled="isViewMode">
-        <div class="current-day-info" role="button" :class="{ disabled: isViewMode }">
+        <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
           <h3 v-if="getSelectedDay">
             {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
           </h3>
@@ -124,14 +124,16 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
+    font-family: 'Sansation';
   }
   span {
     color: var(--fg-secondary-color);
     text-transform: capitalize;
+    font-family: 'Sansation';
+    font-family: 500x;
   }
-  &.disabled {
+  &.readonly {
     cursor: default;
-    opacity: 0.7;
   }
 }
 </style>

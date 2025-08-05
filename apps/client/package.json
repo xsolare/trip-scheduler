@@ -38,6 +38,7 @@
     "@tauri-apps/plugin-sql": "^2.3.0",
     "@trpc/client": "^11.4.3",
     "@vueuse/core": "^13.6.0",
+    "ol": "^10.6.1",
     "pinia": "3.0.3",
     "reka-ui": "^2.4.1",
     "uuid": "^11.1.0",

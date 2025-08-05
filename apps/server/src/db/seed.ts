@@ -1,151 +1,59 @@
 /* eslint-disable no-console */
 import { db } from './index'
+import { MOCK_DATA } from './mock/01.data'
 import { activities, days, trips } from './schema'
-
-const MOCK_TRIPS = [
-  {
-    id: '1',
-    title: 'Путешествие в Чжанцзяцзе',
-    imageUrl: '/images/zhangjiajie.jpg',
-    description: 'Эпическое приключение в горах Аватара.',
-    days: 2,
-    startDate: '2025-07-15',
-    endDate: '2025-07-16',
-    cities: ['Чжанцзяцзе'],
-    status: 'planned' as const,
-    budget: 200000,
-    currency: 'RUB',
-    participants: ['Евгений', 'Алиса'],
-    tags: ['горы', 'природа', 'треккинг'],
-    visibility: 'public' as const,
-  },
-  {
-    id: '2',
-    title: 'Поездка в Париж',
-    imageUrl: '/images/paris.jpg',
-    description: 'Романтическая поездка в город любви',
-    days: 5,
-    startDate: '2024-06-01',
-    endDate: '2024-06-05',
-    cities: ['Париж'],
-    status: 'completed' as const,
-    budget: 150000,
-    currency: 'RUB',
-    participants: ['Анна', 'Михаил'],
-    tags: ['романтика', 'культура', 'город'],
-    visibility: 'private' as const,
-  },
-]
-
-const MOCK_DAYS = [
-  {
-    id: 'day-1',
-    tripId: '1',
-    date: '2025-07-15',
-    title: 'День 1 - Прибытие в Чжанцзяцзе',
-    description: 'Ваш первый день в Чжанцзяцзе будет посвящен прибытию и акклиматизации...',
-    activities: [
-      {
-        id: 'activity-1-1',
-        startTime: '00:00',
-        endTime: '19:00',
-        title: 'Прибытие в Международный аэропорт Чжанцзяцзе-Хэхуа (*DYG*)',
-        sections: [{
-          id: 'section-1-1-1',
-          type: 'description',
-          text: '*   _Примечание:_ Вы прилетаете внутренним рейсом из Гуанчжоу...',
-        }],
-      },
-      {
-        id: 'activity-1-2',
-        startTime: '18:00',
-        endTime: '19:30',
-        title: 'Ужин с традиционной хунаньской кухней',
-        sections: [],
-      },
-    ],
-  },
-  {
-    id: 'day-2',
-    tripId: '1',
-    date: '2025-07-16',
-    title: 'Начало треккинга',
-    description: 'Сегодня начинается активная часть нашего путешествия. Мы отправимся к подножию горы Белуха.',
-    activities: [
-      {
-        id: 'activity-2-1',
-        startTime: '09:00',
-        endTime: '13:00',
-        title: 'Треккинг к первой стоянке',
-        sections: [],
-      },
-      {
-        id: 'activity-2-2',
-        startTime: '13:00',
-        endTime: '14:00',
-        title: 'Обед на природе',
-        sections: [],
-      },
-    ],
-  },
-  {
-    id: 'day-3',
-    tripId: '2',
-    date: '2025-09-10',
-    title: 'Прибытие и Пик Виктория',
-    description: 'Прибытие в Гонконг и подъем на Пик Виктория для панорамного вида на город.',
-    activities: [],
-  },
-]
 
 async function seed() {
   console.log('🌱 Начало заполнения базы данных...')
 
-  // 1. Очистка таблиц в правильном порядке (сначала дочерние)
   console.log('🗑️  Очистка старых данных...')
-  await db.delete(activities).run()
-  await db.delete(days).run()
-  await db.delete(trips).run()
+  await db.delete(activities).catch(() => console.log('Таблица activities еще не существует, пропускаем очистку.'))
+  await db.delete(days).catch(() => console.log('Таблица days еще не существует, пропускаем очистку.'))
+  await db.delete(trips).catch(() => console.log('Таблица trips еще не существует, пропускаем очистку.'))
 
-  // 2. Заполнение таблицы путешествий (trips)
-  console.log('✈️  Заполнение путешествий...')
-  await db.insert(trips).values(MOCK_TRIPS).run()
+  console.log('✈️  Подготовка данных для вставки...')
 
-  // 3. Подготовка и заполнение дней и активностей
-  console.log('🗓️  Заполнение дней и активностей...')
-  if (MOCK_DAYS.length > 0) {
-    const daysToInsert: (typeof days.$inferInsert)[] = []
-    const activitiesToInsert: (typeof activities.$inferInsert)[] = []
+  // Готовим три плоских массива для пакетной вставки
+  const tripsToInsert: (typeof trips.$inferInsert)[] = []
+  const daysToInsert: (typeof days.$inferInsert)[] = []
+  const activitiesToInsert: (typeof activities.$inferInsert)[] = []
 
-    for (const day of MOCK_DAYS) {
-      // Добавляем день в массив для вставки
+  for (const tripData of MOCK_DATA) {
+    const { days: mockDays, ...tripDetails } = tripData
+
+    // 1. Готовим путешествие
+    tripsToInsert.push({
+      ...tripDetails,
+      startDate: tripDetails.startDate.toISOString().split('T')[0],
+      endDate: tripDetails.endDate.toISOString().split('T')[0],
+      days: mockDays.length,
+    })
+
+    for (const mockDay of mockDays) {
+      const { activities: mockActivities, ...dayDetails } = mockDay
+
+      // 2. Готовим дни
       daysToInsert.push({
-        id: day.id,
-        tripId: day.tripId,
-        date: day.date,
-        title: day.title,
-        description: day.description,
+        ...dayDetails,
+        date: dayDetails.date.toISOString().split('T')[0],
       })
 
-      // Добавляем активности этого дня
-      for (const activity of day.activities) {
-        activitiesToInsert.push({
-          ...activity,
-          dayId: day.id, // Связываем активность с днем
-        })
+      for (const mockActivity of mockActivities) {
+        // 3. Готовим активности
+        activitiesToInsert.push(mockActivity)
       }
     }
-
-    // Вставляем все дни одной командой
-    if (daysToInsert.length > 0) {
-      await db.insert(days).values(daysToInsert).run()
-    }
-
-    // Вставляем все активности одной командой
-    if (activitiesToInsert.length > 0) {
-      await db.insert(activities).values(activitiesToInsert).run()
-    }
   }
+
+  console.log(`✈️  Вставка ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней и ${activitiesToInsert.length} активностей...`)
+
+  // Выполняем пакетные вставки
+  if (tripsToInsert.length > 0)
+    await db.insert(trips).values(tripsToInsert)
+  if (daysToInsert.length > 0)
+    await db.insert(days).values(daysToInsert)
+  if (activitiesToInsert.length > 0)
+    await db.insert(activities).values(activitiesToInsert)
 
   console.log('✅ База данных успешно заполнена!')
 }

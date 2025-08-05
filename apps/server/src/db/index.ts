@@ -1,6 +1,9 @@
-import { Database } from 'bun:sqlite'
-import { drizzle } from 'drizzle-orm/bun-sqlite'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { Pool } from 'pg'
 import * as schema from './schema'
 
-const sqlite = new Database('sqlite.db')
-export const db = drizzle(sqlite, { schema })
+const pool = new Pool({
+  connectionString: 'postgresql://trip-scheduler:trip-scheduler@localhost:5432/trip_scheduler_dev',
+})
+
+export const db = drizzle(pool, { schema })

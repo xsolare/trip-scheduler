@@ -17,6 +17,7 @@ const displayData = computed(() => (trips.value && trips.value.length > 0) ? tri
     :error="fetchError"
     :data="displayData"
     :retry-handler="fetchTrips"
+    transition="faded"
   >
     <template #loading>
       <TripListSkeleton />

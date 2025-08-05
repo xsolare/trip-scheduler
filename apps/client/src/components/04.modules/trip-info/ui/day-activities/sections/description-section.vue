@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import type { ActivitySectionText } from '~/shared/types/models/activity'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { useTripStore } from '../../../store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
 
 interface Props {
   section: ActivitySectionText
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['update:section'])
+const emit = defineEmits(['updateSection'])
 const tripStore = useTripStore()
 const { isViewMode } = storeToRefs(tripStore)
 
 const sectionModel = computed({
   get: () => props.section.text,
   set: (newText) => {
-    emit('update:section', { ...props.section, text: newText })
+    emit('updateSection', { ...props.section, text: newText })
   },
 })
 </script>
@@ -24,7 +24,7 @@ const sectionModel = computed({
   <div class="description-section">
     <InlineEditorWrapper
       v-model="sectionModel"
-      :disabled="isViewMode"
+      :readonly="isViewMode"
       placeholder="Добавьте заметку или описание..."
       class="section-editor"
     />

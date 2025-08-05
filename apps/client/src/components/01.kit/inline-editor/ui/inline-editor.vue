@@ -8,6 +8,7 @@ import '@milkdown/crepe/theme/common/style.css'
 
 interface Props {
   disabled?: boolean
+  readonly?: boolean
   placeholder?: string
   features?: Partial<Record<CrepeFeature, boolean>>
 }
@@ -50,25 +51,25 @@ useEditor((root) => {
     .use(listener)
 
   crepe.on((crepeListener) => {
-    crepeListener.markdownUpdated((md) => {
-      // eslint-disable-next-line no-console
-      console.log('Markdown updated:', md)
-    })
+    // crepeListener.markdownUpdated((md) => {
+    //   // eslint-disable-next-line no-console
+    //   console.log('Markdown updated:', md)
+    // })
 
-    crepeListener.updated(() => {
-      // eslint-disable-next-line no-console
-      console.log('Document updated')
-    })
+    // crepeListener.updated(() => {
+    //   // eslint-disable-next-line no-console
+    //   console.log('Document updated')
+    // })
 
-    crepeListener.focus(() => {
-      // eslint-disable-next-line no-console
-      console.log('Editor focused')
-    })
+    // crepeListener.focus(() => {
+    //   // eslint-disable-next-line no-console
+    //   console.log('Editor focused')
+    // })
 
-    crepeListener.blur(() => {
-      // eslint-disable-next-line no-console
-      console.log('Editor blurred')
-    })
+    // crepeListener.blur(() => {
+    //   // eslint-disable-next-line no-console
+    //   console.log('Editor blurred')
+    // })
   })
 
   return crepe
@@ -76,7 +77,12 @@ useEditor((root) => {
 </script>
 
 <template>
-  <div :class="{ 'milkdown-disabled': disabled, 'has-content': !!markdown }">
+  <div
+    :class="{
+      'milkdown-disabled': disabled,
+      'milkdown-readonly': readonly,
+      'has-content': !!markdown }"
+  >
     <Milkdown />
   </div>
 </template>
@@ -84,6 +90,10 @@ useEditor((root) => {
 <style lang="scss" scoped>
 .milkdown-disabled {
   opacity: 0.7;
+  pointer-events: none;
+}
+
+.milkdown-readonly {
   pointer-events: none;
 }
 

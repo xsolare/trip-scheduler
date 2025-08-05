@@ -11,7 +11,6 @@ import { useCalendarPopover } from '../composables/use-calendar-popover'
 
 interface Props {
   disabled?: boolean
-
 }
 
 defineProps<Props>()

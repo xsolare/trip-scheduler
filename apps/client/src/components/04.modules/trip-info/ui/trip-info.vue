@@ -45,7 +45,7 @@ function handleAddNewActivity() {
     tag: EActivityTag.ATTRACTION,
     sections: [],
   }
-  addActivity(getSelectedDay.value.id, newActivity)
+  tripStore.addActivity(getSelectedDay.value.id, newActivity)
 }
 
 onMounted(() => {
@@ -61,6 +61,7 @@ onMounted(() => {
     :data="days"
     :retry-handler="() => tripStore.fetchDaysForTrip(tripId)"
     class="trip-info-wrapper"
+    transition="faded"
   >
     <template #loading>
       <TripInfoSkeleton />
