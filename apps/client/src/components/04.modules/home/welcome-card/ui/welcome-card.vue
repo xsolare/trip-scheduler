@@ -102,8 +102,8 @@ function onMouseMove() {
   position: relative;
   overflow: hidden;
   border-radius: 24px;
-  background-color: rgba(var(--bg-secondary-color-rgb), 0.5);
-  border: 1px solid rgba(var(--border-secondary-color-rgb), 0.3);
+  background-color: var(--bg-secondary-color);
+  border: 1px solid var(--border-secondary-color);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);

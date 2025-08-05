@@ -2,7 +2,7 @@
 // ИЗМЕНЕНИЕ 1: Добавлен импорт ActivitySectionGallery
 import type { ActivitySection, ActivitySectionGallery, ActivitySectionGeolocation, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
 import { ActivitySectionType } from '~/shared/types/models/activity'
 import DescriptionSection from './description-section.vue'
 import GallerySection from './gallery-section.vue'

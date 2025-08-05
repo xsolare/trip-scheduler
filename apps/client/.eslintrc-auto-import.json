@@ -1,7 +1,5 @@
 {
   "globals": {
-    "AppRouteNames": true,
-    "AppRoutePaths": true,
     "Component": true,
     "ComponentPublicInstance": true,
     "ComputedRef": true,

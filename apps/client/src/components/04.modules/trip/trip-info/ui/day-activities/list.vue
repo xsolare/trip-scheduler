@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { IActivity } from '~/components/04.modules/trip-info//models/types'
+import type { IActivity } from '~/components/04.modules/trip/trip-info/models/types'
 import draggable from 'vuedraggable'
-import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
 import ActivityItem from './item.vue'
 
 defineEmits(['add'])

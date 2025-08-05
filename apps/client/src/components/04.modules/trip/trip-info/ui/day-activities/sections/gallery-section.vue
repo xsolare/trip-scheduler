@@ -4,7 +4,7 @@ import type { ActivitySectionGallery } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { ImageViewer, useImageViewer } from '~/components/01.kit/image-viewer'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
 
 interface Props {
   section: ActivitySectionGallery

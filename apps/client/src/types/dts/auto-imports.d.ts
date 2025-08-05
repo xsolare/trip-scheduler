@@ -6,8 +6,8 @@
 // biome-ignore lint: disable
 export {}
 declare global {
-  const AppRouteNames: typeof import('../../shared/types/routes')['AppRouteNames']
-  const AppRoutePaths: typeof import('../../shared/types/routes')['AppRoutePaths']
+  const AppRouteNames: typeof import('../../shared/constants/routes')['AppRouteNames']
+  const AppRoutePaths: typeof import('../../shared/constants/routes')['AppRoutePaths']
   const EffectScope: typeof import('vue')['EffectScope']
   const SyncManager: typeof import('../../shared/lib/sync')['SyncManager']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
@@ -332,9 +332,6 @@ declare global {
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { AppRouteNames } from '../../shared/types/routes'
-  import('../../shared/types/routes')
-  // @ts-ignore
   export type { UseDatabaseOptions, UseDatabaseReturn } from '../../shared/composables/use-database'
   import('../../shared/composables/use-database')
 }
@@ -344,8 +341,6 @@ import { UnwrapRef } from 'vue'
 declare module 'vue' {
   interface GlobalComponents {}
   interface ComponentCustomProperties {
-    readonly AppRouteNames: UnwrapRef<typeof import('../../shared/types/routes')['AppRouteNames']>
-    readonly AppRoutePaths: UnwrapRef<typeof import('../../shared/types/routes')['AppRoutePaths']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>

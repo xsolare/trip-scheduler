@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
 
 const tripStore = useTripStore()
 const { isViewMode } = storeToRefs(tripStore)

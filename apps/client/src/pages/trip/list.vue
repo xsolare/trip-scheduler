@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TripList } from '~/components/04.modules/trip-list/index'
+import { TripList } from '~/components/04.modules/trip/trip-list/index'
 
 const hasFetchError = ref(false)
 </script>

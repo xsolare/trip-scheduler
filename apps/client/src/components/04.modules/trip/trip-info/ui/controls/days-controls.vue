@@ -3,7 +3,7 @@ import type { CalendarDate } from '@internationalized/date'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { CalendarPopover } from '~/components/01.kit/calendar-popover'
-import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
+import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
 import DaysPanel from './days-panel.vue'
 import ModeSwitcher from './mode-switcher.vue'
 

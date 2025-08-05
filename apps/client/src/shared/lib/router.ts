@@ -1,7 +1,7 @@
 import type { Router, RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { AppRouteNames, AppRoutePaths } from '~/shared/types/routes'
+import { AppRouteNames, AppRoutePaths } from '~/shared/constants/routes'
 
 const TripInfo = () => import('~/pages/trip/[id]/index.vue')
 const TripList = () => import('~/pages/trip/list.vue')
