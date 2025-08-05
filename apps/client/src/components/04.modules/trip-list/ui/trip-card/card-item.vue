@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ITrip } from '../../models/types'
 import { Icon } from '@iconify/vue'
-import { InteractiveGridPattern } from '~/components/02.shared/interactive-grid-pattern'
 
 type Props = ITrip
 

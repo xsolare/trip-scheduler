@@ -18,7 +18,7 @@ defineProps<AsyncStateWrapperProps<T>>()
   <SkeletonWrapper
     :loading="loading ?? false"
     class="async-state-wrapper"
-    :name="transition"
+    transition="none"
   >
     <template #skeleton>
       <slot v-if="loading" name="loading">
@@ -26,29 +26,33 @@ defineProps<AsyncStateWrapperProps<T>>()
       </slot>
     </template>
     <template #default>
-      <slot
-        v-if="error"
-        name="error"
-        :error="error"
-        :retry="retryHandler"
-      >
-        <ErrorPlaceholder
-          image-src="/images/smth-wrong.png"
-          title="Что-то пошло не так"
-          message="Произошла ошибка при загрузке данных"
-          action-text="Попробовать снова"
-          @action="retryHandler"
+      <div v-if="error" key="error">
+        <slot
+          name="error"
+          :error="error"
+          :retry="retryHandler"
+        >
+          <ErrorPlaceholder
+            image-src="/images/smth-wrong.png"
+            title="Что-то пошло не так"
+            message="Произошла ошибка при загрузке данных"
+            action-text="Попробовать снова"
+            @action="retryHandler"
+          />
+        </slot>
+      </div>
+
+      <div v-else-if="data" key="success">
+        <slot
+          name="success"
+          :data="data"
+          :retry="retryHandler"
         />
-      </slot>
+      </div>
 
-      <slot
-        v-else-if="data"
-        name="success"
-        :data="data"
-        :retry="retryHandler"
-      />
-
-      <slot v-else name="empty" />
+      <div v-else key="empty">
+        <slot name="empty" />
+      </div>
     </template>
   </SkeletonWrapper>
 </template>

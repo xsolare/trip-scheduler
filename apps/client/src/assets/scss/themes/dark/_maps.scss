@@ -21,7 +21,7 @@ $bg-colors: (
   bg-success: variables.$bg-success-color,
   bg-error: variables.$bg-error-color,
   bg-warning: variables.$bg-warning-color,
-  bg-info: variables.$bg-info-color
+  bg-info: variables.$bg-info-color,
 );
 
 // Border
@@ -32,7 +32,7 @@ $border-colors: (
   border-secondary: variables.$border-secondary-color,
   border-accent: variables.$border-accent-color,
   border-focus: variables.$border-focus-color,
-  border-pressed: variables.$border-pressed-color
+  border-pressed: variables.$border-pressed-color,
 );
 
 // BORDER STATUS
@@ -40,7 +40,7 @@ $border-status-colors: (
   border-success: variables.$border-success-color,
   border-error: variables.$border-error-color,
   border-warning: variables.$border-warning-color,
-  border-info: variables.$border-info-color
+  border-info: variables.$border-info-color,
 );
 
 // FG
@@ -53,7 +53,7 @@ $fg-colors: (
   fg-action: variables.$fg-action-color,
   fg-inverted: variables.$fg-inverted-color,
   fg-disabled: variables.$fg-disabled-color,
-  fg-pressed: variables.$fg-pressed-color
+  fg-pressed: variables.$fg-pressed-color,
 );
 
 // FG STATUS
@@ -61,13 +61,7 @@ $fg-status-colors: (
   fg-success: variables.$fg-success-color,
   fg-error: variables.$fg-error-color,
   fg-warning: variables.$fg-warning-color,
-  fg-info: variables.$fg-info-color
+  fg-info: variables.$fg-info-color,
 );
 
-$colors: functions.map-collect(
-  $bg-colors,
-  $border-colors,
-  $border-status-colors,
-  $fg-colors,
-  $fg-status-colors
-);
+$colors: functions.map-collect($bg-colors, $border-colors, $border-status-colors, $fg-colors, $fg-status-colors);

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 interface Props {
   loading: boolean
+  transition?: string
 }
 
 defineProps<Props>()
 </script>
 
 <template>
-  <Transition name="skeleton-fade" mode="out-in">
+  <Transition :name="transition ?? 'skeleton-fade'" mode="out-in">
     <!-- Если загрузка, показываем слот для скелетонов -->
     <div v-if="loading" key="skeleton">
       <slot name="skeleton" />

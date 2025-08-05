@@ -43,7 +43,7 @@
 .slide-up-enter-from,
 .slide-up-leave-to {
   opacity: 0;
-  transform: translateY(-30px) translateX(-24px) scale(0.95);
+  transform: translateY(-30px) scale(0.95);
 }
 
 .smooth-appear-enter-active,

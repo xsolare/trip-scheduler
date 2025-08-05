@@ -3,9 +3,9 @@ import type { ImageViewerImage, ImageViewerOptions } from '../models/types'
 export function useImageViewer(options: ImageViewerOptions = {}) {
   const {
     enableKeyboard = true,
-    enableThumbnails = false,
-    showCounter = true,
-    closeOnOverlayClick = true,
+    // enableThumbnails = false,
+    // showCounter = true,
+    // closeOnOverlayClick = true,
   } = options
 
   const isOpen = ref(false)

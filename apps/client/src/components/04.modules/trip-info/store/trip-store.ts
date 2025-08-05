@@ -327,6 +327,7 @@ export const useTripStore = defineStore('tripInfo', () => {
       console.error('Trip ID не установлен для загрузки изображения.')
     }
 
+    // eslint-disable-next-line no-console
     console.log('uploadImage', file)
   }
 

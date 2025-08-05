@@ -50,27 +50,27 @@ useEditor((root) => {
     })
     .use(listener)
 
-  crepe.on((crepeListener) => {
-    // crepeListener.markdownUpdated((md) => {
-    //   // eslint-disable-next-line no-console
-    //   console.log('Markdown updated:', md)
-    // })
+  // crepe.on((crepeListener) => {
+  // crepeListener.markdownUpdated((md) => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Markdown updated:', md)
+  // })
 
-    // crepeListener.updated(() => {
-    //   // eslint-disable-next-line no-console
-    //   console.log('Document updated')
-    // })
+  // crepeListener.updated(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Document updated')
+  // })
 
-    // crepeListener.focus(() => {
-    //   // eslint-disable-next-line no-console
-    //   console.log('Editor focused')
-    // })
+  // crepeListener.focus(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Editor focused')
+  // })
 
-    // crepeListener.blur(() => {
-    //   // eslint-disable-next-line no-console
-    //   console.log('Editor blurred')
-    // })
-  })
+  // crepeListener.blur(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Editor blurred')
+  // })
+  // })
 
   return crepe
 })

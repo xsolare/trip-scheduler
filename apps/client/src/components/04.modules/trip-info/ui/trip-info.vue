@@ -54,6 +54,12 @@ watch(fetchError, (newError) => {
   emit('update:hasError', !!newError)
 })
 
+onBeforeUnmount(() => {
+  tripStore.$patch({
+    days: [],
+  })
+})
+
 onMounted(() => {
   if (tripId.value) {
     tripStore.fetchDaysForTrip(tripId.value)
@@ -68,8 +74,8 @@ onMounted(() => {
     :error="fetchError"
     :data="days"
     :retry-handler="() => tripStore.fetchDaysForTrip(tripId)"
+    transition="slide-up"
     class="trip-info-wrapper"
-    transition="faded"
   >
     <template #loading>
       <TripInfoSkeleton />
