@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1754409329895,
-      "tag": "0000_eminent_reavers",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1754412659049,
-      "tag": "0001_nebulous_wallow",
+      "when": 1754414121249,
+      "tag": "0000_whole_firestar",
       "breakpoints": true
     }
   ]

@@ -20,6 +20,7 @@ export const imageProcedures = {
     .input(UploadImageInputSchema)
     .mutation(async ({ input }) => {
       const newImage = await imageRepository.create(input.tripId, input.imageUrl)
+
       return newImage
     }),
 
@@ -30,6 +31,7 @@ export const imageProcedures = {
     .input(GetImagesByTripIdInputSchema)
     .query(async ({ input }) => {
       const images = await imageRepository.getByTripId(input.tripId)
+
       return images
     }),
 }
