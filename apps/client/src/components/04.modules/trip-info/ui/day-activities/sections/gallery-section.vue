@@ -2,8 +2,6 @@
 import type { ImageViewerImage } from '~/components/01.kit/image-viewer'
 import type { ActivitySectionGallery } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
 import { ImageViewer, useImageViewer } from '~/components/01.kit/image-viewer'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { useTripStore } from '~/components/04.modules/trip-info/store/trip-store'
@@ -16,13 +14,11 @@ const props = defineProps<Props>()
 const emit = defineEmits(['updateSection'])
 
 const tripStore = useTripStore()
-const { isViewMode } = storeToRefs(tripStore)
-const tripId = computed(() => tripStore.currentTripId)
+const { isViewMode, tripImages, isUploadingImage, isFetchingImages } = storeToRefs(tripStore)
+const { uploadImage, fetchTripImages } = tripStore
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const isImagePickerOpen = ref(false)
-const tripImages = ref<string[]>([])
-const isLoadingTripImages = ref(false)
 const selectedImagesFromTrip = ref<string[]>([])
 
 const images = computed(() => props.section.imageUrls || [])
@@ -50,46 +46,28 @@ function triggerFileUpload() {
   fileInput.value?.click()
 }
 
-// Эта функция теперь имитирует загрузку на сервер.
-// В реальном приложении здесь будет API-вызов для загрузки файла на бэкенд.
 async function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
-  if (!file || !tripId.value)
+  if (!file)
     return
 
-  // Имитация API-запроса:
-  // const newImageUrl = await api.uploadTripImage(tripId.value, file);
-  // eslint-disable-next-line no-console
-  console.log(`Имитация загрузки файла ${file.name} для путешествия ${tripId.value}`)
+  // TODO
+  const newImageRecord = await uploadImage(file) as any
 
-  const newImageUrl = URL.createObjectURL(file)
-
-  const updatedUrls = [...images.value, newImageUrl]
-  emit('updateSection', { ...props.section, imageUrls: updatedUrls })
+  if (newImageRecord) {
+    const updatedUrls = [...images.value, newImageRecord.url]
+    emit('updateSection', { ...props.section, imageUrls: updatedUrls })
+  }
 
   target.value = ''
 }
 
 async function openTripImagePicker() {
-  if (!tripId.value)
-    return
-  isLoadingTripImages.value = true
   isImagePickerOpen.value = true
-
-  // eslint-disable-next-line no-console
-  console.log(`Запрос изображений для путешествия ${tripId.value}`)
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  tripImages.value = [
-    'https://images.unsplash.com/photo-1682687220208-22d7cf256D08?q=80&w=2940&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1721296371755-2795a2e64098?q=80&w=2940&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1720986161919-3ed4c2cb0f9f?q=80&w=2874&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1720891582236-03f0d4b4c731?q=80&w=2940&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?q=80&w=1920&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?q=80&w=1920&auto=format&fit=crop',
-  ]
-  isLoadingTripImages.value = false
+  if (tripStore.imageFetchStatus === 'idle' || tripStore.imageFetchStatus === 'error')
+    await fetchTripImages()
 }
 
 function closeImagePicker() {
@@ -140,9 +118,7 @@ const galleryClass = computed(() => {
 })
 const maxVisibleImages = computed(() => {
   const count = images.value.length
-  if (count <= 3)
-    return count
-  return 4
+  return count <= 4 ? count : 4
 })
 const remainingImagesCount = computed(() =>
   Math.max(0, images.value.length - maxVisibleImages.value),
@@ -156,9 +132,13 @@ const visibleImages = computed(() =>
   <div class="gallery-section">
     <!-- Панель управления (режим редактирования) -->
     <div v-if="!isViewMode" class="edit-controls">
-      <KitBtn appearance="outline" @click="triggerFileUpload">
+      <KitBtn
+        appearance="outline"
+        :loading="isUploadingImage"
+        @click="triggerFileUpload"
+      >
         <Icon icon="mdi:upload" />
-        Загрузить новое
+        {{ isUploadingImage ? 'Загрузка...' : 'Загрузить новое' }}
       </KitBtn>
       <KitBtn @click="openTripImagePicker">
         <Icon icon="mdi:image-multiple-outline" />
@@ -254,25 +234,25 @@ const visibleImages = computed(() =>
             </button>
           </div>
           <div class="modal-body">
-            <div v-if="isLoadingTripImages" class="loading-state">
+            <div v-if="isFetchingImages" class="loading-state">
               <Icon icon="mdi:loading" class="spinner" />
               <p>Загружаем изображения...</p>
             </div>
             <div v-else-if="tripImages.length > 0" class="image-grid">
               <div
-                v-for="url in tripImages"
-                :key="url"
+                v-for="tripImg in tripImages"
+                :key="tripImg.id"
                 class="grid-item"
                 :class="{
-                  selected: selectedImagesFromTrip.includes(url),
-                  disabled: images.includes(url),
+                  selected: selectedImagesFromTrip.includes(tripImg.url),
+                  disabled: images.includes(tripImg.url),
                 }"
-                @click="toggleImageSelection(url)"
+                @click="toggleImageSelection(tripImg.url)"
               >
-                <img :src="url" loading="lazy">
+                <img :src="tripImg.url" loading="lazy">
                 <div class="overlay">
-                  <Icon v-if="images.includes(url)" icon="mdi:check-circle" class="check-icon added" title="Уже в галерее" />
-                  <Icon v-else-if="selectedImagesFromTrip.includes(url)" icon="mdi:check-circle" class="check-icon selected" />
+                  <Icon v-if="images.includes(tripImg.url)" icon="mdi:check-circle" class="check-icon added" title="Уже в галерее" />
+                  <Icon v-else-if="selectedImagesFromTrip.includes(tripImg.url)" icon="mdi:check-circle" class="check-icon selected" />
                   <Icon v-else icon="mdi:circle-outline" class="check-icon" />
                 </div>
               </div>
@@ -282,7 +262,7 @@ const visibleImages = computed(() =>
               <p>В галерее путешествия еще нет загруженных изображений.</p>
             </div>
           </div>
-          <div v-if="!isLoadingTripImages && tripImages.length > 0" class="modal-footer">
+          <div v-if="!isFetchingImages && tripImages.length > 0" class="modal-footer">
             <KitBtn appearance="secondary" @click="closeImagePicker">
               Отмена
             </KitBtn>
@@ -464,7 +444,7 @@ const visibleImages = computed(() =>
         background: rgba(0, 0, 0, 0.3);
       }
       .check-icon.added {
-        color: #4ade80; 
+        color: #4ade80;
       }
     }
   }

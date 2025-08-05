@@ -5,7 +5,7 @@ export const MOCK_DATA = [
   {
     id: 'df224f26-0e31-4879-a763-719c8369592f', // Trip ID
     title: 'Поездка в Париж',
-    imageUrl: '/images/paris.jpg',
+    imageUrl: '/images/smth-wrong.png',
     description: 'Романтическая поездка в город любви',
     startDate: new Date('2024-06-01'),
     endDate: new Date('2024-06-05'),
@@ -89,7 +89,7 @@ export const MOCK_DATA = [
   {
     id: 'e6a3b1e8-3a8b-4b1c-9e2f-5d1e4c3b2a1d', // Trip ID
     title: 'Автопутешествие по Алтаю',
-    imageUrl: '/images/altai.jpg',
+    imageUrl: '/images/smth-wrong.png',
     description: 'Незабываемое путешествие по Чуйскому тракту к сердцу Алтайских гор.',
     startDate: new Date('2025-08-10'),
     endDate: new Date('2025-08-17'),

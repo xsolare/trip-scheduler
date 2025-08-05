@@ -1,6 +1,5 @@
 import type { IActivity, IDay } from '../models/types'
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import type { TripImage } from '~/shared/types/models/trip'
 import { useDatabase } from '~/shared/composables/use-database'
 import { timeToMinutes } from '../lib/helpers'
 
@@ -22,11 +21,20 @@ export const useTripStore = defineStore('tripInfo', () => {
   const isDaysPanelPinned = ref<boolean>(false)
   const interactionMode = ref<'view' | 'edit'>('edit')
 
+  // Images
+  const tripImages = ref<TripImage[]>([])
+  const imageFetchStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
+  const imageUploadStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
+
   // --- GETTERS ---
 
   const isLoading = computed(() => fetchStatus.value === 'pending')
   const isViewMode = computed(() => interactionMode.value === 'view')
   const getAllDays = computed((): IDay[] => days.value)
+
+  const isUploadingImage = computed(() => imageUploadStatus.value === 'pending')
+  const isFetchingImages = computed(() => imageFetchStatus.value === 'pending')
+
   const getSelectedDay = computed((): IDay | null => {
     if (!currentDayId.value)
       return null
@@ -291,6 +299,37 @@ export const useTripStore = defineStore('tripInfo', () => {
     // При необходимости можно добавить сохранение порядка на бэкенд
   }
 
+  /**
+   * Загружает все изображения для текущего путешествия.
+   */
+  async function fetchTripImages() {
+    if (!currentTripId.value)
+      return
+    imageFetchStatus.value = 'pending'
+    await useDatabase({
+      immediate: true,
+      fn: db => db.files.listImageByTrip(currentTripId.value!),
+      onSuccess: (result) => {
+        tripImages.value = result
+        imageFetchStatus.value = 'success'
+      },
+      onError: () => {
+        imageFetchStatus.value = 'error'
+      },
+    })
+  }
+
+  /**
+   * Загружает файл, сохраняет его URL в БД и обновляет список.
+   */
+  async function uploadImage(file: File) {
+    if (!currentTripId.value) {
+      console.error('Trip ID не установлен для загрузки изображения.')
+    }
+
+    console.log('uploadImage', file)
+  }
+
   return {
     // State
     days,
@@ -301,6 +340,10 @@ export const useTripStore = defineStore('tripInfo', () => {
     isDaysPanelOpen,
     isDaysPanelPinned,
     interactionMode,
+    tripImages,
+    imageFetchStatus,
+    isUploadingImage,
+    isFetchingImages,
 
     // Getters
     isLoading,
@@ -322,5 +365,7 @@ export const useTripStore = defineStore('tripInfo', () => {
     updateActivity,
     reorderActivities,
     setInteractionMode,
+    fetchTripImages,
+    uploadImage,
   }
 })

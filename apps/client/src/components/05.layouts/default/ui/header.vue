@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import { SyncIndicator } from '~/components/02.shared/sync-indicator'
+import { ThemeSwitcher } from '~/components/02.shared/theme-switcher'
 import { AppRoutePaths } from '~/shared/types/routes'
 
 const headerEl = ref<HTMLElement>()
@@ -27,6 +28,7 @@ const router = useRouter()
 
       <!-- Утилиты: синхронизация и профиль -->
       <div class="header-utils">
+        <ThemeSwitcher />
         <SyncIndicator />
         <div class="vr" />
 

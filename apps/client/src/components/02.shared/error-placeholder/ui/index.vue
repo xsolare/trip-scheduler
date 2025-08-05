@@ -58,7 +58,6 @@ const emit = defineEmits<{ (e: 'action'): void }>()
 
 .image {
   user-select: none;
-  pointer-events: none;
   margin-bottom: 16px;
 }
 

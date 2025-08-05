@@ -1,5 +1,6 @@
-import type { IDatabaseClient, IDayRepository, ITripRepository } from '../model/types'
+import type { IDatabaseClient, IDayRepository, IFileRepository, ITripRepository } from '../model/types'
 import { DayRepository } from '../repositories/trpc/day.repository'
+import { FileRepository } from '../repositories/trpc/file.repository'
 import { TripRepository } from '../repositories/trpc/trip.repository'
 
 /**
@@ -9,6 +10,7 @@ import { TripRepository } from '../repositories/trpc/trip.repository'
 class TRPCDatabaseClient implements IDatabaseClient {
   trips: ITripRepository = new TripRepository()
   days: IDayRepository = new DayRepository()
+  files: IFileRepository = new FileRepository()
 
   /**
    * Инициализация клиента. Для tRPC не требуется специальных действий.

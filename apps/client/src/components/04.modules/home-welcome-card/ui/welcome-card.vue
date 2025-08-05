@@ -2,6 +2,7 @@
 import { Icon } from '@iconify/vue'
 import { useMouse, useWindowSize } from '@vueuse/core'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { InteractiveGridPattern } from '~/components/02.shared/interactive-grid-pattern'
 
 const router = useRouter()
 
@@ -11,20 +12,16 @@ function goToTrips() {
 
 const cardRef = ref<HTMLElement | null>(null)
 const transformStyle = ref('')
-
 const { x, y } = useMouse({ touch: false })
 const { width, height } = useWindowSize()
 
 const cardTransform = computed(() => {
   if (!cardRef.value)
     return ''
-
   const maxRotate = 8
   const perspective = 1000
-
   const rotateX = ((y.value / height.value) * 2 - 1) * maxRotate * -1
   const rotateY = ((x.value / width.value) * 2 - 1) * maxRotate
-
   return `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`
 })
 
@@ -39,22 +36,29 @@ function onMouseMove() {
 <template>
   <div class="root-page" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
     <div ref="cardRef" class="glass-card" :style="{ transform: transformStyle }">
-      <div class="logo-accent">
-        <Icon icon="mdi:map-marker-path" />
+      <InteractiveGridPattern
+        class="card-background-grid"
+        :squares="[25, 25]"
+        :width="35"
+        :height="35"
+      />
+
+      <div class="card-content">
+        <div class="logo-accent">
+          <Icon icon="mdi:map-marker-path" />
+        </div>
+        <h1 class="title">
+          Trip Scheduler
+        </h1>
+        <p class="subtitle">
+          Ваш умный помощник для создания идеальных маршрутов, организации
+          планов и незабываемых впечатлений.
+        </p>
+        <KitBtn class="cta-button" @click="goToTrips">
+          <Icon icon="mdi:compass-rose" />
+          <span>К моим путешествиям</span>
+        </KitBtn>
       </div>
-      <h1 class="title">
-        Trip Scheduler
-      </h1>
-      <p class="subtitle">
-        Ваш умный помощник для создания идеальных маршрутов, организации планов и незабываемых впечатлений.
-      </p>
-      <KitBtn
-        class="cta-button"
-        @click="goToTrips"
-      >
-        <Icon icon="mdi:compass-rose" />
-        К моим путешествиям
-      </KitBtn>
     </div>
   </div>
 </template>
@@ -96,11 +100,7 @@ function onMouseMove() {
 
 .glass-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 48px;
+  overflow: hidden;
   border-radius: 24px;
   background-color: rgba(var(--bg-secondary-color-rgb), 0.5);
   border: 1px solid rgba(var(--border-secondary-color-rgb), 0.3);
@@ -109,6 +109,26 @@ function onMouseMove() {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   max-width: 600px;
+}
+
+.card-background-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform: skewY(-12deg);
+
+  mask-image: radial-gradient(circle 250px at center, white, transparent);
+  -webkit-mask-image: radial-gradient(circle 250px at center, white, transparent);
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px;
 }
 
 .logo-accent {
@@ -144,6 +164,9 @@ function onMouseMove() {
 }
 
 .cta-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 0.8rem 1.8rem;
   font-size: 1rem;
   border-radius: 12px;
@@ -151,15 +174,19 @@ function onMouseMove() {
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  background-color: var(--bg-accent-color);
+  color: var(--fg-on-accent-color);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(var(--fg-accent-color-rgb), 0.3);
   }
 
-  :deep(.kit-btn__content) {
+  > svg {
     font-size: 1.25rem;
-    gap: 12px;
   }
 }
 </style>

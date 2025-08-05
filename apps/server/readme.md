@@ -1,4 +1,4 @@
-# Trip Scheduler API
+# Trip Scheduler - API сервер
 
 Это бэкенд-сервис для приложения по планированию путешествий. Он построен с использованием Hono, tRPC и Drizzle ORM, и работает на Bun.
 
@@ -6,20 +6,21 @@
 
 - [Технологии](#технологии)
 - [Требования](#требования)
-- [Локальная разработка](#локальная-разработка)
+- [Начало работы](#начало-работы)
   - [1. Запуск базы данных](#1-запуск-базы-данных)
-  - [2. Запуск сервера](#3-запуск-сервера)
+  - [2. Настройка окружения](#2-настройка-окружения)
+  - [3. Запуск сервера](#3-запуск-сервера)
 - [Доступные скрипты](#доступные-скрипты)
+- [Структура проекта](#структура-проекта)
 - [API](#api)
+  - [tRPC эндпоинты](#trpc-эндпоинты)
+  - [REST эндпоинты](#rest-эндпоинты)
 - [Сборка и запуск в Docker](#сборка-и-запуск-в-docker)
-  - [1. Создание Dockerfile](#1-создание-dockerfile)
-  - [2. Сборка образа](#2-сборка-образа)
-  - [3. Запуск контейнера](#3-запуск-контейнера)
 
 ## Технологии
 
 - **Среда выполнения:** [Bun](https://bun.sh/)
-- **Фреймворк:** [Hono](https://hono.dev/)
+- **Веб-фреймворк:** [Hono](https://hono.dev/)
 - **API:** [tRPC](https://trpc.io/)
 - **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
 - **База данных:** [PostgreSQL](https://www.postgresql.org/)
@@ -32,11 +33,11 @@
 - **[Bun](https://bun.sh/docs/installation)** (v1.1.0 или выше)
 - **[Docker](https://www.docker.com/get-started/)** и Docker Compose
 
-## Локальная разработка
+## Начало работы
 
 ### 1. Запуск базы данных
 
-Для корректной работы приложения необходима запущенная база данных PostgreSQL. Используйте команду ниже, чтобы запустить контейнер Docker с нужными параметрами (взяты из `drizzle.config.ts`).
+Для корректной работы приложения необходима запущенная база данных PostgreSQL. Используйте команду ниже, чтобы запустить контейнер Docker с нужными параметрами.
 
 ```bash
 docker run -p 5432:5432 \
@@ -49,17 +50,31 @@ docker run -p 5432:5432 \
   postgres:latest
 ```
 
-#### Подключтся к базе и посмотреть ID
+### 2. Настройка окружения
 
-```bash
-docker exec -it trip-scheduler-db psql -U trip-scheduler -d trip_scheduler_dev -c "SELECT id, title FROM days;"
+Приложение использует переменные окружения для конфигурации. Создайте файл `.env` в корневой директории проекта и добавьте в него следующие переменные:
+
+```env
+# URL для подключения к базе данных
+DATABASE_URL="postgresql://trip-scheduler:trip-scheduler@localhost:5432/trip_scheduler_dev"
+
+# URL API для доступа к загруженным файлам
+API_URL="http://localhost:8080"
 ```
 
-### 2. Запуск сервера
+### 3. Запуск сервера
 
-Запустите сервер в режиме разработки с автоматической перезагрузкой при изменениях.
+Перед первым запуском необходимо применить миграции и заполнить базу данных тестовыми данными.
 
-> **Примечание:** Если вы хотите сбросить базу данных и накатить всё с нуля, можно выполнить команды `db:migrate` и `db:seed` последовательно.
+```bash
+# Применяет миграции к базе данных
+bun run db:migrate
+
+# (Опционально) Заполняет базу данных тестовыми данными
+bun run db:seed
+```
+
+Теперь запустите сервер в режиме разработки с автоматической перезагрузкой при изменениях.
 
 ```bash
 bun run dev
@@ -84,53 +99,59 @@ bun run dev
 | `bun run db:migrate`  | Применяет существующие миграции к базе данных.                            |
 | `bun run db:seed`     | Заполняет базу данных начальными (тестовыми) данными.                     |
 | `bun run db:generate` | Генерирует новые файлы миграций на основе изменений в `src/db/schema.ts`. |
+| `bun run db:reset`    | Удаляет все таблицы, генерирует новые миграции и заполняет БД.            |
 | `bun run lint`        | Проверяет код на соответствие правилам ESLint.                            |
 | `bun run build`       | Собирает production-версию приложения в папку `dist/`.                    |
 | `bun run start`       | Запускает собранную версию приложения из папки `dist/`.                   |
 
+## Структура проекта
+
+```
+/src
+├── db/                # Схемы, миграции и сиды для Drizzle ORM
+├── lib/               # Общие утилиты и схемы (Zod, tRPC)
+├── modules/           # Основная бизнес-логика, разделенная по модулям (trip, day)
+│   ├── day/
+│   ├── image/
+│   └── trip/
+├── repositories/      # Логика доступа к данным (работа с БД)
+├── router.ts          # Корневой роутер tRPC, объединяющий все модули
+├── server.ts          # Точка входа в приложение, настройка сервера Hono
+└── index.ts           # Настройка роутов Hono и middleware
+```
+
 ## API
 
-Сервер предоставляет **tRPC API**.
+Сервер предоставляет гибридный API: основная часть реализована через **tRPC**, а для загрузки файлов используется **REST** эндпоинт.
 
-- **Endpoint:** `http://localhost:8080/trpc`
-- Для взаимодействия с API используйте любой tRPC-клиент, например, `@trpc/client`.
+### tRPC эндпоинты
+
+- **Основной эндпоинт:** `http://localhost:8080/trpc`
+- **Доступные процедуры:**
+  - `trip.list`: Получение списка всех путешествий.
+  - `trip.getById`: Получение путешествия по ID.
+  - `trip.getByIdWithDays`: Получение путешествия по ID вместе с днями и активностями.
+  - `day.getByTripId`: Получение всех дней для конкретного путешествия.
+  - `day.getById`: Получение дня по ID.
+  - `image.upload`: Сохранение URL загруженного изображения.
+  - `image.listByTrip`: Получение списка всех изображений путешествия.
+
+Для взаимодействия с tRPC API используйте любой совместимый клиент, например, `@trpc/client`.
+
+### REST эндпоинты
+
+- **`POST /api/upload`**: Загрузка файла изображения.
+  - **Тип контента:** `multipart/form-data`
+  - **Поля:**
+    - `file`: Загружаемый файл.
+    - `tripId`: UUID путешествия, к которому относится изображение.
+  - **Ответ:**
+    - `200 OK`: `{ "success": true, "url": "http://localhost:8080/static/uploads/{tripId}/{filename}" }`
+    - `400 Bad Request`: Если файл или `tripId` отсутствуют.
 
 ## Сборка и запуск в Docker
 
-### 1. Создание Dockerfile
-
-Для контейнеризации приложения создайте `Dockerfile` в корне проекта:
-
-```Dockerfile
-# Этап 1: Установка зависимостей
-FROM oven/bun:1 as deps
-WORKDIR /usr/src/app
-COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
-
-# Этап 2: Сборка приложения
-FROM oven/bun:1 as build
-WORKDIR /usr/src/app
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY . .
-RUN bun run build
-
-# Этап 3: Запуск в production
-FROM oven/bun:1-slim as release
-WORKDIR /usr/src/app
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY package.json .
-
-EXPOSE 8080
-ENV NODE_ENV=production
-ENV PORT=8080
-
-# Запускаем собранный JS-файл
-CMD ["bun", "run", "dist/index.js"]
-```
-
-### 2. Сборка образа
+### Сборка образа
 
 Выполните команду для сборки Docker-образа:
 
@@ -138,16 +159,17 @@ CMD ["bun", "run", "dist/index.js"]
 docker build -t trip-scheduler-api .
 ```
 
-### 3. Запуск контейнера
+### Запуск контейнера
 
-Запустите собранный образ в контейнере. Не забудьте, что контейнер с PostgreSQL (`trip-scheduler-db`) уже должен быть запущен.
+Запустите собранный образ в контейнере. Убедитесь, что контейнер с PostgreSQL (`trip-scheduler-db`) уже запущен.
 
 ```bash
 docker run -d \
   --name trip-scheduler-api \
   -p 8080:8080 \
-  --network=host \
+  -e DATABASE_URL="postgresql://trip-scheduler:trip-scheduler@host.docker.internal:5432/trip_scheduler_dev" \
+  -e API_URL="http://localhost:8080" \
   trip-scheduler-api:latest
 ```
 
-> **--network=host** используется для простого доступа к `localhost:5432`, где работает база данных. В реальном production окружении лучше использовать Docker-сети.
+> **Примечание:** Мы используем `host.docker.internal` для подключения к базе данных, запущенной на хост-машине из контейнера. В production-окружении рекомендуется использовать Docker-сети для связи между контейнерами.

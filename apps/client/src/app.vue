@@ -13,7 +13,7 @@ import '~/assets/scss/fonts.scss'
 
 const route = useRoute()
 const layout = computed(() => route.meta.layout || 'empty')
-const transition = computed(() => route.meta.transition || 'smooth-appear')
+const transition = computed(() => route.meta.transition)
 
 const layouts = {
   default: DefaultLayout,
@@ -24,9 +24,11 @@ const layouts = {
 <template>
   <component :is="layouts[layout]">
     <router-view v-slot="{ Component }">
-      <transition :name="transition" mode="out-in">
+      <transition v-if="transition" :name="transition" mode="out-in">
         <component :is="Component" />
       </transition>
+
+      <component :is="Component" v-else />
     </router-view>
   </component>
 </template>

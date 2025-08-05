@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ITrip } from '../../models/types'
 import { Icon } from '@iconify/vue'
+import { InteractiveGridPattern } from '~/components/02.shared/interactive-grid-pattern'
 
 type Props = ITrip
 
@@ -31,9 +32,6 @@ function getAvatarClass(name: string): string {
   const index = name.length % avatarColorNames.length
   return `avatar--${avatarColorNames[index]}`
 }
-// --- КОНЕЦ ИЗМЕНЕНИЯ 1 ---
-
-// Форматирование дат
 const formattedDates = computed(() => {
   const start = new Date(props.startDate)
   const end = new Date(props.endDate)
@@ -173,31 +171,13 @@ const visibilityIcon = computed(() => {
 </template>
 
 <style scoped lang="scss">
-@use 'sass:color'; // Импортируем модуль color для использования color.mix
-
-$avatar-base-colors: (
-  'blue': #096dd9,
-  'orange': #d48806,
-  'green': #389e0d,
-  'red': #d9363e,
-  'purple': #722ed1,
-  'cyan': #08979c,
-);
-
-// Миксин для генерации стилей аватара
-@mixin generate-avatar-colors($base-color) {
-  color: $base-color;
-  // Используем современный синтаксис color.mix для устранения предупреждения
-  background-color: color.mix(white, $base-color, 90%);
-}
-
 .travel-card-wrapper {
   padding: 8px;
   border-radius: 20px;
   transition: all 0.3s ease-in-out;
 
   &:hover {
-    background-color: var(--bg-secondary-color);
+    background-color: var(--bg-hover-color);
   }
 }
 
@@ -217,7 +197,7 @@ $avatar-base-colors: (
 
   .travel-card-wrapper:hover & {
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
-    border-color: var(--border-secondary-color);
+    border-color: var(--border-primary-color);
   }
 }
 
@@ -259,7 +239,8 @@ $avatar-base-colors: (
   .image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.4) 100%);
+    background: linear-gradient(to top, var(--bg-inverted-color) 0%, transparent 80%);
+    opacity: 0.7;
     z-index: 1;
   }
 }
@@ -278,21 +259,28 @@ $avatar-base-colors: (
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #fff;
   backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid;
 
   &.completed {
-    background-color: rgba(27, 131, 89, 0.7);
+    background-color: var(--bg-success-color);
+    color: var(--fg-success-color);
+    border-color: var(--border-success-color);
   }
   &.in-progress {
-    background-color: rgba(5, 122, 255, 0.7);
+    background-color: var(--bg-info-color);
+    color: var(--fg-info-color);
+    border-color: var(--border-info-color);
   }
   &.planned {
-    background-color: rgba(224, 117, 0, 0.7);
+    background-color: var(--bg-warning-color);
+    color: var(--fg-warning-color);
+    border-color: var(--border-warning-color);
   }
   &.draft {
-    background-color: rgba(108, 117, 125, 0.7);
+    background-color: var(--bg-tertiary-color);
+    color: var(--fg-tertiary-color);
+    border-color: var(--border-secondary-color);
   }
 }
 
@@ -307,15 +295,15 @@ $avatar-base-colors: (
   width: 32px;
   height: 32px;
   font-size: 1.1rem;
-  color: #fff;
-  background-color: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--fg-inverted-color);
+  background-color: var(--bg-overlay-primary-color);
+  border: 1px solid var(--border-secondary-color);
   border-radius: 50%;
   backdrop-filter: blur(5px);
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--bg-overlay-secondary-color);
   }
 }
 
@@ -323,7 +311,7 @@ $avatar-base-colors: (
   position: relative;
   font-size: 1.5rem;
   font-weight: 700;
-  color: white;
+  color: var(--fg-inverted-color);
   margin: 0 40px 0 0;
   z-index: 2;
   line-height: 1.2;
@@ -352,7 +340,7 @@ $avatar-base-colors: (
     justify-content: center;
     width: 32px;
     height: 32px;
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: var(--bg-primary-color);
     color: var(--fg-primary-color);
     border: none;
     border-radius: 50%;
@@ -362,7 +350,7 @@ $avatar-base-colors: (
     transition: all 0.2s ease;
 
     &:hover {
-      background-color: #fff;
+      background-color: var(--bg-hover-color);
       transform: scale(1.1);
       color: var(--fg-accent-color);
     }
@@ -375,6 +363,8 @@ $avatar-base-colors: (
   flex-direction: column;
   gap: 16px;
   flex-grow: 1;
+  position: relative;
+  overflow: hidden;
 }
 
 .card-meta {
@@ -402,7 +392,7 @@ $avatar-base-colors: (
   align-items: center;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid var(--border-primary-color);
+  border-top: 1px solid var(--border-secondary-color);
 }
 
 .card-participants {
@@ -418,10 +408,9 @@ $avatar-base-colors: (
     justify-content: center;
     font-size: 0.8rem;
     font-weight: 600;
-    border: 2px solid var(--bg-secondary-color);
+    border: 2px solid var(--bg-primary-color);
     margin-left: -8px;
 
-    // Генерируем классы-модификаторы для каждого цвета
     @each $name, $color in $avatar-base-colors {
       &--#{$name} {
         @include generate-avatar-colors($color);

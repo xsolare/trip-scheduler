@@ -74,3 +74,11 @@ export interface Trip {
    */
   updatedAt?: string
 }
+
+export interface TripImage {
+  id: string
+  url: string
+  tripId: string
+  createdAt: string
+  updatedAt: string
+}

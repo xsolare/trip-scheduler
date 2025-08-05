@@ -12,10 +12,13 @@ $bg-overlay-primary-color: #454a6136;
 $bg-overlay-secondary-color: #94a1abdc;
 $bg-action-hover-color: #828dca;
 $bg-hover-color: #dfe1e6;
+$bg-focus-color: #d7e0f3;
 
 // BG STATUS
 $bg-success-color: #d0e6d2;
 $bg-error-color: #ebd5d9;
+$bg-warning-color: #fcefdc;
+$bg-info-color: #d4e8f7;
 
 // FG
 $fg-primary-color: #22263b;
@@ -24,6 +27,15 @@ $fg-tertiary-color: #22263b99;
 $fg-muted-color: #22263b66;
 $fg-accent-color: #344079;
 $fg-action-color: #424c86;
+$fg-inverted-color: #ffffff;
+$fg-disabled-color: #22263b4d;
+$fg-pressed-color: #22263b;
+
+// FG STATUS
+$fg-success-color: #1e6627;
+$fg-error-color: #8c2b3d;
+$fg-warning-color: #8a5a1b;
+$fg-info-color: #2a5a7f;
 
 // Border
 $border-primary-color: #22263b54;
@@ -31,3 +43,11 @@ $border-secondary-color: #22263b1a;
 $border-accent-color: #bbcef8;
 $border-disabled-color: #22263b1a;
 $border-button-secondary-color: #34407933;
+$border-focus-color: #344079;
+$border-pressed-color: #344079;
+
+// BORDER STATUS
+$border-success-color: #5b9d63;
+$border-error-color: #c58c99;
+$border-warning-color: #e6c58d;
+$border-info-color: #89b9d9;

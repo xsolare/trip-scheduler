@@ -1,5 +1,5 @@
 import type { Day } from '~/shared/types/models/activity'
-import type { Trip } from '~/shared/types/models/trip'
+import type { Trip, TripImage } from '~/shared/types/models/trip'
 
 export interface ITripRepository {
   getAll: () => Promise<Trip[]>
@@ -10,10 +10,17 @@ export interface IDayRepository {
   getByTripId: (tripId: string) => Promise<Day[]>
 }
 
+export interface IFileRepository {
+  uploadFile: (file: File, tripId: string) => Promise<{ url: string }>
+  listImageByTrip: (tripId: string) => Promise<TripImage[]>
+  addImage: (tripId: string, imageUrl: string) => Promise<TripImage>
+}
+
 // Интерфейс для всей базы данных
 export interface IDatabaseClient {
   trips: ITripRepository
   days: IDayRepository
+  files: IFileRepository
 
   initDb: () => Promise<this>
 

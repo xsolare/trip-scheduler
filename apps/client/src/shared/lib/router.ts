@@ -14,6 +14,9 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.Root,
     name: AppRouteNames.Root,
     component: Root,
+    meta: {
+      transition: 'smooth-appear',
+    },
   },
   {
     path: AppRoutePaths.Trip.List,
@@ -37,6 +40,7 @@ const routes: RouteRecordRaw[] = [
     component: NotFound,
     meta: {
       layout: 'default',
+      transition: 'smooth-appear',
     },
   },
 ]

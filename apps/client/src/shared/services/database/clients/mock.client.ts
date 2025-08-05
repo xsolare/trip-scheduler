@@ -1,14 +1,17 @@
-import type { IDatabaseClient, IDayRepository, ITripRepository } from '../model/types'
+import type { IDatabaseClient, IDayRepository, IFileRepository, ITripRepository } from '../model/types'
 import { DayRepository } from '../repositories/mock/day.repository'
 import { TripRepository } from '../repositories/mock/trip.repository'
+import { FileRepository } from '../repositories/real/file.repository'
 
 class MockDatabaseClient implements IDatabaseClient {
+  files!: IFileRepository
   trips!: ITripRepository
   days!: IDayRepository
 
   async initDb(): Promise<this> {
     this.trips = new TripRepository()
     this.days = new DayRepository()
+    this.files = new FileRepository()
 
     return this
   }

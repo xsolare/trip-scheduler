@@ -72,7 +72,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   align-items: center;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid var(--border-primary-color);
+  border-top: 1px solid var(--border-secondary-color);
 }
 
 .card-participants-skeleton,

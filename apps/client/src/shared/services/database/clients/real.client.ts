@@ -1,12 +1,14 @@
 import type Database from '@tauri-apps/plugin-sql'
-import type { IDatabaseClient } from '../model/types.ts'
+import type { IDatabaseClient, IFileRepository } from '../model/types.ts'
 import { getDb } from '../connection.ts'
 import { DayRepository } from '../repositories/real/day.repository.ts'
+import { FileRepository } from '../repositories/real/file.repository.ts'
 import { TripRepository } from '../repositories/real/trip.repository.ts'
 
 class RealDatabaseClient implements IDatabaseClient {
   db!: Database
 
+  files!: IFileRepository
   trips!: TripRepository
   days!: DayRepository
 
@@ -15,6 +17,7 @@ class RealDatabaseClient implements IDatabaseClient {
 
     this.trips = new TripRepository(this.db)
     this.days = new DayRepository(this.db)
+    this.files = new FileRepository()
 
     return this
   }

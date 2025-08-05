@@ -8,7 +8,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
-import { computed } from 'vue'
 
 interface Props {
   maxWidth?: number

@@ -10,6 +10,8 @@ import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
 import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
+const emit = defineEmits(['update:hasError'])
+
 const tripStore = useTripStore()
 const route = useRoute()
 
@@ -48,9 +50,15 @@ function handleAddNewActivity() {
   tripStore.addActivity(getSelectedDay.value.id, newActivity)
 }
 
+watch(fetchError, (newError) => {
+  emit('update:hasError', !!newError)
+})
+
 onMounted(() => {
-  if (tripId.value)
+  if (tripId.value) {
     tripStore.fetchDaysForTrip(tripId.value)
+    tripStore.fetchTripImages()
+  }
 })
 </script>
 
@@ -103,3 +111,9 @@ onMounted(() => {
     </template>
   </AsyncStateWrapper>
 </template>
+
+<style lang="scss" scoped>
+.trip-info-wrapper {
+  height: 100%;
+}
+</style>
