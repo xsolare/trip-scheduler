@@ -140,7 +140,7 @@ function onMouseMove() {
   font-size: 4rem;
   margin-bottom: 24px;
   animation: float 4s ease-in-out infinite;
-  text-shadow: 0 0 20px rgba(var(--fg-accent-color-rgb), 0.5);
+  text-shadow: 0 0 20px var(--fg-accent-color);
 }
 
 .title {
@@ -171,7 +171,7 @@ function onMouseMove() {
   padding: 0.8rem 1.8rem;
   font-size: 1rem;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(var(--fg-accent-color-rgb), 0.2);
+  box-shadow: 0 4px 15px var(--fg-accent-color);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -183,7 +183,7 @@ function onMouseMove() {
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(var(--fg-accent-color-rgb), 0.3);
+    box-shadow: 0 8px 25px var(--fg-accent-color);
   }
 
   > svg {

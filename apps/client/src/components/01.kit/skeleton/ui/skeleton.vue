@@ -36,7 +36,7 @@ const style = computed(() => ({
   color: transparent;
   display: block;
   user-select: none;
-  background: var(--bg-disabled-color, #e0e0e0);
+  background: var(--bg-disabled-color);
 }
 
 .p-skeleton * {
@@ -46,7 +46,6 @@ const style = computed(() => ({
 .p-skeleton--wave {
   position: relative;
   overflow: hidden;
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 .p-skeleton--wave::after {

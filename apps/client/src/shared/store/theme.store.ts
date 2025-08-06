@@ -1,0 +1,104 @@
+import { useStorage } from '@vueuse/core'
+
+export type ThemeName = 'light' | 'dark' | 'custom'
+
+export interface ColorPalette {
+  [key: string]: string // e.g., 'bg-primary-color': '#eeeeee'
+}
+
+const defaultLightPalette: ColorPalette = {
+  // BG
+  'bg-primary-color': '#eeeeee',
+  'bg-secondary-color': '#e8eaeb',
+  'bg-tertiary-color': '#d2d8dd',
+  'bg-header-color': '220, 223, 225',
+  'bg-disabled-color': '#e7e9ed',
+  'bg-inverted-color': '#22263b',
+  'bg-accent-overlay-color': '#818bb5',
+  'bg-accent-color': '#d7e0f3',
+  'bg-pressed-color': '#22263b0d',
+  'bg-overlay-primary-color': '#454a6136',
+  'bg-overlay-secondary-color': '#94a1abdc',
+  'bg-action-hover-color': '#828dca',
+  'bg-hover-color': '#dfe1e6',
+  'bg-focus-color': '#d7e0f3',
+  // BG STATUS
+  'bg-success-color': '#d0e6d2',
+  'bg-error-color': '#ebd5d9',
+  'bg-warning-color': '#fcefdc',
+  'bg-info-color': '#d4e8f7',
+  // FG
+  'fg-primary-color': '#22263b',
+  'fg-secondary-color': '#22263bcc',
+  'fg-tertiary-color': '#22263b99',
+  'fg-muted-color': '#22263b66',
+  'fg-accent-color': '#344079',
+  'fg-action-color': '#424c86',
+  'fg-inverted-color': '#ffffff',
+  'fg-disabled-color': '#22263b4d',
+  'fg-pressed-color': '#22263b',
+  // FG STATUS
+  'fg-success-color': '#1e6627',
+  'fg-error-color': '#8c2b3d',
+  'fg-warning-color': '#8a5a1b',
+  'fg-info-color': '#2a5a7f',
+  // Border
+  'border-primary-color': '#22263b54',
+  'border-secondary-color': '#22263b1a',
+  'border-accent-color': '#bbcef8',
+  'border-disabled-color': '#22263b1a',
+  'border-button-secondary-color': '#34407933',
+  'border-focus-color': '#344079',
+  'border-pressed-color': '#344079',
+  // BORDER STATUS
+  'border-success-color': '#5b9d63',
+  'border-error-color': '#c58c99',
+  'border-warning-color': '#e6c58d',
+  'border-info-color': '#89b9d9',
+}
+
+export const useThemeStore = defineStore('theme', () => {
+  const isCreatorOpen = ref(false)
+
+  const activeThemeName = useStorage<ThemeName>('active-theme', 'light')
+  const customThemePalette = useStorage<ColorPalette>('custom-theme-palette', defaultLightPalette)
+
+  // --- GETTERS ---
+  const isCustomThemeActive = computed(() => activeThemeName.value === 'custom')
+
+  // --- ACTIONS ---
+  function setTheme(name: ThemeName) {
+    activeThemeName.value = name
+  }
+
+  function resetCustomTheme() {
+    customThemePalette.value = { ...defaultLightPalette }
+    setTheme('custom')
+  }
+
+  function openCreator() {
+    isCreatorOpen.value = true
+  }
+
+  function closeCreator() {
+    isCreatorOpen.value = false
+  }
+
+  function loadInitialTheme() {
+    if (!customThemePalette.value || Object.keys(customThemePalette.value).length === 0) {
+      customThemePalette.value = { ...defaultLightPalette }
+    }
+  }
+
+  return {
+    isCreatorOpen,
+    activeThemeName,
+    customThemePalette,
+    isCustomThemeActive,
+    setTheme,
+    openCreator,
+    closeCreator,
+    loadInitialTheme,
+    resetCustomTheme,
+  }
+})

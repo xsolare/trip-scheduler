@@ -6,21 +6,43 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   <div class="travel-card-wrapper">
     <div class="travel-card">
       <div class="card-image-container">
-        <Skeleton height="200px" width="100%" border-radius="0" />
+        <!-- Скелетоны для элементов в шапке (статус и заголовок) -->
+        <div class="card-header-skeleton">
+          <Skeleton width="110px" height="26px" border-radius="20px" />
+        </div>
+        <div class="card-title-skeleton">
+          <Skeleton width="75%" height="32px" />
+          <Skeleton width="55%" height="32px" />
+        </div>
       </div>
+
       <div class="card-content">
         <div class="card-meta">
-          <Skeleton width="70%" height="24px" class="mb-4" />
-          <Skeleton width="50%" height="18px" />
-          <Skeleton width="60%" height="18px" />
-          <Skeleton width="40%" height="18px" />
+          <!-- Скелетоны для мета-данных (даты, города, бюджет) -->
+          <div class="meta-item-skeleton">
+            <Skeleton width="24px" height="24px" border-radius="50%" />
+            <Skeleton width="60%" height="20px" />
+          </div>
+          <div class="meta-item-skeleton">
+            <Skeleton width="24px" height="24px" border-radius="50%" />
+            <Skeleton width="70%" height="20px" />
+          </div>
+          <div class="meta-item-skeleton">
+            <Skeleton width="24px" height="24px" border-radius="50%" />
+            <Skeleton width="40%" height="20px" />
+          </div>
         </div>
+
         <div class="card-footer">
+          <!-- Скелетоны для аватарок участников -->
           <div class="card-participants-skeleton">
             <Skeleton width="32px" height="32px" border-radius="50%" />
-            <Skeleton width="32px" height="32px" border-radius="50%" style="margin-left: -12px" />
+            <Skeleton width="32px" height="32px" border-radius="50%" class="avatar-overlap" />
+            <Skeleton width="32px" height="32px" border-radius="50%" class="avatar-overlap" />
           </div>
+          <!-- Скелетоны для тегов -->
           <div class="card-tags-skeleton">
+            <Skeleton width="70px" height="26px" border-radius="16px" />
             <Skeleton width="70px" height="26px" border-radius="16px" />
           </div>
         </div>
@@ -43,13 +65,32 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  border: 1px solid var(--border-primary-color);
+  border: 1px solid var(--border-secondary-color);
 }
 
 .card-image-container {
+  position: relative;
   height: 200px;
   width: 100%;
-  background-color: var(--bg-tertiary-color);
+  padding: 12px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--bg-tertiary-color); 
+}
+
+.card-header-skeleton {
+  display: flex;
+  z-index: 2;
+}
+
+.card-title-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 2;
+  margin-right: 40px;
 }
 
 .card-content {
@@ -63,7 +104,13 @@ import { Skeleton } from '~/components/01.kit/skeleton'
 .card-meta {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px; 
+}
+
+.meta-item-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .card-footer {
@@ -81,7 +128,13 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   align-items: center;
 }
 
-.mb-4 {
-  margin-bottom: 4px;
+.card-participants-skeleton {
+  .avatar-overlap {
+    margin-left: -8px; 
+  }
+}
+
+.card-tags-skeleton {
+  gap: 6px; 
 }
 </style>

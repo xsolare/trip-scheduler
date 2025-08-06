@@ -12,6 +12,7 @@ import '~/assets/scss/animation.scss'
 import '~/assets/scss/fonts.scss'
 
 const route = useRoute()
+
 const layout = computed(() => route.meta.layout || 'empty')
 const transition = computed(() => route.meta.transition)
 

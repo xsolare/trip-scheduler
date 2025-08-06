@@ -13,6 +13,10 @@ class TripRepository implements ITripRepository {
   async getAll(): Promise<Trip[]> {
     const result = await trpc.trip.list.query()
 
+    if (import.meta.env.VITE_APP_REQUEST_THROTTLE)
+      await new Promise(r => setTimeout(() => r(true), 1_500))
+
+
     return result as Trip[]
   }
 
@@ -21,8 +25,8 @@ class TripRepository implements ITripRepository {
    * @param id - Уникальный идентификатор путешествия.
    * @returns Promise<Trip | null> - Объект путешествия или null, если не найдено.
    */
-  async getById(id: string): Promise<Trip | null> {
-    const result = await trpc.trip.byId.query({ id })
+  async getById(tripId: string): Promise<Trip | null> {
+    const result = await trpc.trip.getById.query({ tripId })
 
     return result as Trip | null
   }

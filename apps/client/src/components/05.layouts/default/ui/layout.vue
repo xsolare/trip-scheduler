@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import { BackgroundEffects } from '~/components/02.shared/background-effects'
+import { ThemeManager } from '~/components/02.shared/theme-manager'
+
 import Footer from './footer.vue'
 import Header from './header.vue'
 </script>
@@ -17,6 +19,8 @@ import Header from './header.vue'
 
     <Footer />
   </main>
+  
+  <ThemeManager/>
 </template>
 
 <style scoped lang="scss">

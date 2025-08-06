@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import { SyncIndicator } from '~/components/02.shared/sync-indicator'
-import { ThemeSwitcher } from '~/components/02.shared/theme-switcher'
 import { AppRoutePaths } from '~/shared/constants/routes'
+import { useThemeStore } from '~/shared/store/theme.store'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()
+const themeStore = useThemeStore()
 </script>
 
 <template>
@@ -28,7 +29,10 @@ const router = useRouter()
 
       <!-- Утилиты: синхронизация и профиль -->
       <div class="header-utils">
-        <ThemeSwitcher />
+        <button class="util-btn" title="Настроить тему" @click="themeStore.openCreator()">
+          <Icon icon="mdi:palette-outline" />
+        </button>
+
         <SyncIndicator />
         <div class="vr" />
 
@@ -144,6 +148,27 @@ const router = useRouter()
     display: flex;
     align-items: center;
     gap: 8px;
+
+    .util-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--fg-secondary-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.2rem;
+      overflow: hidden;
+
+      &:hover {
+        background-color: var(--bg-hover-color);
+        color: var(--fg-accent-color);
+      }
+    }
   }
 
   .profile {

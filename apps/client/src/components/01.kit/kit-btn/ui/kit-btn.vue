@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue' 
+
 interface Props {
+  icon?: string 
   variant?: 'solid' | 'outlined'
   color?: 'primary' | 'secondary'
   disabled?: boolean
@@ -25,6 +28,7 @@ const componentClasses = computed(() => [
     type="button"
   >
     <span class="kit-btn__content">
+      <Icon v-if="props.icon" :icon="props.icon" /> 
       <slot />
     </span>
   </button>
@@ -44,28 +48,38 @@ const componentClasses = computed(() => [
   border-radius: 4px;
   cursor: pointer;
   outline: none;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.1s ease;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 
   & * {
     pointer-events: none;
   }
 
+  &:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(50, 50, 93, .1), 0 3px 6px rgba(0, 0, 0, .08);
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(0px);
+  }
+
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
 
   &--solid {
     &.kit-btn--color-primary {
       background-color: var(--fg-accent-color);
-      color: #fff;
+      border-color: var(--fg-accent-color);
+      color: var(--fg-inverted-color);
 
       &:not(:disabled):hover {
         background-color: var(--bg-action-hover-color);
+        border-color: var(--bg-action-hover-color);
       }
     }
     &.kit-btn--color-secondary {
@@ -76,18 +90,18 @@ const componentClasses = computed(() => [
         background-color: var(--bg-hover-color);
       }
     }
-    transition: all 0.2s ease-in-out;
   }
 
   &--outlined {
     background-color: transparent;
+    box-shadow: none;
 
     &.kit-btn--color-primary {
       border-color: var(--fg-accent-color);
       color: var(--fg-accent-color);
 
       &:not(:disabled):hover {
-        background-color: rgba(var(--fg-accent-color-rgb), 0.1);
+        background-color: var(--bg-disabled-color);
       }
     }
     &.kit-btn--color-secondary {
@@ -95,16 +109,16 @@ const componentClasses = computed(() => [
       color: var(--fg-secondary-color);
       &:not(:disabled):hover {
         background-color: var(--bg-hover-color);
-        border-color: var(--border-primary-color);
+        color: var(--fg-primary-color);
+        border-color: var(--border-hover-color);
       }
     }
-    transition: all 0.2s ease-in-out;
   }
 }
 
 .kit-btn__content {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.5rem; 
 }
 </style>

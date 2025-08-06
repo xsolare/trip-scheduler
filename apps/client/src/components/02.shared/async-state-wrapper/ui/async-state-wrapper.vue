@@ -26,8 +26,8 @@ defineProps<AsyncStateWrapperProps<T>>()
       </slot>
     </template>
     <template #default>
-      <div v-if="error" key="error">
-        <slot
+      <slot
+        v-if="error" key="error"
           name="error"
           :error="error"
           :retry="retryHandler"
@@ -39,20 +39,16 @@ defineProps<AsyncStateWrapperProps<T>>()
             action-text="Попробовать снова"
             @action="retryHandler"
           />
-        </slot>
-      </div>
+      </slot>
 
-      <div v-else-if="data" key="success">
-        <slot
-          name="success"
-          :data="data"
-          :retry="retryHandler"
-        />
-      </div>
+      <slot
+        v-else-if="data" key="success"
+        name="success"
+        :data="data"
+        :retry="retryHandler"
+      />
 
-      <div v-else key="empty">
-        <slot name="empty" />
-      </div>
+      <slot name="empty" v-else key="empty" />
     </template>
   </SkeletonWrapper>
 </template>
