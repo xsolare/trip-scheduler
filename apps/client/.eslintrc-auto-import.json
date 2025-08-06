@@ -285,7 +285,6 @@
     "useTextDirection": true,
     "useTextSelection": true,
     "useTextareaAutosize": true,
-    "useThemeMetaUpdater": true,
     "useThrottle": true,
     "useThrottleFn": true,
     "useThrottledRefHistory": true,
