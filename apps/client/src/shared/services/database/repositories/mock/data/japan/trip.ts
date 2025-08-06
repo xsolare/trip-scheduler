@@ -1,5 +1,5 @@
-import { Trip } from "~/shared/types/models/trip"
-import { tripJapanId } from "./constants"
+import type { Trip } from '~/shared/types/models/trip'
+import { tripJapanId } from './constants'
 
 export const MOCK_JAPAN_TRIP = {
   id: tripJapanId,

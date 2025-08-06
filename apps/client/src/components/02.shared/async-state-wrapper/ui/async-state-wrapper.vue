@@ -28,17 +28,17 @@ defineProps<AsyncStateWrapperProps<T>>()
     <template #default>
       <slot
         v-if="error" key="error"
-          name="error"
-          :error="error"
-          :retry="retryHandler"
-        >
-          <ErrorPlaceholder
-            image-src="/images/smth-wrong.png"
-            title="Что-то пошло не так"
-            message="Произошла ошибка при загрузке данных"
-            action-text="Попробовать снова"
-            @action="retryHandler"
-          />
+        name="error"
+        :error="error"
+        :retry="retryHandler"
+      >
+        <ErrorPlaceholder
+          image-src="/images/smth-wrong.png"
+          title="Что-то пошло не так"
+          message="Произошла ошибка при загрузке данных"
+          action-text="Попробовать снова"
+          @action="retryHandler"
+        />
       </slot>
 
       <slot
@@ -48,7 +48,7 @@ defineProps<AsyncStateWrapperProps<T>>()
         :retry="retryHandler"
       />
 
-      <slot name="empty" v-else key="empty" />
+      <slot v-else key="empty" name="empty" />
     </template>
   </SkeletonWrapper>
 </template>

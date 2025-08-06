@@ -142,10 +142,10 @@ const sectionGroups = computed(() => {
   const groups: { parent: ActivitySection, children: ActivitySection[] }[] = []
   const sections = props.activity.sections || []
   let i = 0
-  
+
   while (i < sections.length) {
     const currentSection = sections[i]
-    
+
     if (!currentSection.isAttached) {
       const attachedChildren = []
       let j = i + 1
@@ -176,7 +176,7 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   const groupId = sectionGroups.value.find(g => g.children === group.children)?.parent.id
   if (!groupId)
     return false
-  
+
   return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
 </script>
@@ -271,7 +271,6 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   position: relative;
   transition: all 0.3s ease;
   margin: 32px 0;
-
 
   &:hover {
     &::before {

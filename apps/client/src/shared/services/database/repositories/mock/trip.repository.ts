@@ -7,7 +7,6 @@ class TripRepository implements ITripRepository {
     if (import.meta.env.VITE_APP_REQUEST_THROTTLE)
       await new Promise(r => setTimeout(() => r(true), 1_500))
 
-
     return Promise.resolve(MOCK_TRIPS)
   }
 

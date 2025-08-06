@@ -1,5 +1,6 @@
 import type { App } from 'vue'
 import { useThemeStore } from '~/shared/store/theme.store'
+import { setupThemeColorMetaTagUpdater } from './meta-updater'
 
 export const themePlugin = {
   install(app: App) {
@@ -15,12 +16,9 @@ export const themePlugin = {
 
     watchEffect(() => {
       const htmlElement = document.documentElement
-
       htmlElement.style.cssText = ''
 
       if (themeStore.isCustomThemeActive) {
-        // Устанавливаем data-theme в 'custom', чтобы некоторые стили могли адаптироваться
-        // если это будет необходимо, но при этом применяем переменные напрямую.
         htmlElement.setAttribute('data-theme', 'custom')
         const palette = themeStore.customThemePalette
         for (const key in palette) {
@@ -31,5 +29,7 @@ export const themePlugin = {
         htmlElement.setAttribute('data-theme', themeStore.activeThemeName)
       }
     })
+
+    setupThemeColorMetaTagUpdater()
   },
 }

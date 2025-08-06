@@ -77,7 +77,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: var(--bg-tertiary-color); 
+  background-color: var(--bg-tertiary-color);
 }
 
 .card-header-skeleton {
@@ -104,7 +104,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
 .card-meta {
   display: flex;
   flex-direction: column;
-  gap: 10px; 
+  gap: 10px;
 }
 
 .meta-item-skeleton {
@@ -130,11 +130,11 @@ import { Skeleton } from '~/components/01.kit/skeleton'
 
 .card-participants-skeleton {
   .avatar-overlap {
-    margin-left: -8px; 
+    margin-left: -8px;
   }
 }
 
 .card-tags-skeleton {
-  gap: 6px; 
+  gap: 6px;
 }
 </style>

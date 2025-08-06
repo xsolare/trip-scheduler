@@ -19,8 +19,8 @@ import Header from './header.vue'
 
     <Footer />
   </main>
-  
-  <ThemeManager/>
+
+  <ThemeManager />
 </template>
 
 <style scoped lang="scss">

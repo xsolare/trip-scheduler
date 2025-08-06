@@ -1,4 +1,4 @@
-import { Trip } from '~/shared/types/models/trip'
+import type { Trip } from '~/shared/types/models/trip'
 import { tripChinaId } from './constants'
 
 export const MOCK_CHINA_TRIP = {

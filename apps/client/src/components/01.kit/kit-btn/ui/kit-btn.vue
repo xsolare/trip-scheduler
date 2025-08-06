@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue' 
+import { Icon } from '@iconify/vue'
 
 interface Props {
-  icon?: string 
+  icon?: string
   variant?: 'solid' | 'outlined'
   color?: 'primary' | 'secondary'
   disabled?: boolean
@@ -28,7 +28,7 @@ const componentClasses = computed(() => [
     type="button"
   >
     <span class="kit-btn__content">
-      <Icon v-if="props.icon" :icon="props.icon" /> 
+      <Icon v-if="props.icon" :icon="props.icon" />
       <slot />
     </span>
   </button>
@@ -49,7 +49,7 @@ const componentClasses = computed(() => [
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
   & * {
     pointer-events: none;
@@ -57,7 +57,9 @@ const componentClasses = computed(() => [
 
   &:not(:disabled):hover {
     transform: translateY(-2px);
-    box-shadow: 0 7px 14px rgba(50, 50, 93, .1), 0 3px 6px rgba(0, 0, 0, .08);
+    box-shadow:
+      0 7px 14px rgba(50, 50, 93, 0.1),
+      0 3px 6px rgba(0, 0, 0, 0.08);
   }
 
   &:not(:disabled):active {
@@ -68,7 +70,7 @@ const componentClasses = computed(() => [
     cursor: not-allowed;
     opacity: 0.6;
     transform: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
   &--solid {
@@ -119,6 +121,6 @@ const componentClasses = computed(() => [
 .kit-btn__content {
   display: flex;
   align-items: center;
-  gap: 0.5rem; 
+  gap: 0.5rem;
 }
 </style>

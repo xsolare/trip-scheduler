@@ -112,7 +112,7 @@ export const useTripInfoStore = defineStore('tripInfo', () => {
     const day = days.value.find(d => d.id === dayId)
     if (!day)
       return
-    
+
     const activityIndex = day.activities.findIndex(a => a.id === updatedActivity.id)
     if (activityIndex === -1)
       return null

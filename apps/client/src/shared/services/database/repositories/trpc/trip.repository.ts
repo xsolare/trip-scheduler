@@ -16,13 +16,12 @@ class TripRepository implements ITripRepository {
     if (import.meta.env.VITE_APP_REQUEST_THROTTLE)
       await new Promise(r => setTimeout(() => r(true), 1_500))
 
-
     return result as Trip[]
   }
 
   /**
    * Получает одно путешествие по его ID.
-   * @param id - Уникальный идентификатор путешествия.
+   * @param tripId - Уникальный идентификатор путешествия.
    * @returns Promise<Trip | null> - Объект путешествия или null, если не найдено.
    */
   async getById(tripId: string): Promise<Trip | null> {

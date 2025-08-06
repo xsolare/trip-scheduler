@@ -1,13 +1,13 @@
-import { v4 as uuidv4 } from 'uuid'
 import type {
-  Day,
   Activity,
+  ActivitySectionGallery,
   ActivitySections,
   ActivitySectionText,
-  ActivitySectionGallery,
+  Day,
 } from '~/shared/types/models/activity'
-import { ActivitySectionType } from '~/shared/types/models/activity'
 import type { Trip } from '~/shared/types/models/trip'
+import { v4 as uuidv4 } from 'uuid'
+import { ActivitySectionType } from '~/shared/types/models/activity'
 
 type ActivityInput = Omit<Activity, 'id' | 'dayId'>
 
@@ -33,7 +33,7 @@ export function createSection(type: ActivitySectionType.DESCRIPTION | ActivitySe
   }
 }
 
-export const createActivity = (time: string, title: string, sections: ActivitySections): ActivityInput => {
+export function createActivity(time: string, title: string, sections: ActivitySections): ActivityInput {
   const [startTime, endTime] = time.split('-')
   return {
     startTime,
@@ -43,7 +43,7 @@ export const createActivity = (time: string, title: string, sections: ActivitySe
   }
 }
 
-export const createDay = (tripId: string, date: string, title: string, description: string, activities: ActivityInput[]): Day => {
+export function createDay(tripId: string, date: string, title: string, description: string, activities: ActivityInput[]): Day {
   const dayId = uuidv4()
   return {
     id: dayId,
@@ -59,7 +59,7 @@ export const createDay = (tripId: string, date: string, title: string, descripti
   }
 }
 
-export const createTrip = (tripData: Omit<Trip, 'days'>, days: Day[]): Trip => {
+export function createTrip(tripData: Omit<Trip, 'days'>, days: Day[]): Trip {
   return {
     ...tripData,
     days: days.length,
