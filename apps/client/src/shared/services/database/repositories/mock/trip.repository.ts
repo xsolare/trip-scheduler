@@ -1,6 +1,6 @@
 import type { ITripRepository } from '../../model/types'
 import type { Trip } from '~/shared/types/models/trip'
-import { MOCK_TRIPS } from './trip.mock'
+import { MOCK_TRIPS } from './data/trip.mock'
 
 class TripRepository implements ITripRepository {
   async getAll(): Promise<Trip[]> {

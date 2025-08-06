@@ -1,6 +1,6 @@
 import type { IDayRepository } from '../../model/types'
 import type { Day } from '~/shared/types/models/activity'
-import { MOCK_DAYS } from './day.mock'
+import { MOCK_DAYS } from './data/trip.mock'
 
 class DayRepository implements IDayRepository {
   async getByTripId(tripId: string): Promise<Day[]> {

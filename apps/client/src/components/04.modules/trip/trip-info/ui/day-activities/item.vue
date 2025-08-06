@@ -27,7 +27,6 @@ const timeEditorRef = ref<HTMLElement | null>(null)
 const editingStartTime = shallowRef<Time | null>(null)
 const editingEndTime = shallowRef<Time | null>(null)
 
-// --- State for Collapsible Sections ---
 const expandedSections = ref<Record<string, Record<string, boolean>>>({})
 
 const sectionTypeIcons: Record<ActivitySectionType, string> = {
@@ -53,7 +52,6 @@ function toggleAllInSection(group: { parent: ActivitySection, children: Activity
   for (const child of group.children)
     expandedSections.value[groupId][child.id] = shouldExpand
 }
-// ---
 
 function updateActivity(newActivityData: Partial<Activity>) {
   emit('update', { ...props.activity, ...newActivityData })
@@ -144,11 +142,14 @@ const sectionGroups = computed(() => {
   const groups: { parent: ActivitySection, children: ActivitySection[] }[] = []
   const sections = props.activity.sections || []
   let i = 0
+  
   while (i < sections.length) {
     const currentSection = sections[i]
+    
     if (!currentSection.isAttached) {
       const attachedChildren = []
       let j = i + 1
+
       while (j < sections.length && sections[j].isAttached) {
         attachedChildren.push(sections[j])
         j++
@@ -171,9 +172,11 @@ function isSectionExpanded(groupId: string, sectionId: string): boolean {
 function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   if (!group.children.length)
     return false
+
   const groupId = sectionGroups.value.find(g => g.children === group.children)?.parent.id
   if (!groupId)
     return false
+  
   return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
 </script>
@@ -269,20 +272,7 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   transition: all 0.3s ease;
   margin: 32px 0;
 
-  &.view-mode {
-    .time-display {
-      cursor: default !important;
-      &:hover {
-        background-color: transparent !important;
-      }
-    }
 
-    &:hover {
-      .activity-header .activity-time::before {
-        color: var(--fg-secondary-color);
-      }
-    }
-  }
   &:hover {
     &::before {
       background-color: var(--fg-accent-color);
@@ -456,10 +446,31 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
 
   .attached-children {
     padding-left: 8px;
-    margin-top: 12px;
     display: flex;
     flex-direction: column;
     gap: 8px;
+
+    > div {
+      margin-top: 12px;
+    }
+  }
+
+  &.view-mode {
+    .time-display {
+      cursor: default !important;
+      &:hover {
+        background-color: transparent !important;
+      }
+    }
+
+    &:hover {
+      .activity-header .activity-time::before {
+        color: var(--fg-secondary-color);
+      }
+    }
+    .sections-list {
+      margin-bottom: 0;
+    }
   }
 
   &::before {

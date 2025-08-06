@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
 import {
+  boolean,
   date,
   integer,
   jsonb,
@@ -11,12 +12,35 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
-interface ActivitySectionText { id: string, type: 'description', text: string }
-interface ActivitySectionGallery { id: string, type: 'gallery', imageUrls: string[] }
-export type ActivitySection = ActivitySectionText | ActivitySectionGallery
+interface ActivitySectionBase {
+  id: string
+  isAttached?: boolean
+}
+
+interface ActivitySectionText extends ActivitySectionBase {
+  type: 'description'
+  text: string
+}
+
+interface ActivitySectionGallery extends ActivitySectionBase {
+  type: 'gallery'
+  imageUrls: string[]
+}
+
+interface ActivitySectionGeolocation extends ActivitySectionBase {
+  type: 'geolocation'
+  latitude: number
+  longitude: number
+  address: string
+}
+
+export type ActivitySection = ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation
+
+// Обновленные Enums
 export const statusEnum = pgEnum('status', ['completed', 'planned', 'draft'])
 export const visibilityEnum = pgEnum('visibility', ['public', 'private'])
-export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery'])
+export const activityTagEnum = pgEnum('activity_tag', ['transport', 'walk', 'food', 'attraction', 'relax'])
+export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery', 'geolocation'])
 
 // Таблица для путешествий (Trips)
 export const trips = pgTable('trips', {
@@ -57,13 +81,14 @@ export const days = pgTable('days', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-// Таблица для активностей (Activities)
+// Таблица для активностей (Activities) 
 export const activities = pgTable('activities', {
   id: uuid('id').primaryKey(),
   startTime: text('start_time').notNull(),
   endTime: text('end_time').notNull(),
   title: text('title').notNull(),
   sections: jsonb('sections').$type<ActivitySection[]>().notNull().default([]),
+  tag: activityTagEnum('tag'),
   dayId: uuid('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

@@ -5,7 +5,7 @@ export const useTripInfoUiStore = defineStore('tripInfo-ui', () => {
   // STATE
   const isDaysPanelOpen = ref<boolean>(false)
   const isDaysPanelPinned = ref<boolean>(false)
-  const interactionMode = ref<'view' | 'edit'>('edit')
+  const interactionMode = ref<'view' | 'edit'>('view')
 
   // GETTERS
   const isViewMode = computed(() => interactionMode.value === 'view')

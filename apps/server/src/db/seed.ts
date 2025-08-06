@@ -56,6 +56,7 @@ async function seed() {
     await db.insert(activities).values(activitiesToInsert)
 
   console.log('✅ База данных успешно заполнена!')
+  process.exit(2)
 }
 
 seed().catch((e) => {

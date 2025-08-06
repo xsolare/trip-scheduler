@@ -1,20 +1,31 @@
 import { z } from 'zod'
 
-const ActivitySectionTextSchema = z.object({
+const ActivitySectionBaseSchema = z.object({
   id: z.string(),
+  isAttached: z.boolean().optional(),
+})
+
+const ActivitySectionTextSchema = ActivitySectionBaseSchema.extend({
   type: z.literal('description'),
   text: z.string(),
 })
 
-const ActivitySectionGallerySchema = z.object({
-  id: z.string(),
+const ActivitySectionGallerySchema = ActivitySectionBaseSchema.extend({
   type: z.literal('gallery'),
   imageUrls: z.array(z.string()),
+})
+
+const ActivitySectionGeolocationSchema = ActivitySectionBaseSchema.extend({
+  type: z.literal('geolocation'),
+  latitude: z.number(),
+  longitude: z.number(),
+  address: z.string(),
 })
 
 export const ActivitySectionSchema = z.discriminatedUnion('type', [
   ActivitySectionTextSchema,
   ActivitySectionGallerySchema,
+  ActivitySectionGeolocationSchema,
 ])
 
 export const ActivitySchema = z.object({
@@ -23,6 +34,7 @@ export const ActivitySchema = z.object({
   endTime: z.string(),
   title: z.string(),
   sections: z.array(ActivitySectionSchema),
+  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).nullable().optional(),
   dayId: z.string().uuid(),
   createdAt: z.date(),
   updatedAt: z.date(),

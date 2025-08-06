@@ -104,5 +104,9 @@ if (tripId.value) {
 <style lang="scss" scoped>
 .trip-info-wrapper {
   height: 100%;
+
+  @include media-down(sm) {
+    padding: 0 4px;
+  }
 }
 </style>

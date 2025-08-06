@@ -1,5 +1,5 @@
 {
-  "id": "d1bc74d0-2cf5-4d96-ad60-58c7e5619952",
+  "id": "1b900d59-d75b-41e3-a44c-dacaf4910dc7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -38,6 +38,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'[]'::jsonb"
+        },
+        "tag": {
+          "name": "tag",
+          "type": "activity_tag",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
         },
         "day_id": {
           "name": "day_id",
@@ -340,7 +347,19 @@
       "schema": "public",
       "values": [
         "description",
-        "gallery"
+        "gallery",
+        "geolocation"
+      ]
+    },
+    "public.activity_tag": {
+      "name": "activity_tag",
+      "schema": "public",
+      "values": [
+        "transport",
+        "walk",
+        "food",
+        "attraction",
+        "relax"
       ]
     },
     "public.status": {

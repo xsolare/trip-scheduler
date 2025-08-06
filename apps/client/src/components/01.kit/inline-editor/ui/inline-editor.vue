@@ -117,6 +117,9 @@ useEditor((root) => {
       margin: 0;
       padding: 0;
     }
+    strong {
+      color: var(--fg-accent-color);
+    }
     h1,
     h2,
     h3,
