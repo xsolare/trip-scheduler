@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { IActivity } from '../models/types'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { useModuleStore } from '../composables/use-module'
 import { minutesToTime, timeToMinutes } from '../lib/helpers'
 import { EActivityTag } from '../models/types'
-import { useTripStore } from '../store/trip-store'
 import AddDayActivity from './controls/add-day-activity.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayActivitiesList from './day-activities/list.vue'
@@ -11,25 +11,16 @@ import DayHeader from './day-header/index.vue'
 import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
 const emit = defineEmits(['update:hasError'])
-
-const tripStore = useTripStore()
 const route = useRoute()
 
-const {
-  days,
-  isLoading,
-  fetchError,
-  getActivitiesForSelectedDay,
-  isViewMode,
-  getSelectedDay,
-} = storeToRefs(tripStore)
+const { data, ui, gallery } = useModuleStore(['data', 'ui', 'gallery'])
+const { days, isLoading, fetchError, getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(data)
+const { isViewMode } = storeToRefs(ui)
 
 const tripId = computed(() => route.params.id as string)
 
-const dayActivitiesListRef = ref<InstanceType<typeof DayActivitiesList> | null>(null)
-
 function handleAddNewDay() {
-  tripStore.addNewDay()
+  data.addNewDay()
 }
 
 function handleAddNewActivity() {
@@ -47,7 +38,7 @@ function handleAddNewActivity() {
     tag: EActivityTag.ATTRACTION,
     sections: [],
   }
-  tripStore.addActivity(getSelectedDay.value.id, newActivity)
+  data.addActivity(getSelectedDay.value.id, newActivity)
 }
 
 watch(fetchError, (newError) => {
@@ -55,17 +46,16 @@ watch(fetchError, (newError) => {
 })
 
 onBeforeUnmount(() => {
-  tripStore.$patch({
-    days: [],
-  })
+  data.reset()
+  gallery.reset()
+  ui.reset()
 })
 
-onMounted(() => {
-  if (tripId.value) {
-    tripStore.fetchDaysForTrip(tripId.value)
-    tripStore.fetchTripImages()
-  }
-})
+if (tripId.value) {
+  data.fetchDaysForTrip(tripId.value)
+  // gallery.setTripId(tripId.value)
+  // gallery.fetchTripImages()
+}
 </script>
 
 <template>
@@ -73,7 +63,7 @@ onMounted(() => {
     :loading="isLoading"
     :error="fetchError"
     :data="days"
-    :retry-handler="() => tripStore.fetchDaysForTrip(tripId)"
+    :retry-handler="() => data.fetchDaysForTrip(tripId)"
     transition="slide-up"
     class="trip-info-wrapper"
   >
@@ -84,22 +74,14 @@ onMounted(() => {
     <template #success>
       <div class="trip-info">
         <DaysControls />
-
         <div class="divider">
           о дне
         </div>
-
         <DayHeader />
-
         <div class="divider">
           маршрут
         </div>
-
-        <DayActivitiesList
-          ref="dayActivitiesListRef"
-          @add="handleAddNewActivity"
-        />
-
+        <DayActivitiesList @add="handleAddNewActivity" />
         <AddDayActivity
           v-if="getActivitiesForSelectedDay.length && !isViewMode"
           @add="handleAddNewActivity"

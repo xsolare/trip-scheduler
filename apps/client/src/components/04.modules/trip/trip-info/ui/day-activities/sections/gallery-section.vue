@@ -4,7 +4,7 @@ import type { ActivitySectionGallery } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { ImageViewer, useImageViewer } from '~/components/01.kit/image-viewer'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
 interface Props {
   section: ActivitySectionGallery
@@ -13,9 +13,10 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits(['updateSection'])
 
-const tripStore = useTripStore()
-const { isViewMode, tripImages, isUploadingImage, isFetchingImages } = storeToRefs(tripStore)
-const { uploadImage, fetchTripImages } = tripStore
+const store = useModuleStore(['gallery', 'ui'])
+const { tripImages, isUploadingImage, isFetchingImages } = storeToRefs(store.gallery)
+const { isViewMode } = storeToRefs(store.ui)
+const { uploadImage } = store.gallery
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const isImagePickerOpen = ref(false)
@@ -66,8 +67,6 @@ async function handleFileUpload(event: Event) {
 
 async function openTripImagePicker() {
   isImagePickerOpen.value = true
-  if (tripStore.imageFetchStatus === 'idle' || tripStore.imageFetchStatus === 'error')
-    await fetchTripImages()
 }
 
 function closeImagePicker() {

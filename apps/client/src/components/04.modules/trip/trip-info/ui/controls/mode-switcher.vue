@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
-const tripStore = useTripStore()
-const { isViewMode } = storeToRefs(tripStore)
+const { ui } = useModuleStore(['ui'])
+const { isViewMode } = storeToRefs(ui)
 
 const buttonConfig = computed(() => {
   if (isViewMode.value) {
@@ -19,7 +19,7 @@ const buttonConfig = computed(() => {
 })
 
 function toggleMode() {
-  tripStore.setInteractionMode(isViewMode.value ? 'edit' : 'view')
+  ui.setInteractionMode(isViewMode.value ? 'edit' : 'view')
 }
 </script>
 

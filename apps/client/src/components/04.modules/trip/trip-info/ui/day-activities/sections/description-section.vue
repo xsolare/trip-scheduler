@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ActivitySectionText } from '~/shared/types/models/activity'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
 interface Props {
   section: ActivitySectionText
@@ -9,8 +9,9 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits(['updateSection'])
-const tripStore = useTripStore()
-const { isViewMode } = storeToRefs(tripStore)
+const store = useModuleStore(['ui'])
+
+const { isViewMode } = storeToRefs(store.ui)
 
 const sectionModel = computed({
   get: () => props.section.text,

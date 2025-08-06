@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
-const tripStore = useTripStore()
-const { getSelectedDay: selectedDay, isViewMode } = storeToRefs(tripStore)
+const { data, ui } = useModuleStore(['data', 'ui'])
+
+const { getSelectedDay: selectedDay } = storeToRefs(data)
+const { isViewMode } = storeToRefs(ui)
 
 function updateDayDetails(details: { title?: string, description?: string }) {
   if (selectedDay.value) {
-    tripStore.updateDayDetails(selectedDay.value.id, details)
+    data.updateDayDetails(selectedDay.value.id, details)
   }
 }
 </script>

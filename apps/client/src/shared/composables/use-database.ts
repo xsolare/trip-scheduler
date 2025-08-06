@@ -35,13 +35,13 @@ export interface UseDatabaseOptions<T> {
    * Коллбэк, который вызывается при успешном завершении операции.
    * @param result - Результат выполнения `fn`.
    */
-  onSuccess?: (result: T) => void
+  onSuccess?: (result: T) => void | Promise<void>
 
   /**
    * Коллбэк, который вызывается при ошибке во время операции.
    * @param error - Перехваченная ошибка.
    */
-  onError?: (error: unknown) => void
+  onError?: (error: unknown) => void | Promise<void>
 }
 
 /** Возвращаемое значение из `useDatabase` */
@@ -105,7 +105,7 @@ export function useDatabase<T>(
 
       data.value = result
       status.value = 'success'
-      onSuccess?.(result)
+      await onSuccess?.(result)
 
       return { data: result, error: null }
     }
@@ -114,7 +114,7 @@ export function useDatabase<T>(
       status.value = 'error'
       const errorKey = key ? ` (key: ${key})` : ''
       console.error(`[useDatabase Error]${errorKey}:`, e)
-      onError?.(e)
+      await onError?.(e)
 
       return { data: null, error: e }
     }

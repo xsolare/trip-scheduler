@@ -1,24 +1,15 @@
 import type { UserConfig } from 'vite'
-import { fileURLToPath, URL } from 'node:url'
 import Vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
-import { FileSystemIconLoader } from 'unplugin-icons/loaders'
 import Icons from 'unplugin-icons/vite'
-import { autoImportOptions } from './utils'
+import { autoImportOptionsCfg } from './cfg/auto-import'
+import { iconsCfg } from './cfg/icons'
 
 export default {
   plugins: [
     Vue({}),
-    AutoImport(autoImportOptions),
-    Icons({
-      compiler: 'vue3',
-      customCollections: {
-        custom: FileSystemIconLoader(
-          fileURLToPath(new URL('../src/assets/svg', import.meta.url)),
-          svg => svg.replace(/\.svg$/, ''),
-        ),
-      },
-    }),
+    AutoImport(autoImportOptionsCfg),
+    Icons(iconsCfg),
   ],
   css: {
     preprocessorOptions: {

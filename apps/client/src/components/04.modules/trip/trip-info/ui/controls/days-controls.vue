@@ -3,13 +3,14 @@ import type { CalendarDate } from '@internationalized/date'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { CalendarPopover } from '~/components/01.kit/calendar-popover'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import DaysPanel from './days-panel.vue'
 import ModeSwitcher from './mode-switcher.vue'
 
-const tripStore = useTripStore()
-const { getAllDays, getSelectedDay, isDaysPanelPinned, isDaysPanelOpen, isViewMode } = storeToRefs(tripStore)
-const { setCurrentDay, addNewDay, updateDayDetails } = tripStore
+const store = useModuleStore(['ui', 'data'])
+const { isDaysPanelPinned, isDaysPanelOpen, isViewMode } = storeToRefs(store.ui)
+const { getAllDays, getSelectedDay } = storeToRefs(store.data)
+const { setCurrentDay, addNewDay, updateDayDetails } = store.data
 
 const selectedCalendarDate = computed<CalendarDate | null>({
   get: () => {

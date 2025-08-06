@@ -80,12 +80,6 @@ const router = useRouter()
   border-radius: inherit;
   overflow: hidden;
   z-index: 5;
-  box-shadow:
-    inset 2px 2px 1px -3px hsl(205 20% 90% / 0.8),
-    inset 4px 4px 2px -6px hsl(205 20% 90% / 0.3),
-    inset 1.5px 1.5px 1.5px -0.75px hsl(205 20% 90% / 0.15),
-    inset 1.5px 1.5px 0.25px hsl(205 20% 90% / 0.03),
-    inset 0 0 0.25px 0.5px hsl(205 20% 90% / 0.03);
 }
 
 .glass > * {

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { TripInfo } from '~/components/04.modules/trip/trip-info'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { useDisplay } from '~/shared/composables/use-display'
 
-const tripStore = useTripStore()
+const store = useModuleStore(['ui'])
 const { mdAndDown } = useDisplay()
 
-const { isDaysPanelPinned } = storeToRefs(tripStore)
+const { isDaysPanelPinned } = storeToRefs(store.ui)
 
 const hasFetchError = ref(false)
 </script>

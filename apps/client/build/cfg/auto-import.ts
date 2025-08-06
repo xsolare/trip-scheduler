@@ -1,7 +1,7 @@
 import type { Options as AutoImportOptions } from 'unplugin-auto-import/types'
 import IconsResolver from 'unplugin-icons/resolver'
 
-export const autoImportOptions: AutoImportOptions = {
+export const autoImportOptionsCfg: AutoImportOptions = {
   imports: [
     'vue',
     'vue-router',
@@ -18,6 +18,7 @@ export const autoImportOptions: AutoImportOptions = {
     './src/shared/lib/',
     './src/shared/types/',
     './src/shared/composables/',
+    './src/shared/constants/',
   ],
   exclude: [
     '**/node_modules/**',

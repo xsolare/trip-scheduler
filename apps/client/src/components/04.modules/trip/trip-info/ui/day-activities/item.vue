@@ -6,7 +6,7 @@ import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
 import { TimeField } from '~/components/01.kit/time-field'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { ActivitySectionType } from '~/shared/types/models/activity'
 import AddSectionMenu from '../controls/add-section-menu.vue'
 import { ActivitySectionRenderer } from './sections'
@@ -18,8 +18,8 @@ interface ActivityItemProps {
 const props = defineProps<ActivityItemProps>()
 const emit = defineEmits(['update', 'delete'])
 
-const tripStore = useTripStore()
-const { isViewMode } = storeToRefs(tripStore)
+const store = useModuleStore(['ui'])
+const { isViewMode } = storeToRefs(store.ui)
 
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)

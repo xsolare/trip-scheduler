@@ -294,8 +294,8 @@ const visibilityIcon = computed(() => {
   width: 32px;
   height: 32px;
   font-size: 1.1rem;
-  color: var(--fg-inverted-color);
-  background-color: var(--bg-overlay-primary-color);
+  background-color: var(--bg-primary-color);
+  color: var(--fg-primary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: 50%;
   backdrop-filter: blur(5px);

@@ -1,5 +1,7 @@
 {
   "globals": {
+    "AppRouteNames": true,
+    "AppRoutePaths": true,
     "Component": true,
     "ComponentPublicInstance": true,
     "ComputedRef": true,
@@ -34,6 +36,7 @@
     "createEventHook": true,
     "createGlobalState": true,
     "createInjectionState": true,
+    "createModuleStoreHook": true,
     "createPinia": true,
     "createReactiveFn": true,
     "createRef": true,

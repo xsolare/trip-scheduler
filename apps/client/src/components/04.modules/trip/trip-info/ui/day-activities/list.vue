@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import type { IActivity } from '~/components/04.modules/trip/trip-info/models/types'
 import draggable from 'vuedraggable'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import ActivityItem from './item.vue'
 
 defineEmits(['add'])
 
-const tripStore = useTripStore()
-const { getActivitiesForSelectedDay, getSelectedDay, isViewMode } = storeToRefs(tripStore)
-const { reorderActivities, updateActivity, removeActivity } = tripStore
+const { data, ui } = useModuleStore(['data', 'ui'])
+
+const { getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(data)
+const { reorderActivities, updateActivity, removeActivity } = data
+const { isViewMode } = storeToRefs(ui)
 
 function onUpdateActivity(updatedActivity: IActivity) {
   if (getSelectedDay.value)

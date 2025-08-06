@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// ИЗМЕНЕНИЕ 1: Добавлен импорт ActivitySectionGallery
 import type { ActivitySection, ActivitySectionGallery, ActivitySectionGeolocation, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { ActivitySectionType } from '~/shared/types/models/activity'
 import DescriptionSection from './description-section.vue'
 import GallerySection from './gallery-section.vue'
@@ -14,8 +13,8 @@ interface Props {
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['updateSection', 'deleteSection'])
-const tripStore = useTripStore()
-const { isViewMode } = storeToRefs(tripStore)
+const store = useModuleStore(['ui'])
+const { isViewMode } = storeToRefs(store.ui)
 
 function onUpdate(data: ActivitySection) {
   emit('updateSection', data)

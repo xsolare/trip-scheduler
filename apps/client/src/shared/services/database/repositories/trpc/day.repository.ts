@@ -14,6 +14,9 @@ class DayRepository implements IDayRepository {
   async getByTripId(tripId: string): Promise<Day[]> {
     const result = await trpc.day.getByTripId.query({ tripId })
 
+    if (import.meta.env.VITE_APP_REQUEST_THROTTLE)
+      await new Promise(r => setTimeout(() => r(true), 1_500))
+
     return result as Day[]
   }
 }

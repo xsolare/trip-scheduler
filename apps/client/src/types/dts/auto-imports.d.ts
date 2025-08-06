@@ -27,6 +27,7 @@ declare global {
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
   const createGlobalState: typeof import('@vueuse/core')['createGlobalState']
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
+  const createModuleStoreHook: typeof import('../../shared/lib/create-module-store-hook')['createModuleStoreHook']
   const createPinia: typeof import('pinia')['createPinia']
   const createReactiveFn: typeof import('@vueuse/core')['createReactiveFn']
   const createRef: typeof import('@vueuse/core')['createRef']
@@ -334,6 +335,9 @@ declare global {
   // @ts-ignore
   export type { UseDatabaseOptions, UseDatabaseReturn } from '../../shared/composables/use-database'
   import('../../shared/composables/use-database')
+  // @ts-ignore
+  export type { AppRouteNames } from '../../shared/constants/routes'
+  import('../../shared/constants/routes')
 }
 
 // for vue template auto import
@@ -341,6 +345,8 @@ import { UnwrapRef } from 'vue'
 declare module 'vue' {
   interface GlobalComponents {}
   interface ComponentCustomProperties {
+    readonly AppRouteNames: UnwrapRef<typeof import('../../shared/constants/routes')['AppRouteNames']>
+    readonly AppRoutePaths: UnwrapRef<typeof import('../../shared/constants/routes')['AppRoutePaths']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
@@ -357,6 +363,7 @@ declare module 'vue' {
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
+    readonly createModuleStoreHook: UnwrapRef<typeof import('../../shared/lib/create-module-store-hook')['createModuleStoreHook']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
     readonly createRef: UnwrapRef<typeof import('@vueuse/core')['createRef']>

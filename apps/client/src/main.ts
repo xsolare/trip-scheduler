@@ -4,14 +4,17 @@ import { createApp } from 'vue'
 import router from '~/shared/lib/router'
 import { initializePwaUpdater } from '~/shared/services/pwa/pwa.service'
 
-import app from './app.vue'
+import application from './app.vue'
+import { requestPlugin } from './plugins/request'
+import databaseServicePromise from './shared/services/database'
 
 const pinia = createPinia()
-const appInstance = createApp(app)
+const app = createApp(application)
 
-appInstance.use(router)
-appInstance.use(pinia)
+app.use(router)
+app.use(pinia)
+app.use(requestPlugin, { databaseService: databaseServicePromise })
 
-appInstance.mount('#app')
+app.mount('#app')
 
 initializePwaUpdater()

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Day } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { useTripStore } from '~/components/04.modules/trip/trip-info/store/trip-store'
+import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { useDisplay } from '~/shared/composables/use-display'
 
 interface Props {
@@ -9,20 +9,18 @@ interface Props {
   selectedDayId?: string
   isOpen: boolean
 }
-
 defineProps<Props>()
-
 const emit = defineEmits<{
   (e: 'selectDay', dayId: string): void
   (e: 'addNewDay'): void
   (e: 'close'): void
 }>()
 
-const tripStore = useTripStore()
+const { ui } = useModuleStore(['ui'])
 const { mdAndDown } = useDisplay()
 
-const { isDaysPanelPinned, isViewMode } = storeToRefs(tripStore)
-const { toggleDaysPanelPinned } = tripStore
+const { isDaysPanelPinned, isViewMode } = storeToRefs(ui)
+const { toggleDaysPanelPinned } = ui
 
 function onSelectDay(dayId: string) {
   emit('selectDay', dayId)
@@ -36,14 +34,12 @@ function getShortWeekday(date: string): string {
 </script>
 
 <template>
-  <!-- Затемняющий фон (только для всплывающей панели) -->
   <div
     v-if="(isOpen && !isDaysPanelPinned) || (isOpen && mdAndDown)"
     class="backdrop"
     @click="$emit('close')"
   />
 
-  <!-- Сама панель -->
   <aside class="panel" :class="{ open: isOpen, pinned: !mdAndDown && isDaysPanelPinned }">
     <header class="panel-header">
       <h2>Дни путешествия</h2>
@@ -70,13 +66,10 @@ function getShortWeekday(date: string): string {
             :class="{ active: selectedDayId === day.id }"
             @click="onSelectDay(day.id)"
           >
-            <!-- Левая часть: Номер и Название -->
             <div class="day-item-main">
               <span class="day-number">{{ index + 1 }}</span>
               <span class="day-title">{{ day.title || `День ${index + 1}` }}</span>
             </div>
-
-            <!-- Правая часть: Дата и Бейдж дня недели -->
             <div class="day-item-meta">
               <span class="day-date">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) }}</span>
               <span class="day-weekday-badge">{{ getShortWeekday(day.date) }}</span>

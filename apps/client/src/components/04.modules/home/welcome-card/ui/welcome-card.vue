@@ -129,6 +129,7 @@ function onMouseMove() {
   align-items: center;
   text-align: center;
   padding: 48px;
+  user-select: none;
 }
 
 .logo-accent {
