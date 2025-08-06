@@ -39,6 +39,7 @@ export type ActivitySections = (ActivitySectionText | ActivitySectionGallery | A
 
 export interface Activity {
   id: string
+  dayId: string
   title: string
   startTime: string
   endTime: string

@@ -32,6 +32,7 @@ function handleAddNewActivity() {
   const endTimeMinutes = startTimeMinutes + 60
 
   const newActivity: Omit<IActivity, 'id'> = {
+    dayId: getSelectedDay.value.id,
     title: 'Новая активность',
     startTime: minutesToTime(startTimeMinutes),
     endTime: minutesToTime(endTimeMinutes),
