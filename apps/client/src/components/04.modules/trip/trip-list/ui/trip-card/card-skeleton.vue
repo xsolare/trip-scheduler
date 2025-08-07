@@ -8,11 +8,17 @@ import { Skeleton } from '~/components/01.kit/skeleton'
       <div class="card-image-container">
         <!-- Скелетоны для элементов в шапке (статус и заголовок) -->
         <div class="card-header-skeleton">
-          <Skeleton width="110px" height="26px" border-radius="20px" />
+          <!-- Эти скелетоны используют цвет по умолчанию -->
+          <Skeleton width="110px" height="34px" border-radius="20px" />
         </div>
+
         <div class="card-title-skeleton">
-          <Skeleton width="75%" height="32px" />
-          <Skeleton width="55%" height="32px" />
+          <Skeleton width="55%" height="28px" />
+        </div>
+
+        <!-- Скелетон для иконки приватности -->
+        <div class="card-visibility-skeleton">
+          <Skeleton width="32px" height="32px" border-radius="50%" />
         </div>
       </div>
 
@@ -20,30 +26,29 @@ import { Skeleton } from '~/components/01.kit/skeleton'
         <div class="card-meta">
           <!-- Скелетоны для мета-данных (даты, города, бюджет) -->
           <div class="meta-item-skeleton">
-            <Skeleton width="24px" height="24px" border-radius="50%" />
-            <Skeleton width="60%" height="20px" />
+            <Skeleton width="24px" height="24px" border-radius="50%" color="var(--bg-tertiary-color)" />
+            <Skeleton width="60%" height="20px" color="var(--bg-tertiary-color)" />
           </div>
           <div class="meta-item-skeleton">
-            <Skeleton width="24px" height="24px" border-radius="50%" />
-            <Skeleton width="70%" height="20px" />
+            <Skeleton width="24px" height="24px" border-radius="50%" color="var(--bg-tertiary-color)" />
+            <Skeleton width="70%" height="20px" color="var(--bg-tertiary-color)" />
           </div>
           <div class="meta-item-skeleton">
-            <Skeleton width="24px" height="24px" border-radius="50%" />
-            <Skeleton width="40%" height="20px" />
+            <Skeleton width="24px" height="24px" border-radius="50%" color="var(--bg-tertiary-color)" />
+            <Skeleton width="40%" height="20px" color="var(--bg-tertiary-color)" />
           </div>
         </div>
 
         <div class="card-footer">
           <!-- Скелетоны для аватарок участников -->
           <div class="card-participants-skeleton">
-            <Skeleton width="32px" height="32px" border-radius="50%" />
-            <Skeleton width="32px" height="32px" border-radius="50%" class="avatar-overlap" />
-            <Skeleton width="32px" height="32px" border-radius="50%" class="avatar-overlap" />
+            <Skeleton width="32px" height="32px" border-radius="50%" color="var(--bg-tertiary-color)" />
+            <Skeleton width="32px" height="32px" border-radius="50%" class="avatar-overlap" color="var(--bg-tertiary-color)" />
           </div>
           <!-- Скелетоны для тегов -->
           <div class="card-tags-skeleton">
-            <Skeleton width="70px" height="26px" border-radius="16px" />
-            <Skeleton width="70px" height="26px" border-radius="16px" />
+            <Skeleton width="80px" height="26px" border-radius="16px" color="var(--bg-tertiary-color)" />
+            <Skeleton width="60px" height="26px" border-radius="16px" color="var(--bg-tertiary-color)" />
           </div>
         </div>
       </div>
@@ -91,6 +96,13 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   gap: 8px;
   z-index: 2;
   margin-right: 40px;
+}
+
+.card-visibility-skeleton {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  z-index: 2;
 }
 
 .card-content {

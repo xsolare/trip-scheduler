@@ -1,3 +1,5 @@
+import { useStorage } from '@vueuse/core'
+
 /**
  * Стор для управления состоянием UI на странице информации о путешествии.
  */
@@ -5,7 +7,11 @@ export const useTripInfoUiStore = defineStore('tripInfo-ui', () => {
   // STATE
   const isDaysPanelOpen = ref<boolean>(false)
   const isDaysPanelPinned = ref<boolean>(false)
-  const interactionMode = ref<'view' | 'edit'>('view')
+
+  const interactionMode = useStorage<'view' | 'edit'>(
+    'tripinfo-interaction-mode',
+    'view',
+  )
 
   // GETTERS
   const isViewMode = computed(() => interactionMode.value === 'view')
@@ -30,7 +36,6 @@ export const useTripInfoUiStore = defineStore('tripInfo-ui', () => {
   function reset() {
     isDaysPanelOpen.value = false
     isDaysPanelPinned.value = false
-    interactionMode.value = 'edit'
   }
 
   return {

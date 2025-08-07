@@ -1,4 +1,4 @@
-import { createModuleStoreHook } from '~/shared/lib/create-module-store-hook'
+import { createStoreHook } from '~/shared/lib/create-store-hook'
 
 import { useTripInfoGalleryStore } from '../store/trip-info-gallery.store'
 import { useTripInfoUiStore } from '../store/trip-info-ui.store'
@@ -10,4 +10,4 @@ const moduleStores = {
   gallery: useTripInfoGalleryStore,
 }
 
-export const useModuleStore = createModuleStoreHook(moduleStores)
+export const useModuleStore = createStoreHook(moduleStores)

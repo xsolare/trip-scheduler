@@ -1,6 +1,6 @@
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error' | 'offline'
 
-interface SyncState {
+export interface SyncState {
   status: SyncStatus
   lastSyncTime: string | null
   pendingCount: number

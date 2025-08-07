@@ -4,26 +4,29 @@ interface Props {
   width?: string | number
   height?: string | number
   borderRadius?: string
+  color?: string 
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  type: undefined,
+  type: 'wave',
   width: '100%',
   height: '1.2em',
   borderRadius: '4px',
+  color: 'var(--bg-secondary-color)', 
 })
 
 const style = computed(() => ({
   width: typeof props.width === 'number' ? `${props.width}px` : props.width,
   height: typeof props.height === 'number' ? `${props.height}px` : props.height,
   borderRadius: props.borderRadius,
+  backgroundColor: props.color, 
 }))
 </script>
 
 <template>
   <div
     class="p-skeleton"
-    :class="{ 'p-skeleton--wave': props.type === 'wave' }"
+    :class="{ 'p-skeleton--wave': type === 'wave' }"
     :style="style"
   >
     <!-- Невидимый контент для сохранения высоты строки -->
@@ -31,12 +34,11 @@ const style = computed(() => ({
   </div>
 </template>
 
-<style scoped>
+<style lang="scss">
 .p-skeleton {
   color: transparent;
   display: block;
   user-select: none;
-  background: var(--bg-disabled-color);
 }
 
 .p-skeleton * {
@@ -50,7 +52,7 @@ const style = computed(() => ({
 
 .p-skeleton--wave::after {
   animation: wave 1.5s linear 0s infinite;
-  background: linear-gradient(90deg, transparent, var(--bg-overlay-dark-color, rgba(0, 0, 0, 0.08)), transparent);
+  background: linear-gradient(90deg, transparent, var(--bg-overlay-primary-color), transparent);
   content: '';
   position: absolute;
   transform: translate3d(-100%, 0, 0);

@@ -1,4 +1,5 @@
 <script setup>
+import { ReloadPrompt } from '~/components/02.shared/reload-prompt'
 import { DefaultLayout } from '~/components/05.layouts/default'
 import { EmptyLayout } from '~/components/05.layouts/empty'
 
@@ -32,4 +33,5 @@ const layouts = {
       <component :is="Component" v-else />
     </router-view>
   </component>
+  <ReloadPrompt />
 </template>

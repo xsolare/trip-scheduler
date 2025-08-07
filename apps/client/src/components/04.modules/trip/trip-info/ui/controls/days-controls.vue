@@ -135,6 +135,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   }
   &.readonly {
     cursor: default;
+    pointer-events: none;
   }
 }
 </style>

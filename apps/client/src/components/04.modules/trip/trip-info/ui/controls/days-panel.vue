@@ -132,6 +132,10 @@ function getShortWeekday(date: string): string {
       display: none;
     }
   }
+
+  @include media-down(sm) {
+    width: 100%;
+  }
 }
 
 .panel-header {
