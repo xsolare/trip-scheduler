@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PushBack } from '~/components/02.shared/push-back/index'
 import { TripInfo } from '~/components/04.modules/trip/trip-info'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { useDisplay } from '~/shared/composables/use-display'
@@ -16,6 +17,7 @@ const hasFetchError = ref(false)
     class="content-wrapper"
     :class="[{ isPanelPinned: isDaysPanelPinned && !mdAndDown }, { 'has-error': hasFetchError }]"
   >
+    <PushBack />
     <TripInfo />
   </section>
 </template>

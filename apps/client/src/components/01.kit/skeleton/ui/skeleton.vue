@@ -4,7 +4,7 @@ interface Props {
   width?: string | number
   height?: string | number
   borderRadius?: string
-  color?: string 
+  color?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -12,14 +12,14 @@ const props = withDefaults(defineProps<Props>(), {
   width: '100%',
   height: '1.2em',
   borderRadius: '4px',
-  color: 'var(--bg-secondary-color)', 
+  color: 'var(--bg-secondary-color)',
 })
 
 const style = computed(() => ({
   width: typeof props.width === 'number' ? `${props.width}px` : props.width,
   height: typeof props.height === 'number' ? `${props.height}px` : props.height,
   borderRadius: props.borderRadius,
-  backgroundColor: props.color, 
+  backgroundColor: props.color,
 }))
 </script>
 

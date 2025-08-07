@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PushBack } from '~/components/02.shared/push-back/index'
 import { TripList } from '~/components/04.modules/trip/trip-list/index'
 
 const hasFetchError = ref(false)
@@ -9,6 +10,7 @@ const hasFetchError = ref(false)
     class="content-wrapper"
     :class="{ 'has-error': hasFetchError }"
   >
+    <PushBack />
     <TripList @update:has-error="hasFetchError = $event" />
   </section>
 </template>
