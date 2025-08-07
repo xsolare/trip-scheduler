@@ -18,7 +18,7 @@ export function createStoreHook<T extends Record<string, () => any>>(
   function useStore<K extends keyof T>(keyOrKeys: K | K[]) {
     if (Array.isArray(keyOrKeys)) {
       const requestedStores = Object.fromEntries(
-        keyOrKeys.map(key => [key, stores[key]()]), 
+        keyOrKeys.map(key => [key, stores[key]()]),
       ) as { [P in K]: ReturnType<T[P]> }
       return Object.freeze(requestedStores)
     }
