@@ -475,7 +475,7 @@ const visibleImages = computed(() =>
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: 8px;
-  padding: 16px;
+  padding: 8px;
   transition: all 0.2s ease-in-out;
 
   &:hover {
