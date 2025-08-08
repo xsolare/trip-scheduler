@@ -119,9 +119,6 @@ const visibilityIcon = computed(() => {
           <button class="action-btn" title="Редактировать" @click.stop>
             <Icon icon="mdi:pencil-outline" />
           </button>
-          <button class="action-btn" title="Поделиться" @click.stop>
-            <Icon icon="mdi:share-variant-outline" />
-          </button>
           <button class="action-btn" title="Еще" @click.stop>
             <Icon icon="mdi:dots-vertical" />
           </button>
@@ -314,7 +311,6 @@ const visibilityIcon = computed(() => {
   margin: 0 40px 0 0;
   z-index: 2;
   line-height: 1.2;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .card-actions {
@@ -345,7 +341,6 @@ const visibilityIcon = computed(() => {
     border-radius: 50%;
     cursor: pointer;
     backdrop-filter: blur(4px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
 
     &:hover {
