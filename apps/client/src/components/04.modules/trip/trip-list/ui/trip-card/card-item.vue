@@ -106,7 +106,7 @@ function handleSave(updatedTrip: ITrip) {
         <div class="card-meta">
           <div class="meta-item">
             <Icon icon="mdi:calendar-month-outline" />
-            <span>{{ formattedDates }}</span>
+            <span>{{ formattedDates }}</span>игт ш
           </div>
           <div class="meta-item">
             <Icon icon="mdi:map-marker-outline" />
