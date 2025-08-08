@@ -1,71 +1,45 @@
 <script setup lang="ts">
-import type { ITrip } from '../../models/types'
+import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import type { ITrip } from '../../models/types'
+import TripEditModal from '../trip-modals/Trip-edit-modal.vue';
 
-type Props = ITrip
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<ITrip>(), {
   participants: () => [],
   tags: () => [],
   visibility: 'private',
 })
 
+const emit = defineEmits(['update:trip'])
 const router = useRouter()
+const isEditing = ref(false)
 
-function goTo() {
-  router.push(AppRoutePaths.Trip.Info(`${props.id}`))
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
-
+// Функции для отображения данных
+const getInitials = (name: string) => name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 const avatarColorNames = ['blue', 'orange', 'green', 'red', 'purple', 'cyan']
+const getAvatarClass = (name: string) => `avatar--${avatarColorNames[name.length % avatarColorNames.length]}`
 
-function getAvatarClass(name: string): string {
-  const index = name.length % avatarColorNames.length
-  return `avatar--${avatarColorNames[index]}`
-}
 const formattedDates = computed(() => {
   const start = new Date(props.startDate)
   const end = new Date(props.endDate)
+  const formatter = new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'long' })
 
-  const formatter = new Intl.DateTimeFormat('ru', {
-    day: 'numeric',
-    month: 'long',
-  })
-
-  if (start.getFullYear() === end.getFullYear()) {
-    return `${formatter.format(start)} - ${formatter.format(end)} ${start.getFullYear()}`
-  }
-  else {
-    return `${formatter.format(start)} ${start.getFullYear()} - ${formatter.format(end)} ${end.getFullYear()}`
-  }
+  return start.getFullYear() === end.getFullYear()
+    ? `${formatter.format(start)} - ${formatter.format(end)} ${start.getFullYear()}`
+    : `${formatter.format(start)} ${start.getFullYear()} - ${formatter.format(end)} ${end.getFullYear()}`
 })
 
-// Информация о статусе
 const statusInfo = computed(() => {
   switch (props.status) {
-    case 'completed':
-      return { text: 'Завершено', class: 'completed', icon: 'mdi:check-circle-outline' }
-    case 'in-progress':
-      return { text: 'В процессе', class: 'in-progress', icon: 'mdi:airplane-takeoff' }
-    case 'planned':
-      return { text: 'Запланировано', class: 'planned', icon: 'mdi:calendar-check-outline' }
-    default:
-      return { text: 'Черновик', class: 'draft', icon: 'mdi:pencil-circle-outline' }
+    case 'completed': return { text: 'Завершено', class: 'completed', icon: 'mdi:check-circle-outline' }
+    case 'in-progress': return { text: 'В процессе', class: 'in-progress', icon: 'mdi:airplane-takeoff' }
+    case 'planned': return { text: 'Запланировано', class: 'planned', icon: 'mdi:calendar-check-outline' }
+    default: return { text: 'Черновик', class: 'draft', icon: 'mdi:pencil-circle-outline' }
   }
 })
 
-// Форматирование бюджета
 const formattedBudget = computed(() => {
-  if (!props.budget || !props.currency)
-    return null
+  if (!props.budget || !props.currency) return null
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: props.currency,
@@ -73,29 +47,29 @@ const formattedBudget = computed(() => {
   }).format(props.budget)
 })
 
-// Иконка для приватности
 const visibilityIcon = computed(() => {
   switch (props.visibility) {
-    case 'public':
-      return { icon: 'mdi:earth', title: 'Публичное путешествие' }
-    case 'shared':
-      return { icon: 'mdi:account-multiple-outline', title: 'Доступно по ссылке' }
-    default:
-      return { icon: 'mdi:lock-outline', title: 'Приватное путешествие' }
+    case 'public': return { icon: 'mdi:earth', title: 'Публичное путешествие' }
+    case 'shared': return { icon: 'mdi:account-multiple-outline', title: 'Доступно по ссылке' }
+    default: return { icon: 'mdi:lock-outline', title: 'Приватное путешествие' }
   }
 })
+
+function goTo() {
+  router.push(AppRoutePaths.Trip.Info(`${props.id}`))
+}
+
+function handleSave(updatedTrip: ITrip) {
+  emit('update:trip', updatedTrip)
+  isEditing.value = false
+}
 </script>
 
 <template>
   <div class="travel-card-wrapper">
     <div class="travel-card" @click="goTo">
       <div class="card-image-container">
-        <img
-          v-if="imageUrl"
-          :src="imageUrl"
-          :alt="title"
-          class="card-image"
-        >
+        <img v-if="imageUrl" :src="imageUrl" :alt="title" class="card-image">
         <div v-else class="card-no-image">
           <Icon icon="mdi:map-legend" />
         </div>
@@ -116,7 +90,7 @@ const visibilityIcon = computed(() => {
         </span>
 
         <div class="card-actions">
-          <button class="action-btn" title="Редактировать" @click.stop>
+          <button class="action-btn" title="Редактировать" @click.stop="isEditing = true">
             <Icon icon="mdi:pencil-outline" />
           </button>
           <button class="action-btn" title="Поделиться" @click.stop>
@@ -146,12 +120,8 @@ const visibilityIcon = computed(() => {
 
         <div class="card-footer">
           <div v-if="participants.length" class="card-participants">
-            <div
-              v-for="participant in participants.slice(0, 3)"
-              :key="participant"
-              class="avatar"
-              :class="getAvatarClass(participant)"
-            >
+            <div v-for="participant in participants.slice(0, 3)" :key="participant" class="avatar"
+              :class="getAvatarClass(participant)">
               <span>{{ getInitials(participant) }}</span>
             </div>
             <div v-if="participants.length > 3" class="avatar avatar--more">
@@ -166,6 +136,8 @@ const visibilityIcon = computed(() => {
         </div>
       </div>
     </div>
+
+    <TripEditModal v-model="isEditing" :trip="props" @save="handleSave" />
   </div>
 </template>
 
@@ -266,16 +238,19 @@ const visibilityIcon = computed(() => {
     color: var(--fg-success-color);
     border-color: var(--border-success-color);
   }
+
   &.in-progress {
     background-color: var(--bg-info-color);
     color: var(--fg-info-color);
     border-color: var(--border-info-color);
   }
+
   &.planned {
     background-color: var(--bg-warning-color);
     color: var(--fg-warning-color);
     border-color: var(--border-warning-color);
   }
+
   &.draft {
     background-color: var(--bg-tertiary-color);
     color: var(--fg-tertiary-color);
