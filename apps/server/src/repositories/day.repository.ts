@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '~/db'
 import { activities, days } from '~/db/schema'
+import { createTRPCError } from '~/lib/trpc'
 
 type Day = typeof days.$inferSelect
 type DayInsert = typeof days.$inferInsert
@@ -52,6 +53,25 @@ export const dayRepository = {
       .returning()
 
     return updatedDay
+  },
+
+  /**
+   * Удаляет день по его ID.
+   * Благодаря 'onDelete: cascade' в схеме, все связанные активности удалятся автоматически.
+   * @param id - ID дня для удаления.
+   * @returns Объект удаленного дня.
+   */
+  async delete(id: string) {
+    const [deletedDay] = await db
+      .delete(days)
+      .where(eq(days.id, id))
+      .returning()
+
+    if (!deletedDay) {
+      createTRPCError('NOT_FOUND', `День с ID ${id} не найден.`)
+    }
+
+    return deletedDay
   },
 
   /**

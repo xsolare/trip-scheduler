@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CreateDayInputSchema, GetTripsByIdInputSchema, UpdateDayInputSchema } from '~/lib/schemas'
+import { CreateDayInputSchema, DeleteDayInputSchema, GetTripsByIdInputSchema, UpdateDayInputSchema } from '~/lib/schemas'
 import { createTRPCError, t } from '~/lib/trpc'
 import { dayRepository } from '~/repositories/day.repository'
 
@@ -36,6 +36,13 @@ export const dayProcedures = {
         description: input.description || '',
       })
       return newDay
+    }),
+
+  deleteDay: t.procedure
+    .input(DeleteDayInputSchema)
+    .mutation(async ({ input }) => {
+      const deletedDay = await dayRepository.delete(input.id)
+      return deletedDay
     }),
 
   updateDayDetails: t.procedure

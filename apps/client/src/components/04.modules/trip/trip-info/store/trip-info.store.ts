@@ -286,7 +286,9 @@ export const useTripInfoStore = defineStore('tripInfo', {
         return
       }
 
-      // const originalDays = [...this.days]
+      const deletedDay = this.days[dayIndex]
+      const originalCurrentDayId = this.currentDayId
+
       this.days.splice(dayIndex, 1)
 
       if (this.days.length > 0) {
@@ -297,8 +299,19 @@ export const useTripInfoStore = defineStore('tripInfo', {
         this.currentDayId = null
       }
 
-      console.log(`Day ${dayIdToDelete} deleted optimistically.`)
-      // TODO: Добавить useRequest для удаления с сервера и отката
+      useRequest({
+        key: ETripInfoKeys.DELETE_DAY,
+        fn: db => db.days.deleteDay(dayIdToDelete),
+        onSuccess: () => {
+          console.log(`День ${dayIdToDelete} успешно удален с сервера.`)
+        },
+        onError: (error) => {
+          console.error(`Ошибка при удалении дня ${dayIdToDelete}: `, error)
+          this.days.splice(dayIndex, 0, deletedDay)
+          this.currentDayId = originalCurrentDayId
+          // TODO: Показать уведомление пользователю об ошибке
+        },
+      })
     },
 
     reorderActivities(newOrder: IActivity[]) {

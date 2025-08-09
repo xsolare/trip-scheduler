@@ -36,7 +36,6 @@ export const ActivitySchema = z.object({
   sections: z.array(ActivitySectionSchema),
   tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).nullable().optional(),
   dayId: z.string().uuid(),
-  // createdAt и updatedAt не включаем, так как они управляются сервером
 })
 
 export const CreateActivityInputSchema = ActivitySchema.pick({
@@ -48,7 +47,6 @@ export const CreateActivityInputSchema = ActivitySchema.pick({
   sections: true,
 })
 
-// Схема для обновления активности - это вся активность, включая ID.
 export const UpdateActivityInputSchema = ActivitySchema
 
 export const DeleteActivityInputSchema = z.object({
@@ -89,9 +87,12 @@ export const TripWithDaysSchema = TripSchema.extend({
   days: z.array(DaySchema),
 })
 
-// Входные схемы
 export const GetTripsByIdInputSchema = z.object({
   tripId: z.string().uuid(),
+})
+
+export const DeleteDayInputSchema = z.object({
+  id: z.string().uuid(),
 })
 
 export const CreateDayInputSchema = DaySchema.pick({

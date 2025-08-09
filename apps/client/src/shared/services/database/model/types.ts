@@ -10,6 +10,7 @@ export interface IDayRepository {
   getByTripId: (tripId: string) => Promise<Day[]>
   createNewDay: (dayData: Omit<Day, 'id'>) => Promise<Day>
   updateDayDetails: (id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>) => Promise<Day>
+  deleteDay: (id: string) => Promise<void>
 }
 
 export interface IActivityRepository {

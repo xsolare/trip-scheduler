@@ -44,6 +44,12 @@ class DayRepository implements IDayRepository {
   }
 
   @throttle(1_000)
+  async deleteDay(id: string): Promise<void> {
+    await this.db.execute('DELETE FROM days WHERE id = $1', [id])
+    await logOperation('days', id, 'DELETE')
+  }
+
+  @throttle(1_000)
   async updateDayDetails(_id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>): Promise<Day> {
     return Promise.resolve(details as Day)
   }

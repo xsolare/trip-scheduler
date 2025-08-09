@@ -23,6 +23,17 @@ class DayRepository implements IDayRepository {
   }
 
   @throttle(1_000)
+  async deleteDay(id: string): Promise<void> {
+    // eslint-disable-next-line no-console
+    console.log(`[Mock] Deleting day with id: ${id}`)
+    const dayIndex = MOCK_DAYS.findIndex(d => d.id === id)
+    if (dayIndex !== -1)
+      MOCK_DAYS.splice(dayIndex, 1)
+
+    return Promise.resolve()
+  }
+
+  @throttle(1_000)
   async updateDayDetails(_id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>): Promise<Day> {
     return Promise.resolve(details as Day)
   }
