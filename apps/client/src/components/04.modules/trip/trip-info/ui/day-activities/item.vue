@@ -65,6 +65,7 @@ function parseTime(timeStr: string): Time {
 function editTime() {
   if (isViewMode.value)
     return
+
   isTimeEditing.value = true
   editingStartTime.value = parseTime(props.activity.startTime)
   editingEndTime.value = parseTime(props.activity.endTime)
@@ -73,6 +74,7 @@ function editTime() {
 function saveTimeChanges() {
   if (!isTimeEditing.value)
     return
+
   const newStartTime = `${editingStartTime.value?.hour.toString().padStart(2, '0')}:${editingStartTime.value?.minute.toString().padStart(2, '0')}`
   const newEndTime = `${editingEndTime.value?.hour.toString().padStart(2, '0')}:${editingEndTime.value?.minute.toString().padStart(2, '0')}`
   updateActivity({ startTime: newStartTime, endTime: newEndTime })
@@ -87,8 +89,6 @@ const activityTitle = computed({
   get: () => props.activity.title,
   set: newTitle => updateActivity({ title: newTitle }),
 })
-
-onClickOutside(timeEditorRef, saveTimeChanges)
 
 function updateSection(sectionId: string, newSectionData: ActivitySection) {
   const newSections = [...(props.activity.sections || [])]
@@ -179,6 +179,8 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
 
   return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
+
+onClickOutside(timeEditorRef, saveTimeChanges)
 </script>
 
 <template>
@@ -193,7 +195,11 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
           <TimeField v-if="editingEndTime" v-model="editingEndTime" />
         </div>
         <div v-else class="time-display" @click="editTime">
-          {{ activity.startTime }} - {{ activity.endTime }}
+          <div class="time-display-preview">
+            {{ activity.startTime }}
+            <span>-</span>
+            {{ activity.endTime }}
+          </div>
         </div>
       </div>
     </div>
@@ -300,11 +306,12 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
       position: relative;
       font-weight: 600;
       color: var(--fg-accent-color);
-      padding: 4px;
+      padding: 4px 0;
+
       &::before {
         position: absolute;
         left: -15px;
-        top: 6px;
+        top: 4px;
         content: '✦';
         font-size: 0.8rem;
         color: var(--fg-secondary-color);
@@ -319,6 +326,14 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
         margin: -2px -4px;
         border-radius: 4px;
         transition: background-color 0.2s ease;
+
+        &-preview {
+          padding: 0 4px;
+
+          > span {
+            margin: 0 5px;
+          }
+        }
 
         &:hover {
           background-color: var(--bg-hover-color);

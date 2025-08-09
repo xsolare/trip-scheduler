@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import process from 'node:process'
 import { db } from './index'
 import { MOCK_DATA } from './mock/01.data'
 import { activities, days, trips } from './schema'
@@ -61,6 +62,6 @@ async function seed() {
 
 seed().catch((e) => {
   console.error('❌ Ошибка при заполнении базы данных:', e)
-  // eslint-disable-next-line node/prefer-global/process
+
   process.exit(1)
 })

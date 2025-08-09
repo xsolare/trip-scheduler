@@ -40,6 +40,7 @@ const statusInfo = computed(() => {
 const formattedBudget = computed(() => {
   if (!props.budget || !props.currency)
     return null
+
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: props.currency,

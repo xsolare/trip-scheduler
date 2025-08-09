@@ -16,7 +16,6 @@ const emit = defineEmits(['updateSection'])
 const store = useModuleStore(['gallery', 'ui'])
 const { tripImages, isUploadingImage, isFetchingImages } = storeToRefs(store.gallery)
 const { isViewMode } = storeToRefs(store.ui)
-const { uploadImage } = store.gallery
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const isImagePickerOpen = ref(false)
@@ -55,7 +54,7 @@ async function handleFileUpload(event: Event) {
     return
 
   // TODO
-  const newImageRecord = await uploadImage(file) as any
+  const newImageRecord = await store.gallery.uploadImage(file) as any
 
   if (newImageRecord) {
     const updatedUrls = [...images.value, newImageRecord.url]
@@ -129,23 +128,24 @@ const visibleImages = computed(() =>
 
 <template>
   <div class="gallery-section">
-    <!-- Панель управления (режим редактирования) -->
     <div v-if="!isViewMode" class="edit-controls">
       <KitBtn
-        appearance="outline"
+        variant="outlined"
+        icon="mdi:upload"
         :loading="isUploadingImage"
         @click="triggerFileUpload"
       >
-        <Icon icon="mdi:upload" />
         {{ isUploadingImage ? 'Загрузка...' : 'Загрузить новое' }}
       </KitBtn>
-      <KitBtn @click="openTripImagePicker">
-        <Icon icon="mdi:image-multiple-outline" />
+      <KitBtn
+        icon="mdi:image-multiple-outline"
+        variant="outlined"
+        @click="openTripImagePicker"
+      >
         Выбрать из галереи
       </KitBtn>
     </div>
 
-    <!-- Скрытый инпут для загрузки файлов -->
     <input
       ref="fileInput"
       type="file"
@@ -154,7 +154,6 @@ const visibleImages = computed(() =>
       @change="handleFileUpload"
     >
 
-    <!-- Галерея -->
     <div v-if="images.length > 0" class="gallery-container" :class="galleryClass">
       <div
         v-for="(image, index) in visibleImages"
@@ -199,7 +198,6 @@ const visibleImages = computed(() =>
       </div>
     </div>
 
-    <!-- Пустое состояние -->
     <div v-else class="empty-state">
       <Icon icon="mdi:image-multiple-outline" class="empty-icon" />
       <p>В этой галерее пока нет изображений.</p>
@@ -211,7 +209,6 @@ const visibleImages = computed(() =>
       </span>
     </div>
 
-    <!-- Image Viewer -->
     <ImageViewer
       v-model:visible="imageViewer.isOpen.value"
       v-model:current-index="imageViewer.currentIndex.value"
@@ -221,7 +218,6 @@ const visibleImages = computed(() =>
       :close-on-overlay-click="true"
     />
 
-    <!-- Модальное окно для выбора изображений из путешествия -->
     <Teleport to="body">
       <div v-if="isImagePickerOpen" class="image-picker-modal">
         <div class="modal-overlay" @click="closeImagePicker" />

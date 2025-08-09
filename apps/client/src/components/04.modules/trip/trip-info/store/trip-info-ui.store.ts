@@ -3,7 +3,7 @@ import { useStorage } from '@vueuse/core'
 /**
  * Стор для управления состоянием UI на странице информации о путешествии.
  */
-export const useTripInfoUiStore = defineStore('tripInfo-ui', () => {
+export const useTripInfoUiStore = defineStore('tripInfoUi', () => {
   // STATE
   const isDaysPanelOpen = ref<boolean>(false)
   const isDaysPanelPinned = ref<boolean>(false)

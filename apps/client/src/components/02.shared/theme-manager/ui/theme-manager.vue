@@ -323,7 +323,6 @@ function variableNameToHumanReadable(name: string) {
     &:hover {
       border-color: var(--border-focus-color);
       transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
 
     &.active {
@@ -746,20 +745,6 @@ function variableNameToHumanReadable(name: string) {
   }
 }
 
-.theme-card {
-  animation: slideIn 0.3s ease;
-
-  &:nth-child(1) {
-    animation-delay: 0s;
-  }
-  &:nth-child(2) {
-    animation-delay: 0.1s;
-  }
-  &:nth-child(3) {
-    animation-delay: 0.2s;
-  }
-}
-
 .theme-editor-item {
   animation: slideIn 0.4s ease;
 
@@ -795,20 +780,6 @@ function variableNameToHumanReadable(name: string) {
           margin-left: 0;
         }
       }
-    }
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .theme-card {
-    &:hover {
-      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
-    }
-
-    &.active {
-      box-shadow:
-        0 0 0 1px var(--border-pressed-color),
-        0 4px 20px var(--bg-action-hover-color);
     }
   }
 }

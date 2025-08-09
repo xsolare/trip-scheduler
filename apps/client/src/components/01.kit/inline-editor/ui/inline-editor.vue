@@ -14,8 +14,13 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits<{
+  (e: 'markdownUpdated', value: string): void
+  (e: 'updated'): void
+  (e: 'focus'): void
+  (e: 'blur'): void
+}>()
 const markdown = defineModel<string>({ required: true })
-
 if (markdown.value === undefined) {
   markdown.value = ``
 }
@@ -50,27 +55,26 @@ useEditor((root) => {
     })
     .use(listener)
 
-  // crepe.on((crepeListener) => {
-  // crepeListener.markdownUpdated((md) => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Markdown updated:', md)
-  // })
+  crepe.on((crepeListener) => {
+    // crepeListener.markdownUpdated((md) => {
+    //   console.log('Markdown updated:', md)
+    // })
 
-  // crepeListener.updated(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Document updated')
-  // })
+    crepeListener.updated(() => {
+      // console.log('Document updated')
+      emit('updated')
+    })
 
-  // crepeListener.focus(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Editor focused')
-  // })
+    crepeListener.focus(() => {
+      // console.log('Editor focused')
+      emit('focus')
+    })
 
-  // crepeListener.blur(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Editor blurred')
-  // })
-  // })
+    crepeListener.blur(() => {
+      // console.log('Editor blurred')
+      emit('blur')
+    })
+  })
 
   return crepe
 })
