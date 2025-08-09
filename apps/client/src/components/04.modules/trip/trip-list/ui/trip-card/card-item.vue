@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Icon } from '@iconify/vue'
 import type { ITrip } from '../../models/types'
-import TripEditModal from '../trip-modals/Trip-edit-modal.vue';
+import { Icon } from '@iconify/vue'
+import { computed, ref } from 'vue'
+import TripEditModal from '../trip-modals/Trip-edit-modal.vue'
 
 const props = withDefaults(defineProps<ITrip>(), {
   participants: () => [],
@@ -14,7 +14,6 @@ const emit = defineEmits(['update:trip'])
 const router = useRouter()
 const isEditing = ref(false)
 
-// Функции для отображения данных
 const getInitials = (name: string) => name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 const avatarColorNames = ['blue', 'orange', 'green', 'red', 'purple', 'cyan']
 const getAvatarClass = (name: string) => `avatar--${avatarColorNames[name.length % avatarColorNames.length]}`
@@ -39,7 +38,8 @@ const statusInfo = computed(() => {
 })
 
 const formattedBudget = computed(() => {
-  if (!props.budget || !props.currency) return null
+  if (!props.budget || !props.currency)
+    return null
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: props.currency,
@@ -106,7 +106,7 @@ function handleSave(updatedTrip: ITrip) {
         <div class="card-meta">
           <div class="meta-item">
             <Icon icon="mdi:calendar-month-outline" />
-            <span>{{ formattedDates }}</span>игт ш
+            <span>{{ formattedDates }}</span>
           </div>
           <div class="meta-item">
             <Icon icon="mdi:map-marker-outline" />
@@ -120,8 +120,10 @@ function handleSave(updatedTrip: ITrip) {
 
         <div class="card-footer">
           <div v-if="participants.length" class="card-participants">
-            <div v-for="participant in participants.slice(0, 3)" :key="participant" class="avatar"
-              :class="getAvatarClass(participant)">
+            <div
+              v-for="participant in participants.slice(0, 3)" :key="participant" class="avatar"
+              :class="getAvatarClass(participant)"
+            >
               <span>{{ getInitials(participant) }}</span>
             </div>
             <div v-if="participants.length > 3" class="avatar avatar--more">
@@ -137,7 +139,7 @@ function handleSave(updatedTrip: ITrip) {
       </div>
     </div>
 
-    <TripEditModal v-model="isEditing" :trip="props" @save="handleSave" />
+    <TripEditModal v-model="isEditing" :trip="props" @update:trip="handleSave" />
   </div>
 </template>
 

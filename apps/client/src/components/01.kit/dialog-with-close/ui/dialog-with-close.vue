@@ -17,8 +17,24 @@ interface Props {
 const { maxWidth = 700, title } = defineProps<Props>()
 
 const visible = defineModel<boolean>('visible', { required: true })
+const isShaking = ref(false)
 
 const maxWidthPx = computed(() => `${maxWidth}px`)
+
+function handleOutsideClick(event: any) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  shakeDialog()
+  return false
+}
+
+function shakeDialog() {
+  isShaking.value = true
+  setTimeout(() => {
+    isShaking.value = false
+  }, 500)
+}
 </script>
 
 <template>
@@ -26,14 +42,8 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
     <DialogPortal>
       <DialogOverlay class="dialog-overlay" />
       <DialogContent
-        class="dialog-content-wrapper"
-        :style="{ maxWidth: maxWidthPx }"
-        @pointer-down-outside="(event) => {
-          const originalEvent = event.detail.originalEvent
-          const target = originalEvent.target as HTMLElement
-          if (originalEvent.offsetX > target.clientWidth || originalEvent.offsetY > target.clientHeight)
-            event.preventDefault()
-        }"
+        class="dialog-content-wrapper" :style="{ maxWidth: maxWidthPx }" :class="{ shake: isShaking }"
+        @pointer-down-outside="handleOutsideClick"
       >
         <div class="dialog-header">
           <DialogTitle class="dialog-title">
@@ -76,7 +86,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   z-index: 1001;
   width: 90vw;
   padding: 16px;
-  animation: content-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  //animation: content-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -126,6 +136,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -136,9 +147,33 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
     opacity: 0;
     transform: translate(-50%, -48%) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.shake {
+  animation: gentle-pulse 0.5s ease-in-out;
+}
+
+@keyframes gentle-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  25% {
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+
+  75% {
+    transform: translate(-50%, -50%) scale(0.99);
   }
 }
 </style>

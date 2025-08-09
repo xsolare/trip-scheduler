@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { Icon } from '@iconify/vue'
 import type { ITrip } from '../../models/types'
+import { Icon } from '@iconify/vue'
+import { computed, ref, watch } from 'vue'
 import { DialogWithClose } from '~/components/01.kit/dialog-with-close'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 
@@ -10,37 +10,53 @@ const props = defineProps<{
   trip: ITrip
 }>()
 
+const emit = defineEmits(['update:modelValue', 'update:trip'])
 
-
-const emit = defineEmits(['update:modelValue', 'save'])
-
-const editedTrip = ref<ITrip>(JSON.parse(JSON.stringify(props.trip)))
+const editedTrip = ref({
+  ...props.trip,
+  citiesString: props.trip.cities?.join(', ') || '',
+})
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 watch(() => props.trip, (newTrip) => {
-  editedTrip.value = JSON.parse(JSON.stringify(newTrip))
+  editedTrip.value = {
+    ...newTrip,
+    citiesString: newTrip.cities?.join(', ') || '',
+  }
 }, { deep: true })
 
-const saveChanges = () => {
+function saveChanges() {
   if (!editedTrip.value.title?.trim()) {
-    alert('Название не может быть пустым')
     return
   }
-  emit('save', { ...editedTrip.value })
+  if (!editedTrip.value.id) {
+    console.error('Отсутствует ID поездки')
+    return
+  }
+
+  const citiesArray = editedTrip.value.citiesString
+    .split(',')
+    .map(city => city.trim())
+    .filter(city => city)
+
+  emit('update:trip', {
+    ...editedTrip.value,
+    cities: citiesArray,
+  })
   closeModal()
 }
 
-const closeModal = () => {
+function closeModal() {
   isOpen.value = false
 }
 </script>
 
 <template>
-  <DialogWithClose :visible="isOpen" @update:visible="isOpen = $event" title="Редактирование путешествия">
+  <DialogWithClose :visible="isOpen" title="Редактирование путешествия" @update:visible="isOpen = $event">
     <div class="modal-body">
       <div class="form-group">
         <label>Название*</label>
@@ -60,7 +76,11 @@ const closeModal = () => {
 
       <div class="form-group">
         <label>Города</label>
-        <input v-model="editedTrip.cities" class="form-input" placeholder="Введите через запятую">
+        <input
+          v-model="editedTrip.citiesString" class="form-input"
+          placeholder="Введите через запятую: Москва, Санкт-Петербург, Сочи"
+        >
+        <small class="hint-text">Перечислите города через запятую</small>
       </div>
 
       <div class="form-row">
@@ -71,9 +91,15 @@ const closeModal = () => {
         <div class="form-group">
           <label>Валюта</label>
           <select v-model="editedTrip.currency" class="form-input">
-            <option value="RUB">RUB</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
+            <option value="RUB">
+              RUB
+            </option>
+            <option value="USD">
+              USD
+            </option>
+            <option value="EUR">
+              EUR
+            </option>
           </select>
         </div>
       </div>
@@ -81,31 +107,45 @@ const closeModal = () => {
       <div class="form-group">
         <label>Статус</label>
         <select v-model="editedTrip.status" class="form-input">
-          <option value="draft">Черновик</option>
-          <option value="planned">Запланировано</option>
-          <option value="in-progress">В процессе</option>
-          <option value="completed">Завершено</option>
+          <option value="draft">
+            Черновик
+          </option>
+          <option value="planned">
+            Запланировано
+          </option>
+          <option value="in-progress">
+            В процессе
+          </option>
+          <option value="completed">
+            Завершено
+          </option>
         </select>
       </div>
 
       <div class="form-group">
         <label>Видимость</label>
         <select v-model="editedTrip.visibility" class="form-input">
-          <option value="private">Приватное</option>
-          <option value="shared">Доступ по ссылке</option>
-          <option value="public">Публичное</option>
+          <option value="private">
+            Приватное
+          </option>
+          <option value="shared">
+            Доступ по ссылке
+          </option>
+          <option value="public">
+            Публичное
+          </option>
         </select>
       </div>
     </div>
 
     <div class="modal-footer">
-      <KitBtn variant="outlined" color="secondary" @click="closeModal" class="action-btn">
+      <KitBtn variant="outlined" color="secondary" class="action-btn" @click="closeModal">
         <template #icon>
           <Icon icon="mdi:close" />
         </template>
         Отменить
       </KitBtn>
-      <KitBtn color="primary" @click="saveChanges" class="action-btn">
+      <KitBtn color="primary" class="action-btn" @click="saveChanges">
         <template #icon>
           <Icon icon="mdi:content-save" />
         </template>
@@ -121,29 +161,21 @@ const closeModal = () => {
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
 }
 
 .form-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary);
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
 }
 
 .form-row {
@@ -159,14 +191,18 @@ const closeModal = () => {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  padding: 1rem;
-  border-top: 1px solid var(--border-color);
+  padding: 1.25rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .action-btn {
   min-width: 120px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+}
+
+.hint-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 </style>

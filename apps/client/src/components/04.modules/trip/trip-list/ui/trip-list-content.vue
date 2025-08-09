@@ -7,14 +7,15 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['update:trips'])
+const emit = defineEmits(['update:trip'])
 
-const handleTripUpdate = (updatedTrip: ITrip) => {
+function handleTripUpdate(updatedTrip: ITrip) {
   const updatedTrips = props.trips.map(trip =>
-    trip.id === updatedTrip.id ? updatedTrip : trip
+    trip.id === updatedTrip.id
+      ? JSON.parse(JSON.stringify(updatedTrip))
+      : trip,
   )
-
-  emit('update:trips', updatedTrips)
+  emit('update:trip', updatedTrips)
 }
 </script>
 
@@ -29,6 +30,5 @@ const handleTripUpdate = (updatedTrip: ITrip) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 0px;
-
 }
 </style>
