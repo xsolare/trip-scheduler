@@ -204,10 +204,9 @@ export const useTripInfoStore = defineStore('tripInfo', {
 
       // 2. Отправляем запрос на сервер
       useRequest({
-        key: `${ETripInfoKeys.UPDATE_ACTIVITY}:${updatedActivity.id}`,
+        key: ETripInfoKeys.UPDATE_ACTIVITY,
         fn: db => db.activities.update(updatedActivity),
         onSuccess: (activityFromServer) => {
-          // Заменяем данные на те, что пришли с сервера для полной консистентности
           const finalIndex = day.activities.findIndex(a => a.id === activityFromServer.id)
           if (finalIndex !== -1)
             day.activities[finalIndex] = activityFromServer

@@ -1,5 +1,5 @@
 import type { IFileRepository } from '../../model/types'
-import type { TripImage, TripImageSection } from '~/shared/types/models/trip'
+import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 
 export class FileRepository implements IFileRepository {
   /**
@@ -8,7 +8,7 @@ export class FileRepository implements IFileRepository {
    * @param _tripId - ID путешествия для привязки файла.
    * @returns Promise с URL загруженного файла.
    */
-  async uploadFile(_file: File, _tripId: string, _section: TripImageSection): Promise<TripImage> {
+  async uploadFile(_file: File, _tripId: string, _placement: TripImagePlacement): Promise<TripImage> {
     return Promise.resolve({} as TripImage)
   }
 
