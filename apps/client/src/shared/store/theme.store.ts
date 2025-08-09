@@ -66,7 +66,7 @@ export const useThemeStore = defineStore('theme', () => {
   const isCustomThemeActive = computed(() => activeThemeName.value === 'custom')
 
   // --- ACTIONS ---
-  function setTheme(name: ThemeName) {
+  function setTheme(name: ThemeType) {
     activeThemeName.value = name
   }
 
