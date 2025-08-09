@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Icon } from '@iconify/vue'
 import type { ITrip } from '../../models/types'
-import TripEditModal from '../trip-modals/Trip-edit-modal.vue';
+import { Icon } from '@iconify/vue'
+import { computed, ref } from 'vue'
+import TripEditModal from '../trip-modals/Trip-edit-modal.vue'
 
 const props = withDefaults(defineProps<ITrip>(), {
   participants: () => [],
@@ -118,8 +118,10 @@ function handleSave(updatedTrip: ITrip) {
 
         <div class="card-footer">
           <div v-if="participants.length" class="card-participants">
-            <div v-for="participant in participants.slice(0, 3)" :key="participant" class="avatar"
-              :class="getAvatarClass(participant)">
+            <div
+              v-for="participant in participants.slice(0, 3)" :key="participant" class="avatar"
+              :class="getAvatarClass(participant)"
+            >
               <span>{{ getInitials(participant) }}</span>
             </div>
             <div v-if="participants.length > 3" class="avatar avatar--more">

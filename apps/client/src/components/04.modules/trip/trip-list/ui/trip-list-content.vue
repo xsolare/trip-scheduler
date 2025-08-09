@@ -30,6 +30,5 @@ function handleTripUpdate(updatedTrip: ITrip) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 0px;
-
 }
 </style>
