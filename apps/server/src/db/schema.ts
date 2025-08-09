@@ -1,6 +1,5 @@
 import { relations } from 'drizzle-orm'
 import {
-  boolean,
   date,
   integer,
   jsonb,
@@ -81,7 +80,7 @@ export const days = pgTable('days', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-// Таблица для активностей (Activities) 
+// Таблица для активностей (Activities)
 export const activities = pgTable('activities', {
   id: uuid('id').primaryKey(),
   startTime: text('start_time').notNull(),

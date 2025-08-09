@@ -54,7 +54,6 @@ export const tripProcedures = {
         tags: trip.tags as string[],
         days: trip.days.map(day => ({
           ...day,
-          date: new Date(day.date),
         })),
       }
     }),

@@ -2,35 +2,43 @@
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
-const { data, ui } = useModuleStore(['data', 'ui'])
+const store = useModuleStore(['data', 'ui'])
 
-const { getSelectedDay: selectedDay } = storeToRefs(data)
-const { isViewMode } = storeToRefs(ui)
+const { getSelectedDay: selectedDay } = storeToRefs(store.data)
+const { isViewMode } = storeToRefs(store.ui)
 
 function updateDayDetails(details: { title?: string, description?: string }) {
-  if (selectedDay.value) {
-    data.updateDayDetails(selectedDay.value.id, details)
-  }
+  store.data.updateDayDetails(selectedDay.value!.id, details)
+}
+
+function handleDescriptionBlur(newDesc: string) {
+  updateDayDetails({ description: newDesc })
+}
+
+function handleTitleBlur(newTitle: string) {
+  updateDayDetails({ title: newTitle })
 }
 </script>
 
 <template>
   <div v-if="selectedDay" class="day-header">
     <InlineEditorWrapper
-      :model-value="selectedDay.title"
+      :key="selectedDay.id"
+      v-model="selectedDay.title"
       :readonly="isViewMode"
       :features="{ 'block-edit': false }"
       placeholder="Название дня..."
       class="day-title"
-      @update:model-value="newTitle => updateDayDetails({ title: newTitle })"
+      @blur="handleTitleBlur(selectedDay.title)"
     />
     <InlineEditorWrapper
-      :model-value="selectedDay.description || ''"
+      :key="selectedDay.id"
+      v-model="selectedDay.description"
       :readonly="isViewMode"
       :features="{ 'block-edit': false }"
       placeholder="Добавьте описание..."
       class="day-description"
-      @update:model-value="newDesc => updateDayDetails({ description: newDesc })"
+      @blur="handleDescriptionBlur(selectedDay.description)"
     />
   </div>
 </template>

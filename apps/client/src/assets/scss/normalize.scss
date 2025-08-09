@@ -90,32 +90,6 @@ hr {
   --crepe-color-inline-area: var(--bg-accent-color); /* Inline editing area color */
 }
 
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--fg-secondary-color);
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  font-weight: 500;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--border-secondary-color);
-  }
-
-  &::before {
-    margin-right: 0.5em;
-  }
-
-  &::after {
-    margin-left: 0.5em;
-  }
-}
-
 .milkdown-toolbar {
   padding: 4px !important;
   .toolbar-item {

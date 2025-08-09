@@ -8,10 +8,12 @@ export interface ITripRepository {
 
 export interface IDayRepository {
   getByTripId: (tripId: string) => Promise<Day[]>
+  createNewDay: (dayData: Omit<Day, 'id'>) => Promise<Day>
+  updateDayDetails: (id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>) => Promise<Day>
 }
 
 export interface IFileRepository {
-  uploadFile: (file: File, tripId: string) => Promise<{ url: string }>
+  uploadFile: (file: File, tripId: string) => Promise<TripImage>
   listImageByTrip: (tripId: string) => Promise<TripImage[]>
   addImage: (tripId: string, imageUrl: string) => Promise<TripImage>
 }

@@ -45,7 +45,6 @@ const apiRoutes = new Hono()
   })
 
 app.route('/api', apiRoutes)
-
 app.use('/static/*', serveStatic({ root: './' }))
 
 // tRPC middleware

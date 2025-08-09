@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ActivitySectionGeolocation } from '~/shared/types/models/activity'
+import { Icon } from '@iconify/vue'
 import { Feature, Map, Overlay, View } from 'ol'
 import { Point } from 'ol/geom'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
@@ -218,7 +219,7 @@ onMounted(() => {
   <div class="geolocation-section">
     <div v-if="showAddress" class="geolocation-section-header">
       <div class="geolocation-section-address">
-        <Icon name="map-pin" class="geolocation-section-icon" />
+        <Icon icon="map-pin" class="geolocation-section-icon" />
         <span class="geolocation-section-address-text">{{ section.address }}</span>
       </div>
 
@@ -228,7 +229,7 @@ onMounted(() => {
         type="button"
         @click="handleCenterOnLocation"
       >
-        <Icon name="crosshairs" />
+        <Icon icon="crosshairs" />
         <span class="sr-only">Центрировать на локации</span>
       </button>
     </div>

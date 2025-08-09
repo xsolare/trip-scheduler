@@ -13,20 +13,17 @@ const { reorderActivities, updateActivity, removeActivity } = data
 const { isViewMode } = storeToRefs(ui)
 
 function onUpdateActivity(updatedActivity: IActivity) {
-  if (getSelectedDay.value)
-    updateActivity(getSelectedDay.value.id, updatedActivity)
+  updateActivity(getSelectedDay.value!.id, updatedActivity)
 }
 
 function onDeleteActivity(activityId: string) {
-  if (getSelectedDay.value)
-    removeActivity(getSelectedDay.value.id, activityId)
+  removeActivity(getSelectedDay.value!.id, activityId)
 }
 
 const draggableActivities = computed({
   get: () => getActivitiesForSelectedDay.value,
   set: (newOrder: IActivity[]) => {
-    if (getSelectedDay.value)
-      reorderActivities(getSelectedDay.value.id, newOrder)
+    reorderActivities(newOrder)
   },
 })
 </script>
@@ -55,12 +52,6 @@ const draggableActivities = computed({
 
       <div v-if="getActivitiesForSelectedDay.length === 0" class="empty-state">
         <p>На этот день нет запланированных активностей</p>
-        <button
-          v-if="!isViewMode"
-          @click="$emit('add')"
-        >
-          Добавить активность
-        </button>
       </div>
     </div>
   </div>
@@ -86,10 +77,10 @@ const draggableActivities = computed({
       border: 2px dashed var(--border-secondary-color);
       border-radius: 8px;
       margin-top: 20px;
-      text-align: center;
 
       p {
-        margin-bottom: 20px;
+        text-align: center;
+        font-size: 0.9rem;
         color: var(--fg-secondary-color);
       }
     }

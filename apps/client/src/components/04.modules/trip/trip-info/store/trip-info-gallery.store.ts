@@ -11,10 +11,10 @@ export enum ETripGalleryKeys {
 /**
  * Стор для управления галереей и изображениями на странице путешествия.
  */
-export const useTripInfoGalleryStore = defineStore('tripInfo-gallery', () => {
+export const useTripInfoGalleryStore = defineStore('tripInfoGallery', () => {
   // --- STATE ---
   const tripImages = ref<TripImage[]>([])
-  const currentTripId = ref<string | null>(null)
+  const currentTripId = ref<string | null>('null')
 
   // --- GETTERS ---
   const isFetchingImages = useRequestStatus(ETripGalleryKeys.FETCH_IMAGES)
@@ -41,11 +41,10 @@ export const useTripInfoGalleryStore = defineStore('tripInfo-gallery', () => {
       onSuccess: (result) => {
         tripImages.value = result
       },
+
     })
   }
 
-  // @ts-expect-error nice
-  // eslint-disable-next-line unused-imports/no-unused-vars
   async function uploadImage(file: File): Promise<TripImage | null> {
     const tripId = currentTripId.value
     if (!tripId) {
@@ -53,21 +52,19 @@ export const useTripInfoGalleryStore = defineStore('tripInfo-gallery', () => {
       return null
     }
 
-    // const { data } = await useRequest<TripImage>({
-    //   key: ETripGalleryKeys.UPLOAD_IMAGE,
-    //   fn: db => db.files.uploadTripImage(tripId, file), // Предполагаемый метод API
-    //   immediate: true,
-    //   onSuccess: (newImage) => {
-    //     // Добавляем новое изображение в общий список
-    //     tripImages.value.push(newImage)
-    //   },
-    //   onError: (error) => {
-    //     console.error(`Ошибка при загрузке изображения для путешествия ${tripId}:`, error)
-    //     // Здесь можно показать уведомление пользователю
-    //   },
-    // }).execute()
+    const { data } = await useRequest({
+      key: ETripGalleryKeys.UPLOAD_IMAGE,
+      fn: db => db.files.uploadFile(file, tripId),
+      immediate: false,
+      onSuccess: (newImage) => {
+        tripImages.value.push(newImage)
+      },
+      onError: (error) => {
+        console.error(`Ошибка при загрузке изображения для путешествия ${tripId}:`, error)
+      },
+    }).execute()
 
-    // return data
+    return data
   }
 
   function reset() {

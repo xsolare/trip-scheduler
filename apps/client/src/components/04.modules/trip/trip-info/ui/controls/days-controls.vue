@@ -10,7 +10,20 @@ import ModeSwitcher from './mode-switcher.vue'
 const store = useModuleStore(['ui', 'data'])
 const { isDaysPanelPinned, isDaysPanelOpen, isViewMode } = storeToRefs(store.ui)
 const { getAllDays, getSelectedDay } = storeToRefs(store.data)
-const { setCurrentDay, addNewDay, updateDayDetails } = store.data
+const { setCurrentDay, updateDayDetails } = store.data
+
+function handleAddNewDay() {
+  store.data.addNewDay()
+  if (!store.ui.isDaysPanelPinned)
+    store.ui.closeDaysPanel()
+}
+
+function handleDeleteDay() {
+  if (!getSelectedDay.value)
+    return
+
+  store.data.deleteDay()
+}
 
 const selectedCalendarDate = computed<CalendarDate | null>({
   get: () => {
@@ -24,24 +37,20 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     const originalDate = currentDay.date
     const newDateString = newDate.toString() // 'YYYY-MM-DD'
 
-    // Не делать ничего, если дата не изменилась
     if (originalDate.startsWith(newDateString))
       return
 
     const newIsoDate = new Date(newDateString).toISOString()
 
-    // Ищем, не занята ли новая дата другим днем
     const occupiedDay = getAllDays.value.find(
       day => day.date.startsWith(newDateString) && day.id !== currentDay.id,
     )
 
     if (occupiedDay) {
-      // Дата занята, меняем даты местами
       updateDayDetails(occupiedDay.id, { date: originalDate })
       updateDayDetails(currentDay.id, { date: newIsoDate })
     }
     else {
-      // Дата свободна, просто обновляем текущий день
       updateDayDetails(currentDay.id, { date: newIsoDate })
     }
   },
@@ -71,7 +80,17 @@ const selectedCalendarDate = computed<CalendarDate | null>({
       </CalendarPopover>
     </div>
     <div class="spacer" />
-    <ModeSwitcher />
+    <div class="right-controls">
+      <button
+        v-if="!isViewMode"
+        class="delete-day-btn"
+        title="Удалить текущий день"
+        @click="handleDeleteDay"
+      >
+        <Icon icon="mdi:trash-can-outline" />
+      </button>
+      <ModeSwitcher />
+    </div>
 
     <DaysPanel
       :is-open="isDaysPanelOpen"
@@ -79,7 +98,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
       :selected-day-id="getSelectedDay?.id"
       @close="isDaysPanelOpen = false"
       @select-day="setCurrentDay"
-      @add-new-day="addNewDay"
+      @add-new-day="handleAddNewDay"
     />
   </div>
 </template>
@@ -95,6 +114,11 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   display: flex;
   align-items: center;
   gap: 16px;
+}
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .spacer {
   flex-grow: 1;
@@ -119,6 +143,25 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   }
 }
 
+.delete-day-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--fg-secondary-color);
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--bg-error-color);
+    color: var(--fg-error-color);
+    border-color: var(--border-error-color);
+  }
+}
 .current-day-info {
   cursor: pointer;
   h3 {

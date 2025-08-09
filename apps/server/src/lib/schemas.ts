@@ -42,7 +42,7 @@ export const ActivitySchema = z.object({
 
 export const DaySchema = z.object({
   id: z.string().uuid(),
-  date: z.union([z.date(), z.string()]),
+  date: z.union([z.string()]),
   title: z.string(),
   description: z.string().nullable(),
   tripId: z.string().uuid(),
@@ -77,4 +77,16 @@ export const TripWithDaysSchema = TripSchema.extend({
 // Входные схемы
 export const GetTripsByIdInputSchema = z.object({
   tripId: z.string().uuid(),
+})
+
+export const CreateDayInputSchema = DaySchema.pick({
+  tripId: true,
+  title: true,
+  description: true,
+  date: true,
+})
+
+export const UpdateDayInputSchema = z.object({
+  id: z.string().uuid(),
+  details: DaySchema.pick({ title: true, description: true, date: true }).partial(),
 })

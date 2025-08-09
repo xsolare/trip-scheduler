@@ -5,7 +5,6 @@ import { EmptyLayout } from '~/components/05.layouts/empty'
 
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
-
 import '~/assets/scss/global.scss'
 import '~/assets/scss/atomic.scss'
 import '~/assets/scss/normalize.scss'
@@ -33,5 +32,6 @@ const layouts = {
       <component :is="Component" v-else />
     </router-view>
   </component>
+
   <ReloadPrompt />
 </template>

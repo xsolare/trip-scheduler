@@ -54,6 +54,6 @@ export interface Day {
   tripId: string
   date: string
   title: string
-  description?: string
+  description: string
   activities: Activity[]
 }
