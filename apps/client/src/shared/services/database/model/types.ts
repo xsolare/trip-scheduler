@@ -1,5 +1,5 @@
-import type { Day } from '~/shared/types/models/activity'
-import type { Trip, TripImage } from '~/shared/types/models/trip'
+import type { Activity, Day } from '~/shared/types/models/activity'
+import type { Trip, TripImage, TripImageSection } from '~/shared/types/models/trip'
 
 export interface ITripRepository {
   getAll: () => Promise<Trip[]>
@@ -12,8 +12,13 @@ export interface IDayRepository {
   updateDayDetails: (id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>) => Promise<Day>
 }
 
+export interface IActivityRepository {
+  create: (activityData: Omit<Activity, 'id'>) => Promise<Activity>
+  remove: (id: string) => Promise<Activity>
+}
+
 export interface IFileRepository {
-  uploadFile: (file: File, tripId: string) => Promise<TripImage>
+  uploadFile: (file: File, tripId: string, section: TripImageSection) => Promise<TripImage>
   listImageByTrip: (tripId: string) => Promise<TripImage[]>
   addImage: (tripId: string, imageUrl: string) => Promise<TripImage>
 }
@@ -23,6 +28,7 @@ export interface IDatabaseClient {
   trips: ITripRepository
   days: IDayRepository
   files: IFileRepository
+  activities: IActivityRepository
 
   initDb: () => Promise<this>
 

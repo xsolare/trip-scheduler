@@ -1,12 +1,11 @@
 import { z } from 'zod'
-import { CreateDayInputSchema, DaySchema, GetTripsByIdInputSchema, UpdateDayInputSchema } from '~/lib/schemas'
+import { CreateDayInputSchema, GetTripsByIdInputSchema, UpdateDayInputSchema } from '~/lib/schemas'
 import { createTRPCError, t } from '~/lib/trpc'
 import { dayRepository } from '~/repositories/day.repository'
 
 export const dayProcedures = {
   getByTripId: t.procedure
     .input(GetTripsByIdInputSchema)
-    .output(z.array(DaySchema))
     .query(async ({ input }) => {
       const days = await dayRepository.getByTripId(input.tripId)
 
@@ -17,7 +16,6 @@ export const dayProcedures = {
 
   getById: t.procedure
     .input(z.object({ dayId: z.string().uuid() }))
-    .output(DaySchema.nullable())
     .query(async ({ input }) => {
       const day = await dayRepository.getById(input.dayId)
       if (!day)

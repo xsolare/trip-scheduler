@@ -13,10 +13,12 @@ import { ActivitySectionRenderer } from './sections'
 
 interface ActivityItemProps {
   activity: Activity
+  isFirst: boolean
+  isLast: boolean
 }
 
 const props = defineProps<ActivityItemProps>()
-const emit = defineEmits(['update', 'delete'])
+const emit = defineEmits(['update', 'delete', 'moveUp', 'moveDown'])
 
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)
@@ -202,6 +204,31 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           </div>
         </div>
       </div>
+      <div class="activity-controls">
+        <button
+          class="control-btn"
+          title="Поднять вверх"
+          :disabled="isFirst"
+          @click="$emit('moveUp')"
+        >
+          <Icon icon="mdi:arrow-up" />
+        </button>
+        <button
+          class="control-btn"
+          title="Опустить вниз"
+          :disabled="isLast"
+          @click="$emit('moveDown')"
+        >
+          <Icon icon="mdi:arrow-down" />
+        </button>
+        <button
+          class="control-btn delete-btn"
+          title="Удалить активность"
+          @click="$emit('delete', activity.id)"
+        >
+          <Icon icon="mdi:trash-can-outline" />
+        </button>
+      </div>
     </div>
 
     <div class="activity-title">
@@ -301,6 +328,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   .activity-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 
     .activity-time {
       position: relative;
@@ -343,6 +371,46 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         display: flex;
         align-items: center;
         gap: 4px;
+      }
+    }
+
+    .activity-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: all 0.2s ease-in-out;
+
+      .control-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: transparent;
+        border: 1px solid var(--border-secondary-color);
+        color: var(--fg-secondary-color);
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background-color: var(--bg-hover-color);
+          color: var(--fg-primary-color);
+          border-color: var(--border-primary-color);
+        }
+
+        &.delete-btn:hover:not(:disabled) {
+          background-color: var(--bg-error-color);
+          color: var(--fg-error-color);
+          border-color: var(--border-error-color);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
       }
     }
   }
@@ -482,6 +550,9 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         color: var(--fg-secondary-color);
       }
     }
+    .activity-header .activity-controls {
+      display: none;
+    }
     .sections-list {
       margin-bottom: 0;
     }
@@ -499,7 +570,14 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   }
 }
 
+.activity-item:hover .activity-header .activity-controls {
+  opacity: 1;
+}
+
 @include media-down(sm) {
+  .activity-item .activity-header .activity-controls {
+    opacity: 1;
+  }
   .activity-item {
     .activity-sections {
       padding-left: 0;

@@ -4,19 +4,6 @@ import { Skeleton } from '~/components/01.kit/skeleton'
 
 <template>
   <div class="trip-info-skeleton">
-    <!-- Corrected Days Controls Skeleton -->
-    <div class="controls-skeleton">
-      <div class="left-controls-skeleton">
-        <Skeleton width="37px" height="37px" border-radius="8px" type="wave" />
-        <div class="day-info-skeleton">
-          <Skeleton width="120px" height="24px" border-radius="6px" type="wave" />
-          <Skeleton width="80px" height="20px" border-radius="6px" type="wave" />
-        </div>
-      </div>
-      <div class="spacer" />
-      <Skeleton width="37px" height="37px" border-radius="8px" type="wave" />
-    </div>
-
     <!-- Divider "о дне" -->
     <div class="divider-skeleton">
       <Skeleton width="80px" height="12px" border-radius="4px" type="wave" />

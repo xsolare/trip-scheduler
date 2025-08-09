@@ -89,8 +89,6 @@ export const activities = pgTable('activities', {
   sections: jsonb('sections').$type<ActivitySection[]>().notNull().default([]),
   tag: activityTagEnum('tag'),
   dayId: uuid('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // Отношения

@@ -5,7 +5,8 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: 'postgresql://user:password@localhost:5432/trip_scheduler_db',
+    // eslint-disable-next-line node/prefer-global/process
+    url: `${process.env.DATABASE_URL}`,
   },
   verbose: true,
   strict: true,

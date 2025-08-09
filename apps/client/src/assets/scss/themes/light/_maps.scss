@@ -17,6 +17,8 @@ $bg-colors: (
   bg-action-hover: variables.$bg-action-hover-color,
   bg-hover: variables.$bg-hover-color,
   bg-focus: variables.$bg-focus-color,
+  bg-highlight: variables.$bg-highlight-color,
+
   // STATUS
   bg-success: variables.$bg-success-color,
   bg-error: variables.$bg-error-color,
@@ -54,6 +56,7 @@ $fg-colors: (
   fg-inverted: variables.$fg-inverted-color,
   fg-disabled: variables.$fg-disabled-color,
   fg-pressed: variables.$fg-pressed-color,
+  fg-highlight: variables.$fg-highlight-color,
 );
 
 // FG STATUS

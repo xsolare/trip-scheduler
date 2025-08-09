@@ -24,6 +24,7 @@ export const themePresets: ThemePreset[] = [
       'bg-action-hover-color': '#f37a51',
       'bg-hover-color': '#ede7e5bf',
       'bg-focus-color': '#fce9e4',
+      'bg-highlight-color': '#fdf5d7',
 
       // BG STATUS
       'bg-success-color': '#d4e6d6',
@@ -41,6 +42,7 @@ export const themePresets: ThemePreset[] = [
       'fg-inverted-color': '#faf4f2',
       'fg-disabled-color': '#29242a4d',
       'fg-pressed-color': '#29242a',
+      'fg-highlight-color': '#d99f47',
 
       // FG STATUS
       'fg-success-color': '#269d69',
@@ -82,6 +84,7 @@ export const themePresets: ThemePreset[] = [
       'bg-action-hover-color': '#81a1c1',
       'bg-hover-color': '#d8dee9',
       'bg-focus-color': '#dce5f0',
+      'bg-highlight-color': '#f4efe2',
 
       // BG STATUS
       'bg-success-color': '#e6f0df',
@@ -99,6 +102,7 @@ export const themePresets: ThemePreset[] = [
       'fg-inverted-color': '#eceff4',
       'fg-disabled-color': '#2e34404d',
       'fg-pressed-color': '#2e3440',
+      'fg-highlight-color': '#bf9d6f',
 
       // FG STATUS
       'fg-success-color': '#a3be8c',
@@ -140,6 +144,7 @@ export const themePresets: ThemePreset[] = [
       'bg-action-hover-color': '#00b96b99',
       'bg-hover-color': '#eeeeee',
       'bg-focus-color': '#d2e7dd',
+      'bg-highlight-color': '#fcf8e3',
 
       // BG STATUS
       'bg-success-color': '#d9f1e4',
@@ -157,6 +162,7 @@ export const themePresets: ThemePreset[] = [
       'fg-inverted-color': '#ffffff',
       'fg-disabled-color': '#1b1b1f4d',
       'fg-pressed-color': '#1b1b1f',
+      'fg-highlight-color': '#9c7a2e',
 
       // FG STATUS
       'fg-success-color': '#1c6b48',
@@ -198,6 +204,7 @@ export const themePresets: ThemePreset[] = [
       'bg-action-hover-color': '#ff92d4',
       'bg-hover-color': '#44475a',
       'bg-focus-color': '#44324f',
+      'bg-highlight-color': '#504e3b',
 
       // BG STATUS
       'bg-success-color': '#334e3d',
@@ -215,6 +222,7 @@ export const themePresets: ThemePreset[] = [
       'fg-inverted-color': '#282a36',
       'fg-disabled-color': '#f8f8f24d',
       'fg-pressed-color': '#f8f8f2',
+      'fg-highlight-color': '#f1fa8c',
 
       // FG STATUS
       'fg-success-color': '#50fa7b',
