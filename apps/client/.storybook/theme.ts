@@ -4,7 +4,7 @@ export const customTheme = create({
   base: 'light',
 
   // Brand
-  brandTitle: 'Your App Storybook',
+  brandTitle: 'TripScheduler Storybook',
   brandUrl: '/',
 
   // Colors from your palette
