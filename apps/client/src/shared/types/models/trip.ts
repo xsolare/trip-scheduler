@@ -82,3 +82,5 @@ export interface TripImage {
   createdAt: string
   updatedAt: string
 }
+
+export type TripImageSection = 'route' | 'memory'

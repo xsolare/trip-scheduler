@@ -46,7 +46,6 @@ export interface Activity {
   //
   sections?: ActivitySections
   tag?: ActivityTag
-
 }
 
 export interface Day {

@@ -3,13 +3,14 @@ import type { CalendarDate } from '@internationalized/date'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { CalendarPopover } from '~/components/01.kit/calendar-popover'
+import { Skeleton } from '~/components/01.kit/skeleton'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import DaysPanel from './days-panel.vue'
 import ModeSwitcher from './mode-switcher.vue'
 
 const store = useModuleStore(['ui', 'data'])
 const { isDaysPanelPinned, isDaysPanelOpen, isViewMode } = storeToRefs(store.ui)
-const { getAllDays, getSelectedDay } = storeToRefs(store.data)
+const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.data)
 const { setCurrentDay, updateDayDetails } = store.data
 
 function handleAddNewDay() {
@@ -24,6 +25,8 @@ function handleDeleteDay() {
 
   store.data.deleteDay()
 }
+
+const isDayInfoLoading = computed(() => isLoading.value || isLoadingNewDay.value)
 
 const selectedCalendarDate = computed<CalendarDate | null>({
   get: () => {
@@ -68,7 +71,11 @@ const selectedCalendarDate = computed<CalendarDate | null>({
         <Icon icon="mdi:menu" />
       </button>
 
-      <CalendarPopover v-model="selectedCalendarDate" :disabled="isViewMode">
+      <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
+        <Skeleton width="100px" height="20px" border-radius="6px" type="wave" />
+        <Skeleton width="80px" height="18px" border-radius="6px" type="wave" />
+      </div>
+      <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
         <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
           <h3 v-if="getSelectedDay">
             {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
@@ -80,7 +87,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
       </CalendarPopover>
     </div>
     <div class="spacer" />
-    <div class="right-controls">
+    <div v-if="!isDayInfoLoading" class="right-controls">
       <button
         v-if="!isViewMode"
         class="delete-day-btn"
@@ -109,6 +116,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   align-items: center;
   gap: 16px;
   padding: 16px 0;
+  min-height: 80px;
 }
 .left-controls {
   display: flex;
@@ -161,6 +169,11 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     color: var(--fg-error-color);
     border-color: var(--border-error-color);
   }
+}
+.current-day-info-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .current-day-info {
   cursor: pointer;

@@ -9,9 +9,7 @@ CREATE TABLE "activities" (
 	"title" text NOT NULL,
 	"sections" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"tag" "activity_tag",
-	"day_id" uuid NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"day_id" uuid NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "days" (

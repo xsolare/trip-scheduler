@@ -111,7 +111,7 @@ useEditor((root) => {
       padding: 8px;
     }
     em {
-      color: var(--fg-accent-color);
+      color: var(--fg-highlight-color);
     }
     code {
       color: var(--fg-secondary-color);
@@ -122,7 +122,7 @@ useEditor((root) => {
       padding: 0;
     }
     strong {
-      color: var(--fg-accent-color);
+      color: var(--fg-highlight-color);
     }
     h1,
     h2,

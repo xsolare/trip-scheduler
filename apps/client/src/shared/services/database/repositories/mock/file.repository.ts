@@ -1,5 +1,5 @@
 import type { IFileRepository } from '../../model/types'
-import type { TripImage } from '~/shared/types/models/trip'
+import type { TripImage, TripImageSection } from '~/shared/types/models/trip'
 import { throttle } from '../../lib/decorators'
 
 class FileRepository implements IFileRepository {
@@ -9,17 +9,17 @@ class FileRepository implements IFileRepository {
    * @param _tripId - ID путешествия для привязки файла.
    * @returns Promise с URL загруженного файла.
    */
-  @throttle(1500)
-  async uploadFile(_file: File, _tripId: string): Promise<TripImage> {
+  @throttle(1_000)
+  async uploadFile(_file: File, _tripId: string, _section: TripImageSection): Promise<TripImage> {
     return Promise.resolve({} as TripImage)
   }
 
-  @throttle(1500)
+  @throttle(1_000)
   async listImageByTrip(_tripId: string): Promise<TripImage[]> {
     return Promise.resolve([])
   }
 
-  @throttle(1500)
+  @throttle(1_000)
   async addImage(_tripId: string, _imageUrl: string): Promise<TripImage> {
     return Promise.resolve({} as TripImage)
   }

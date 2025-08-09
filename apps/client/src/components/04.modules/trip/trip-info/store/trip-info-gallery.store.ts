@@ -54,7 +54,7 @@ export const useTripInfoGalleryStore = defineStore('tripInfoGallery', () => {
 
     const { data } = await useRequest({
       key: ETripGalleryKeys.UPLOAD_IMAGE,
-      fn: db => db.files.uploadFile(file, tripId),
+      fn: db => db.files.uploadFile(file, tripId, 'route'),
       immediate: false,
       onSuccess: (newImage) => {
         tripImages.value.push(newImage)

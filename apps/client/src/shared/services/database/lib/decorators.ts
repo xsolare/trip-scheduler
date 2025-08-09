@@ -9,7 +9,7 @@ export function throttle(delay: number) {
     descriptor.value = async function (...args: any[]) {
       const result = await originalMethod.apply(this, args)
 
-      if (import.meta.env?.VITE_APP_REQUEST_THROTTLE === true)
+      if (import.meta.env?.VITE_APP_REQUEST_THROTTLE)
         await new Promise(resolve => setTimeout(resolve, delay))
 
       return result

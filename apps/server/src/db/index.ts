@@ -3,7 +3,7 @@ import { Pool } from 'pg'
 import * as schema from './schema'
 
 const pool = new Pool({
-  connectionString: 'postgresql://trip-scheduler:trip-scheduler@localhost:5432/trip_scheduler_dev',
+  connectionString: `${import.meta.env.DATABASE_URL}`,
 })
 
 export const db = drizzle(pool, { schema })

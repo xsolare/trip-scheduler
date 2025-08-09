@@ -20,6 +20,20 @@ function onDeleteActivity(activityId: string) {
   removeActivity(getSelectedDay.value!.id, activityId)
 }
 
+function onMoveActivity(activity: IActivity, direction: 'up' | 'down') {
+  const activities = [...getActivitiesForSelectedDay.value]
+  const currentIndex = activities.findIndex(a => a.id === activity.id)
+
+  if (direction === 'up' && currentIndex > 0) {
+    [activities[currentIndex], activities[currentIndex - 1]] = [activities[currentIndex - 1], activities[currentIndex]]
+    reorderActivities(activities)
+  }
+  else if (direction === 'down' && currentIndex < activities.length - 1) {
+    [activities[currentIndex], activities[currentIndex + 1]] = [activities[currentIndex + 1], activities[currentIndex]]
+    reorderActivities(activities)
+  }
+}
+
 const draggableActivities = computed({
   get: () => getActivitiesForSelectedDay.value,
   set: (newOrder: IActivity[]) => {
@@ -41,11 +55,15 @@ const draggableActivities = computed({
         :disabled="isViewMode"
         class="draggable-area"
       >
-        <template #item="{ element: activity }">
+        <template #item="{ element: activity, index }">
           <ActivityItem
             :activity="activity"
+            :is-first="index === 0"
+            :is-last="index === draggableActivities.length - 1"
             @update="onUpdateActivity"
             @delete="onDeleteActivity"
+            @move-up="onMoveActivity(activity, 'up')"
+            @move-down="onMoveActivity(activity, 'down')"
           />
         </template>
       </draggable>

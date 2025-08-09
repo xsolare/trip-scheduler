@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { GetTripsByIdInputSchema, TripSchema, TripWithDaysSchema } from '~/lib/schemas'
+import { GetTripsByIdInputSchema, TripSchema } from '~/lib/schemas'
 import { t } from '~/lib/trpc'
 import { tripRepository } from '~/repositories/trip.repository'
 
@@ -39,7 +39,6 @@ export const tripProcedures = {
 
   getByIdWithDays: t.procedure
     .input(GetTripsByIdInputSchema)
-    .output(TripWithDaysSchema.nullable())
     .query(async ({ input }) => {
       const trip = await tripRepository.getByIdWithDays(input.tripId)
       if (!trip)

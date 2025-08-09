@@ -40,6 +40,15 @@ export const ActivitySchema = z.object({
   updatedAt: z.date(),
 })
 
+export const CreateActivityInputSchema = ActivitySchema.pick({
+  dayId: true,
+  title: true,
+  startTime: true,
+  endTime: true,
+  tag: true,
+  sections: true,
+})
+
 export const DaySchema = z.object({
   id: z.string().uuid(),
   date: z.union([z.string()]),
@@ -68,6 +77,10 @@ export const TripSchema = z.object({
   days: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),
+})
+
+export const DeleteActivityInputSchema = z.object({
+  id: z.string().uuid(),
 })
 
 export const TripWithDaysSchema = TripSchema.extend({

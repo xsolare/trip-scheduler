@@ -1,6 +1,5 @@
+import type { ThemeType } from '~/shared/types/models/theme'
 import { useStorage } from '@vueuse/core'
-
-export type ThemeName = 'light' | 'dark' | 'custom'
 
 export interface ColorPalette {
   [key: string]: string // e.g., 'bg-primary-color': '#eeeeee'
@@ -60,7 +59,7 @@ const defaultLightPalette: ColorPalette = {
 export const useThemeStore = defineStore('theme', () => {
   const isCreatorOpen = ref(false)
 
-  const activeThemeName = useStorage<ThemeName>('active-theme', 'light')
+  const activeThemeName = useStorage<ThemeType>('active-theme', 'light')
   const customThemePalette = useStorage<ColorPalette>('custom-theme-palette', defaultLightPalette)
 
   // --- GETTERS ---
@@ -74,6 +73,10 @@ export const useThemeStore = defineStore('theme', () => {
   function resetCustomTheme() {
     customThemePalette.value = { ...defaultLightPalette }
     setTheme('custom')
+  }
+
+  function applyCustomPalette(newPalette: ColorPalette) {
+    Object.assign(customThemePalette.value, newPalette)
   }
 
   function openCreator() {
@@ -92,6 +95,7 @@ export const useThemeStore = defineStore('theme', () => {
 
   return {
     isCreatorOpen,
+    applyCustomPalette,
     activeThemeName,
     customThemePalette,
     isCustomThemeActive,

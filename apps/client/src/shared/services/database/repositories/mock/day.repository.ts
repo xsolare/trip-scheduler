@@ -4,14 +4,14 @@ import { throttle } from '../../lib/decorators'
 import { MOCK_DAYS } from './data/trip.mock'
 
 class DayRepository implements IDayRepository {
-  @throttle(1500)
+  @throttle(1_000)
   async getByTripId(tripId: string): Promise<Day[]> {
     const days = MOCK_DAYS.filter(d => d.tripId === tripId)
 
     return Promise.resolve(days)
   }
 
-  @throttle(1500)
+  @throttle(1_000)
   async createNewDay(dayData: Omit<Day, 'id'>): Promise<Day> {
     const newDay: Day = {
       ...dayData,
@@ -22,7 +22,7 @@ class DayRepository implements IDayRepository {
     return Promise.resolve(newDay)
   }
 
-  @throttle(1500)
+  @throttle(1_000)
   async updateDayDetails(_id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>): Promise<Day> {
     return Promise.resolve(details as Day)
   }

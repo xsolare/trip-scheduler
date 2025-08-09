@@ -215,7 +215,8 @@ function handleOverlayClick(e: Event) {
   max-height: 100%;
   object-fit: contain;
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px var(--bg-overlay-primary-color);
+  background: var(--bg-overlay-primary-color);
 }
 
 .nav-btn {

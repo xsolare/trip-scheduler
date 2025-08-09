@@ -1,8 +1,8 @@
+/* eslint-disable no-console */
 import type { IActivity, IDay } from '../models/types'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
 import { useRequest, useRequestError, useRequestStatus, useRequestStore } from '~/plugins/request'
-import { timeToMinutes } from '../lib/helpers'
+import { getActivityDuration, minutesToTime, timeToMinutes } from '../lib/helpers'
 
 export enum ETripInfoKeys {
   FETCH_DAYS = 'trip:fetch-days',
@@ -19,272 +19,331 @@ export enum ETripInfoKeys {
  * Стор для управления ДАННЫМИ о конкретном путешествии,
  * включая его дни и активности.
  */
-export const useTripInfoStore = defineStore('tripInfo', () => {
+export const useTripInfoStore = defineStore('tripInfo', {
   // --- STATE ---
-  const days = ref<IDay[]>([])
-  const currentTripId = ref<string | null>(null)
-  const currentDayId = ref<string | null>(null)
+  state: (): {
+    days: IDay[]
+    currentTripId: string | null
+    currentDayId: string | null
+  } => ({
+    days: [],
+    currentTripId: null,
+    currentDayId: null,
+  }),
 
   // --- GETTERS ---
-  const isLoading = useRequestStatus(ETripInfoKeys.FETCH_DAYS)
-  const fetchError = useRequestError(ETripInfoKeys.FETCH_DAYS)
+  getters: {
+    isLoading: () => useRequestStatus(ETripInfoKeys.FETCH_DAYS).value,
+    fetchError: () => useRequestError(ETripInfoKeys.FETCH_DAYS).value,
+    isLoadingUpdateDay: () => useRequestStatus(ETripInfoKeys.UPDATE_DAY).value,
+    isLoadingNewDay: () => useRequestStatus(ETripInfoKeys.ADD_DAY).value,
 
-  const isLoadingUpdateDay = useRequestStatus(ETripInfoKeys.UPDATE_DAY)
-  const isLoadingNewDay = useRequestStatus(ETripInfoKeys.ADD_DAY)
+    getAllDays(state): IDay[] {
+      return state.days
+    },
 
-  const getAllDays = computed((): IDay[] => days.value)
+    getSelectedDay(state): IDay | null {
+      if (!state.currentDayId)
+        return null
 
-  const getSelectedDay = computed((): IDay | null => {
-    if (!currentDayId.value)
-      return null
+      return state.days.find(day => day.id === state.currentDayId) ?? null
+    },
 
-    return days.value.find(day => day.id === currentDayId.value) ?? null
-  })
-
-  const getActivitiesForSelectedDay = computed((): IActivity[] => {
-    return getSelectedDay.value?.activities
-      .slice()
-      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)) ?? []
-  })
+    getActivitiesForSelectedDay(): IActivity[] {
+      return this.getSelectedDay?.activities
+        .slice()
+        .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)) ?? []
+    },
+  },
 
   // --- ACTIONS ---
-  function fetchDaysForTrip(tripId: string) {
-    currentTripId.value = tripId
+  actions: {
+    fetchDaysForTrip(tripId: string) {
+      this.currentTripId = tripId
 
-    useRequest({
-      key: ETripInfoKeys.FETCH_DAYS,
-      fn: db => db.days.getByTripId(tripId),
-      immediate: true,
-      onSuccess: (result) => {
-        const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        days.value = sortedDays
-        currentDayId.value = sortedDays.length > 0 ? sortedDays[0].id : null
-      },
-      onError: (error) => {
-        days.value = []
-        currentDayId.value = null
-        console.error(`Ошибка при загрузке дней для путешествия ${tripId}:`, error)
-      },
-    })
-  }
+      useRequest({
+        key: ETripInfoKeys.FETCH_DAYS,
+        fn: db => db.days.getByTripId(tripId),
+        immediate: true,
+        onSuccess: (result) => {
+          const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          this.days = sortedDays
+          this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+        },
+        onError: (error) => {
+          this.days = []
+          this.currentDayId = null
+          console.error(`Ошибка при загрузке дней для путешествия ${tripId}: `, error)
+        },
+      })
+    },
 
-  function setCurrentDay(dayId: string): void {
-    currentDayId.value = dayId
-  }
+    setCurrentDay(dayId: string): void {
+      this.currentDayId = dayId
+    },
 
-  function updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date'>>) {
-    const dayIndex = days.value.findIndex(d => d.id === dayId)
-    if (dayIndex === -1) {
-      console.error('Не удалось найти день для обновления:', dayId)
-      return
-    }
-    const originalDay = { ...days.value[dayIndex] }
+    updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date'>>) {
+      const dayIndex = this.days.findIndex(d => d.id === dayId)
+      if (dayIndex === -1) {
+        console.error('Не удалось найти день для обновления:', dayId)
+        return
+      }
+      const originalDay = { ...this.days[dayIndex] }
 
-    Object.assign(days.value[dayIndex], details)
+      Object.assign(this.days[dayIndex], details)
 
-    if (details.date) {
-      days.value.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    }
+      if (details.date)
+        this.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-    useRequest({
-      key: ETripInfoKeys.UPDATE_DAY,
-      fn: db => db.days.updateDayDetails(dayId, details),
-      onSuccess: (updatedDayFromServer) => {
-        const finalDayIndex = days.value.findIndex(d => d.id === dayId)
-        if (finalDayIndex !== -1)
-          days.value[finalDayIndex] = { ...days.value[finalDayIndex], ...updatedDayFromServer }
-      },
-      onError: (error) => {
-        const dayToRevertIndex = days.value.findIndex(d => d.id === dayId)
-        if (dayToRevertIndex !== -1)
-          days.value[dayToRevertIndex] = originalDay
+      useRequest({
+        key: ETripInfoKeys.UPDATE_DAY,
+        fn: db => db.days.updateDayDetails(dayId, details),
+        onSuccess: (updatedDayFromServer) => {
+          const finalDayIndex = this.days.findIndex(d => d.id === dayId)
+          if (finalDayIndex !== -1)
+            this.days[finalDayIndex] = { ...this.days[finalDayIndex], ...updatedDayFromServer }
+        },
+        onError: (error) => {
+          const dayToRevertIndex = this.days.findIndex(d => d.id === dayId)
+          if (dayToRevertIndex !== -1)
+            this.days[dayToRevertIndex] = originalDay
 
-        if (details.date)
-          days.value.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          if (details.date)
+            this.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-        console.error(`Ошибка при обновлении дня ${dayId}:`, error)
-      },
-    })
-  }
+          console.error(`Ошибка при обновлении дня ${dayId}: `, error)
+        },
+      })
+    },
 
-  function addActivity(dayId: string, activity: Omit<IActivity, 'id'>) {
-    // 1. Оптимистичное обновление UI
-    const day = days.value.find(d => d.id === dayId)
-    if (!day)
-      return
+    addActivity(dayId: string, activityData: Omit<IActivity, 'id'>) {
+      const day = this.days.find(d => d.id === dayId)
+      if (!day) {
+        console.error('Не удалось найти день для добавления активности:', dayId)
+        return
+      }
 
-    const tempId = `temp-activity-${Date.now()}`
-    const newActivity: IActivity = { ...activity, id: tempId }
-    day.activities.push(newActivity)
+      // 1. Создаем временную активность для немедленного отображения в UI
+      const tempId = `temp-activity-${Date.now()}`
+      const optimisticActivity: IActivity = {
+        ...activityData,
+        id: tempId,
+      }
 
-    // 2. Запрос в фоне
-    // TODO
+      // 2. Оптимистично добавляем в стор
+      day.activities.push(optimisticActivity)
 
-    // eslint-disable-next-line no-console
-    console.log('addActivity', newActivity)
-  }
+      // 3. Отправляем запрос на сервер
+      useRequest({
+        key: `${ETripInfoKeys.ADD_ACTIVITY}:${tempId}`,
+        fn: db => db.activities.create(activityData),
+        onSuccess: (createdActivityFromServer) => {
+          const tempActivity = day.activities.find(a => a.id === tempId)
+          if (tempActivity) {
+            Object.assign(tempActivity, createdActivityFromServer)
+          }
+          console.log(`Активность ${createdActivityFromServer.id} успешно создана.`)
+        },
+        onError: (error) => {
+          console.error(`Ошибка при создании активности: `, error)
+          const activityIndex = day.activities.findIndex(a => a.id === tempId)
+          if (activityIndex !== -1) {
+            day.activities.splice(activityIndex, 1)
+          }
+          // TODO: Показать уведомление пользователю об ошибке
+        },
+      })
+    },
 
-  function removeActivity(dayId: string, activityId: string) {
-    const day = days.value.find(d => d.id === dayId)
-    if (!day)
-      return
+    removeActivity(dayId: string, activityId: string) {
+      const day = this.days.find(d => d.id === dayId)
+      if (!day) {
+        console.error('Не удалось найти день для удаления активности:', dayId)
+        return
+      }
 
-    const activityIndex = day.activities.findIndex(a => a.id === activityId)
-    if (activityIndex === -1)
-      return null
+      const activityIndex = day.activities.findIndex(a => a.id === activityId)
+      if (activityIndex === -1) {
+        console.error('Не удалось найти активность для удаления:', activityId)
+        return
+      }
 
-    // const removedActivity = day.activities.splice(activityIndex, 1)[0]
+      // 1. Оптимистично удаляем активность из стора
+      const removedActivity = day.activities.splice(activityIndex, 1)[0]
 
-    // TODO
+      // 2. Отправляем запрос на сервер
+      useRequest({
+        key: `${ETripInfoKeys.REMOVE_ACTIVITY}:${activityId}`,
+        fn: db => db.activities.remove(activityId),
+        onSuccess: () => {
+          console.log(`Активность ${activityId} успешно удалена с сервера.`)
+        },
+        onError: (error) => {
+          // 3. При ошибке откатываем изменения (возвращаем активность)
+          console.error(`Ошибка при удалении активности ${activityId}: `, error)
+          if (day)
+            day.activities.splice(activityIndex, 0, removedActivity)
+          // TODO: Показать уведомление пользователю об ошибке
+        },
+      })
+    },
 
-    // eslint-disable-next-line no-console
-    console.log('removeActivity', activityId)
-  }
+    updateActivity(dayId: string, updatedActivity: IActivity) {
+      const day = this.days.find(d => d.id === dayId)
+      if (!day)
+        return
 
-  function updateActivity(dayId: string, updatedActivity: IActivity) {
-    const day = days.value.find(d => d.id === dayId)
-    if (!day)
-      return
+      const activityIndex = day.activities.findIndex(a => a.id === updatedActivity.id)
+      if (activityIndex === -1)
+        return
 
-    const activityIndex = day.activities.findIndex(a => a.id === updatedActivity.id)
-    if (activityIndex === -1)
-      return null
+      // 1. Сохраняем оригинальное состояние и оптимистично обновляем
+      // const originalActivity = { ...day.activities[activityIndex] }
+      day.activities[activityIndex] = updatedActivity
 
-    day.activities[activityIndex] = updatedActivity
+      // 2. Отправляем запрос на сервер
+      // TODO: Реализовать на сервере и в API-слое
+      /*
+      useRequest({
+        key: `${ETripInfoKeys.UPDATE_ACTIVITY}:${updatedActivity.id}`,
+        fn: db => db.activities.update(updatedActivity.id, updatedActivity), // db.activities.update не существует, нужно добавить
+        onSuccess: (activityFromServer) => {
+          // При успехе можно обновить данные с сервера, если они отличаются
+          Object.assign(day.activities[activityIndex], activityFromServer)
+          console.log(`Активность ${updatedActivity.id} успешно обновлена.`)
+        },
+        onError: (error) => {
+          // 3. При ошибке откатываем
+          console.error(`Ошибка при обновлении активности ${updatedActivity.id}: `, error)
+          day.activities[activityIndex] = originalActivity
+          // TODO: Показать уведомление пользователю об ошибке
+        },
+      })
+      */
+    },
 
-    // TODO
+    addNewDay() {
+      if (!this.currentTripId) {
+        console.error('Невозможно добавить день: ID путешествия не установлен.')
+        return
+      }
 
-    // eslint-disable-next-line no-console
-    console.log('updateActivity', updatedActivity)
-  }
+      const lastDay = [...this.days].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).pop()
+      const newDate = lastDay ? new Date(lastDay.date) : new Date()
 
-  function addNewDay() {
-    if (!currentTripId.value) {
-      console.error('Невозможно добавить день: ID путешествия не установлен.')
-      return
-    }
+      if (lastDay)
+        newDate.setDate(newDate.getDate() + 1)
 
-    const lastDay = days.value.toSorted((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).at(-1)
-    const newDate = lastDay ? new Date(lastDay.date) : new Date()
+      const newDayData: Omit<IDay, 'id'> = {
+        tripId: this.currentTripId,
+        title: `День ${this.days.length + 1}`,
+        description: '',
+        date: newDate.toISOString(),
+        activities: [],
+      }
 
-    if (lastDay)
-      newDate.setDate(newDate.getDate() + 1)
+      const tempId = `temp-day-${Date.now()}`
+      const dayWithTempId = { ...newDayData, id: tempId }
 
-    const newDayData: Omit<IDay, 'id'> = {
-      tripId: currentTripId.value,
-      title: `День ${days.value.length + 1}`,
-      description: '',
-      date: newDate.toISOString(),
-      activities: [],
-    }
+      this.days.push(dayWithTempId)
+      this.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      this.currentDayId = tempId
 
-    const tempId = `temp-day-${Date.now()}`
-    const dayWithTempId = { ...newDayData, id: tempId }
+      useRequest({
+        key: ETripInfoKeys.ADD_DAY,
+        fn: db => db.days.createNewDay(newDayData),
+        onSuccess: (createdDay) => {
+          const tempDayIndex = this.days.findIndex(d => d.id === tempId)
+          if (tempDayIndex !== -1) {
+            this.days[tempDayIndex] = { ...this.days[tempDayIndex], ...createdDay }
+            if (this.currentDayId === tempId)
+              this.currentDayId = createdDay.id
+          }
+        },
+        onError: (error) => {
+          console.error('Ошибка при добавлении нового дня:', error)
+          const tempDayIndex = this.days.findIndex(d => d.id === tempId)
+          if (tempDayIndex !== -1)
+            this.days.splice(tempDayIndex, 1)
 
-    days.value.push(dayWithTempId)
-    days.value.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    currentDayId.value = tempId
+          if (this.currentDayId === tempId)
+            this.currentDayId = this.days.length > 0 ? this.days[this.days.length - 1].id : null
+        },
+      })
+    },
 
-    useRequest({
-      key: ETripInfoKeys.ADD_DAY,
-      fn: db => db.days.createNewDay(newDayData),
-      onSuccess: (createdDay) => {
-        const tempDayIndex = days.value.findIndex(d => d.id === tempId)
-        if (tempDayIndex !== -1) {
-          days.value[tempDayIndex] = { ...days.value[tempDayIndex], ...createdDay }
-          if (currentDayId.value === tempId)
-            currentDayId.value = createdDay.id
-        }
-      },
-      onError: (error) => {
-        console.error('Ошибка при добавлении нового дня:', error)
-        const tempDayIndex = days.value.findIndex(d => d.id === tempId)
-        if (tempDayIndex !== -1)
-          days.value.splice(tempDayIndex, 1)
+    deleteDay() {
+      if (!this.currentDayId) {
+        console.error('Невозможно удалить день: день не выбран.')
+        return
+      }
 
-        if (currentDayId.value === tempId)
-          currentDayId.value = days.value.length > 0 ? days.value[days.value.length - 1].id : null
-      },
-    })
-  }
+      const dayIdToDelete = this.currentDayId
+      const dayIndex = this.days.findIndex(d => d.id === dayIdToDelete)
+      if (dayIndex === -1) {
+        console.error('Не удалось найти день для удаления:', dayIdToDelete)
+        return
+      }
 
-  function deleteDay() {
-    if (!currentDayId.value) {
-      console.error('Невозможно удалить день: день не выбран.')
-      return
-    }
+      // const originalDays = [...this.days]
+      this.days.splice(dayIndex, 1)
 
-    const dayIdToDelete = currentDayId.value
-    const dayIndex = days.value.findIndex(d => d.id === dayIdToDelete)
-    if (dayIndex === -1) {
-      console.error('Не удалось найти день для удаления:', dayIdToDelete)
-      return
-    }
+      if (this.days.length > 0) {
+        const newIndex = Math.min(dayIndex, this.days.length - 1)
+        this.currentDayId = this.days[newIndex].id
+      }
+      else {
+        this.currentDayId = null
+      }
 
-    // @ts-expect-error Сделаю позже
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const originalDays = [...days.value]
-    days.value.splice(dayIndex, 1)
+      console.log(`Day ${dayIdToDelete} deleted optimistically.`)
+      // TODO: Добавить useRequest для удаления с сервера и отката
+    },
 
-    if (days.value.length > 0) {
-      const newIndex = Math.min(dayIndex, days.value.length - 1)
-      currentDayId.value = days.value[newIndex].id
-    }
-    else {
-      currentDayId.value = null
-    }
+    reorderActivities(newOrder: IActivity[]) {
+      const day = this.days.find(d => d.id === this.currentDayId)
+      if (!day)
+        return
 
-    // useRequest({
-    //   key: ETripInfoKeys.DELETE_DAY,
-    //   // @ts-expect-error - db.days.deleteDay is not defined in the provided context
-    //   fn: db => db.days.deleteDay(dayIdToDelete),
-    //   onError: (error) => {
-    //     console.error(`Ошибка при удалении дня ${dayIdToDelete}:`, error)
-    //     // Rollback
-    //     days.value = originalDays
-    //     currentDayId.value = dayIdToDelete
-    //   },
-    // })
-  }
+      if (newOrder.length === 0) {
+        day.activities = []
+        return
+      }
 
-  function reorderActivities(newOrder: IActivity[]): void {
-    const day = days.value.find(d => d.id === currentDayId.value)
-    if (!day)
-      return
+      const originalSortedActivities = this.getActivitiesForSelectedDay
+      const anchorStartTimeMinutes = originalSortedActivities.length > 0
+        ? timeToMinutes(originalSortedActivities[0].startTime)
+        : 9 * 60
 
-    day.activities = newOrder
-    // TODO
-  }
+      const GAP_BETWEEN_ACTIVITIES_MINUTES = 15
+      const recalculatedActivities: IActivity[] = []
+      let lastEndTimeMinutes = anchorStartTimeMinutes - GAP_BETWEEN_ACTIVITIES_MINUTES
 
-  function reset() {
-    days.value = []
-    currentTripId.value = null
-    currentDayId.value = null
+      for (const activity of newOrder) {
+        const duration = getActivityDuration(activity)
+        const newStartTimeMinutes = lastEndTimeMinutes + GAP_BETWEEN_ACTIVITIES_MINUTES
+        const newEndTimeMinutes = newStartTimeMinutes + duration
 
-    const requestStore = useRequestStore()
-    Object.values(ETripInfoKeys).forEach(key => requestStore.reset(key))
-  }
+        recalculatedActivities.push({
+          ...activity,
+          startTime: minutesToTime(newStartTimeMinutes),
+          endTime: minutesToTime(newEndTimeMinutes),
+        })
 
-  return {
-    days,
-    currentTripId,
-    currentDayId,
-    isLoadingUpdateDay,
-    isLoadingNewDay,
-    isLoading,
-    fetchError,
-    getAllDays,
-    getSelectedDay,
-    getActivitiesForSelectedDay,
-    fetchDaysForTrip,
-    setCurrentDay,
-    updateDayDetails,
-    addActivity,
-    removeActivity,
-    updateActivity,
-    addNewDay,
-    deleteDay,
-    reorderActivities,
-    reset,
-  }
+        lastEndTimeMinutes = newEndTimeMinutes
+      }
+
+      day.activities = recalculatedActivities
+      // TODO: Отправить batch-запрос на обновление на бэкенд
+    },
+
+    reset() {
+      this.days = []
+      this.currentTripId = null
+      this.currentDayId = null
+
+      const requestStore = useRequestStore()
+      Object.values(ETripInfoKeys).forEach(key => requestStore.reset(key))
+    },
+  },
 })

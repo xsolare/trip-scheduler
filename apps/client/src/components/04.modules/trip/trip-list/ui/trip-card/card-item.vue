@@ -210,7 +210,7 @@ function handleSave(updatedTrip: ITrip) {
   .image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, var(--bg-inverted-color) 0%, transparent 80%);
+    background: linear-gradient(to top, var(--bg-tertiary-color) 0%, transparent 80%);
     opacity: 0.7;
     z-index: 1;
   }
@@ -285,7 +285,7 @@ function handleSave(updatedTrip: ITrip) {
   position: relative;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--fg-inverted-color);
+  color: var(--fg-secondary-color);
   margin: 0 40px 0 0;
   z-index: 2;
   line-height: 1.2;
