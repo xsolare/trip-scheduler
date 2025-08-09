@@ -15,6 +15,14 @@ class ActivityRepository implements IActivityRepository {
     return Promise.resolve(newActivity)
   }
 
+  @throttle(500)
+  async update(activityData: Activity): Promise<Activity> {
+    // eslint-disable-next-line no-console
+    console.log('[Mock] Updating activity:', activityData.id, activityData)
+
+    return Promise.resolve(activityData)
+  }
+
   @throttle(1000)
   async remove(id: string): Promise<Activity> {
     // eslint-disable-next-line no-console

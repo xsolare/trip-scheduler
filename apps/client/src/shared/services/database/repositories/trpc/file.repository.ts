@@ -1,5 +1,5 @@
 import type { IFileRepository } from '../../model/types'
-import type { TripImage, TripImageSection } from '~/shared/types/models/trip'
+import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 import { trpc } from '~/shared/services/trpc/trpc.service'
 
 export class FileRepository implements IFileRepository {
@@ -9,11 +9,11 @@ export class FileRepository implements IFileRepository {
    * @param tripId - ID путешествия для привязки файла.
    * @returns Promise с URL загруженного файла.
    */
-  async uploadFile(file: File, tripId: string, section: TripImageSection): Promise<TripImage> {
+  async uploadFile(file: File, tripId: string, placement: TripImagePlacement): Promise<TripImage> {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('tripId', tripId)
-    formData.append('section', section)
+    formData.append('placement', placement)
 
     // const response = await fetch(`${import.meta.env.VITE_APP_SERVER_URL}/api/upload`, {
     const response = await fetch(`/api/upload`, {

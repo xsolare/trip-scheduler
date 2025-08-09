@@ -1,4 +1,4 @@
-import { CreateActivityInputSchema, DeleteActivityInputSchema } from '~/lib/schemas'
+import { CreateActivityInputSchema, DeleteActivityInputSchema, UpdateActivityInputSchema } from '~/lib/schemas'
 import { t } from '~/lib/trpc'
 import { activityRepository } from '~/repositories/activity.repository'
 
@@ -10,6 +10,15 @@ export const activityProcedures = {
     .input(CreateActivityInputSchema)
     .mutation(async ({ input }) => {
       return await activityRepository.create(input)
+    }),
+
+  /**
+   * Обновляет существующую активность.
+   */
+  update: t.procedure
+    .input(UpdateActivityInputSchema)
+    .mutation(({ input }) => {
+      return activityRepository.update(input)
     }),
 
   /**

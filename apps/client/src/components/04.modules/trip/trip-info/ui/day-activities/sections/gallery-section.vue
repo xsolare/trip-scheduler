@@ -5,6 +5,7 @@ import { Icon } from '@iconify/vue'
 import { ImageViewer, useImageViewer } from '~/components/01.kit/image-viewer'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { TripImagePlacement } from '~/shared/types/models/trip'
 
 interface Props {
   section: ActivitySectionGallery
@@ -53,8 +54,7 @@ async function handleFileUpload(event: Event) {
   if (!file)
     return
 
-  // TODO
-  const newImageRecord = await store.gallery.uploadImage(file) as any
+  const newImageRecord = await store.gallery.uploadImage(file, TripImagePlacement.ROUTE)
 
   if (newImageRecord) {
     const updatedUrls = [...images.value, newImageRecord.url]

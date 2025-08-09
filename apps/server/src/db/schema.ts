@@ -40,6 +40,7 @@ export const statusEnum = pgEnum('status', ['completed', 'planned', 'draft'])
 export const visibilityEnum = pgEnum('visibility', ['public', 'private'])
 export const activityTagEnum = pgEnum('activity_tag', ['transport', 'walk', 'food', 'attraction', 'relax'])
 export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery', 'geolocation'])
+export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
 
 // Таблица для путешествий (Trips)
 export const trips = pgTable('trips', {
@@ -65,6 +66,7 @@ export const tripImages = pgTable('trip_images', {
   id: uuid('id').primaryKey().defaultRandom(),
   url: text('url').notNull(),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  placement: tripImagePlacementEnum('placement').notNull().default('route'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })

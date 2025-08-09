@@ -37,6 +37,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
     fetchError: () => useRequestError(ETripInfoKeys.FETCH_DAYS).value,
     isLoadingUpdateDay: () => useRequestStatus(ETripInfoKeys.UPDATE_DAY).value,
     isLoadingNewDay: () => useRequestStatus(ETripInfoKeys.ADD_DAY).value,
+    isLoadingUpdateActivity: () => useRequestStatus(ETripInfoKeys.UPDATE_ACTIVITY).value,
 
     getAllDays(state): IDay[] {
       return state.days
@@ -198,28 +199,29 @@ export const useTripInfoStore = defineStore('tripInfo', {
         return
 
       // 1. Сохраняем оригинальное состояние и оптимистично обновляем
-      // const originalActivity = { ...day.activities[activityIndex] }
+      const originalActivity = JSON.parse(JSON.stringify(day.activities[activityIndex]))
       day.activities[activityIndex] = updatedActivity
 
       // 2. Отправляем запрос на сервер
-      // TODO: Реализовать на сервере и в API-слое
-      /*
       useRequest({
         key: `${ETripInfoKeys.UPDATE_ACTIVITY}:${updatedActivity.id}`,
-        fn: db => db.activities.update(updatedActivity.id, updatedActivity), // db.activities.update не существует, нужно добавить
+        fn: db => db.activities.update(updatedActivity),
         onSuccess: (activityFromServer) => {
-          // При успехе можно обновить данные с сервера, если они отличаются
-          Object.assign(day.activities[activityIndex], activityFromServer)
-          console.log(`Активность ${updatedActivity.id} успешно обновлена.`)
+          // Заменяем данные на те, что пришли с сервера для полной консистентности
+          const finalIndex = day.activities.findIndex(a => a.id === activityFromServer.id)
+          if (finalIndex !== -1)
+            day.activities[finalIndex] = activityFromServer
         },
         onError: (error) => {
-          // 3. При ошибке откатываем
+          // 3. В случае ошибки откатываем изменения
+          const revertIndex = day.activities.findIndex(a => a.id === updatedActivity.id)
+          if (revertIndex !== -1)
+            day.activities[revertIndex] = originalActivity
+
           console.error(`Ошибка при обновлении активности ${updatedActivity.id}: `, error)
-          day.activities[activityIndex] = originalActivity
-          // TODO: Показать уведомление пользователю об ошибке
+          // TODO: Показать уведомление пользователю
         },
       })
-      */
     },
 
     addNewDay() {

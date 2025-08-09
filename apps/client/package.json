@@ -15,6 +15,7 @@
     "build:web": "vue-tsc --noEmit && vite build --config build/vite.config.web.ts",
     "preview": "vite preview --config build/vite.config.tauri.ts",
     "preview:web": "vite preview --config build/vite.config.web.ts",
+    "build:storybook": "storybook build -o dist-storybook",
     "tauri": "bunx tauri",
     "tauri:dev": "bunx tauri dev",
     "tauri:build": "bunx tauri build",

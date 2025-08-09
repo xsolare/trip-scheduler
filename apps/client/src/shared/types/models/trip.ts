@@ -75,12 +75,16 @@ export interface Trip {
   updatedAt?: string
 }
 
+export enum TripImagePlacement {
+  ROUTE = 'route',
+  MEMORIES = 'memories',
+}
+
 export interface TripImage {
   id: string
   url: string
   tripId: string
+  placement: TripImagePlacement
   createdAt: string
   updatedAt: string
 }
-
-export type TripImageSection = 'route' | 'memory'

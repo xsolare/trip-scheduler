@@ -14,10 +14,16 @@ class ActivityRepository implements IActivityRepository {
     return Promise.resolve(newActivity)
   }
 
+  @throttle(500)
+  async update(activityData: Activity): Promise<Activity> {
+    // eslint-disable-next-line no-console
+    console.log('[Mock] Updating activity:', activityData.id, activityData)
+
+    return Promise.resolve(activityData)
+  }
+
   @throttle(1000)
   async remove(id: string): Promise<Activity> {
-    // В моке мы просто возвращаем фиктивный объект,
-    // так как реальное удаление из MOCK_DATA не требуется для теста.
     // eslint-disable-next-line no-console
     console.log(`[Mock] Removing activity with id: ${id}`)
 

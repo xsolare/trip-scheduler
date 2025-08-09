@@ -76,7 +76,7 @@ if (tripId.value) {
           о дне
         </Divider>
         <DayHeader />
-        <Divider>
+        <Divider :is-loading="store.data.isLoadingUpdateActivity">
           маршрут
         </Divider>
         <DayActivitiesList @add="handleAddNewActivity" />

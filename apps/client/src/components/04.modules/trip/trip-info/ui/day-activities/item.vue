@@ -26,6 +26,8 @@ const { isViewMode } = storeToRefs(store.ui)
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
 
+const activityTitle = ref(props.activity.title)
+
 const editingStartTime = shallowRef<Time | null>(null)
 const editingEndTime = shallowRef<Time | null>(null)
 
@@ -87,11 +89,6 @@ function cancelTimeEditing() {
   isTimeEditing.value = false
 }
 
-const activityTitle = computed({
-  get: () => props.activity.title,
-  set: newTitle => updateActivity({ title: newTitle }),
-})
-
 function updateSection(sectionId: string, newSectionData: ActivitySection) {
   const newSections = [...(props.activity.sections || [])]
   const sectionIndex = newSections.findIndex(s => s.id === sectionId)
@@ -104,6 +101,7 @@ function updateSection(sectionId: string, newSectionData: ActivitySection) {
 
 function addSection(type: ActivitySectionType) {
   let newSection: ActivitySection
+
   switch (type) {
     case ActivitySectionType.DESCRIPTION:
       newSection = {
@@ -182,6 +180,10 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
 
+function handleInlineEditorBlur() {
+  updateActivity({ title: activityTitle.value })
+}
+
 onClickOutside(timeEditorRef, saveTimeChanges)
 </script>
 
@@ -239,6 +241,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         :readonly="isViewMode"
         class="activity-title-editor"
         :features="{ 'block-edit': false }"
+        @blur="handleInlineEditorBlur"
       />
     </div>
 

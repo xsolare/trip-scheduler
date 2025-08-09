@@ -96,7 +96,7 @@ function getShortWeekday(date: string): string {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  z-index: 98;
 }
 
 .panel {
@@ -106,7 +106,7 @@ function getShortWeekday(date: string): string {
   width: 400px;
   height: 100%;
   background-color: var(--bg-primary-color);
-  z-index: 1000;
+  z-index: 99;
   transform: translateX(-100%);
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   display: flex;
@@ -130,6 +130,16 @@ function getShortWeekday(date: string): string {
 
     .close-btn {
       display: none;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 8px;
+      bottom: -47px;
+      right: -1px;
+      border-right: 1px solid var(--border-secondary-color);
+      height: 47px;
     }
   }
 

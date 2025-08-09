@@ -99,7 +99,7 @@ const themeStore = useThemeStore()
   border-bottom: 1px solid var(--border-primary-color);
   height: 44px;
   width: 100%;
-  z-index: 100;
+  z-index: 7;
   transition:
     background-color 0.3s ease,
     backdrop-filter 0.3s ease;
