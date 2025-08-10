@@ -1,75 +1,103 @@
-/* eslint-disable unused-imports/no-unused-vars */
-import type { Memory } from '~/shared/types/models/memory'
+import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import { defineStore } from 'pinia'
+import { useRequest, useRequestStatus } from '~/plugins/request'
 
 export enum ETripMemoriesKeys {
   FETCH = 'memories:fetch',
   CREATE = 'memories:create',
+  UPDATE = 'memories:update',
   DELETE = 'memories:delete',
 }
 
-interface TripInfoMemoriesState {
-  memories: Memory[]
-  currentDayId: string | null
-  isLoading: boolean
-}
-
 export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
-  state: (): TripInfoMemoriesState => ({
-    memories: [],
-    currentDayId: null,
-    isLoading: false,
+  state: () => ({
+    memories: [] as Memory[],
+    currentTripId: null as string | null,
   }),
 
-  // GETTERS: Вычисляемые свойства на основе состояния.
   getters: {
-    sortedMemories: (state): Memory[] => {
-      // TODO
+    isLoading: () => useRequestStatus(ETripMemoriesKeys.FETCH).value,
+
+    // Воспоминания с временной меткой для таймлайна
+    timelineMemories(state): Record<string, Memory[]> {
+      const grouped: Record<string, Memory[]> = {}
+      const sorted = state.memories
+        .filter(m => m.timestamp)
+        .sort((a, b) => new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime())
+
+      for (const memory of sorted) {
+        const date = new Date(memory.timestamp!).toISOString().split('T')[0]
+        if (!grouped[date])
+          grouped[date] = []
+
+        grouped[date].push(memory)
+      }
+      return grouped
+    },
+
+    // Воспоминания без временной метки
+    unsortedMemories: (state): Memory[] => {
+      return state.memories.filter(m => !m.timestamp && m.imageId)
     },
   },
 
-  // ACTIONS: Методы для изменения состояния.
   actions: {
-    fetchMemories(dayId: string) {
-      if (this.currentDayId === dayId && this.memories.length > 0)
+    fetchMemories(tripId: string) {
+      if (this.currentTripId === tripId)
         return
 
-      this.currentDayId = dayId
-      this.isLoading = true // Устанавливаем флаг загрузки
+      this.currentTripId = tripId
 
-      // useRequest<Memory[]>({
-      //   key: `${ETripMemoriesKeys.FETCH}:${dayId}`,
-      //   fn: db => db.memories.getByDayId(dayId),
-      //   onSuccess: (result) => {
-      //     this.memories = result
-      //   },
-      //   onError: () => {
-      //     this.memories = [] // Очищаем в случае ошибки
-      //   },
-      // }).execute().finally(() => {
-      //   this.isLoading = false // Снимаем флаг загрузки в любом случае
-      // })
+      useRequest<Memory[]>({
+        key: `${ETripMemoriesKeys.FETCH}:${tripId}`,
+        fn: db => db.memories.getByTripId(tripId),
+        onSuccess: (result) => {
+          this.memories = result
+        },
+      }).execute()
     },
 
-    async addComment(dayId: string, text: string) {
-      // TODO: Реализовать логику добавления комментария,
-      // включая оптимистичное обновление и вызов useRequest.
-      // this.memories.push(optimisticComment);
-      // useRequest(...).execute()
+    async createMemory(data: CreateMemoryInput) {
+      await useRequest({
+        key: ETripMemoriesKeys.CREATE,
+        fn: db => db.memories.create(data),
+        onSuccess: (newMemory) => {
+          this.memories.push(newMemory)
+        },
+      }).execute()
     },
 
-    async addPhoto(dayId: string, tripImageId: string, url: string) {
-      // TODO: Логика добавления фото
+    async updateMemory(data: UpdateMemoryInput) {
+      const memory = this.memories.find(m => m.id === data.id)
+      if (!memory)
+        return
+
+      const originalMemory = { ...memory }
+      Object.assign(memory, data) // Optimistic update
+
+      await useRequest({
+        key: `${ETripMemoriesKeys.UPDATE}:${data.id}`,
+        fn: db => db.memories.update(data),
+        onError: () => {
+          Object.assign(memory, originalMemory) // Revert on error
+        },
+      }).execute()
     },
 
-    async deleteMemory(memoryId: string) {
-      // TODO: Логика удаления, включая оптимистичное удаление из this.memories
+    async deleteMemory(id: string) {
+      const index = this.memories.findIndex(m => m.id === id)
+      if (index > -1)
+        this.memories.splice(index, 1) // Optimistic delete
+
+      await useRequest({
+        key: `${ETripMemoriesKeys.DELETE}:${id}`,
+        fn: db => db.memories.delete(id),
+      }).execute()
     },
 
     reset() {
       this.memories = []
-      this.currentDayId = null
-      this.isLoading = false
+      this.currentTripId = null
     },
   },
 })

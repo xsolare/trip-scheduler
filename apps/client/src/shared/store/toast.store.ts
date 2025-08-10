@@ -2,7 +2,7 @@ import type { ToastMessage, ToastOptions } from '../types/models/toast'
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 
-interface ToastState {
+export interface ToastState {
   messages: ToastMessage[]
 }
 

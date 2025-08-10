@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ToastMessage } from '~/components/01.kit/kit-toast'
+import type { ToastMessage } from '~/shared/types/models/toast'
 import { useSwipe } from '@vueuse/core'
 
 interface Props {

@@ -1,4 +1,5 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
+import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import type { Trip, TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 
 export interface ITripRepository {
@@ -20,9 +21,9 @@ export interface IActivityRepository {
 }
 
 export interface IFileRepository {
-  uploadFile: (file: File, tripId: string, placement: TripImagePlacement) => Promise<TripImage>
+  uploadFile: (file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null) => Promise<TripImage>
   listImageByTrip: (tripId: string) => Promise<TripImage[]>
-  addImage: (tripId: string, imageUrl: string) => Promise<TripImage>
+  addImage: (tripId: string, imageUrl: string, placement: TripImagePlacement) => Promise<TripImage>
 }
 
 // Интерфейс для всей базы данных
@@ -31,6 +32,7 @@ export interface IDatabaseClient {
   days: IDayRepository
   files: IFileRepository
   activities: IActivityRepository
+  memories: IMemoryRepository
 
   initDb: () => Promise<this>
 
@@ -38,6 +40,13 @@ export interface IDatabaseClient {
   getUnsyncedChanges: () => Promise<any[]>
   markAsSynced: (logIds: number[]) => Promise<void>
   testConnection: () => Promise<boolean>
+}
+
+export interface IMemoryRepository {
+  getByTripId: (tripId: string) => Promise<Memory[]>
+  create: (data: CreateMemoryInput) => Promise<Memory>
+  update: (data: UpdateMemoryInput) => Promise<Memory>
+  delete: (id: string) => Promise<Memory>
 }
 
 // Режимы работы
