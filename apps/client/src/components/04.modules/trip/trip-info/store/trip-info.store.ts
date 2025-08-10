@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import type { IActivity, IDay } from '../models/types'
 import { defineStore } from 'pinia'
+import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestError, useRequestStatus, useRequestStore } from '~/plugins/request'
 import { getActivityDuration, minutesToTime, timeToMinutes } from '../lib/helpers'
 
@@ -113,7 +114,9 @@ export const useTripInfoStore = defineStore('tripInfo', {
         onError: (error) => {
           this.days = []
           this.currentDayId = null
+
           console.error(`Ошибка при загрузке дней для путешествия ${tripId}: `, error)
+          useToast().error(`Ошибка при загрузке дней для путешествия: ${error}`)
         },
       })
     },
@@ -122,6 +125,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const dayIndex = this.days.findIndex(d => d.id === dayId)
       if (dayIndex === -1) {
         console.error('Не удалось найти день для обновления:', dayId)
+        useToast().error(`Не удалось найти день для обновления`)
         return
       }
       const originalDay = { ...this.days[dayIndex] }
@@ -148,6 +152,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
             this.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
           console.error(`Ошибка при обновлении дня ${dayId}: `, error)
+          useToast().error(`Ошибка при обновлении дня: ${error}`)
         },
       })
     },
@@ -156,6 +161,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const day = this.days.find(d => d.id === dayId)
       if (!day) {
         console.error('Не удалось найти день для добавления активности:', dayId)
+        useToast().error(`Не удалось найти день для добавления активности`)
         return
       }
 
@@ -181,12 +187,13 @@ export const useTripInfoStore = defineStore('tripInfo', {
           console.log(`Активность ${createdActivityFromServer.id} успешно создана.`)
         },
         onError: (error) => {
-          console.error(`Ошибка при создании активности: `, error)
           const activityIndex = day.activities.findIndex(a => a.id === tempId)
           if (activityIndex !== -1) {
             day.activities.splice(activityIndex, 1)
           }
-          // TODO: Показать уведомление пользователю об ошибке
+
+          console.error(`Ошибка при создании активности: `, error)
+          useToast().error(`Ошибка при создании активности: ${error}`)
         },
       })
     },
@@ -195,12 +202,14 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const day = this.days.find(d => d.id === dayId)
       if (!day) {
         console.error('Не удалось найти день для удаления активности:', dayId)
+        useToast().error(`Не удалось найти день для удаления активности.`)
         return
       }
 
       const activityIndex = day.activities.findIndex(a => a.id === activityId)
       if (activityIndex === -1) {
         console.error('Не удалось найти активность для удаления:', activityId)
+        useToast().error(`Не удалось найти активность для удаления.`)
         return
       }
 
@@ -216,11 +225,13 @@ export const useTripInfoStore = defineStore('tripInfo', {
         },
         onError: (error) => {
           // 3. При ошибке откатываем изменения (возвращаем активность)
-          console.error(`Ошибка при удалении активности ${activityId}: `, error)
           if (day)
             day.activities.splice(activityIndex, 0, removedActivity)
-          // TODO: Показать уведомление пользователю об ошибке
+
+          console.error(`Ошибка при удалении активности ${activityId}: `, error)
+          useToast().error(`Ошибка при удалении активности: ${error}`)
         },
+
       })
     },
 
@@ -253,7 +264,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
             day.activities[revertIndex] = originalActivity
 
           console.error(`Ошибка при обновлении активности ${updatedActivity.id}: `, error)
-          // TODO: Показать уведомление пользователю
+          useToast().error(`Ошибка при обновлении активности: ${error}`)
         },
       })
     },
@@ -261,6 +272,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
     addNewDay() {
       if (!this.currentTripId) {
         console.error('Невозможно добавить день: ID путешествия не установлен.')
+        useToast().error(`Невозможно добавить день: ID путешествия не установлен.`)
         return
       }
 
@@ -297,13 +309,15 @@ export const useTripInfoStore = defineStore('tripInfo', {
           }
         },
         onError: (error) => {
-          console.error('Ошибка при добавлении нового дня:', error)
           const tempDayIndex = this.days.findIndex(d => d.id === tempId)
           if (tempDayIndex !== -1)
             this.days.splice(tempDayIndex, 1)
 
           if (this.currentDayId === tempId)
             this.currentDayId = this.days.length > 0 ? this.days[this.days.length - 1].id : null
+
+          console.error('Ошибка при добавлении нового дня:', error)
+          useToast().error(`Ошибка при добавлении нового дня: ${error}`)
         },
       })
     },
@@ -311,6 +325,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
     deleteDay() {
       if (!this.currentDayId) {
         console.error('Невозможно удалить день: день не выбран.')
+        useToast().error(`Невозможно удалить день: день не выбран.`)
         return
       }
 
@@ -318,6 +333,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const dayIndex = this.days.findIndex(d => d.id === dayIdToDelete)
       if (dayIndex === -1) {
         console.error('Не удалось найти день для удаления:', dayIdToDelete)
+        useToast().error(`Не удалось найти день для удаления.`)
         return
       }
 
@@ -341,10 +357,11 @@ export const useTripInfoStore = defineStore('tripInfo', {
           console.log(`День ${dayIdToDelete} успешно удален с сервера.`)
         },
         onError: (error) => {
-          console.error(`Ошибка при удалении дня ${dayIdToDelete}: `, error)
           this.days.splice(dayIndex, 0, deletedDay)
           this.currentDayId = originalCurrentDayId
-          // TODO: Показать уведомление пользователю об ошибке
+
+          console.error(`Ошибка при удалении дня ${dayIdToDelete}: `, error)
+          useToast().error(`Ошибка при удалении дня: ${error}`)
         },
       })
     },

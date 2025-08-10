@@ -25,8 +25,8 @@ const style = computed(() => ({
 
 <template>
   <div
-    class="p-skeleton"
-    :class="{ 'p-skeleton--wave': type === 'wave' }"
+    class="kit-skeleton"
+    :class="{ 'kit-skeleton--wave': type === 'wave' }"
     :style="style"
   >
     <!-- Невидимый контент для сохранения высоты строки -->
@@ -35,22 +35,22 @@ const style = computed(() => ({
 </template>
 
 <style lang="scss">
-.p-skeleton {
+.kit-skeleton {
   color: transparent;
   display: block;
   user-select: none;
 }
 
-.p-skeleton * {
+.kit-skeleton * {
   visibility: hidden;
 }
 
-.p-skeleton--wave {
+.kit-skeleton--wave {
   position: relative;
   overflow: hidden;
 }
 
-.p-skeleton--wave::after {
+.kit-skeleton--wave::after {
   animation: wave 1.5s linear 0s infinite;
   background: linear-gradient(90deg, transparent, var(--bg-overlay-primary-color), transparent);
   content: '';

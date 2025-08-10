@@ -1,4 +1,5 @@
 <script setup>
+import { ToastContainer } from '~/components/01.kit/kit-toast'
 import { ReloadPrompt } from '~/components/02.shared/reload-prompt'
 import { DefaultLayout } from '~/components/05.layouts/default'
 import { EmptyLayout } from '~/components/05.layouts/empty'
@@ -33,5 +34,6 @@ const layouts = {
     </router-view>
   </component>
 
+  <ToastContainer />
   <ReloadPrompt />
 </template>

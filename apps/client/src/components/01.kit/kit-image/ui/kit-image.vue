@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AspectRatio } from 'reka-ui'
 import { computed, nextTick, onBeforeUnmount, readonly, ref, watch } from 'vue'
-import { Skeleton } from '~/components/01.kit/skeleton'
+import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 
 interface Props {
   src: string
@@ -152,7 +152,7 @@ defineExpose({
       <transition name="fade">
         <div v-if="isLoading" class="placeholder-wrapper">
           <slot name="loader">
-            <Skeleton class="skeleton-placeholder" />
+            <KitSkeleton class="skeleton-placeholder" />
           </slot>
         </div>
       </transition>

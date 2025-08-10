@@ -31,7 +31,7 @@ export const autoImportOptionsCfg: AutoImportOptions = {
       customCollections: ['custom'],
     }),
   ],
-  dts: './src/types/dts/auto-imports.d.ts',
+  dts: './src/shared/types/dts/auto-imports.d.ts',
   vueTemplate: true,
   eslintrc: {
     enabled: true,

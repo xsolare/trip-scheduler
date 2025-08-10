@@ -3,7 +3,7 @@ import type { CalendarDate } from '@internationalized/date'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { CalendarPopover } from '~/components/01.kit/calendar-popover'
-import { Skeleton } from '~/components/01.kit/skeleton'
+import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import DaysPanel from './days-panel.vue'
 import ModeSwitcher from './mode-switcher.vue'
@@ -72,8 +72,8 @@ const selectedCalendarDate = computed<CalendarDate | null>({
       </button>
 
       <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
-        <Skeleton width="100px" height="20px" border-radius="6px" type="wave" />
-        <Skeleton width="80px" height="18px" border-radius="6px" type="wave" />
+        <KitSkeleton width="100px" height="20px" border-radius="6px" type="wave" />
+        <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
       </div>
       <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
         <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
@@ -88,15 +88,18 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     </div>
     <div class="spacer" />
     <div v-if="!isDayInfoLoading" class="right-controls">
-      <button
-        v-if="!isViewMode"
-        class="delete-day-btn"
-        title="Удалить текущий день"
-        @click="handleDeleteDay"
-      >
-        <Icon icon="mdi:trash-can-outline" />
-      </button>
-      <ModeSwitcher />
+      <TransitionGroup name="faded">
+        <button
+          v-if="!isViewMode"
+          key="delete"
+          class="delete-day-btn"
+          title="Удалить текущий день"
+          @click="handleDeleteDay"
+        >
+          <Icon icon="mdi:trash-can-outline" />
+        </button>
+        <ModeSwitcher key="mode" />
+      </TransitionGroup>
     </div>
 
     <DaysPanel

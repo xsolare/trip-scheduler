@@ -8,8 +8,10 @@ import { EActivityTag } from '../models/types'
 import AddDayActivity from './controls/add-day-activity.vue'
 import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
+import ViewSwitcher from './controls/view-switcher.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
+import MemoriesList from './memories/list.vue'
 import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
 const emit = defineEmits(['update:hasError'])
@@ -68,7 +70,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <ViewSwitcher />
   <DaysControls />
+
   <AsyncStateWrapper
     :loading="isLoading || store.data.isLoadingNewDay"
     :error="fetchError"
@@ -90,7 +94,10 @@ onBeforeUnmount(() => {
         <Divider :is-loading="store.data.isLoadingUpdateActivity">
           маршрут
         </Divider>
-        <DayActivitiesList @add="handleAddNewActivity" />
+        <Transition name="faded-blured" mode="out-in">
+          <DayActivitiesList v-if="store.ui.activeView === 'plan'" @add="handleAddNewActivity" />
+          <MemoriesList v-else-if="store.ui.activeView === 'memories'" />
+        </Transition>
         <AddDayActivity
           v-if="!isViewMode"
           @add="handleAddNewActivity"
@@ -111,11 +118,17 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss" scoped>
-.trip-info-wrapper {
+.trip-info {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 
-  @include media-down(sm) {
-    padding: 0 4px;
+  &-wrapper {
+    height: 100%;
+
+    @include media-down(sm) {
+      padding: 0 4px;
+    }
   }
 }
 </style>
