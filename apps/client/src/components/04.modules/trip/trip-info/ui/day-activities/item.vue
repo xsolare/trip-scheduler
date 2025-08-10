@@ -26,6 +26,8 @@ const { isViewMode } = storeToRefs(store.ui)
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
 
+const activityTitle = ref(props.activity.title)
+
 const editingStartTime = shallowRef<Time | null>(null)
 const editingEndTime = shallowRef<Time | null>(null)
 
@@ -87,11 +89,6 @@ function cancelTimeEditing() {
   isTimeEditing.value = false
 }
 
-const activityTitle = computed({
-  get: () => props.activity.title,
-  set: newTitle => updateActivity({ title: newTitle }),
-})
-
 function updateSection(sectionId: string, newSectionData: ActivitySection) {
   const newSections = [...(props.activity.sections || [])]
   const sectionIndex = newSections.findIndex(s => s.id === sectionId)
@@ -104,6 +101,7 @@ function updateSection(sectionId: string, newSectionData: ActivitySection) {
 
 function addSection(type: ActivitySectionType) {
   let newSection: ActivitySection
+
   switch (type) {
     case ActivitySectionType.DESCRIPTION:
       newSection = {
@@ -182,6 +180,10 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
 
+function handleInlineEditorBlur() {
+  updateActivity({ title: activityTitle.value })
+}
+
 onClickOutside(timeEditorRef, saveTimeChanges)
 </script>
 
@@ -239,6 +241,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         :readonly="isViewMode"
         class="activity-title-editor"
         :features="{ 'block-edit': false }"
+        @blur="handleInlineEditorBlur"
       />
     </div>
 
@@ -352,7 +355,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         cursor: pointer;
         padding: 2px 4px;
         margin: -2px -4px;
-        border-radius: 4px;
+        border-radius: var(--r-2xs);
         transition: background-color 0.2s ease;
 
         &-preview {
@@ -387,7 +390,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         justify-content: center;
         width: 28px;
         height: 28px;
-        border-radius: 50%;
+        border-radius: var(--r-full);
         background: transparent;
         border: 1px solid var(--border-secondary-color);
         color: var(--fg-secondary-color);
@@ -480,7 +483,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     gap: 4px;
     background: var(--bg-secondary-color);
     padding: 4px;
-    border-radius: 16px;
+    border-radius: var(--r-l);
     border: 1px solid var(--border-secondary-color);
   }
 
@@ -490,7 +493,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     border: none;
     background: var(--bg-tertiary-color);
     color: var(--fg-secondary-color);
@@ -515,7 +518,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     border: 1px solid var(--border-secondary-color);
     background: transparent;
     color: var(--fg-secondary-color);

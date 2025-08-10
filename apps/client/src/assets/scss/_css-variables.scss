@@ -6,4 +6,16 @@
   @each $colorType, $color in map.get($theme, 'colors') {
     --#{$colorType}-color: #{$color};
   }
+
+  @if map.has-key($theme, 'paddings') {
+    @each $paddingType, $padding in map.get($theme, 'paddings') {
+      --p-#{$paddingType}: #{$padding};
+    }
+  }
+
+  @if map.has-key($theme, 'radius') {
+    @each $radiusType, $radius in map.get($theme, 'radius') {
+      --r-#{$radiusType}: #{$radius};
+    }
+  }
 }

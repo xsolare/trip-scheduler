@@ -105,7 +105,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   padding: 4px;
   cursor: pointer;
   color: var(--fg-secondary-color);
-  border-radius: 50%;
+  border-radius: var(--r-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;

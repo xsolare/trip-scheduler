@@ -25,7 +25,7 @@ const emit = defineEmits(['add'])
     background-color: transparent;
     border: 2px dashed var(--border-secondary-color);
     color: var(--fg-secondary-color);
-    border-radius: 8px;
+    border-radius: var(--r-s);
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;

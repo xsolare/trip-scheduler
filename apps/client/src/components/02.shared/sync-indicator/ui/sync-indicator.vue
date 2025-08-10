@@ -184,7 +184,7 @@ async function handleClearCache() {
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   border: none;
   background: transparent;
   cursor: pointer;
@@ -222,7 +222,7 @@ async function handleClearCache() {
   padding: 8px;
   background: var(--bg-primary-color);
   border: 1px solid var(--border-primary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   box-shadow:
     0 4px 6px -1px rgb(0 0 0 / 0.1),
     0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -302,7 +302,7 @@ async function handleClearCache() {
   gap: 12px;
   width: 100%;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   font-size: 13px;
   color: var(--fg-primary-color);
   cursor: pointer;

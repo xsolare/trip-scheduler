@@ -51,7 +51,7 @@ function handleUpdateValue(value: CalendarDate | null) {
 
 <style scoped lang="scss">
 :deep(.date-picker-content) {
-  border-radius: 8px;
+  border-radius: var(--r-s);
   animation-duration: 0.6s;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 8px;

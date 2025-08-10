@@ -48,7 +48,7 @@ function handleTitleBlur(newTitle: string) {
   position: relative;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 4px 4px 16px 16px;
+  border-radius: var(--r-2xs) var(--r-2xs) var(--r-l) var(--r-l);
   padding: 32px;
   margin-bottom: 32px;
   margin-top: 16px;
@@ -74,7 +74,7 @@ function handleTitleBlur(newTitle: string) {
     > div {
       padding: 8px 12px;
       margin: -8px -12px;
-      border-radius: 12px;
+      border-radius: var(--r-m);
       cursor: text;
       transition: background-color 0.2s ease-in-out;
 
@@ -111,6 +111,12 @@ function handleTitleBlur(newTitle: string) {
       font-size: 0.9rem;
       margin: 0;
     }
+  }
+}
+
+@include media-down(sm) {
+  .day-header {
+    padding: 24px;
   }
 }
 </style>

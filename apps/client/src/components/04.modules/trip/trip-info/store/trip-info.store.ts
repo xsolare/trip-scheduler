@@ -37,6 +37,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
     fetchError: () => useRequestError(ETripInfoKeys.FETCH_DAYS).value,
     isLoadingUpdateDay: () => useRequestStatus(ETripInfoKeys.UPDATE_DAY).value,
     isLoadingNewDay: () => useRequestStatus(ETripInfoKeys.ADD_DAY).value,
+    isLoadingUpdateActivity: () => useRequestStatus(ETripInfoKeys.UPDATE_ACTIVITY).value,
 
     getAllDays(state): IDay[] {
       return state.days
@@ -54,11 +55,43 @@ export const useTripInfoStore = defineStore('tripInfo', {
         .slice()
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)) ?? []
     },
+
+    currentDayIndex(state): number {
+      if (!state.currentDayId || !state.days)
+        return -1
+      return state.days.findIndex(day => day.id === state.currentDayId)
+    },
+
+    getPreviousDayId(): string | null {
+      if (this.currentDayIndex > 0)
+        return this.days[this.currentDayIndex - 1].id
+      return null
+    },
+
+    getNextDayId(): string | null {
+      if (this.currentDayIndex !== -1 && this.currentDayIndex < this.days.length - 1)
+        return this.days[this.currentDayIndex + 1].id
+      return null
+    },
   },
 
   // --- ACTIONS ---
   actions: {
-    fetchDaysForTrip(tripId: string) {
+    setCurrentDay(dayId: string): void {
+      this.currentDayId = dayId
+    },
+
+    selectNextDay() {
+      if (this.getNextDayId)
+        this.setCurrentDay(this.getNextDayId)
+    },
+
+    selectPreviousDay() {
+      if (this.getPreviousDayId)
+        this.setCurrentDay(this.getPreviousDayId)
+    },
+
+    fetchDaysForTrip(tripId: string, initialDayIdFromQuery?: string) {
       this.currentTripId = tripId
 
       useRequest({
@@ -68,7 +101,14 @@ export const useTripInfoStore = defineStore('tripInfo', {
         onSuccess: (result) => {
           const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           this.days = sortedDays
-          this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+          const dayFromQueryIsValid = initialDayIdFromQuery && sortedDays.some(d => d.id === initialDayIdFromQuery)
+
+          if (dayFromQueryIsValid) {
+            this.currentDayId = initialDayIdFromQuery
+          }
+          else {
+            this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+          }
         },
         onError: (error) => {
           this.days = []
@@ -76,10 +116,6 @@ export const useTripInfoStore = defineStore('tripInfo', {
           console.error(`Ошибка при загрузке дней для путешествия ${tripId}: `, error)
         },
       })
-    },
-
-    setCurrentDay(dayId: string): void {
-      this.currentDayId = dayId
     },
 
     updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date'>>) {
@@ -198,28 +234,28 @@ export const useTripInfoStore = defineStore('tripInfo', {
         return
 
       // 1. Сохраняем оригинальное состояние и оптимистично обновляем
-      // const originalActivity = { ...day.activities[activityIndex] }
+      const originalActivity = JSON.parse(JSON.stringify(day.activities[activityIndex]))
       day.activities[activityIndex] = updatedActivity
 
       // 2. Отправляем запрос на сервер
-      // TODO: Реализовать на сервере и в API-слое
-      /*
       useRequest({
-        key: `${ETripInfoKeys.UPDATE_ACTIVITY}:${updatedActivity.id}`,
-        fn: db => db.activities.update(updatedActivity.id, updatedActivity), // db.activities.update не существует, нужно добавить
+        key: ETripInfoKeys.UPDATE_ACTIVITY,
+        fn: db => db.activities.update(updatedActivity),
         onSuccess: (activityFromServer) => {
-          // При успехе можно обновить данные с сервера, если они отличаются
-          Object.assign(day.activities[activityIndex], activityFromServer)
-          console.log(`Активность ${updatedActivity.id} успешно обновлена.`)
+          const finalIndex = day.activities.findIndex(a => a.id === activityFromServer.id)
+          if (finalIndex !== -1)
+            day.activities[finalIndex] = activityFromServer
         },
         onError: (error) => {
-          // 3. При ошибке откатываем
+          // 3. В случае ошибки откатываем изменения
+          const revertIndex = day.activities.findIndex(a => a.id === updatedActivity.id)
+          if (revertIndex !== -1)
+            day.activities[revertIndex] = originalActivity
+
           console.error(`Ошибка при обновлении активности ${updatedActivity.id}: `, error)
-          day.activities[activityIndex] = originalActivity
-          // TODO: Показать уведомление пользователю об ошибке
+          // TODO: Показать уведомление пользователю
         },
       })
-      */
     },
 
     addNewDay() {
@@ -285,7 +321,9 @@ export const useTripInfoStore = defineStore('tripInfo', {
         return
       }
 
-      // const originalDays = [...this.days]
+      const deletedDay = this.days[dayIndex]
+      const originalCurrentDayId = this.currentDayId
+
       this.days.splice(dayIndex, 1)
 
       if (this.days.length > 0) {
@@ -296,8 +334,19 @@ export const useTripInfoStore = defineStore('tripInfo', {
         this.currentDayId = null
       }
 
-      console.log(`Day ${dayIdToDelete} deleted optimistically.`)
-      // TODO: Добавить useRequest для удаления с сервера и отката
+      useRequest({
+        key: ETripInfoKeys.DELETE_DAY,
+        fn: db => db.days.deleteDay(dayIdToDelete),
+        onSuccess: () => {
+          console.log(`День ${dayIdToDelete} успешно удален с сервера.`)
+        },
+        onError: (error) => {
+          console.error(`Ошибка при удалении дня ${dayIdToDelete}: `, error)
+          this.days.splice(dayIndex, 0, deletedDay)
+          this.currentDayId = originalCurrentDayId
+          // TODO: Показать уведомление пользователю об ошибке
+        },
+      })
     },
 
     reorderActivities(newOrder: IActivity[]) {

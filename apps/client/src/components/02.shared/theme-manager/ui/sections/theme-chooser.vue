@@ -59,7 +59,6 @@ const emit = defineEmits<{
 @include media-down(sm) {
   .theme-chooser {
     min-width: auto;
-    padding: 16px;
   }
 }
 </style>

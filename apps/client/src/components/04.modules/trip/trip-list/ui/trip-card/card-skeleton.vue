@@ -59,7 +59,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
 <style scoped lang="scss">
 .travel-card-wrapper {
   padding: 8px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
 }
 
 .travel-card {
@@ -67,7 +67,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   flex-direction: column;
   width: 100%;
   background-color: var(--bg-secondary-color);
-  border-radius: 16px;
+  border-radius: var(--r-l);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   border: 1px solid var(--border-secondary-color);

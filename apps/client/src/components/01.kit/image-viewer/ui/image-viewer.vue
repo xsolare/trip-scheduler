@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ImageViewerImage } from '../models/types'
 import { Icon } from '@iconify/vue'
+import { onClickOutside } from '@vueuse/core'
 
 interface Props {
   visible: boolean
@@ -24,6 +25,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+const viewerContentRef = ref(null)
 
 const currentImage = computed(() => props.images[props.currentIndex])
 const hasMultipleImages = computed(() => props.images.length > 1)
@@ -53,11 +56,11 @@ function goToIndex(index: number) {
   }
 }
 
-function handleOverlayClick(e: Event) {
-  if (props.closeOnOverlayClick && e.target === e.currentTarget) {
+onClickOutside(viewerContentRef, () => {
+  if (props.closeOnOverlayClick && props.visible) {
     close()
   }
-}
+})
 </script>
 
 <template>
@@ -66,66 +69,60 @@ function handleOverlayClick(e: Event) {
       <div
         v-if="visible"
         class="image-viewer-overlay"
-        @click="handleOverlayClick"
       >
-        <!-- Заголовок с кнопкой закрытия -->
-        <div class="viewer-header">
-          <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
-            {{ currentIndex + 1 }} из {{ images.length }}
-          </div>
-          <button class="close-btn" @click="close">
-            <Icon icon="mdi:close" />
-          </button>
-        </div>
-
-        <!-- Основной контент -->
-        <div class="viewer-content">
-          <!-- Кнопка "Назад" -->
-          <button
-            v-if="hasMultipleImages"
-            class="nav-btn prev-btn"
-            @click="prev"
-          >
-            <Icon icon="mdi:chevron-left" />
-          </button>
-
-          <!-- Контейнер изображения -->
-          <div class="image-container">
-            <img
-              v-if="currentImage"
-              :src="currentImage.url"
-              :alt="currentImage.alt || `Image ${currentIndex + 1}`"
-              class="viewer-image"
-            >
-          </div>
-
-          <!-- Кнопка "Вперёд" -->
-          <button
-            v-if="hasMultipleImages"
-            class="nav-btn next-btn"
-            @click="next"
-          >
-            <Icon icon="mdi:chevron-right" />
-          </button>
-        </div>
-
-        <!-- Подпись к изображению -->
-        <div v-if="currentImage?.caption" class="image-caption">
-          {{ currentImage.caption }}
-        </div>
-
-        <!-- Миниатюры (если включены) -->
-        <div v-if="enableThumbnails && hasMultipleImages" class="thumbnails-container">
-          <div class="thumbnails-wrapper">
-            <button
-              v-for="(image, index) in images"
-              :key="index"
-              class="thumbnail"
-              :class="{ active: index === currentIndex }"
-              @click="goToIndex(index)"
-            >
-              <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+        <div ref="viewerContentRef" class="viewer-wrapper">
+          <div class="viewer-header">
+            <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
+              {{ currentIndex + 1 }} из {{ images.length }}
+            </div>
+            <button class="close-btn" @click="close">
+              <Icon icon="mdi:close" />
             </button>
+          </div>
+
+          <div class="viewer-content">
+            <button
+              v-if="hasMultipleImages"
+              class="nav-btn prev-btn"
+              @click="prev"
+            >
+              <Icon icon="mdi:chevron-left" />
+            </button>
+
+            <div class="image-container">
+              <img
+                v-if="currentImage"
+                :src="currentImage.url"
+                :alt="currentImage.alt || `Image ${currentIndex + 1}`"
+                class="viewer-image"
+              >
+            </div>
+
+            <button
+              v-if="hasMultipleImages"
+              class="nav-btn next-btn"
+              @click="next"
+            >
+              <Icon icon="mdi:chevron-right" />
+            </button>
+          </div>
+
+          <div v-if="currentImage?.caption" class="image-caption">
+            {{ currentImage.caption }}
+          </div>
+
+          <div v-if="enableThumbnails && hasMultipleImages" class="thumbnails-container">
+            <div class="thumbnails-wrapper">
+              <button
+                v-for="(image, index) in images"
+                :key="index"
+                class="thumbnail"
+                :class="{ active: index === currentIndex }"
+                @click="goToIndex(index)"
+              >
+                <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -147,6 +144,20 @@ function handleOverlayClick(e: Event) {
   padding: 20px;
 }
 
+.viewer-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 100%;
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+}
+
 .viewer-header {
   position: absolute;
   top: 20px;
@@ -162,7 +173,7 @@ function handleOverlayClick(e: Event) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
   font-size: 0.9rem;
   font-weight: 500;
   backdrop-filter: blur(8px);
@@ -173,7 +184,7 @@ function handleOverlayClick(e: Event) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--r-full);
   width: 44px;
   height: 44px;
   cursor: pointer;
@@ -197,30 +208,28 @@ function handleOverlayClick(e: Event) {
   align-items: center;
   justify-content: center;
   flex: 1;
-  width: 100%;
-  max-height: 80vh;
+  min-height: 0;
 }
 
 .image-container {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   max-width: 90vw;
-  max-height: 80vh;
+  max-height: 100%;
 }
 
 .viewer-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: var(--r-m);
   box-shadow: 0 20px 60px var(--bg-overlay-primary-color);
   background: var(--bg-overlay-primary-color);
 }
 
 .nav-btn {
-  position: absolute;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
   width: 56px;
@@ -228,7 +237,7 @@ function handleOverlayClick(e: Event) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  border-radius: var(--r-full);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -257,10 +266,11 @@ function handleOverlayClick(e: Event) {
 }
 
 .image-caption {
+  flex-shrink: 0;
   background: rgba(0, 0, 0, 0.6);
   color: white;
   padding: 12px 24px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
   margin-top: 20px;
   text-align: center;
   backdrop-filter: blur(8px);
@@ -281,7 +291,7 @@ function handleOverlayClick(e: Event) {
   gap: 8px;
   padding: 12px;
   background: rgba(0, 0, 0, 0.6);
-  border-radius: 16px;
+  border-radius: var(--r-l);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow-x: auto;
@@ -297,7 +307,7 @@ function handleOverlayClick(e: Event) {
   width: 60px;
   height: 60px;
   border: 2px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -318,7 +328,7 @@ function handleOverlayClick(e: Event) {
   }
 }
 
-@include media-down(sm) {
+@media (max-width: 767px) {
   .image-viewer-overlay {
     padding: 10px;
   }

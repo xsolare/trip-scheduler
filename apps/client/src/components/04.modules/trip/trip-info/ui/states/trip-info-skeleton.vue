@@ -96,7 +96,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   padding: 32px;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 4px 4px 16px 16px;
+  border-radius: var(--r-2xs) var(--r-2xs) var(--r-l) var(--r-l);
   margin-bottom: 32px;
   margin-top: 16px;
 }
@@ -151,7 +151,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
     padding: 10px;
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-secondary-color);
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
   }
 
   .add-block-skeleton-wrapper {
@@ -159,7 +159,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
     width: fit-content;
     padding: 10px 12px;
     border: 2px dashed var(--border-secondary-color);
-    border-radius: 8px;
+    border-radius: var(--r-s);
   }
 }
 

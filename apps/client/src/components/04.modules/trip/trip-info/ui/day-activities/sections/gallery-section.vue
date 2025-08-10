@@ -4,7 +4,9 @@ import type { ActivitySectionGallery } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { ImageViewer, useImageViewer } from '~/components/01.kit/image-viewer'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitImage } from '~/components/01.kit/kit-image'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { TripImagePlacement } from '~/shared/types/models/trip'
 
 interface Props {
   section: ActivitySectionGallery
@@ -53,8 +55,7 @@ async function handleFileUpload(event: Event) {
   if (!file)
     return
 
-  // TODO
-  const newImageRecord = await store.gallery.uploadImage(file) as any
+  const newImageRecord = await store.gallery.uploadImage(file, TripImagePlacement.ROUTE)
 
   if (newImageRecord) {
     const updatedUrls = [...images.value, newImageRecord.url]
@@ -95,15 +96,6 @@ function confirmImageSelection() {
 
 function openViewer(index: number) {
   imageViewer.open(viewerImages.value, index)
-}
-
-function handleImageError(event: Event) {
-  const target = event.target as HTMLImageElement
-  if (target) {
-    target.src = '/images/smth-wrong.png'
-    target.onerror = null
-    target.classList.add('image-error')
-  }
 }
 
 const galleryClass = computed(() => {
@@ -161,13 +153,12 @@ const visibleImages = computed(() =>
         class="image-wrapper"
         @click="openViewer(index)"
       >
-        <img
+        <KitImage
           class="image-item"
           :src="image"
           :alt="`Image ${index + 1}`"
-          loading="lazy"
-          @error="handleImageError"
-        >
+          object-fit="cover"
+        />
         <div class="image-overlay">
           <button
             v-if="!isViewMode"
@@ -184,13 +175,12 @@ const visibleImages = computed(() =>
         class="more-images-wrapper"
         @click="openViewer(maxVisibleImages)"
       >
-        <img
+        <KitImage
           class="image-item"
           :src="images[maxVisibleImages]"
           alt="More images"
-          loading="lazy"
-          @error="handleImageError"
-        >
+          object-fit="cover"
+        />
         <div class="more-images-overlay">
           <Icon icon="mdi:plus" class="more-icon" />
           <span class="more-text">+{{ remainingImagesCount }}</span>
@@ -244,7 +234,7 @@ const visibleImages = computed(() =>
                 }"
                 @click="toggleImageSelection(tripImg.url)"
               >
-                <img :src="tripImg.url" loading="lazy">
+                <KitImage :src="tripImg.url" object-fit="cover" />
                 <div class="overlay">
                   <Icon v-if="images.includes(tripImg.url)" icon="mdi:check-circle" class="check-icon added" title="Уже в галерее" />
                   <Icon v-else-if="selectedImagesFromTrip.includes(tripImg.url)" icon="mdi:check-circle" class="check-icon selected" />
@@ -306,7 +296,7 @@ const visibleImages = computed(() =>
     position: relative;
     z-index: 1001;
     background-color: var(--bg-secondary-color);
-    border-radius: 12px;
+    border-radius: var(--r-m);
     width: 90vw;
     max-width: 900px;
     height: 85vh;
@@ -381,18 +371,11 @@ const visibleImages = computed(() =>
   .grid-item {
     position: relative;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: var(--r-s);
     overflow: hidden;
     border: 2px solid transparent;
     transition: all 0.2s ease;
     aspect-ratio: 1 / 1;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.2s ease;
-    }
 
     .overlay {
       position: absolute;
@@ -424,15 +407,12 @@ const visibleImages = computed(() =>
 
     &:hover:not(.disabled) {
       transform: scale(1.03);
-      img {
-        transform: scale(1.05);
-      }
     }
 
     &.disabled {
       cursor: not-allowed;
       opacity: 0.6;
-      img {
+      :deep(img) {
         filter: grayscale(80%);
       }
       .overlay {
@@ -470,7 +450,7 @@ const visibleImages = computed(() =>
   gap: 16px;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 8px;
   transition: all 0.2s ease-in-out;
 
@@ -519,7 +499,7 @@ const visibleImages = computed(() =>
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid var(--border-primary-color);
   max-width: 400px;
@@ -537,7 +517,6 @@ const visibleImages = computed(() =>
   .image-item {
     width: 100%;
     height: 100%;
-    object-fit: cover;
     transition: transform 0.3s ease;
   }
 
@@ -557,7 +536,7 @@ const visibleImages = computed(() =>
     background: rgba(220, 38, 38, 0.8);
     color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     width: 32px;
     height: 32px;
     cursor: pointer;
@@ -616,7 +595,7 @@ const visibleImages = computed(() =>
   color: var(--fg-secondary-color);
   min-height: 180px;
   border: 2px dashed var(--border-secondary-color);
-  border-radius: 12px;
+  border-radius: var(--r-m);
   background: var(--bg-tertiary-color);
 
   .empty-icon {
@@ -635,27 +614,6 @@ const visibleImages = computed(() =>
   .empty-hint {
     font-size: 0.85rem;
     opacity: 0.7;
-  }
-}
-
-.image-item {
-  opacity: 0;
-  animation: fadeInImage 0.3s ease-out forwards;
-}
-
-.image-item.image-error {
-  object-fit: contain;
-  padding: 8px;
-}
-
-@keyframes fadeInImage {
-  from {
-    opacity: 0;
-    transform: scale(1.02);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
   }
 }
 </style>

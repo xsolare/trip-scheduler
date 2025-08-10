@@ -45,7 +45,7 @@ const componentClasses = computed(() => [
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: var(--r-2xs);
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease-in-out;

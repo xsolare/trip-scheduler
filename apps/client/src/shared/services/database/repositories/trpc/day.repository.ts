@@ -32,6 +32,11 @@ class DayRepository implements IDayRepository {
   }
 
   @throttle(1_000)
+  async deleteDay(id: string): Promise<void> {
+    await trpc.day.deleteDay.mutate({ id })
+  }
+
+  @throttle(1_000)
   async updateDayDetails(id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>): Promise<Day> {
     const result = await trpc.day.updateDayDetails.mutate({
       id,

@@ -61,7 +61,7 @@ const model = defineModel<Time | null | undefined>({ required: true })
   display: flex;
   align-items: center;
   padding: 0 4px;
-  border-radius: 4px;
+  border-radius: var(--r-2xs);
   border-width: 1px;
   text-align: center;
   background-color: var(--bg-tertiary-color);

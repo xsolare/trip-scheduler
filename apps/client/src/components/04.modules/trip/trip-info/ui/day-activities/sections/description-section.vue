@@ -13,12 +13,11 @@ const store = useModuleStore(['ui'])
 
 const { isViewMode } = storeToRefs(store.ui)
 
-const sectionModel = computed({
-  get: () => props.section.text,
-  set: (newText) => {
-    emit('updateSection', { ...props.section, text: newText })
-  },
-})
+const sectionModel = ref<string>(props.section.text)
+
+function handleInlineEditorBlur() {
+  emit('updateSection', { ...props.section, text: sectionModel.value })
+}
 </script>
 
 <template>
@@ -28,6 +27,7 @@ const sectionModel = computed({
       :readonly="isViewMode"
       placeholder="Добавьте заметку или описание..."
       class="section-editor"
+      @blur="handleInlineEditorBlur()"
     />
   </div>
 </template>
@@ -36,7 +36,7 @@ const sectionModel = computed({
 .description-section {
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 4px;
+  border-radius: var(--r-2xs);
   transition: border-color 0.2s;
 
   &:hover {

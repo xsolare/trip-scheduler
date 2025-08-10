@@ -1,4 +1,4 @@
-import type { TripImage } from '~/shared/types/models/trip'
+import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRequest, useRequestStatus } from '~/plugins/request'
@@ -45,7 +45,7 @@ export const useTripInfoGalleryStore = defineStore('tripInfoGallery', () => {
     })
   }
 
-  async function uploadImage(file: File): Promise<TripImage | null> {
+  async function uploadImage(file: File, placement: TripImagePlacement): Promise<TripImage | null> {
     const tripId = currentTripId.value
     if (!tripId) {
       console.error('Trip ID не установлен для загрузки изображения.')
@@ -54,7 +54,7 @@ export const useTripInfoGalleryStore = defineStore('tripInfoGallery', () => {
 
     const { data } = await useRequest({
       key: ETripGalleryKeys.UPLOAD_IMAGE,
-      fn: db => db.files.uploadFile(file, tripId, 'route'),
+      fn: db => db.files.uploadFile(file, tripId, placement),
       immediate: false,
       onSuccess: (newImage) => {
         tripImages.value.push(newImage)

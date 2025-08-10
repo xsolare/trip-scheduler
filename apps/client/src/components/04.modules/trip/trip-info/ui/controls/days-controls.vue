@@ -135,7 +135,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
 .menu-btn {
   background: transparent;
   border: 1px solid var(--border-secondary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 8px;
   cursor: pointer;
   color: var(--fg-secondary-color);
@@ -157,7 +157,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   justify-content: center;
   background: transparent;
   border: 1px solid var(--border-secondary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 8px;
   cursor: pointer;
   color: var(--fg-secondary-color);
