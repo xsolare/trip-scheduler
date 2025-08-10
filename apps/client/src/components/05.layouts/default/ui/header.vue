@@ -155,7 +155,7 @@ const themeStore = useThemeStore()
       justify-content: center;
       width: 32px;
       height: 32px;
-      border-radius: 6px;
+      border-radius: var(--r-xs);
       border: none;
       background: transparent;
       color: var(--fg-secondary-color);
@@ -177,7 +177,7 @@ const themeStore = useThemeStore()
     justify-content: center;
 
     &-img {
-      border-radius: 50%;
+      border-radius: var(--r-full);
       border: 1px solid var(--border-primary-color);
       overflow: hidden;
       cursor: pointer;

@@ -170,7 +170,7 @@ const visibilityIcon = computed(() => {
 <style scoped lang="scss">
 .travel-card-wrapper {
   padding: 8px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
   transition: all 0.3s ease-in-out;
 
   &:hover {
@@ -183,7 +183,7 @@ const visibilityIcon = computed(() => {
   flex-direction: column;
   width: 100%;
   background-color: var(--bg-secondary-color);
-  border-radius: 16px;
+  border-radius: var(--r-l);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   overflow: hidden;
@@ -253,7 +253,7 @@ const visibilityIcon = computed(() => {
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
   font-size: 0.75rem;
   font-weight: 500;
   backdrop-filter: blur(5px);
@@ -295,7 +295,7 @@ const visibilityIcon = computed(() => {
   background-color: var(--bg-primary-color);
   color: var(--fg-primary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 50%;
+  border-radius: var(--r-full);
   backdrop-filter: blur(5px);
   transition: background-color 0.2s ease;
 
@@ -339,7 +339,7 @@ const visibilityIcon = computed(() => {
     background-color: var(--bg-primary-color);
     color: var(--fg-primary-color);
     border: none;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     cursor: pointer;
     backdrop-filter: blur(4px);
     transition: all 0.2s ease;
@@ -397,7 +397,7 @@ const visibilityIcon = computed(() => {
   .avatar {
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -432,7 +432,7 @@ const visibilityIcon = computed(() => {
     background-color: var(--bg-tertiary-color);
     color: var(--fg-secondary-color);
     padding: 4px 10px;
-    border-radius: 16px;
+    border-radius: var(--r-l);
     font-size: 0.75rem;
     font-weight: 500;
     white-space: nowrap;

@@ -55,11 +55,43 @@ export const useTripInfoStore = defineStore('tripInfo', {
         .slice()
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)) ?? []
     },
+
+    currentDayIndex(state): number {
+      if (!state.currentDayId || !state.days)
+        return -1
+      return state.days.findIndex(day => day.id === state.currentDayId)
+    },
+
+    getPreviousDayId(): string | null {
+      if (this.currentDayIndex > 0)
+        return this.days[this.currentDayIndex - 1].id
+      return null
+    },
+
+    getNextDayId(): string | null {
+      if (this.currentDayIndex !== -1 && this.currentDayIndex < this.days.length - 1)
+        return this.days[this.currentDayIndex + 1].id
+      return null
+    },
   },
 
   // --- ACTIONS ---
   actions: {
-    fetchDaysForTrip(tripId: string) {
+    setCurrentDay(dayId: string): void {
+      this.currentDayId = dayId
+    },
+
+    selectNextDay() {
+      if (this.getNextDayId)
+        this.setCurrentDay(this.getNextDayId)
+    },
+
+    selectPreviousDay() {
+      if (this.getPreviousDayId)
+        this.setCurrentDay(this.getPreviousDayId)
+    },
+
+    fetchDaysForTrip(tripId: string, initialDayIdFromQuery?: string) {
       this.currentTripId = tripId
 
       useRequest({
@@ -69,7 +101,14 @@ export const useTripInfoStore = defineStore('tripInfo', {
         onSuccess: (result) => {
           const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           this.days = sortedDays
-          this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+          const dayFromQueryIsValid = initialDayIdFromQuery && sortedDays.some(d => d.id === initialDayIdFromQuery)
+
+          if (dayFromQueryIsValid) {
+            this.currentDayId = initialDayIdFromQuery
+          }
+          else {
+            this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+          }
         },
         onError: (error) => {
           this.days = []
@@ -77,10 +116,6 @@ export const useTripInfoStore = defineStore('tripInfo', {
           console.error(`Ошибка при загрузке дней для путешествия ${tripId}: `, error)
         },
       })
-    },
-
-    setCurrentDay(dayId: string): void {
-      this.currentDayId = dayId
     },
 
     updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date'>>) {

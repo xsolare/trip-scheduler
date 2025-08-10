@@ -229,7 +229,7 @@ function getShortWeekday(date: string): string {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
     background-color: var(--bg-secondary-color);
     color: var(--fg-secondary-color);
     font-size: 0.85rem;
@@ -267,7 +267,7 @@ function getShortWeekday(date: string): string {
     background-color: var(--bg-secondary-color);
     color: var(--fg-secondary-color);
     padding: 3px 8px;
-    border-radius: 6px;
+    border-radius: var(--r-xs);
     font-size: 0.7rem;
     font-weight: 800;
     line-height: 1;
@@ -299,6 +299,7 @@ function getShortWeekday(date: string): string {
   padding: 16px 20px;
   border-top: 1px solid var(--border-secondary-color);
   flex-shrink: 0;
+  z-index: 100;
 }
 
 .add-day-btn {
@@ -308,7 +309,7 @@ function getShortWeekday(date: string): string {
   justify-content: center;
   gap: 8px;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   border: 1px solid var(--border-secondary-color);
   background-color: transparent;
   color: var(--fg-secondary-color);

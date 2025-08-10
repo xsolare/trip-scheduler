@@ -61,7 +61,7 @@ const emit = defineEmits<{
 
 .theme-card {
   border: 2px solid var(--border-primary-color);
-  border-radius: 12px;
+  border-radius: var(--r-m);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -133,7 +133,7 @@ const emit = defineEmits<{
 
     .preview-header {
       height: 16px;
-      border-radius: 4px;
+      border-radius: var(--r-2xs);
       margin-bottom: 8px;
     }
 
@@ -145,7 +145,7 @@ const emit = defineEmits<{
 
     .preview-element {
       height: 24px;
-      border-radius: 3px;
+      border-radius: var(--r-2xs);
       flex: 1;
 
       &--small {

@@ -1,35 +1,39 @@
 <script setup lang="ts">
-import type { ColorPalette } from '~/shared/store/theme.store'
+import type { ColorPalette, RadiusPalette } from '~/shared/store/theme.store'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { useDisplay } from '~/shared/composables/use-display'
 import { useThemeStore } from '~/shared/store/theme.store'
-import { themePresets } from '../../constants/theme-presets'
+import { themePresets } from '../../constants/color-presets'
+import { radiusPresets } from '../../constants/radius-presets'
 import ColorEditorGrid from './color-editor-grid.vue'
-import PresetSelector from './preset-selector.vue'
+import ColorPresetSelector from './preset-selector.vue'
+import RadiusEditorGrid from './radius-editor-grid.vue'
+import RadiusPresetSelector from './radius-preset-selector.vue'
 
 const emit = defineEmits<{
   (e: 'back'): void
   (e: 'apply'): void
   (e: 'upload'): void
   (e: 'reset'): void
+  (e: 'resetRadius'): void
 }>()
 const themeStore = useThemeStore()
-const { customThemePalette } = storeToRefs(themeStore)
+const { customThemePalette, customThemeRadius } = storeToRefs(themeStore)
 
-const activeTab = ref<'presets' | 'colors'>('presets')
+const activeTab = ref<'presets' | 'colors' | 'radius'>('presets')
 
 function applyPreset(palette: ColorPalette) {
   Object.assign(customThemePalette.value, palette)
-  activeTab.value = 'colors'
 }
+
+function applyRadiusPreset(radius: RadiusPalette) {
+  themeStore.applyCustomRadius(radius)
+}
+const { mdAndDown } = useDisplay()
 </script>
 
 <template>
   <div class="theme-editor">
-    <div class="theme-editor-header">
-      <h3>Настройка цветовой схемы</h3>
-      <p>Измените цвета для создания уникальной темы</p>
-    </div>
-
     <div class="tabs">
       <button :class="{ active: activeTab === 'presets' }" @click="activeTab = 'presets'">
         Выбор пресета
@@ -37,29 +41,41 @@ function applyPreset(palette: ColorPalette) {
       <button :class="{ active: activeTab === 'colors' }" @click="activeTab = 'colors'">
         Редактор цветов
       </button>
+      <button :class="{ active: activeTab === 'radius' }" @click="activeTab = 'radius'">
+        Радиусы
+      </button>
     </div>
 
     <div class="tab-content">
-      <PresetSelector
-        v-show="activeTab === 'presets'"
-        :presets="themePresets"
-        @apply-preset="applyPreset"
-      />
+      <div v-show="activeTab === 'presets'" class="preset-tab">
+        <ColorPresetSelector
+          :presets="themePresets"
+          @apply-preset="applyPreset"
+        />
+      </div>
       <ColorEditorGrid v-show="activeTab === 'colors'" v-model="customThemePalette" />
+      <div v-show="activeTab === 'radius'" class="radius-tab">
+        <RadiusPresetSelector :presets="radiusPresets" @apply-preset="applyRadiusPreset" />
+        <div class="divider" />
+        <RadiusEditorGrid v-model="customThemeRadius" />
+      </div>
     </div>
 
     <div class="theme-editor-actions">
       <KitBtn icon="mdi:arrow-left" variant="outlined" color="secondary" @click="emit('back')">
-        Назад
+        {{ mdAndDown ? '' : 'Назад' }}
       </KitBtn>
       <KitBtn icon="mdi:upload" variant="outlined" color="secondary" @click="emit('upload')">
-        Загрузить JSON
+        {{ mdAndDown ? '' : 'Загрузить' }}
       </KitBtn>
       <KitBtn icon="mdi:restore" variant="outlined" color="secondary" @click="emit('reset')">
-        Сбросить
+        {{ mdAndDown ? '' : 'Сбросить' }}
+      </KitBtn>
+      <KitBtn icon="mdi:radius" variant="outlined" color="secondary" @click="emit('resetRadius')">
+        {{ mdAndDown ? '' : 'Сброс радиусов' }}
       </KitBtn>
       <KitBtn icon="mdi:check" color="primary" @click="emit('apply')">
-        Применить
+        {{ mdAndDown ? '' : 'Применить' }}
       </KitBtn>
     </div>
   </div>
@@ -75,21 +91,14 @@ function applyPreset(palette: ColorPalette) {
   max-width: 100%;
 }
 
-.theme-editor-header {
-  text-align: center;
-  flex-shrink: 0;
+.divider {
+  height: 1px;
+  background-color: var(--border-primary-color);
+  margin: 24px 6px;
+}
 
-  h3 {
-    margin: 0 0 8px 0;
-    font-size: 1.3rem;
-    color: var(--fg-primary-color);
-  }
-
-  p {
-    margin: 0;
-    color: var(--fg-secondary-color);
-    font-size: 0.95rem;
-  }
+.radius-tab {
+  padding: 6px;
 }
 
 .tabs {
@@ -124,7 +133,6 @@ function applyPreset(palette: ColorPalette) {
 }
 
 .tab-content {
-  padding-top: 16px;
   overflow-y: auto;
   flex: 1;
   min-height: 200px;
@@ -133,6 +141,8 @@ function applyPreset(palette: ColorPalette) {
 .theme-editor-actions {
   display: flex;
   justify-content: flex-start;
+  font-style: row;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 16px 6px 0 6px;
   border-top: 1px solid var(--border-primary-color);
@@ -140,10 +150,11 @@ function applyPreset(palette: ColorPalette) {
   background-color: var(--bg-primary-color);
 
   .kit-btn {
-    min-width: 120px;
+    max-width: 120px;
 
     &.kit-btn--color-primary {
       margin-left: auto;
+      width: 100%;
     }
   }
 }
@@ -151,19 +162,17 @@ function applyPreset(palette: ColorPalette) {
 @include media-down(sm) {
   .theme-editor {
     width: 100%;
-    padding: 16px;
   }
 
   .theme-editor-actions {
-    flex-direction: column-reverse;
     gap: 8px;
 
     .kit-btn {
-      width: 100%;
       min-width: unset;
 
       &.kit-btn--color-primary {
-        margin-left: 0;
+        max-width: 120px;
+        width: auto;
       }
     }
   }

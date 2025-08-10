@@ -87,7 +87,7 @@ function toggleAttached() {
 .control-btn {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: var(--r-full);
   background-color: var(--bg-tertiary-color);
   border: 1px solid var(--border-secondary-color);
   color: var(--fg-secondary-color);

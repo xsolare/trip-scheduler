@@ -58,7 +58,7 @@ function interactiveRender(args: any) {
       </div>
       <div>
         <p style="margin: 0; font-size: 14px; color: #666;">v-model state (Time object):</p>
-        <code style="font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">
+        <code style="font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: var(--r-2xs); display: inline-block; margin-top: 4px;">
           {{ timeValue ? timeValue.toString() : 'null' }}
         </code>
       </div>

@@ -47,7 +47,7 @@ function createRender(slotContent: string) {
     <div>
       <button
         @click="visible = true"
-        style="padding: 8px 16px; border-radius: 6px; background-color: #333; color: white; border: none; cursor: pointer;"
+        style="padding: 8px 16px; border-radius: var(--r-xs); background-color: #333; color: white; border: none; cursor: pointer;"
       >
         Open Dialog
       </button>

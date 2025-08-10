@@ -6,6 +6,7 @@ import { useModuleStore } from '../composables/use-module'
 import { minutesToTime, timeToMinutes } from '../lib/helpers'
 import { EActivityTag } from '../models/types'
 import AddDayActivity from './controls/add-day-activity.vue'
+import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
@@ -13,12 +14,14 @@ import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
 const emit = defineEmits(['update:hasError'])
 const route = useRoute()
+const router = useRouter()
 
 const store = useModuleStore(['data', 'ui', 'gallery'])
 const { days, isLoading, fetchError, getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(store.data)
 const { isViewMode } = storeToRefs(store.ui)
 
 const tripId = computed(() => route.params.id as string)
+const dayId = computed(() => route.query.day as string)
 
 function handleAddNewActivity() {
   if (!getSelectedDay.value)
@@ -44,16 +47,24 @@ watch(fetchError, (newError) => {
   emit('update:hasError', !!newError)
 })
 
+watch(
+  () => store.data.currentDayId,
+  (newDayId) => {
+    if (newDayId && newDayId !== route.query.day)
+      router.replace({ query: { ...route.query, day: newDayId } })
+  },
+)
+
+if (tripId.value) {
+  store.data.fetchDaysForTrip(tripId.value, dayId.value)
+  store.gallery.setTripId(tripId.value)
+}
+
 onBeforeUnmount(() => {
   store.data.reset()
   store.gallery.reset()
   store.ui.reset()
 })
-
-if (tripId.value) {
-  store.data.fetchDaysForTrip(tripId.value)
-  store.gallery.setTripId(tripId.value)
-}
 </script>
 
 <template>
@@ -71,7 +82,7 @@ if (tripId.value) {
     </template>
 
     <template #success>
-      <div class="trip-info">
+      <div :key="store.data.currentDayId!" class="trip-info">
         <Divider :is-loading="store.data.isLoadingUpdateDay">
           о дне
         </Divider>
@@ -84,6 +95,7 @@ if (tripId.value) {
           v-if="!isViewMode"
           @add="handleAddNewActivity"
         />
+        <DayNavigation v-if="!isLoading && days.length > 1" />
       </div>
     </template>
 

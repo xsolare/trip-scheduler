@@ -48,7 +48,7 @@ const palette = defineModel<ColorPalette>({ required: true })
   flex-direction: column;
   padding: 16px;
   border: 1px solid var(--border-primary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   background: var(--bg-secondary-color);
   transition: all 0.2s ease;
 
@@ -73,7 +73,7 @@ const palette = defineModel<ColorPalette>({ required: true })
     content: '';
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     background-color: var(--label-color-preview);
     border: 1px solid var(--border-secondary-color);
     flex-shrink: 0;
@@ -92,7 +92,7 @@ const palette = defineModel<ColorPalette>({ required: true })
       content: '';
       position: absolute;
       inset: -2px;
-      border-radius: 6px;
+      border-radius: var(--r-xs);
       background: linear-gradient(45deg, transparent, var(--border-accent-color), transparent);
       opacity: 0;
       transition: opacity 0.2s ease;
@@ -109,7 +109,7 @@ const palette = defineModel<ColorPalette>({ required: true })
   width: 40px;
   height: 40px;
   border: 2px solid var(--border-primary-color);
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   cursor: pointer;
   background-color: transparent;
   -webkit-appearance: none;
@@ -130,12 +130,12 @@ const palette = defineModel<ColorPalette>({ required: true })
 
   &::-webkit-color-swatch {
     border: none;
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
   }
 
   &::-moz-color-swatch {
     border: none;
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
   }
 }
 
@@ -143,7 +143,7 @@ const palette = defineModel<ColorPalette>({ required: true })
   flex: 1;
   padding: 10px 12px;
   border: 1px solid var(--border-primary-color);
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   background-color: var(--bg-primary-color);
   color: var(--fg-primary-color);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;

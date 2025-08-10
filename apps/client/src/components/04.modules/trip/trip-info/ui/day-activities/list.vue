@@ -93,7 +93,7 @@ const draggableActivities = computed({
       justify-content: center;
       padding: 40px 20px;
       border: 2px dashed var(--border-secondary-color);
-      border-radius: 8px;
+      border-radius: var(--r-s);
       margin-top: 20px;
 
       p {
@@ -108,7 +108,7 @@ const draggableActivities = computed({
 .ghost-activity {
   opacity: 0.5;
   background: var(--bg-secondary-color);
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   > div {
     visibility: hidden;
   }

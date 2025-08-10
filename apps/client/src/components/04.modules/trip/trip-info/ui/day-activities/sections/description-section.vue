@@ -36,7 +36,7 @@ function handleInlineEditorBlur() {
 .description-section {
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 4px;
+  border-radius: var(--r-2xs);
   transition: border-color 0.2s;
 
   &:hover {

@@ -70,7 +70,7 @@ function createRender(imageList: ImageViewerImage[]) {
           :src="image.url.replace('/1920/1080', '/300/200')"
           :alt="image.alt"
           @click="openViewer(index)"
-          style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s;"
+          style="width: 100%; height: 100px; object-fit: cover; border-radius: var(--r-s); cursor: pointer; transition: transform 0.2s;"
           @mouseover="event => event.target.style.transform = 'scale(1.05)'"
           @mouseout="event => event.target.style.transform = 'scale(1)'"
         />

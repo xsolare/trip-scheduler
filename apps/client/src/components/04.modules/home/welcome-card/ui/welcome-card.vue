@@ -101,7 +101,7 @@ function onMouseMove() {
 .glass-card {
   position: relative;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: var(--r-xl);
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   backdrop-filter: blur(12px);
@@ -170,7 +170,7 @@ function onMouseMove() {
   gap: 12px;
   padding: 0.8rem 1.8rem;
   font-size: 1rem;
-  border-radius: 12px;
+  border-radius: var(--r-m);
   box-shadow: 0 4px 15px var(--fg-accent-color);
   transition:
     transform 0.2s ease,

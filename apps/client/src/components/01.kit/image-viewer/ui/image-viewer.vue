@@ -36,12 +36,6 @@ function close() {
   emit('close')
 }
 
-onClickOutside(viewerContentRef, () => {
-  if (props.closeOnOverlayClick && props.visible) {
-    close()
-  }
-})
-
 function next() {
   if (!hasMultipleImages.value)
     return
@@ -61,6 +55,12 @@ function goToIndex(index: number) {
     emit('update:currentIndex', index)
   }
 }
+
+onClickOutside(viewerContentRef, () => {
+  if (props.closeOnOverlayClick && props.visible) {
+    close()
+  }
+})
 </script>
 
 <template>
@@ -173,7 +173,7 @@ function goToIndex(index: number) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
   font-size: 0.9rem;
   font-weight: 500;
   backdrop-filter: blur(8px);
@@ -184,7 +184,7 @@ function goToIndex(index: number) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--r-full);
   width: 44px;
   height: 44px;
   cursor: pointer;
@@ -209,7 +209,6 @@ function goToIndex(index: number) {
   justify-content: center;
   flex: 1;
   min-height: 0;
-  width: 100%;
 }
 
 .image-container {
@@ -224,13 +223,13 @@ function goToIndex(index: number) {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: var(--r-m);
   box-shadow: 0 20px 60px var(--bg-overlay-primary-color);
   background: var(--bg-overlay-primary-color);
 }
 
 .nav-btn {
-  position: absolute;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
   width: 56px;
@@ -238,7 +237,7 @@ function goToIndex(index: number) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  border-radius: var(--r-full);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -271,7 +270,7 @@ function goToIndex(index: number) {
   background: rgba(0, 0, 0, 0.6);
   color: white;
   padding: 12px 24px;
-  border-radius: 20px;
+  border-radius: var(--r-xl);
   margin-top: 20px;
   text-align: center;
   backdrop-filter: blur(8px);
@@ -292,7 +291,7 @@ function goToIndex(index: number) {
   gap: 8px;
   padding: 12px;
   background: rgba(0, 0, 0, 0.6);
-  border-radius: 16px;
+  border-radius: var(--r-l);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow-x: auto;
@@ -308,7 +307,7 @@ function goToIndex(index: number) {
   width: 60px;
   height: 60px;
   border: 2px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;

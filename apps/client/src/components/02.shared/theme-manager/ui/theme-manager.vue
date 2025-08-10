@@ -67,6 +67,7 @@ function handleJsonUpload(event: Event) {
       @back="showCustomizer = false"
       @apply="closeCreator"
       @reset="store.theme.resetCustomTheme"
+      @reset-radius="store.theme.resetCustomRadius"
       @upload="triggerJsonUpload"
     />
 

@@ -219,7 +219,7 @@ useEventListener('keydown', (e) => {
   gap: 8px;
   padding: 10px 16px;
   border: 2px dashed var(--border-secondary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   background: transparent;
   color: var(--fg-secondary-color);
   font-size: 0.9rem;
@@ -273,7 +273,7 @@ useEventListener('keydown', (e) => {
   padding: 12px;
   background: var(--bg-primary-color);
   border: 1px solid var(--border-primary-color);
-  border-radius: 12px;
+  border-radius: var(--r-m);
   box-shadow:
     0 10px 25px -5px rgb(0 0 0 / 0.1),
     0 4px 6px -2px rgb(0 0 0 / 0.05);
@@ -351,7 +351,7 @@ useEventListener('keydown', (e) => {
   gap: 12px;
   width: 100%;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
@@ -371,7 +371,7 @@ useEventListener('keydown', (e) => {
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: var(--r-s);
     background: var(--bg-secondary-color);
     color: var(--fg-accent-color);
     flex-shrink: 0;
@@ -409,7 +409,7 @@ useEventListener('keydown', (e) => {
   .option-shortcut {
     padding: 4px 8px;
     background: var(--bg-secondary-color);
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
     font-size: 11px;
     font-weight: 600;
     color: var(--fg-secondary-color);

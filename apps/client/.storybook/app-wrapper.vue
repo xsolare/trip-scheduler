@@ -27,7 +27,7 @@ html {
 
 #storybook-root,
 .sb-story {
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   overflow: hidden;
   min-height: 100vh;
   position: relative;

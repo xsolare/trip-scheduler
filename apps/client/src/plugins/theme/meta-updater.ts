@@ -1,4 +1,3 @@
-import { computed, watch } from 'vue'
 import { useThemeStore } from '~/shared/store/theme.store'
 
 /**

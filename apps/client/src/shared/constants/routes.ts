@@ -3,7 +3,7 @@ export enum AppRouteNames {
 
   NotFound = 'not-found',
 
-  TripInfo = 'trip-unfo',
+  TripInfo = 'trip-info',
   TripList = 'trip-list',
 }
 

@@ -51,7 +51,7 @@ function interactiveRender(args: any) {
       <Calendar v-model="selectedDate" @update:modelValue="args['onUpdate:modelValue']" />
       <div style="margin-top: 16px; text-align: center;">
         <p style="margin: 0; font-size: 14px; color: #666;">v-model state:</p>
-        <code style="font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 4px;">
+        <code style="font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: var(--r-2xs);">
           {{ selectedDate ? selectedDate.toString() : 'null' }}
         </code>
       </div>

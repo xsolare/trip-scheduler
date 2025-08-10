@@ -76,7 +76,7 @@ function render(args: any) {
     template: `
     <div style="font-family: 'Rubik', sans-serif;">
       <p><strong>Editor:</strong></p>
-      <div style="border: 1px solid #ccc; border-radius: 8px; padding: 4px; min-height: 80px;">
+      <div style="border: 1px solid #ccc; border-radius: var(--r-s); padding: 4px; min-height: 80px;">
         <InlineEditorWrapper
           v-model="content"
           :disabled="args.disabled"
@@ -91,7 +91,7 @@ function render(args: any) {
       </div>
 
       <p style="margin-top: 24px;"><strong>Live Markdown Output (v-model):</strong></p>
-      <pre style="background: #f4f4f4; border: 1px solid #ddd; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-break: break-all;">{{ content }}</pre>
+      <pre style="background: #f4f4f4; border: 1px solid #ddd; padding: 10px; border-radius: var(--r-2xs); white-space: pre-wrap; word-break: break-all;">{{ content }}</pre>
     </div>
   `,
   }

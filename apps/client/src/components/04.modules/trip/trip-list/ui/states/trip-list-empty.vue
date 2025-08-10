@@ -37,7 +37,7 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
   color: var(--fg-secondary-color);
   width: 100%;
   border: 2px dashed var(--border-secondary-color);
-  border-radius: 12px;
+  border-radius: var(--r-m);
   margin-top: 16px;
 }
 
