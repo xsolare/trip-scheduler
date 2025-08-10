@@ -1,6 +1,6 @@
 {
-  "id": "0f6b1d4f-2442-4f6e-bd16-5ad349f89c46",
-  "prevId": "bb23b35a-775f-443d-a4f2-a3166f9a3cf0",
+  "id": "e8cabf97-cb5a-46ba-add6-2204857e026b",
+  "prevId": "0f6b1d4f-2442-4f6e-bd16-5ad349f89c46",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -132,6 +132,91 @@
           "tableTo": "trips",
           "columnsFrom": [
             "trip_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.memories": {
+      "name": "memories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trip_id": {
+          "name": "trip_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_id": {
+          "name": "image_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "memories_trip_id_trips_id_fk": {
+          "name": "memories_trip_id_trips_id_fk",
+          "tableFrom": "memories",
+          "tableTo": "trips",
+          "columnsFrom": [
+            "trip_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memories_image_id_trip_images_id_fk": {
+          "name": "memories_image_id_trip_images_id_fk",
+          "tableFrom": "memories",
+          "tableTo": "trip_images",
+          "columnsFrom": [
+            "image_id"
           ],
           "columnsTo": [
             "id"

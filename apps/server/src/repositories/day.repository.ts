@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { db } from '~/db'
-import { activities, days } from '~/db/schema'
 import { createTRPCError } from '~/lib/trpc'
+import { db } from '../../db'
+import { activities, days } from '../../db/schema'
 
 type Day = typeof days.$inferSelect
 type DayInsert = typeof days.$inferInsert

@@ -1,7 +1,7 @@
-import type { tripImagePlacementEnum } from '~/db/schema'
+import type { tripImagePlacementEnum } from '../../db/schema'
 import { eq } from 'drizzle-orm'
-import { db } from '~/db'
-import { tripImages } from '~/db/schema'
+import { db } from '../../db'
+import { tripImages } from '../../db/schema'
 
 type Placement = (typeof tripImagePlacementEnum.enumValues)[number]
 

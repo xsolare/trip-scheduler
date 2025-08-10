@@ -32,6 +32,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "build/**/*.ts"
+    "build/**/*.ts",
+    "db/**/*.ts"
   ]
 }

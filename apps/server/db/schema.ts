@@ -71,6 +71,19 @@ export const tripImages = pgTable('trip_images', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// Таблица для воспоминаний (Memories)
+export const memories = pgTable('memories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id')
+    .notNull()
+    .references(() => trips.id, { onDelete: 'cascade' }),
+  timestamp: timestamp('timestamp', { withTimezone: true }), // Может быть null для неотсортированных
+  comment: text('comment'),
+  imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 // Таблица для дней (Days)
 export const days = pgTable('days', {
   id: uuid('id').primaryKey(),
@@ -97,6 +110,7 @@ export const activities = pgTable('activities', {
 export const tripsRelations = relations(trips, ({ many }) => ({
   days: many(days),
   images: many(tripImages),
+  memories: many(memories),
 }))
 
 export const daysRelations = relations(days, ({ one, many }) => ({
@@ -118,5 +132,16 @@ export const tripImagesRelations = relations(tripImages, ({ one }) => ({
   trip: one(trips, {
     fields: [tripImages.tripId],
     references: [trips.id],
+  }),
+}))
+
+export const memoriesRelations = relations(memories, ({ one }) => ({
+  trip: one(trips, {
+    fields: [memories.tripId],
+    references: [trips.id],
+  }),
+  image: one(tripImages, {
+    fields: [memories.imageId],
+    references: [tripImages.id],
   }),
 }))

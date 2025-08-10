@@ -106,3 +106,31 @@ export const UpdateDayInputSchema = z.object({
   id: z.string().uuid(),
   details: DaySchema.pick({ title: true, description: true, date: true }).partial(),
 })
+
+export const MemorySchema = z.object({
+  id: z.string().uuid(),
+  tripId: z.string().uuid(),
+  timestamp: z.string().datetime().nullable(),
+  comment: z.string().nullable(),
+  imageId: z.string().uuid().nullable(),
+  imageUrl: z.string().url().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const CreateMemoryInputSchema = z.object({
+  tripId: z.string().uuid(),
+  timestamp: z.string().datetime().optional().nullable(),
+  comment: z.string().optional().nullable(),
+  imageId: z.string().uuid().optional().nullable(),
+})
+
+export const UpdateMemoryInputSchema = z.object({
+  id: z.string().uuid(),
+  timestamp: z.string().datetime().optional().nullable(),
+  comment: z.string().optional().nullable(),
+})
+
+export const DeleteMemoryInputSchema = z.object({
+  id: z.string().uuid(),
+})

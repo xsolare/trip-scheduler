@@ -2,9 +2,9 @@ import type { z } from 'zod'
 import type { CreateActivityInputSchema, UpdateActivityInputSchema } from '~/lib/schemas'
 import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { db } from '~/db'
-import { activities } from '~/db/schema'
 import { createTRPCError } from '~/lib/trpc'
+import { db } from '../../db'
+import { activities } from '../../db/schema'
 
 type ActivityInsert = typeof activities.$inferInsert
 

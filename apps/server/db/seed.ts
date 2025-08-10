@@ -1,12 +1,10 @@
-// src/db/seed.ts (обновленная версия)
-
 /* eslint-disable no-console */
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { db } from './index'
 import { MOCK_DATA } from './mock/01.data'
-import { activities, days, tripImages, trips } from './schema'
+import { activities, days, memories, tripImages, trips } from './schema'
 
 async function seed() {
   console.log('🌱 Начало заполнения базы данных...')
@@ -27,6 +25,7 @@ async function seed() {
   }
 
   console.log('🗑️  Очистка старых данных...')
+  await db.delete(memories)
   await db.delete(activities)
   await db.delete(days)
   await db.delete(tripImages)
@@ -38,14 +37,15 @@ async function seed() {
   const daysToInsert: (typeof days.$inferInsert)[] = []
   const activitiesToInsert: (typeof activities.$inferInsert)[] = []
   const imagesToInsert: (typeof tripImages.$inferInsert)[] = []
+  const memoriesToInsert: (typeof memories.$inferInsert)[] = []
 
   for (const tripData of sourceData) {
-    const { days: mockDays, images: mockImages, ...tripDetails } = tripData
+    const { days: mockDays, images: mockImages, memories: mockMemories, ...tripDetails } = tripData
 
     tripsToInsert.push({
       ...tripDetails,
-      startDate: tripDetails.startDate.split('T')[0],
-      endDate: tripDetails.endDate.split('T')[0],
+      startDate: tripDetails.startDate.toISOString().split('T')[0],
+      endDate: tripDetails.endDate.toISOString().split('T')[0],
       days: mockDays.length,
     })
 
@@ -54,7 +54,7 @@ async function seed() {
         const { activities: mockActivities, ...dayDetails } = mockDay
         daysToInsert.push({
           ...dayDetails,
-          date: dayDetails.date.split('T')[0],
+          date: dayDetails.date.toISOString().split('T')[0],
         })
         if (mockActivities) {
           for (const mockActivity of mockActivities) {
@@ -69,18 +69,26 @@ async function seed() {
         imagesToInsert.push(mockImage)
       }
     }
+
+    if (mockMemories) {
+      for (const mockMemory of mockMemories) {
+        memoriesToInsert.push(mockMemory)
+      }
+    }
   }
 
-  console.log(`✈️  Вставка ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней, ${activitiesToInsert.length} активностей и ${imagesToInsert.length} изображений...`)
+  console.log(`✈️  Вставка ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней, ${activitiesToInsert.length} активностей, ${imagesToInsert.length} изображений и ${memoriesToInsert.length} воспоминаний...`)
 
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)
   if (daysToInsert.length > 0)
     await db.insert(days).values(daysToInsert)
-  if (activitiesToInsert.length > 0)
-    await db.insert(activities).values(activitiesToInsert)
   if (imagesToInsert.length > 0)
     await db.insert(tripImages).values(imagesToInsert)
+  if (activitiesToInsert.length > 0)
+    await db.insert(activities).values(activitiesToInsert)
+  if (memoriesToInsert.length > 0)
+    await db.insert(memories).values(memoriesToInsert)
 
   console.log('✅ База данных успешно заполнена!')
   process.exit(0)

@@ -15,6 +15,13 @@
       "when": 1754766970281,
       "tag": "0001_bright_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1754857914359,
+      "tag": "0002_reflective_human_torch",
+      "breakpoints": true
     }
   ]
 }
