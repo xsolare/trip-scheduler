@@ -1,17 +1,21 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
-import type { Trip, TripImage, TripImagePlacement } from '~/shared/types/models/trip'
+import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 
 export interface ITripRepository {
   getAll: () => Promise<Trip[]>
   getById: (id: string) => Promise<Trip | null>
+  getByIdWithDays: (id: string) => Promise<TripWithDays | null>
+  create: (data: CreateTripInput) => Promise<Trip>
+  update: (id: string, details: UpdateTripInput) => Promise<Trip>
+  delete: (id: string) => Promise<Trip>
 }
 
 export interface IDayRepository {
   getByTripId: (tripId: string) => Promise<Day[]>
-  createNewDay: (dayData: Omit<Day, 'id'>) => Promise<Day>
+  createNewDay: (dayData: Omit<Day, 'id' | 'activities'>) => Promise<Day>
   updateDayDetails: (id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>) => Promise<Day>
-  deleteDay: (id: string) => Promise<void>
+  deleteDay: (id: string) => Promise<Day>
 }
 
 export interface IActivityRepository {

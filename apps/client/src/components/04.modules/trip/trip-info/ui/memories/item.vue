@@ -76,6 +76,7 @@ const displayTime = computed(() => {
 })
 
 function handleDelete() {
+  // eslint-disable-next-line no-alert
   if (confirm('Вы уверены, что хотите удалить это воспоминание?')) {
     deleteMemory(props.memory.id)
   }

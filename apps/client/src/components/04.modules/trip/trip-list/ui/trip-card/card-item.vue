@@ -2,13 +2,13 @@
 import type { ITrip } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
+import { KitImage } from '~/components/01.kit/kit-image'
 
 type Props = ITrip
 
 const props = withDefaults(defineProps<Props>(), {
   participants: () => [],
   tags: () => [],
-  visibility: 'private',
 })
 
 const router = useRouter()
@@ -17,21 +17,6 @@ function goTo() {
   router.push(AppRoutePaths.Trip.Info(`${props.id}`))
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
-
-const avatarColorNames = ['blue', 'orange', 'green', 'red', 'purple', 'cyan']
-
-function getAvatarClass(name: string): string {
-  const index = name.length % avatarColorNames.length
-  return `avatar--${avatarColorNames[index]}`
-}
 const formattedDates = computed(() => {
   const start = new Date(props.startDate)
   const end = new Date(props.endDate)
@@ -54,7 +39,7 @@ const statusInfo = computed(() => {
   switch (props.status) {
     case 'completed':
       return { text: 'Завершено', class: 'completed', icon: 'mdi:check-circle-outline' }
-    case 'in-progress':
+    case 'draft':
       return { text: 'В процессе', class: 'in-progress', icon: 'mdi:airplane-takeoff' }
     case 'planned':
       return { text: 'Запланировано', class: 'planned', icon: 'mdi:calendar-check-outline' }
@@ -80,7 +65,7 @@ const visibilityIcon = computed(() => {
   switch (props.visibility) {
     case 'public':
       return { icon: 'mdi:earth', title: 'Публичное путешествие' }
-    case 'shared':
+    case 'private':
       return { icon: 'mdi:account-multiple-outline', title: 'Доступно по ссылке' }
     default:
       return { icon: 'mdi:lock-outline', title: 'Приватное путешествие' }
@@ -92,12 +77,12 @@ const visibilityIcon = computed(() => {
   <div class="travel-card-wrapper">
     <div class="travel-card" @click="goTo">
       <div class="card-image-container">
-        <img
+        <KitImage
           v-if="imageUrl"
           :src="imageUrl"
           :alt="title"
           class="card-image"
-        >
+        />
         <div v-else class="card-no-image">
           <Icon icon="mdi:map-legend" />
         </div>
@@ -216,33 +201,37 @@ const visibilityIcon = computed(() => {
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+  }
+
+  // Применяем transition к внутреннему изображению компонента KitImage
+  .card-image :deep(.image) {
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
+}
 
-  .travel-card-wrapper:hover .card-image {
-    transform: scale(1.05);
-  }
+// Применяем transform к внутреннему изображению компонента KitImage при наведении
+.travel-card-wrapper:hover .card-image :deep(.image) {
+  transform: scale(1.05);
+}
 
-  .card-no-image {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-tertiary-color);
-    color: var(--fg-secondary-color);
-    font-size: 56px;
-    opacity: 0.5;
-  }
+.card-no-image {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-tertiary-color);
+  color: var(--fg-secondary-color);
+  font-size: 56px;
+  opacity: 0.5;
+}
 
-  .image-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, var(--bg-tertiary-color) 0%, transparent 80%);
-    opacity: 0.7;
-    z-index: 1;
-  }
+.image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--bg-tertiary-color) 0%, transparent 80%);
+  opacity: 0.7;
+  z-index: 1;
 }
 
 .card-header {
@@ -405,7 +394,6 @@ const visibilityIcon = computed(() => {
     }
   }
 }
-
 
 .card-tags {
   display: flex;

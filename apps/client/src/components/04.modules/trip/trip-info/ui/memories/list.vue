@@ -42,6 +42,7 @@ function handleAddTextNote() {
   if (!tripId)
     return
 
+  // eslint-disable-next-line no-alert
   const newComment = prompt('Введите текст заметки:')
   if (newComment?.trim()) {
     memories.createMemory({
@@ -125,6 +126,7 @@ function updateActivityDetails(activity: Activity, data: Partial<Activity>) {
 }
 
 function addMemoryToAction(activity: Activity) {
+  // eslint-disable-next-line no-alert
   const comment = prompt('Добавьте текстовое воспоминание для этого события:')
   if (comment) {
     const tripId = tripData.currentTripId
@@ -205,15 +207,17 @@ function addMemoryToAction(activity: Activity) {
                 <template #trigger>
                   <div class="rating-control" :class="{ 'has-rating': activity.rating }">
                     <div class="rating-stars">
-                      <Icon
-                        v-for="i in 5"
-                        :key="i"
-                        :icon="activity.rating && activity.rating >= i ? 'mdi:star' : 'mdi:star-outline'"
-                        class="star"
-                        height="14"
-                        width="14"
-                        :class="{ filled: activity.rating && activity.rating >= i }"
-                      />
+                      <template v-if="!!activity.rating">
+                        <Icon
+                          v-for="i in 5"
+                          :key="i"
+                          :icon="activity.rating && activity.rating >= i ? 'mdi:star' : 'mdi:star-outline'"
+                          class="star"
+                          height="14"
+                          width="14"
+                          :class="{ filled: activity.rating && activity.rating >= i }"
+                        />
+                      </template>
                     </div>
                     <span v-if="!activity.rating" class="rating-placeholder">Оценить</span>
                   </div>
@@ -247,6 +251,7 @@ function addMemoryToAction(activity: Activity) {
 
             <template v-else>
               <div
+                v-if="activity.status !== EActivityStatus.NONE"
                 class="status-badge"
                 :class="`status-${activity.status}`"
                 :title="statusInfo(activity.status).label"
@@ -277,6 +282,7 @@ function addMemoryToAction(activity: Activity) {
         </h5>
 
         <div class="memories-for-activity">
+          <!-- @vue-ignore -->
           <MemoriesItem
             v-for="memory in mappedMemories[activity.id]"
             :key="memory.id"
@@ -425,6 +431,12 @@ function addMemoryToAction(activity: Activity) {
   align-items: center;
   gap: 12px;
   width: 100%;
+  transition: all 0.2s ease;
+  border-radius: var(--r-xs) var(--r-l) var(--r-l) var(--r-xs);
+
+  &:hover {
+    background-color: var(--bg-hover-color);
+  }
 }
 
 .header-spacer {
@@ -537,6 +549,7 @@ function addMemoryToAction(activity: Activity) {
   border-radius: var(--r-xs);
   font-size: 0.85rem;
   font-weight: 600;
+  height: 30px;
   color: var(--fg-secondary-color);
   white-space: nowrap;
 }

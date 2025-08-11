@@ -1,6 +1,7 @@
 import type { IFileRepository } from '../../model/types'
 import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 import { trpc } from '~/shared/services/trpc/trpc.service'
+import { throttle } from '../../lib/decorators'
 
 export class FileRepository implements IFileRepository {
   /**
@@ -12,6 +13,7 @@ export class FileRepository implements IFileRepository {
    * @param comment - Опциональный комментарий для воспоминаний.
    * @returns Promise с данными о созданном изображении.
    */
+  @throttle(500)
   async uploadFile(file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null): Promise<TripImage> {
     const formData = new FormData()
     formData.append('file', file)
@@ -35,12 +37,13 @@ export class FileRepository implements IFileRepository {
     return response.json()
   }
 
+  @throttle(500)
   async listImageByTrip(tripId: string): Promise<TripImage[]> {
-    return await trpc.image.listByTrip.query({ tripId })
+    return await trpc.image.listByTrip.query({ tripId }) as TripImage[]
   }
 
-  // ИСПРАВЛЕНИЕ: Обновляем метод для соответствия интерфейсу и передачи всех данных
+  @throttle(500)
   async addImage(tripId: string, imageUrl: string, placement: TripImagePlacement): Promise<TripImage> {
-    return await trpc.image.upload.mutate({ tripId, imageUrl, placement })
+    return await trpc.image.upload.mutate({ tripId, imageUrl, placement }) as TripImage
   }
 }

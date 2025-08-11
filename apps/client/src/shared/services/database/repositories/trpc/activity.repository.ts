@@ -17,7 +17,7 @@ class ActivityRepository implements IActivityRepository {
     }
     const createdActivity = await trpc.activity.create.mutate(payload)
 
-    return createdActivity as unknown as Activity
+    return createdActivity as Activity
   }
 
   /**
@@ -33,7 +33,7 @@ class ActivityRepository implements IActivityRepository {
     }
     const updatedActivity = await trpc.activity.update.mutate(payload)
 
-    return updatedActivity as unknown as Activity
+    return updatedActivity as Activity
   }
 
   /**
@@ -45,7 +45,7 @@ class ActivityRepository implements IActivityRepository {
   async remove(id: string): Promise<Activity> {
     const deletedActivity = await trpc.activity.delete.mutate({ id })
 
-    return deletedActivity as unknown as Activity
+    return deletedActivity as Activity
   }
 }
 

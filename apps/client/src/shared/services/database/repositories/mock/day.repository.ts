@@ -12,10 +12,11 @@ class DayRepository implements IDayRepository {
   }
 
   @throttle(1_000)
-  async createNewDay(dayData: Omit<Day, 'id'>): Promise<Day> {
+  async createNewDay(dayData: Omit<Day, 'id' | 'activities'>): Promise<Day> {
     const newDay: Day = {
       ...dayData,
       id: `mock-day-${Date.now()}`,
+      activities: [],
     }
     MOCK_DAYS.push(newDay)
 
@@ -23,14 +24,16 @@ class DayRepository implements IDayRepository {
   }
 
   @throttle(1_000)
-  async deleteDay(id: string): Promise<void> {
+  async deleteDay(id: string): Promise<Day> {
     // eslint-disable-next-line no-console
     console.log(`[Mock] Deleting day with id: ${id}`)
     const dayIndex = MOCK_DAYS.findIndex(d => d.id === id)
-    if (dayIndex !== -1)
-      MOCK_DAYS.splice(dayIndex, 1)
+    if (dayIndex === -1)
+      return Promise.reject(new Error(`Day with id ${id} not found`))
 
-    return Promise.resolve()
+    const [deletedDay] = MOCK_DAYS.splice(dayIndex, 1)
+
+    return Promise.resolve(deletedDay)
   }
 
   @throttle(1_000)

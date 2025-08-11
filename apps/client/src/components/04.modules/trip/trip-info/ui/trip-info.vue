@@ -2,6 +2,7 @@
 import type { IActivity } from '../models/types'
 import Divider from '~/components/01.kit/divider/ui/divider.vue'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { EActivityStatus } from '~/shared/types/models/activity'
 import { useModuleStore } from '../composables/use-module'
 import { minutesToTime, timeToMinutes } from '../lib/helpers'
 import { EActivityTag } from '../models/types'
@@ -38,6 +39,7 @@ function handleAddNewActivity() {
     endTime: minutesToTime(endTimeMinutes),
     tag: EActivityTag.ATTRACTION,
     sections: [],
+    status: EActivityStatus.NONE,
   }
 
   store.data.addActivity(getSelectedDay.value.id, newActivity)

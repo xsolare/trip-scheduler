@@ -6,4 +6,4 @@ export type ActiveView = 'plan' | 'memories'
 export type IMemory = Memory
 export type IActivity = Activity
 export type IDay = Day
-export { EActivityTag as EActivityTag }
+export { EActivityTag }

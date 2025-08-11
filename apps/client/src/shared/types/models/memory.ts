@@ -1,3 +1,5 @@
+import type { RouterInput } from '../trpc'
+
 export interface Memory {
   id: string
   tripId: string
@@ -13,19 +15,10 @@ export interface Memory {
  * Тип данных для создания нового воспоминания.
  * Используется в API-запросах.
  */
-export interface CreateMemoryInput {
-  tripId: string
-  timestamp?: string | null
-  comment?: string | null
-  imageId?: string | null
-}
+export type CreateMemoryInput = RouterInput['memory']['create']
 
 /**
  * Тип данных для обновления существующего воспоминания.
  * Используется в API-запросах.
  */
-export interface UpdateMemoryInput {
-  id: string
-  timestamp?: string | null
-  comment?: string | null
-}
+export type UpdateMemoryInput = RouterInput['memory']['update']

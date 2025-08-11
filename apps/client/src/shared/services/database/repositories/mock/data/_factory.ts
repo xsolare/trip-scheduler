@@ -5,9 +5,8 @@ import type {
   ActivitySectionText,
   Day,
 } from '~/shared/types/models/activity'
-import type { Trip } from '~/shared/types/models/trip'
 import { v4 as uuidv4 } from 'uuid'
-import { EActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType, EActivityStatus } from '~/shared/types/models/activity'
 
 type ActivityInput = Omit<Activity, 'id' | 'dayId'>
 
@@ -35,11 +34,13 @@ export function createSection(type: EActivitySectionType.DESCRIPTION | EActivity
 
 export function createActivity(time: string, title: string, sections: ActivitySections): ActivityInput {
   const [startTime, endTime] = time.split('-')
+
   return {
     startTime,
     endTime: endTime || startTime,
     title,
     sections,
+    status: EActivityStatus.NONE,
   }
 }
 
@@ -56,12 +57,5 @@ export function createDay(tripId: string, date: string, title: string, descripti
       id: uuidv4(),
       dayId,
     })),
-  }
-}
-
-export function createTrip(tripData: Omit<Trip, 'days'>, days: Day[]): Trip {
-  return {
-    ...tripData,
-    days: days.length,
   }
 }

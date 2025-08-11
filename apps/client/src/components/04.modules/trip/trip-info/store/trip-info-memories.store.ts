@@ -75,7 +75,7 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
         key: `${ETripMemoriesKeys.UPDATE}:${data.id}`,
         fn: db => db.memories.update(data),
         onError: () => {
-          Object.assign(memory, originalMemory) 
+          Object.assign(memory, originalMemory)
         },
       }).execute()
     },
@@ -83,7 +83,7 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
     async deleteMemory(id: string) {
       const index = this.memories.findIndex(m => m.id === id)
       if (index > -1) {
-        const [removedMemory] = this.memories.splice(index, 1) 
+        const [removedMemory] = this.memories.splice(index, 1)
 
         await useRequest({
           key: `${ETripMemoriesKeys.DELETE}:${id}`,

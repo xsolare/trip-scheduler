@@ -46,7 +46,7 @@ export interface Activity {
   //
   sections?: ActivitySections
   tag?: EActivityTag
-  rating?: number 
+  rating?: number
   status: EActivityStatus
 }
 
