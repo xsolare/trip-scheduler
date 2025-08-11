@@ -2,49 +2,59 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
+import url from 'node:url'
 import { db } from './index'
-import { MOCK_DATA } from './mock/01.data'
 import { activities, days, memories, tripImages, trips } from './schema'
 
-/**
- * Копирует статические файлы из db/static в /static в корне проекта.
- * Это необходимо, так как моковые данные ссылаются на эти файлы.
- */
 async function copyStaticFiles() {
   const sourceDir = path.join(__dirname, 'mock/static')
   const destDir = path.join(process.cwd(), 'static')
 
   try {
     console.log(`🔄 Копирование статических файлов из ${sourceDir} в ${destDir}...`)
-
-    // Удаляем старую директорию, чтобы обеспечить чистоту
     await fs.rm(destDir, { recursive: true, force: true })
     console.log('🚮 Старая директория static удалена.')
-
-    // Копируем новую
     await fs.cp(sourceDir, destDir, { recursive: true })
     console.log('✅ Статические файлы успешно скопированы.')
   }
   catch (error) {
-    // Если исходной папки нет, это не критично, просто выводим предупреждение
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
       console.warn(`⚠️  Исходная директория ${sourceDir} не найдена. Копирование пропущено.`)
-    }
-    else {
+    else
       console.error('❌ Ошибка при копировании статических файлов:', error)
-      // В случае серьезной ошибки прерываем выполнение
-      process.exit(1)
-    }
   }
 }
 
-async function seed() {
-  // 1. Копируем статические файлы для моков
-  await copyStaticFiles()
+/**
+ * Динамическая загрузка всех моковых данных из папки /mock.
+ */
+async function loadAllMockData(): Promise<any[]> {
+  const mockDir = path.join(__dirname, 'mock')
+  const allFiles = await fs.readdir(mockDir)
+  const mockFiles = allFiles.filter(file => file.endsWith('.ts') && !file.startsWith('_'))
 
+  if (mockFiles.length === 0) {
+    return []
+  }
+
+  console.log(`🔍 Найдены файлы с моковыми данными: ${mockFiles.join(', ')}`)
+
+  const allMocks = await Promise.all(
+    mockFiles.map(async (file) => {
+      const filePath = path.join(mockDir, file)
+      const module = await import(url.pathToFileURL(filePath).href)
+      return module.MOCK_DATA || []
+    }),
+  )
+
+  return allMocks.flat()
+}
+
+async function seed() {
+  await copyStaticFiles()
   console.log('🌱 Начало заполнения базы данных...')
 
-  let sourceData: any[] = MOCK_DATA
+  let sourceData: any[] = []
 
   if (process.argv.includes('--from-dump')) {
     const dumpPath = path.join(__dirname, 'dump', 'latest.dump.json')
@@ -56,6 +66,13 @@ async function seed() {
     catch {
       console.error(`❌ Не удалось прочитать файл дампа. Убедитесь, что он существует. Запустите 'bun run db:dump'.`)
       process.exit(1)
+    }
+  }
+  else {
+    sourceData = await loadAllMockData()
+    if (sourceData.length === 0) {
+      console.warn('⚠️ Моковые данные не найдены. Заполнение базы данных пропущено.')
+      process.exit(0)
     }
   }
 
@@ -79,9 +96,8 @@ async function seed() {
 
     tripsToInsert.push({
       ...tripDetails,
-      startDate: tripDetails.startDate.toISOString().split('T')[0],
-      endDate: tripDetails.endDate.toISOString().split('T')[0],
-      days: mockDays.length,
+      startDate: new Date(tripDetails.startDate).toISOString().split('T')[0],
+      endDate: new Date(tripDetails.endDate).toISOString().split('T')[0],
     })
 
     if (mockDays) {
@@ -89,25 +105,24 @@ async function seed() {
         const { activities: mockActivities, ...dayDetails } = mockDay
         daysToInsert.push({
           ...dayDetails,
-          date: dayDetails.date.toISOString().split('T')[0],
+          date: new Date(mockDay.date).toISOString().split('T')[0],
         })
         if (mockActivities) {
-          for (const mockActivity of mockActivities) {
-            activitiesToInsert.push(mockActivity)
-          }
+          activitiesToInsert.push(...mockActivities)
         }
       }
     }
 
     if (mockImages) {
-      for (const mockImage of mockImages) {
-        imagesToInsert.push(mockImage)
-      }
+      imagesToInsert.push(...mockImages)
     }
 
     if (mockMemories) {
       for (const mockMemory of mockMemories) {
-        memoriesToInsert.push(mockMemory)
+        memoriesToInsert.push({
+          ...mockMemory,
+          timestamp: mockMemory.timestamp ? new Date(mockMemory.timestamp) : null,
+        })
       }
     }
   }

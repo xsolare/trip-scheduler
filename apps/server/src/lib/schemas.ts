@@ -82,7 +82,6 @@ export const TripSchema = z.object({
   participants: z.array(z.string()),
   tags: z.array(z.string()),
   visibility: z.enum(['public', 'private']),
-  days: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -93,6 +92,31 @@ export const TripWithDaysSchema = TripSchema.extend({
 
 export const GetTripsByIdInputSchema = z.object({
   tripId: z.string().uuid(),
+})
+
+export const UpdateTripInputSchema = z.object({
+  id: z.string().uuid(),
+  details: TripSchema.pick({
+    title: true,
+    description: true,
+    startDate: true,
+    endDate: true,
+    cities: true,
+    status: true,
+    budget: true,
+    currency: true,
+    participants: true,
+    tags: true,
+    visibility: true,
+  }).partial(),
+})
+
+export const CreateTripInputSchema = TripSchema.pick({
+  title: true,
+}).extend({
+  description: z.string().optional(),
+  startDate: z.union([z.date(), z.string()]).optional(),
+  endDate: z.union([z.date(), z.string()]).optional(),
 })
 
 export const DeleteDayInputSchema = z.object({

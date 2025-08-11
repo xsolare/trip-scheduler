@@ -42,6 +42,7 @@ export const dayProcedures = {
     .input(DeleteDayInputSchema)
     .mutation(async ({ input }) => {
       const deletedDay = await dayRepository.delete(input.id)
+
       return deletedDay
     }),
 

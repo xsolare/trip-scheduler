@@ -59,7 +59,6 @@ CREATE TABLE "trips" (
 	"participants" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"visibility" "visibility" DEFAULT 'private' NOT NULL,
-	"days" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );

@@ -58,7 +58,6 @@ export const trips = pgTable('trips', {
   participants: jsonb('participants').$type<string[]>().notNull().default([]),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
   visibility: visibilityEnum('visibility').notNull().default('private'),
-  days: integer('days').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })

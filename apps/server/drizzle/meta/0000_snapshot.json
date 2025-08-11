@@ -1,5 +1,5 @@
 {
-  "id": "ba195440-3b06-4c0f-84be-3be2929d6bec",
+  "id": "6e972a58-a871-4723-bd68-d7b4c8b7ec33",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -402,13 +402,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'private'"
-        },
-        "days": {
-          "name": "days",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "created_at": {
           "name": "created_at",
