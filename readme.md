@@ -4,6 +4,7 @@
 
 **Trip Scheduler** — это комплексное решение для создания идеальных маршрутов путешествий. Это кросс-платформенное приложение, состоящее из десктопного клиента на базе Tauri и веб-версии, с акцентом на офлайн-работу и последующую синхронизацию данных с сервером.
 
+
 [![Vue.js](https://img.shields.io/badge/Vue.js-3-4FC08D?logo=vue.js)](https://vuejs.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-2-24C8E2?logo=tauri)](https://tauri.app/)
 [![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono)](https://hono.dev/)
@@ -12,6 +13,9 @@
 [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite)](https://www.sqlite.org/)
 [![Rust](https://img.shields.io/badge/Rust-black?logo=rust)](https://www.rust-lang.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript)](https://www.typescriptlang.org/)
+
+![250812_02h26m13s_screenshot](assets/250812_02h26m13s_screenshot.png)
+
 
 ## 🌟 Ключевые возможности
 
@@ -142,3 +146,7 @@
 | **Линтинг и типизация**                 |
 | `bun run lint`                          | Проверка кода всего проекта с помощью ESLint.                              |
 | `bun run typecheck`                     | Проверка типов TypeScript во всем проекте.                                 |
+
+## 📜 Пример приложения
+
+![250812_02h26m58s_screenshot](assets/250812_02h26m58s_screenshot.png)
