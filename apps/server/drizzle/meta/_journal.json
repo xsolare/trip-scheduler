@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1754747367088,
-      "tag": "0000_overconfident_tarantula",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1754766970281,
-      "tag": "0001_bright_lorna_dane",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1754857914359,
-      "tag": "0002_reflective_human_torch",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1754906315580,
-      "tag": "0003_volatile_major_mapleleaf",
+      "when": 1754925033658,
+      "tag": "0000_lean_jamie_braddock",
       "breakpoints": true
     }
   ]

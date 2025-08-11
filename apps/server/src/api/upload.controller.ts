@@ -27,7 +27,7 @@ export async function uploadFileHandler(c: Context) {
   const fileExtension = file.name.split('.').pop()
   const filename = `${Date.now()}-${crypto.randomUUID()}.${fileExtension}`
 
-  const tripUploadDir = join(`${import.meta.env.STATIC_PATH}/${placement}`, tripId)
+  const tripUploadDir = join(`${import.meta.env.STATIC_PATH}/${tripId}`, placement)
   const fullPath = join(tripUploadDir, filename)
 
   try {
@@ -35,7 +35,7 @@ export async function uploadFileHandler(c: Context) {
     await Bun.write(fullPath, await file.arrayBuffer())
 
     const baseURL = import.meta.env.API_URL
-    const url = `${baseURL}/${import.meta.env.STATIC_PATH}/${placement}/${tripId}/${filename}`
+    const url = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${filename}`
 
     const newImageRecord = await imageRepository.create(tripId, url, placement)
 

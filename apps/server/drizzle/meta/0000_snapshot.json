@@ -1,5 +1,5 @@
 {
-  "id": "bb23b35a-775f-443d-a4f2-a3166f9a3cf0",
+  "id": "ba195440-3b06-4c0f-84be-3be2929d6bec",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -43,6 +43,20 @@
           "name": "tag",
           "type": "activity_tag",
           "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "activity_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
+        },
+        "rating": {
+          "name": "rating",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -146,6 +160,91 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.memories": {
+      "name": "memories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trip_id": {
+          "name": "trip_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_id": {
+          "name": "image_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "memories_trip_id_trips_id_fk": {
+          "name": "memories_trip_id_trips_id_fk",
+          "tableFrom": "memories",
+          "tableTo": "trips",
+          "columnsFrom": [
+            "trip_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memories_image_id_trip_images_id_fk": {
+          "name": "memories_image_id_trip_images_id_fk",
+          "tableFrom": "memories",
+          "tableTo": "trip_images",
+          "columnsFrom": [
+            "image_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.trip_images": {
       "name": "trip_images",
       "schema": "",
@@ -168,6 +267,14 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "placement": {
+          "name": "placement",
+          "type": "trip_image_placement",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'route'"
         },
         "created_at": {
           "name": "created_at",
@@ -337,6 +444,15 @@
         "geolocation"
       ]
     },
+    "public.activity_status": {
+      "name": "activity_status",
+      "schema": "public",
+      "values": [
+        "none",
+        "completed",
+        "skipped"
+      ]
+    },
     "public.activity_tag": {
       "name": "activity_tag",
       "schema": "public",
@@ -355,6 +471,14 @@
         "completed",
         "planned",
         "draft"
+      ]
+    },
+    "public.trip_image_placement": {
+      "name": "trip_image_placement",
+      "schema": "public",
+      "values": [
+        "route",
+        "memories"
       ]
     },
     "public.visibility": {

@@ -6,7 +6,42 @@ import { db } from './index'
 import { MOCK_DATA } from './mock/01.data'
 import { activities, days, memories, tripImages, trips } from './schema'
 
+/**
+ * Копирует статические файлы из db/static в /static в корне проекта.
+ * Это необходимо, так как моковые данные ссылаются на эти файлы.
+ */
+async function copyStaticFiles() {
+  const sourceDir = path.join(__dirname, 'mock/static')
+  const destDir = path.join(process.cwd(), 'static')
+
+  try {
+    console.log(`🔄 Копирование статических файлов из ${sourceDir} в ${destDir}...`)
+
+    // Удаляем старую директорию, чтобы обеспечить чистоту
+    await fs.rm(destDir, { recursive: true, force: true })
+    console.log('🚮 Старая директория static удалена.')
+
+    // Копируем новую
+    await fs.cp(sourceDir, destDir, { recursive: true })
+    console.log('✅ Статические файлы успешно скопированы.')
+  }
+  catch (error) {
+    // Если исходной папки нет, это не критично, просто выводим предупреждение
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      console.warn(`⚠️  Исходная директория ${sourceDir} не найдена. Копирование пропущено.`)
+    }
+    else {
+      console.error('❌ Ошибка при копировании статических файлов:', error)
+      // В случае серьезной ошибки прерываем выполнение
+      process.exit(1)
+    }
+  }
+}
+
 async function seed() {
+  // 1. Копируем статические файлы для моков
+  await copyStaticFiles()
+
   console.log('🌱 Начало заполнения базы данных...')
 
   let sourceData: any[] = MOCK_DATA
