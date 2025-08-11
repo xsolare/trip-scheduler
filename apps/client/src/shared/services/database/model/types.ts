@@ -1,16 +1,21 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
-import type { Trip, TripImage, TripImagePlacement } from '~/shared/types/models/trip'
+import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
+import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 
 export interface ITripRepository {
   getAll: () => Promise<Trip[]>
   getById: (id: string) => Promise<Trip | null>
+  getByIdWithDays: (id: string) => Promise<TripWithDays | null>
+  create: (data: CreateTripInput) => Promise<Trip>
+  update: (id: string, details: UpdateTripInput) => Promise<Trip>
+  delete: (id: string) => Promise<Trip>
 }
 
 export interface IDayRepository {
   getByTripId: (tripId: string) => Promise<Day[]>
-  createNewDay: (dayData: Omit<Day, 'id'>) => Promise<Day>
+  createNewDay: (dayData: Omit<Day, 'id' | 'activities'>) => Promise<Day>
   updateDayDetails: (id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>) => Promise<Day>
-  deleteDay: (id: string) => Promise<void>
+  deleteDay: (id: string) => Promise<Day>
 }
 
 export interface IActivityRepository {
@@ -20,9 +25,9 @@ export interface IActivityRepository {
 }
 
 export interface IFileRepository {
-  uploadFile: (file: File, tripId: string, placement: TripImagePlacement) => Promise<TripImage>
+  uploadFile: (file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null) => Promise<TripImage>
   listImageByTrip: (tripId: string) => Promise<TripImage[]>
-  addImage: (tripId: string, imageUrl: string) => Promise<TripImage>
+  addImage: (tripId: string, imageUrl: string, placement: TripImagePlacement) => Promise<TripImage>
 }
 
 // Интерфейс для всей базы данных
@@ -31,6 +36,7 @@ export interface IDatabaseClient {
   days: IDayRepository
   files: IFileRepository
   activities: IActivityRepository
+  memories: IMemoryRepository
 
   initDb: () => Promise<this>
 
@@ -38,6 +44,13 @@ export interface IDatabaseClient {
   getUnsyncedChanges: () => Promise<any[]>
   markAsSynced: (logIds: number[]) => Promise<void>
   testConnection: () => Promise<boolean>
+}
+
+export interface IMemoryRepository {
+  getByTripId: (tripId: string) => Promise<Memory[]>
+  create: (data: CreateMemoryInput) => Promise<Memory>
+  update: (data: UpdateMemoryInput) => Promise<Memory>
+  delete: (id: string) => Promise<Memory>
 }
 
 // Режимы работы

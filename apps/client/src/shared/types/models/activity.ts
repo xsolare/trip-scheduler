@@ -1,4 +1,4 @@
-export enum ActivityTag {
+export enum EActivityTag {
   TRANSPORT = 'transport',
   WALK = 'walk',
   FOOD = 'food',
@@ -6,7 +6,7 @@ export enum ActivityTag {
   RELAX = 'relax',
 }
 
-export enum ActivitySectionType {
+export enum EActivitySectionType {
   DESCRIPTION = 'description',
   GALLERY = 'gallery',
   GEOLOCATION = 'geolocation',
@@ -14,22 +14,22 @@ export enum ActivitySectionType {
 
 export interface ActivitySection {
   id: string
-  type: ActivitySectionType
+  type: EActivitySectionType
   isAttached?: boolean
 }
 
 export interface ActivitySectionText extends ActivitySection {
-  type: ActivitySectionType.DESCRIPTION
+  type: EActivitySectionType.DESCRIPTION
   text: string
 }
 
 export interface ActivitySectionGallery extends ActivitySection {
-  type: ActivitySectionType.GALLERY
+  type: EActivitySectionType.GALLERY
   imageUrls: string[]
 }
 
 export interface ActivitySectionGeolocation extends ActivitySection {
-  type: ActivitySectionType.GEOLOCATION
+  type: EActivitySectionType.GEOLOCATION
   latitude: number
   longitude: number
   address: string
@@ -45,7 +45,15 @@ export interface Activity {
   endTime: string
   //
   sections?: ActivitySections
-  tag?: ActivityTag
+  tag?: EActivityTag
+  rating?: number
+  status: EActivityStatus
+}
+
+export enum EActivityStatus {
+  NONE = 'none',
+  COMPLETED = 'completed',
+  SKIPPED = 'skipped',
 }
 
 export interface Day {

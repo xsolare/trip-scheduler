@@ -1,3 +1,5 @@
+import { useToastStore } from '~/shared/store/toast.store'
+
 /**
  * Composable для доступа к API уведомлений (тостов).
  * @example
@@ -5,5 +7,5 @@
  * toast.success('Профиль успешно обновлен!')
  */
 export function useToast() {
-  return useAppStore('toast')
+  return useToastStore()
 }

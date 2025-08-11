@@ -8,10 +8,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { ActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType } from '~/shared/types/models/activity'
 
 interface SectionOption {
-  type: ActivitySectionType
+  type: EActivitySectionType
   label: string
   icon: string
   shortcut?: string
@@ -20,14 +20,14 @@ interface SectionOption {
 }
 
 const emit = defineEmits<{
-  addSection: [type: ActivitySectionType]
+  addSection: [type: EActivitySectionType]
 }>()
 
 const isOpen = ref(false)
 
 const sectionOptions: SectionOption[] = [
   {
-    type: ActivitySectionType.DESCRIPTION,
+    type: EActivitySectionType.DESCRIPTION,
     label: 'Заметка',
     icon: 'mdi:text-box-plus-outline',
     shortcut: 'T',
@@ -35,7 +35,7 @@ const sectionOptions: SectionOption[] = [
     category: 'content',
   },
   {
-    type: ActivitySectionType.GALLERY,
+    type: EActivitySectionType.GALLERY,
     label: 'Галерея',
     icon: 'mdi:image-multiple-outline',
     shortcut: 'G',
@@ -43,7 +43,7 @@ const sectionOptions: SectionOption[] = [
     category: 'media',
   },
   {
-    type: ActivitySectionType.GEOLOCATION,
+    type: EActivitySectionType.GEOLOCATION,
     label: 'Локация',
     icon: 'mdi:map-marker-plus-outline',
     shortcut: 'L',
@@ -56,7 +56,7 @@ const contentOptions = computed(() => sectionOptions.filter(opt => opt.category 
 const mediaOptions = computed(() => sectionOptions.filter(opt => opt.category === 'media'))
 const locationOptions = computed(() => sectionOptions.filter(opt => opt.category === 'location'))
 
-function handleAddSection(type: ActivitySectionType) {
+function handleAddSection(type: EActivitySectionType) {
   emit('addSection', type)
   isOpen.value = false
 }

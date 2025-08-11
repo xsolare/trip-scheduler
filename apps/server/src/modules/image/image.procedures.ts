@@ -1,10 +1,12 @@
 import { z } from 'zod'
 import { t } from '~/lib/trpc'
 import { imageRepository } from '~/repositories/image.repository'
+import { tripImagePlacementEnum } from '../../../db/schema'
 
 const UploadImageInputSchema = z.object({
   tripId: z.string().uuid(),
   imageUrl: z.string().url(),
+  placement: z.enum(tripImagePlacementEnum.enumValues),
 })
 
 // Схема для получения списка изображений
@@ -19,7 +21,11 @@ export const imageProcedures = {
   upload: t.procedure
     .input(UploadImageInputSchema)
     .mutation(async ({ input }) => {
-      const newImage = await imageRepository.create(input.tripId, input.imageUrl)
+      const newImage = await imageRepository.create(
+        input.tripId,
+        input.imageUrl,
+        input.placement,
+      )
 
       return newImage
     }),

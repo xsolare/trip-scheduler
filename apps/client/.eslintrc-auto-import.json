@@ -2,6 +2,7 @@
   "globals": {
     "AppRouteNames": true,
     "AppRoutePaths": true,
+    "AppRouter": true,
     "Component": true,
     "ComponentPublicInstance": true,
     "ComputedRef": true,
@@ -15,6 +16,8 @@
     "MaybeRefOrGetter": true,
     "PropType": true,
     "Ref": true,
+    "RouterInput": true,
+    "RouterOutput": true,
     "ShallowRef": true,
     "Slot": true,
     "Slots": true,

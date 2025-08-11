@@ -2,10 +2,10 @@
 import type { IActivity } from '../models/types'
 import Divider from '~/components/01.kit/divider/ui/divider.vue'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { EActivityStatus } from '~/shared/types/models/activity'
 import { useModuleStore } from '../composables/use-module'
 import { minutesToTime, timeToMinutes } from '../lib/helpers'
 import { EActivityTag } from '../models/types'
-import AddDayActivity from './controls/add-day-activity.vue'
 import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
 import ViewSwitcher from './controls/view-switcher.vue'
@@ -18,9 +18,8 @@ const emit = defineEmits(['update:hasError'])
 const route = useRoute()
 const router = useRouter()
 
-const store = useModuleStore(['data', 'ui', 'gallery'])
+const store = useModuleStore(['data', 'ui', 'gallery', 'memories'])
 const { days, isLoading, fetchError, getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(store.data)
-const { isViewMode } = storeToRefs(store.ui)
 
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
@@ -40,6 +39,7 @@ function handleAddNewActivity() {
     endTime: minutesToTime(endTimeMinutes),
     tag: EActivityTag.ATTRACTION,
     sections: [],
+    status: EActivityStatus.NONE,
   }
 
   store.data.addActivity(getSelectedDay.value.id, newActivity)
@@ -60,6 +60,7 @@ watch(
 if (tripId.value) {
   store.data.fetchDaysForTrip(tripId.value, dayId.value)
   store.gallery.setTripId(tripId.value)
+  store.memories.fetchMemories(tripId.value)
 }
 
 onBeforeUnmount(() => {
@@ -91,17 +92,15 @@ onBeforeUnmount(() => {
           о дне
         </Divider>
         <DayHeader />
-        <Divider :is-loading="store.data.isLoadingUpdateActivity">
-          маршрут
-        </Divider>
-        <Transition name="faded-blured" mode="out-in">
-          <DayActivitiesList v-if="store.ui.activeView === 'plan'" @add="handleAddNewActivity" />
-          <MemoriesList v-else-if="store.ui.activeView === 'memories'" />
-        </Transition>
-        <AddDayActivity
-          v-if="!isViewMode"
-          @add="handleAddNewActivity"
-        />
+
+        <template v-if="store.ui.activeView === 'plan'">
+          <Divider :is-loading="store.data.isLoadingUpdateActivity">
+            маршрут
+          </Divider>
+          <DayActivitiesList @add="handleAddNewActivity" />
+        </template>
+        <MemoriesList v-else-if="store.ui.activeView === 'memories'" />
+
         <DayNavigation v-if="!isLoading && days.length > 1" />
       </div>
     </template>

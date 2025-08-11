@@ -1,0 +1,149 @@
+import { relations } from 'drizzle-orm'
+import {
+  date,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core'
+
+interface ActivitySectionBase {
+  id: string
+  isAttached?: boolean
+}
+
+interface ActivitySectionText extends ActivitySectionBase {
+  type: 'description'
+  text: string
+}
+
+interface ActivitySectionGallery extends ActivitySectionBase {
+  type: 'gallery'
+  imageUrls: string[]
+}
+
+interface ActivitySectionGeolocation extends ActivitySectionBase {
+  type: 'geolocation'
+  latitude: number
+  longitude: number
+  address: string
+}
+
+export type ActivitySection = ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation
+
+// Обновленные Enums
+export const statusEnum = pgEnum('status', ['completed', 'planned', 'draft'])
+export const visibilityEnum = pgEnum('visibility', ['public', 'private'])
+export const activityTagEnum = pgEnum('activity_tag', ['transport', 'walk', 'food', 'attraction', 'relax'])
+export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery', 'geolocation'])
+export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed', 'skipped'])
+export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
+
+// Таблица для путешествий (Trips)
+export const trips = pgTable('trips', {
+  id: uuid('id').primaryKey(),
+  title: text('title').notNull(),
+  imageUrl: text('image_url'),
+  description: text('description'),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date').notNull(),
+  cities: jsonb('cities').$type<string[]>().notNull().default([]),
+  status: statusEnum('status').notNull().default('draft'),
+  budget: real('budget'),
+  currency: text('currency').default('RUB'),
+  participants: jsonb('participants').$type<string[]>().notNull().default([]),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  visibility: visibilityEnum('visibility').notNull().default('private'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const tripImages = pgTable('trip_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  url: text('url').notNull(),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  placement: tripImagePlacementEnum('placement').notNull().default('route'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// Таблица для воспоминаний (Memories)
+export const memories = pgTable('memories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id')
+    .notNull()
+    .references(() => trips.id, { onDelete: 'cascade' }),
+  timestamp: timestamp('timestamp', { withTimezone: true }), // Может быть null для неотсортированных
+  comment: text('comment'),
+  imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// Таблица для дней (Days)
+export const days = pgTable('days', {
+  id: uuid('id').primaryKey(),
+  date: date('date').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// Таблица для активностей (Activities)
+export const activities = pgTable('activities', {
+  id: uuid('id').primaryKey(),
+  startTime: text('start_time').notNull(),
+  endTime: text('end_time').notNull(),
+  title: text('title').notNull(),
+  sections: jsonb('sections').$type<ActivitySection[]>().notNull().default([]),
+  tag: activityTagEnum('tag'),
+  status: activityStatusEnum('status').notNull().default('none'),
+  rating: integer('rating'),
+  dayId: uuid('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
+})
+
+// Отношения
+export const tripsRelations = relations(trips, ({ many }) => ({
+  days: many(days),
+  images: many(tripImages),
+  memories: many(memories),
+}))
+
+export const daysRelations = relations(days, ({ one, many }) => ({
+  trip: one(trips, {
+    fields: [days.tripId],
+    references: [trips.id],
+  }),
+  activities: many(activities),
+}))
+
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  day: one(days, {
+    fields: [activities.dayId],
+    references: [days.id],
+  }),
+}))
+
+export const tripImagesRelations = relations(tripImages, ({ one }) => ({
+  trip: one(trips, {
+    fields: [tripImages.tripId],
+    references: [trips.id],
+  }),
+}))
+
+export const memoriesRelations = relations(memories, ({ one }) => ({
+  trip: one(trips, {
+    fields: [memories.tripId],
+    references: [trips.id],
+  }),
+  image: one(tripImages, {
+    fields: [memories.imageId],
+    references: [tripImages.id],
+  }),
+}))

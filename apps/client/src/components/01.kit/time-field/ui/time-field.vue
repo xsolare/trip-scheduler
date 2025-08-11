@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { Time } from '@internationalized/date'
+import { Time } from '@internationalized/date'
 import { TimeFieldInput, TimeFieldRoot } from 'reka-ui'
+import { watch } from 'vue'
 
 interface Props {
   placeholder?: string
@@ -15,10 +16,15 @@ withDefaults(defineProps<Props>(), {
 })
 
 const model = defineModel<Time | null | undefined>({ required: true })
+
+watch(model, (newValue) => {
+  if (newValue === null)
+    model.value = new Time(0, 0)
+})
 </script>
 
 <template>
-  <div class="time-field-wrapper">
+  <div class="kit-time-field-wrapper">
     <TimeFieldRoot
       id="time-field"
       v-slot="{ segments }"
@@ -26,7 +32,7 @@ const model = defineModel<Time | null | undefined>({ required: true })
       granularity="minute"
       :disabled="disabled"
       :readonly="readonly"
-      class="time-field"
+      class="kit-time-field"
       :hour-cycle="24"
       part="dayPeriod"
     >
@@ -51,13 +57,13 @@ const model = defineModel<Time | null | undefined>({ required: true })
   </div>
 </template>
 
-<style scoped lang="scss">
-.time-field-wrapper {
+<style lang="scss">
+.kit-time-field-wrapper {
   display: flex;
   flex-direction: column;
 }
 
-.time-field {
+.kit-time-field {
   display: flex;
   align-items: center;
   padding: 0 4px;

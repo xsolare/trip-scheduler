@@ -1,27 +1,38 @@
 <script setup lang="ts">
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
 
-import { useTripList } from '../composables/use-trip-list'
+import { useModuleStore } from '../composables/use-module'
 import TripListEmpty from './states/trip-list-empty.vue'
 import TripListSkeleton from './states/trip-list-skeleton.vue'
 import TripListContent from './trip-list-content.vue'
 
 const emit = defineEmits(['update:hasError'])
-const { trips, isLoading, fetchError, fetchTrips } = useTripList()
+const store = useModuleStore(['tripList'])
 
-watch(fetchError, (newError) => {
-  emit('update:hasError', !!newError)
-})
+const { trips, isLoading } = storeToRefs(store.tripList)
+
+watch(
+  () => store.tripList.fetchError,
+  (newError) => {
+    emit('update:hasError', !!newError)
+  },
+)
 
 const displayData = computed(() => (trips.value && trips.value.length > 0) ? trips.value : null)
+
+store.tripList.fetchTrips()
+
+onBeforeUnmount(() => {
+  store.tripList.reset()
+})
 </script>
 
 <template>
   <AsyncStateWrapper
     :loading="isLoading"
-    :error="fetchError"
+    :error="store.tripList.fetchError"
     :data="displayData"
-    :retry-handler="fetchTrips"
+    :retry-handler="store.tripList.fetchTrips"
     transition="slide-up"
     class="trip-list-wrapper"
   >

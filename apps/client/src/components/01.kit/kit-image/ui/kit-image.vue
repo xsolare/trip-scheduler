@@ -147,9 +147,9 @@ defineExpose({
 
 <template>
   <component :is="aspectRatio ? AspectRatio : 'div'" :ratio="aspectRatio" class="kit-image-wrapper">
-    <div class="image-container">
+    <div class="kit-image-container">
       <!-- Слот для лоудера с Skeleton по умолчанию -->
-      <transition name="fade">
+      <transition name="faded">
         <div v-if="isLoading" class="placeholder-wrapper">
           <slot name="loader">
             <KitSkeleton class="skeleton-placeholder" />
@@ -158,7 +158,7 @@ defineExpose({
       </transition>
 
       <!-- Слот для ошибки с заглушкой по умолчанию -->
-      <transition name="fade">
+      <transition name="faded">
         <div v-if="hasError" class="placeholder-wrapper">
           <slot name="error">
             <div class="error-placeholder">
@@ -184,62 +184,52 @@ defineExpose({
   </component>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .kit-image-wrapper {
   width: 100%;
   height: 100%;
   border-radius: inherit;
 }
 
-.image-container {
+.kit-image-container {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
-}
 
-.placeholder-wrapper,
-.image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
+  .placeholder-wrapper,
+  .image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
 
-.image {
-  transition: opacity 0.3s ease-out;
-}
+  .image {
+    transition: opacity 0.3s ease-out;
+  }
 
-.skeleton-placeholder {
-  width: 100%;
-  height: 100%;
-}
+  .skeleton-placeholder {
+    width: 100%;
+    height: 100%;
+  }
 
-.error-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background-color: var(--bg-tertiary-color);
-  border-radius: inherit;
-}
+  .error-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-tertiary-color);
+    border-radius: inherit;
+  }
 
-.error-image {
-  width: 50%;
-  height: 50%;
-  object-fit: contain;
-  opacity: 0.5;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+  .error-image {
+    width: 50%;
+    height: 50%;
+    object-fit: contain;
+    opacity: 0.5;
+  }
 }
 </style>

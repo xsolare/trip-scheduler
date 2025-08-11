@@ -2,9 +2,10 @@
 import type { IActivity } from '~/components/04.modules/trip/trip-info/models/types'
 import draggable from 'vuedraggable'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import AddDayActivity from '../controls/add-day-activity.vue'
 import ActivityItem from './item.vue'
 
-defineEmits(['add'])
+const emit = defineEmits(['add'])
 
 const { data, ui } = useModuleStore(['data', 'ui'])
 
@@ -71,6 +72,11 @@ const draggableActivities = computed({
       <div v-if="getActivitiesForSelectedDay.length === 0" class="empty-state">
         <p>На этот день нет запланированных активностей</p>
       </div>
+
+      <AddDayActivity
+        v-if="!isViewMode "
+        @add="emit('add')"
+      />
     </div>
   </div>
 </template>

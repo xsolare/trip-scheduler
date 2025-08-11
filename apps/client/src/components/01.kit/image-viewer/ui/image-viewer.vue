@@ -107,8 +107,16 @@ onClickOutside(viewerContentRef, () => {
             </button>
           </div>
 
-          <div v-if="currentImage?.caption" class="image-caption">
-            {{ currentImage.caption }}
+          <!--
+            Старый caption заменен на более универсальный footer-слот.
+            <div v-if="currentImage?.caption" class="image-caption">
+              {{ currentImage.caption }}
+            </div>
+          -->
+
+          <!-- Добавлен слот для кастомного футера -->
+          <div v-if="$slots.footer" class="viewer-footer">
+            <slot name="footer" :image="currentImage" :index="currentIndex" />
           </div>
 
           <div v-if="enableThumbnails && hasMultipleImages" class="thumbnails-container">
@@ -265,17 +273,12 @@ onClickOutside(viewerContentRef, () => {
   right: 20px;
 }
 
-.image-caption {
-  flex-shrink: 0;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 12px 24px;
-  border-radius: var(--r-xl);
-  margin-top: 20px;
-  text-align: center;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  max-width: 80%;
+/* Стили для нового футера */
+.viewer-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 5;
 }
 
 .thumbnails-container {

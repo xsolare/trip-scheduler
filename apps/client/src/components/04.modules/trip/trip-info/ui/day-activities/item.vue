@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
 import { TimeField } from '~/components/01.kit/time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
-import { ActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType } from '~/shared/types/models/activity'
 import AddSectionMenu from '../controls/add-section-menu.vue'
 import { ActivitySectionRenderer } from './sections'
 
@@ -33,10 +33,10 @@ const editingEndTime = shallowRef<Time | null>(null)
 
 const expandedSections = ref<Record<string, Record<string, boolean>>>({})
 
-const sectionTypeIcons: Record<ActivitySectionType, string> = {
-  [ActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
-  [ActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
-  [ActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
+const sectionTypeIcons: Record<EActivitySectionType, string> = {
+  [EActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
+  [EActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
+  [EActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
 }
 
 function toggleSection(groupId: string, sectionId: string) {
@@ -99,28 +99,28 @@ function updateSection(sectionId: string, newSectionData: ActivitySection) {
   }
 }
 
-function addSection(type: ActivitySectionType) {
+function addSection(type: EActivitySectionType) {
   let newSection: ActivitySection
 
   switch (type) {
-    case ActivitySectionType.DESCRIPTION:
+    case EActivitySectionType.DESCRIPTION:
       newSection = {
         id: uuidv4(),
-        type: ActivitySectionType.DESCRIPTION,
+        type: EActivitySectionType.DESCRIPTION,
         text: '',
       } as ActivitySectionText
       break
-    case ActivitySectionType.GALLERY:
+    case EActivitySectionType.GALLERY:
       newSection = {
         id: uuidv4(),
-        type: ActivitySectionType.GALLERY,
+        type: EActivitySectionType.GALLERY,
         imageUrls: [],
       } as ActivitySectionGallery
       break
-    case ActivitySectionType.GEOLOCATION:
+    case EActivitySectionType.GEOLOCATION:
       newSection = {
         id: uuidv4(),
-        type: ActivitySectionType.GEOLOCATION,
+        type: EActivitySectionType.GEOLOCATION,
         latitude: 0,
         longitude: 0,
         address: '',

@@ -34,8 +34,10 @@ export const ActivitySchema = z.object({
   endTime: z.string(),
   title: z.string(),
   sections: z.array(ActivitySectionSchema),
-  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).nullable().optional(),
+  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).optional(),
   dayId: z.string().uuid(),
+  status: z.enum(['none', 'completed', 'skipped']).default('none').optional(),
+  rating: z.number().min(0).max(5).nullable().optional(),
 })
 
 export const CreateActivityInputSchema = ActivitySchema.pick({
@@ -45,6 +47,8 @@ export const CreateActivityInputSchema = ActivitySchema.pick({
   endTime: true,
   tag: true,
   sections: true,
+  status: true,
+  rating: true,
 })
 
 export const UpdateActivityInputSchema = ActivitySchema
@@ -78,7 +82,6 @@ export const TripSchema = z.object({
   participants: z.array(z.string()),
   tags: z.array(z.string()),
   visibility: z.enum(['public', 'private']),
-  days: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -89,6 +92,31 @@ export const TripWithDaysSchema = TripSchema.extend({
 
 export const GetTripsByIdInputSchema = z.object({
   tripId: z.string().uuid(),
+})
+
+export const UpdateTripInputSchema = z.object({
+  id: z.string().uuid(),
+  details: TripSchema.pick({
+    title: true,
+    description: true,
+    startDate: true,
+    endDate: true,
+    cities: true,
+    status: true,
+    budget: true,
+    currency: true,
+    participants: true,
+    tags: true,
+    visibility: true,
+  }).partial(),
+})
+
+export const CreateTripInputSchema = TripSchema.pick({
+  title: true,
+}).extend({
+  description: z.string().optional(),
+  startDate: z.union([z.date(), z.string()]).optional(),
+  endDate: z.union([z.date(), z.string()]).optional(),
 })
 
 export const DeleteDayInputSchema = z.object({
@@ -105,4 +133,32 @@ export const CreateDayInputSchema = DaySchema.pick({
 export const UpdateDayInputSchema = z.object({
   id: z.string().uuid(),
   details: DaySchema.pick({ title: true, description: true, date: true }).partial(),
+})
+
+export const MemorySchema = z.object({
+  id: z.string().uuid(),
+  tripId: z.string().uuid(),
+  timestamp: z.string().datetime().nullable(),
+  comment: z.string().nullable(),
+  imageId: z.string().uuid().nullable(),
+  imageUrl: z.string().url().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const CreateMemoryInputSchema = z.object({
+  tripId: z.string().uuid(),
+  timestamp: z.string().datetime().optional().nullable(),
+  comment: z.string().optional().nullable(),
+  imageId: z.string().uuid().optional().nullable(),
+})
+
+export const UpdateMemoryInputSchema = z.object({
+  id: z.string().uuid(),
+  timestamp: z.string().datetime().optional().nullable(),
+  comment: z.string().optional().nullable(),
+})
+
+export const DeleteMemoryInputSchema = z.object({
+  id: z.string().uuid(),
 })

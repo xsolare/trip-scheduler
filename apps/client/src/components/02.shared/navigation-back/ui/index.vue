@@ -26,7 +26,7 @@ function goBack() {
 <style scoped lang="scss">
 .navigation-back-container {
   display: flex;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .navigation-back-btn {

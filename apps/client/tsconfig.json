@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "composite": true,
-    "target": "esnext",
+    "target": "ESNext",
     "jsx": "preserve",
     "lib": [
-      "ES2023",
+      "ESNext",
       "DOM",
       "DOM.Iterable"
     ],

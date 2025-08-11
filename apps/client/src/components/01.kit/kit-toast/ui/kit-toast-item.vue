@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ToastMessage } from '~/components/01.kit/kit-toast'
+import type { ToastMessage } from '~/shared/types/models/toast'
 import { useSwipe } from '@vueuse/core'
 
 interface Props {
@@ -54,7 +54,7 @@ const swipeStyle = computed(() => {
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .kit-toast-item {
   margin-left: auto;
   padding: var(--p-m, 16px);

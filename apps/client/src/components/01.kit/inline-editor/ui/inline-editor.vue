@@ -21,6 +21,7 @@ const emit = defineEmits<{
   (e: 'blur'): void
 }>()
 const markdown = defineModel<string>({ required: true })
+
 if (markdown.value === undefined) {
   markdown.value = ``
 }
