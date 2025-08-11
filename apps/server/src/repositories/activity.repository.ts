@@ -20,6 +20,8 @@ export const activityRepository = {
       .values({
         ...data,
         tag: data.tag ?? null,
+        status: data.status ?? 'none',
+        rating: data.rating ?? null,
         id: uuidv4(),
       } satisfies ActivityInsert)
       .returning()

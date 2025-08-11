@@ -1,6 +1,7 @@
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestStatus } from '~/plugins/request'
+import { useTripInfoStore } from './trip-info.store'
 
 export enum ETripMemoriesKeys {
   FETCH = 'memories:fetch',
@@ -18,32 +19,27 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
   getters: {
     isLoading: () => useRequestStatus(ETripMemoriesKeys.FETCH).value,
 
-    // Воспоминания с временной меткой для таймлайна
-    timelineMemories(state): Record<string, Memory[]> {
-      const grouped: Record<string, Memory[]> = {}
-      const sorted = state.memories
-        .filter(m => m.timestamp)
-        .sort((a, b) => new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime())
+    memoriesForSelectedDay(state): Memory[] {
+      const tripInfoStore = useTripInfoStore()
+      const selectedDay = tripInfoStore.getSelectedDay
+      if (!selectedDay)
+        return []
 
-      for (const memory of sorted) {
-        const date = new Date(memory.timestamp!).toISOString().split('T')[0]
-        if (!grouped[date])
-          grouped[date] = []
+      const selectedDateStr = new Date(selectedDay.date).toISOString().split('T')[0]
 
-        grouped[date].push(memory)
-      }
-      return grouped
+      return state.memories
+        .filter(m => m.timestamp && new Date(m.timestamp).toISOString().split('T')[0] === selectedDateStr)
+        .sort((a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime())
     },
 
-    // Воспоминания без временной метки
     unsortedMemories: (state): Memory[] => {
-      return state.memories.filter(m => !m.timestamp && m.imageId)
+      return state.memories.filter(m => m.imageId && !m.timestamp)
     },
   },
 
   actions: {
     fetchMemories(tripId: string) {
-      if (this.currentTripId === tripId)
+      if (this.currentTripId === tripId && this.memories.length > 0)
         return
 
       this.currentTripId = tripId
@@ -73,26 +69,30 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
         return
 
       const originalMemory = { ...memory }
-      Object.assign(memory, data) // Optimistic update
+      Object.assign(memory, data)
 
       await useRequest({
         key: `${ETripMemoriesKeys.UPDATE}:${data.id}`,
         fn: db => db.memories.update(data),
         onError: () => {
-          Object.assign(memory, originalMemory) // Revert on error
+          Object.assign(memory, originalMemory) 
         },
       }).execute()
     },
 
     async deleteMemory(id: string) {
       const index = this.memories.findIndex(m => m.id === id)
-      if (index > -1)
-        this.memories.splice(index, 1) // Optimistic delete
+      if (index > -1) {
+        const [removedMemory] = this.memories.splice(index, 1) 
 
-      await useRequest({
-        key: `${ETripMemoriesKeys.DELETE}:${id}`,
-        fn: db => db.memories.delete(id),
-      }).execute()
+        await useRequest({
+          key: `${ETripMemoriesKeys.DELETE}:${id}`,
+          fn: db => db.memories.delete(id),
+          onError: () => {
+            this.memories.splice(index, 0, removedMemory)
+          },
+        }).execute()
+      }
     },
 
     reset() {

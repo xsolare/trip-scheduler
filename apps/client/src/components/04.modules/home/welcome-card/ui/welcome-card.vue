@@ -54,7 +54,7 @@ function onMouseMove() {
           Ваш умный помощник для создания идеальных маршрутов, организации
           планов и незабываемых впечатлений.
         </p>
-        <KitBtn class="cta-button" @click="goToTrips">
+        <KitBtn @click="goToTrips">
           <Icon icon="mdi:compass-rose" />
           <span>К моим путешествиям</span>
         </KitBtn>
@@ -162,32 +162,5 @@ function onMouseMove() {
   max-width: 450px;
   line-height: 1.6;
   margin-bottom: 32px;
-}
-
-.cta-button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0.8rem 1.8rem;
-  font-size: 1rem;
-  border-radius: var(--r-m);
-  box-shadow: 0 4px 15px var(--fg-accent-color);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  background-color: var(--bg-accent-color);
-  color: var(--fg-on-accent-color);
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px var(--fg-accent-color);
-  }
-
-  > svg {
-    font-size: 1.25rem;
-  }
 }
 </style>

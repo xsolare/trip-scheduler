@@ -34,8 +34,10 @@ export const ActivitySchema = z.object({
   endTime: z.string(),
   title: z.string(),
   sections: z.array(ActivitySectionSchema),
-  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).nullable().optional(),
+  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).optional(),
   dayId: z.string().uuid(),
+  status: z.enum(['none', 'completed', 'skipped']).default('none').optional(),
+  rating: z.number().min(0).max(5).nullable().optional(),
 })
 
 export const CreateActivityInputSchema = ActivitySchema.pick({
@@ -45,6 +47,8 @@ export const CreateActivityInputSchema = ActivitySchema.pick({
   endTime: true,
   tag: true,
   sections: true,
+  status: true,
+  rating: true,
 })
 
 export const UpdateActivityInputSchema = ActivitySchema

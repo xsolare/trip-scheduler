@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ITrip } from '../../models/types'
 import { Icon } from '@iconify/vue'
+import { KitAvatar } from '~/components/01.kit/kit-avatar'
 
 type Props = ITrip
 
@@ -144,17 +145,19 @@ const visibilityIcon = computed(() => {
 
         <div class="card-footer">
           <div v-if="participants.length" class="card-participants">
-            <div
+            <KitAvatar
               v-for="participant in participants.slice(0, 3)"
               :key="participant"
-              class="avatar"
-              :class="getAvatarClass(participant)"
+              :name="participant"
+              class="participant-avatar"
+            />
+            <KitAvatar
+              v-if="participants.length > 3"
+              class="participant-avatar"
+              is-more
             >
-              <span>{{ getInitials(participant) }}</span>
-            </div>
-            <div v-if="participants.length > 3" class="avatar avatar--more">
-              <span>+{{ participants.length - 3 }}</span>
-            </div>
+              +{{ participants.length - 3 }}
+            </KitAvatar>
           </div>
           <div v-if="tags?.length" class="card-tags">
             <span v-for="tag in tags.slice(0, 2)" :key="tag" class="tag">
@@ -394,34 +397,15 @@ const visibilityIcon = computed(() => {
   display: flex;
   align-items: center;
 
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--r-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border: 2px solid var(--bg-primary-color);
+  .participant-avatar {
     margin-left: -8px;
-
-    @each $name, $color in $avatar-base-colors {
-      &--#{$name} {
-        @include generate-avatar-colors($color);
-      }
-    }
 
     &:first-child {
       margin-left: 0;
     }
-
-    &--more {
-      color: var(--fg-secondary-color);
-      background-color: var(--bg-tertiary-color);
-    }
   }
 }
+
 
 .card-tags {
   display: flex;

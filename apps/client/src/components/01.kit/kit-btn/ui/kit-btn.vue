@@ -27,14 +27,14 @@ const componentClasses = computed(() => [
     :disabled="props.disabled"
     type="button"
   >
-    <span class="kit-btn__content">
+    <span class="kit-btn-content">
       <Icon v-if="props.icon" :icon="props.icon" />
       <slot />
     </span>
   </button>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .kit-btn {
   display: inline-flex;
   align-items: center;
@@ -116,11 +116,11 @@ const componentClasses = computed(() => [
       }
     }
   }
-}
 
-.kit-btn__content {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  &-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 }
 </style>

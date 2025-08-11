@@ -90,16 +90,14 @@ onBeforeUnmount(() => {
           о дне
         </Divider>
         <DayHeader />
+
         <template v-if="store.ui.activeView === 'plan'">
           <Divider :is-loading="store.data.isLoadingUpdateActivity">
             маршрут
           </Divider>
+          <DayActivitiesList @add="handleAddNewActivity" />
         </template>
-
-        <Transition name="faded-blured" mode="out-in">
-          <DayActivitiesList v-if="store.ui.activeView === 'plan'" @add="handleAddNewActivity" />
-          <MemoriesList v-else-if="store.ui.activeView === 'memories'" />
-        </Transition>
+        <MemoriesList v-else-if="store.ui.activeView === 'memories'" />
 
         <DayNavigation v-if="!isLoading && days.length > 1" />
       </div>

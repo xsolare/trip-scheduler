@@ -7,27 +7,27 @@ import type {
 } from '~/shared/types/models/activity'
 import type { Trip } from '~/shared/types/models/trip'
 import { v4 as uuidv4 } from 'uuid'
-import { ActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType } from '~/shared/types/models/activity'
 
 type ActivityInput = Omit<Activity, 'id' | 'dayId'>
 
 type CreatableSection = ActivitySectionText | ActivitySectionGallery
 
-export function createSection(type: ActivitySectionType.DESCRIPTION, content: string): ActivitySectionText
-export function createSection(type: ActivitySectionType.GALLERY, content: string[]): ActivitySectionGallery
-export function createSection(type: ActivitySectionType.DESCRIPTION | ActivitySectionType.GALLERY, content: string | string[]): CreatableSection {
+export function createSection(type: EActivitySectionType.DESCRIPTION, content: string): ActivitySectionText
+export function createSection(type: EActivitySectionType.GALLERY, content: string[]): ActivitySectionGallery
+export function createSection(type: EActivitySectionType.DESCRIPTION | EActivitySectionType.GALLERY, content: string | string[]): CreatableSection {
   const baseSection = { id: uuidv4() }
 
-  if (type === ActivitySectionType.DESCRIPTION) {
+  if (type === EActivitySectionType.DESCRIPTION) {
     return {
       ...baseSection,
-      type: ActivitySectionType.DESCRIPTION,
+      type: EActivitySectionType.DESCRIPTION,
       text: content as string,
     }
   }
   return {
     ...baseSection,
-    type: ActivitySectionType.GALLERY,
+    type: EActivitySectionType.GALLERY,
     imageUrls: content as string[],
     isAttached: true,
   }

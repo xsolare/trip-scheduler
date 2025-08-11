@@ -22,6 +22,13 @@
       "when": 1754857914359,
       "tag": "0002_reflective_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1754906315580,
+      "tag": "0003_volatile_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }
