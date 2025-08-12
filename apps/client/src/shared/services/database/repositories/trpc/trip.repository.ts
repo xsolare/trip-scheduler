@@ -30,8 +30,8 @@ class TripRepository implements ITripRepository {
   }
 
   @throttle(500)
-  async delete(id: string): Promise<Trip> {
-    return await trpc.trip.delete.mutate(id) as Trip
+  async delete(tripId: string): Promise<Trip> {
+    return await trpc.trip.delete.mutate({ tripId }) as Trip
   }
 }
 

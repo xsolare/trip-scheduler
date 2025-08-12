@@ -1,17 +1,15 @@
 import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { createTRPCError } from '~/lib/trpc'
 import { db } from '../../db'
 import { activities, days } from '../../db/schema'
 
 type Day = typeof days.$inferSelect
 type DayInsert = typeof days.$inferInsert
+type DayUpdateInput = Partial<Pick<Day, 'title' | 'description'>> & { date?: string | Date }
 
 export const dayRepository = {
   /**
-   * Получает все дни и их активности для конкретного путешествия.
-   * @param tripId - ID путешествия.
-   * @returns Массив дней с вложенными активностями.
+   * Получает все дни для конкретного путешествия.
    */
   async getByTripId(tripId: string) {
     return await db.query.days.findMany({
@@ -26,40 +24,33 @@ export const dayRepository = {
   },
 
   /**
-   * Получает день по ID с активностями.
-   */
-  async getById(id: string) {
-    return await db.query.days.findFirst({
-      where: eq(days.id, id),
-      with: {
-        activities: {
-          orderBy: activities.startTime,
-        },
-      },
-    })
-  },
-
-  /**
    * Обновляет детали дня (название, описание, дата).
    * @param id - ID дня для обновления.
    * @param details - Объект с данными для обновления.
-   * @returns Обновленный объект дня.
+   * @returns Обновленный объект дня или null.
    */
-  async update(id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>) {
+  async update(id: string, details: DayUpdateInput) { // Используем более гибкий тип
+    const { date, ...rest } = details
+    // Логика преобразования даты остается, так как она корректна
+    const updatePayload = {
+      ...rest,
+      updatedAt: new Date(),
+      ...(date && { date: date instanceof Date ? date.toISOString().split('T')[0] : date }),
+    }
+
     const [updatedDay] = await db
       .update(days)
-      .set({ ...details, updatedAt: new Date() })
+      .set(updatePayload)
       .where(eq(days.id, id))
       .returning()
 
-    return updatedDay
+    return updatedDay || null
   },
 
   /**
    * Удаляет день по его ID.
-   * Благодаря 'onDelete: cascade' в схеме, все связанные активности удалятся автоматически.
    * @param id - ID дня для удаления.
-   * @returns Объект удаленного дня.
+   * @returns Объект удаленного дня или null.
    */
   async delete(id: string) {
     const [deletedDay] = await db
@@ -67,11 +58,7 @@ export const dayRepository = {
       .where(eq(days.id, id))
       .returning()
 
-    if (!deletedDay) {
-      createTRPCError('NOT_FOUND', `День с ID ${id} не найден.`)
-    }
-
-    return deletedDay
+    return deletedDay || null
   },
 
   /**
@@ -79,11 +66,15 @@ export const dayRepository = {
    * @param dayData - Данные для создания дня.
    * @returns Созданный объект дня.
    */
-  async create(dayData: Omit<DayInsert, 'id' | 'createdAt' | 'updatedAt'>) {
+  async create(dayData: Omit<DayInsert, 'id' | 'createdAt' | 'updatedAt' | 'date'> & { date: string | Date }) {
+    const { date, ...rest } = dayData
+    const newDate = date instanceof Date ? date.toISOString().split('T')[0] : date
+
     const [newDay] = await db
       .insert(days)
       .values({
-        ...dayData,
+        ...rest,
+        date: newDate,
         id: uuidv4(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -92,5 +83,4 @@ export const dayRepository = {
 
     return { ...newDay, activities: [] }
   },
-
 }

@@ -283,7 +283,7 @@ function getShortWeekday(date: string): string {
 
     .day-number {
       background-color: var(--fg-accent-color);
-      color: white;
+      color: var(--fg-inverted-color);
     }
     .day-title {
       color: var(--fg-accent-color);

@@ -7,7 +7,4 @@ export interface ImageViewerImage {
 
 export interface ImageViewerOptions {
   enableKeyboard?: boolean
-  enableThumbnails?: boolean
-  showCounter?: boolean
-  closeOnOverlayClick?: boolean
 }

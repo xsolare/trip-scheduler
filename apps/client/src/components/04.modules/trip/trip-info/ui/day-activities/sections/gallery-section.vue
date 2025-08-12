@@ -27,9 +27,6 @@ const images = computed(() => props.section.imageUrls || [])
 
 const imageViewer = useImageViewer({
   enableKeyboard: true,
-  enableThumbnails: true,
-  showCounter: true,
-  closeOnOverlayClick: true,
 })
 
 const viewerImages = computed<ImageViewerImage[]>(() =>
@@ -390,7 +387,7 @@ const visibleImages = computed(() =>
       top: 8px;
       right: 8px;
       font-size: 1.8rem;
-      color: white;
+      color: var(--fg-inverted-color);
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
       &.selected {
         color: var(--fg-accent-color);
@@ -534,7 +531,7 @@ const visibleImages = computed(() =>
 
   .delete-btn {
     background: rgba(220, 38, 38, 0.8);
-    color: white;
+    color: var(--fg-inverted-color);
     border: none;
     border-radius: var(--r-full);
     width: 32px;
@@ -565,7 +562,7 @@ const visibleImages = computed(() =>
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--fg-inverted-color);
     font-weight: 600;
     backdrop-filter: blur(2px);
     transition: all 0.3s ease;

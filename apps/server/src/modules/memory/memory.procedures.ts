@@ -1,29 +1,34 @@
-import { CreateMemoryInputSchema, DeleteMemoryInputSchema, GetTripsByIdInputSchema, UpdateMemoryInputSchema } from '~/lib/schemas'
-import { t } from '~/lib/trpc'
-import { memoryRepository } from '~/repositories/memory.repository'
+import z from 'zod'
+import { publicProcedure } from '~/lib/trpc'
+import {
+  CreateMemoryInputSchema,
+  DeleteMemoryInputSchema,
+  UpdateMemoryInputSchema,
+} from './memory.schemas'
+import { memoryService } from './memory.service'
 
 export const memoryProcedures = {
-  listByTrip: t.procedure
-    .input(GetTripsByIdInputSchema)
+  getByTripId: publicProcedure
+    .input(z.object({ tripId: z.string().uuid() }))
     .query(async ({ input }) => {
-      return await memoryRepository.getByTripId(input.tripId)
+      return memoryService.getByTripId(input.tripId)
     }),
 
-  create: t.procedure
+  create: publicProcedure
     .input(CreateMemoryInputSchema)
     .mutation(async ({ input }) => {
-      return await memoryRepository.create(input)
+      return memoryService.create(input)
     }),
 
-  update: t.procedure
+  update: publicProcedure
     .input(UpdateMemoryInputSchema)
     .mutation(async ({ input }) => {
-      return await memoryRepository.update(input)
+      return memoryService.update(input)
     }),
 
-  delete: t.procedure
+  delete: publicProcedure
     .input(DeleteMemoryInputSchema)
     .mutation(async ({ input }) => {
-      return await memoryRepository.delete(input.id)
+      return memoryService.delete(input.id)
     }),
 }

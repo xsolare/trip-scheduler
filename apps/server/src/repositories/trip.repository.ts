@@ -1,8 +1,7 @@
-import type z from 'zod'
-import type { CreateTripInputSchema, UpdateTripInputSchema } from '~/lib/schemas'
+import type { z } from 'zod'
+import type { CreateTripInputSchema, UpdateTripInputSchema } from '~/modules/trip/trip.schemas'
 import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { createTRPCError } from '~/lib/trpc'
 import { db } from '../../db'
 import { activities, days, trips } from '../../db/schema'
 
@@ -51,9 +50,7 @@ export const tripRepository = {
 
   /**
    * Обновляет детали путешествия.
-   * @param id - ID путешествия.
-   * @param details - Объект с обновляемыми полями.
-   * @returns Обновленный объект путешествия.
+   * @returns Обновленный объект путешествия или null.
    */
   async update(id: string, details: z.infer<typeof UpdateTripInputSchema>['details']) {
     const { startDate, endDate, ...restDetails } = details
@@ -75,18 +72,14 @@ export const tripRepository = {
       .where(eq(trips.id, id))
       .returning()
 
-    if (!updatedTrip)
-      createTRPCError('NOT_FOUND', `Путешествие с ID ${id} не найдено.`)
-
-    return updatedTrip
+    return updatedTrip || null
   },
 
   /**
    * Создает новое путешествие.
-   * @param data - Данные для создания путешествия.
    * @returns Созданный объект путешествия.
    */
-  async create(data: z.infer<typeof CreateTripInputSchema>) {
+  async create(data: z.infer<typeof CreateTripInputSchema>, userId: string) {
     const { startDate, endDate, ...restData } = data
 
     const newStartDate = (startDate instanceof Date ? startDate : new Date()).toISOString().split('T')[0]
@@ -97,6 +90,7 @@ export const tripRepository = {
       .values({
         id: uuidv4(),
         ...restData,
+        userId,
         startDate: newStartDate,
         endDate: newEndDate,
       })
@@ -107,13 +101,10 @@ export const tripRepository = {
 
   /**
    * Удаляет путешествие по ID.
+   * @returns Удаленный объект или null.
    */
   async delete(id: string) {
     const [deletedTrip] = await db.delete(trips).where(eq(trips.id, id)).returning()
-    if (!deletedTrip) {
-      createTRPCError('NOT_FOUND', `Путешествие с ID ${id} не найдено.`)
-    }
-
-    return deletedTrip
+    return deletedTrip || null
   },
 }

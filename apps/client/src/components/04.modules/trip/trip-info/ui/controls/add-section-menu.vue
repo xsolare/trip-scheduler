@@ -384,7 +384,7 @@ useEventListener('keydown', (e) => {
 
   &[data-highlighted] .option-icon {
     background: var(--fg-accent-color);
-    color: white;
+    color: var(--fg-inverted-color);
     transform: scale(1.05);
   }
 
@@ -421,7 +421,7 @@ useEventListener('keydown', (e) => {
 
   &[data-highlighted] .option-shortcut {
     background: var(--fg-accent-color);
-    color: white;
+    color: var(--fg-inverted-color);
   }
 }
 

@@ -3,9 +3,6 @@ import type { ImageViewerImage, ImageViewerOptions } from '../models/types'
 export function useImageViewer(options: ImageViewerOptions = {}) {
   const {
     enableKeyboard = true,
-    // enableThumbnails = false,
-    // showCounter = true,
-    // closeOnOverlayClick = true,
   } = options
 
   const isOpen = ref(false)
@@ -14,6 +11,22 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
 
   const currentImage = computed(() => images.value[currentIndex.value])
   const hasMultipleImages = computed(() => images.value.length > 1)
+
+  let originalOverflow = ''
+
+  watch(isOpen, (value) => {
+    if (value) {
+      originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    }
+    else {
+      document.body.style.overflow = originalOverflow
+    }
+  })
+
+  onUnmounted(() => {
+    document.body.style.overflow = originalOverflow
+  })
 
   function open(imageList: ImageViewerImage[], startIndex = 0) {
     images.value = imageList
@@ -43,7 +56,6 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
     }
   }
 
-  // Обработка клавиатуры
   function handleKeydown(e: KeyboardEvent) {
     if (!isOpen.value || !enableKeyboard)
       return
@@ -64,7 +76,6 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
     }
   }
 
-  // Подключаем обработчик клавиатуры
   if (enableKeyboard) {
     useEventListener(document, 'keydown', handleKeydown)
   }

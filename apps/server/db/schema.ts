@@ -1,11 +1,13 @@
 import { relations } from 'drizzle-orm'
 import {
   date,
+  index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
   real,
+  serial,
   text,
   timestamp,
   uuid,
@@ -42,6 +44,37 @@ export const activityTagEnum = pgEnum('activity_tag', ['transport', 'walk', 'foo
 export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery', 'geolocation'])
 export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed', 'skipped'])
 export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
+
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+
+  role: userRoleEnum('role').notNull().default('user'),
+  email: text('email').notNull().unique(),
+  emailVerified: timestamp('email_verified', { withTimezone: true }),
+  password: text('password'),
+
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
+
+  // Поля для OAuth
+  githubId: text('github_id').unique(),
+  googleId: text('google_id').unique(),
+
+  // Таймстампы
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => ({
+  emailIndex: index('email_idx').on(t.email),
+}))
+
+export const refreshTokens = pgTable('refresh_tokens', {
+  id: serial('id').primaryKey(),
+  token: text('token').notNull().unique(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
 
 // Таблица для путешествий (Trips)
 export const trips = pgTable('trips', {
@@ -58,6 +91,9 @@ export const trips = pgTable('trips', {
   participants: jsonb('participants').$type<string[]>().notNull().default([]),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
   visibility: visibilityEnum('visibility').notNull().default('private'),
+
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
@@ -109,7 +145,11 @@ export const activities = pgTable('activities', {
 })
 
 // Отношения
-export const tripsRelations = relations(trips, ({ many }) => ({
+export const tripsRelations = relations(trips, ({ one, many }) => ({
+  user: one(users, {
+    fields: [trips.userId],
+    references: [users.id],
+  }),
   days: many(days),
   images: many(tripImages),
   memories: many(memories),
@@ -145,5 +185,17 @@ export const memoriesRelations = relations(memories, ({ one }) => ({
   image: one(tripImages, {
     fields: [memories.imageId],
     references: [tripImages.id],
+  }),
+}))
+
+export const usersRelations = relations(users, ({ many }) => ({
+  trips: many(trips),
+  refreshTokens: many(refreshTokens),
+}))
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [refreshTokens.userId],
+    references: [users.id],
   }),
 }))

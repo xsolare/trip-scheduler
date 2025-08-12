@@ -71,8 +71,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <ViewSwitcher />
-  <DaysControls />
+  <template v-if="!fetchError">
+    <ViewSwitcher />
+    <DaysControls />
+  </template>
 
   <AsyncStateWrapper
     :loading="isLoading || store.data.isLoadingNewDay"

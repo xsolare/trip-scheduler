@@ -1,32 +1,27 @@
-import { CreateActivityInputSchema, DeleteActivityInputSchema, UpdateActivityInputSchema } from '~/lib/schemas'
-import { t } from '~/lib/trpc'
-import { activityRepository } from '~/repositories/activity.repository'
+import { publicProcedure } from '~/lib/trpc'
+import {
+  CreateActivityInputSchema,
+  DeleteActivityInputSchema,
+  UpdateActivityInputSchema,
+} from './activity.schemas'
+import { activityService } from './activity.service'
 
 export const activityProcedures = {
-  /**
-   * Мутация для создания новой активности.
-   */
-  create: t.procedure
+  create: publicProcedure
     .input(CreateActivityInputSchema)
     .mutation(async ({ input }) => {
-      return await activityRepository.create(input)
+      return activityService.create(input)
     }),
 
-  /**
-   * Обновляет существующую активность.
-   */
-  update: t.procedure
+  update: publicProcedure
     .input(UpdateActivityInputSchema)
-    .mutation(({ input }) => {
-      return activityRepository.update(input)
+    .mutation(async ({ input }) => {
+      return activityService.update(input)
     }),
 
-  /**
-   * Мутация для удаления активности.
-   */
-  delete: t.procedure
+  delete: publicProcedure
     .input(DeleteActivityInputSchema)
     .mutation(async ({ input }) => {
-      return await activityRepository.delete(input.id)
+      return activityService.delete(input.id)
     }),
 }

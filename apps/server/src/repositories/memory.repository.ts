@@ -1,9 +1,8 @@
 import type { z } from 'zod'
-import type { CreateMemoryInputSchema, UpdateMemoryInputSchema } from '~/lib/schemas'
+import type { CreateMemoryInputSchema, UpdateMemoryInputSchema } from '~/modules/memory/memory.schemas'
 import { db } from 'db'
 import { memories, tripImages } from 'db/schema'
 import { eq } from 'drizzle-orm'
-import { createTRPCError } from '~/lib/trpc'
 
 export const memoryRepository = {
   /**
@@ -44,6 +43,7 @@ export const memoryRepository = {
 
   /**
    * Обновляет воспоминание (комментарий или временную метку).
+   * @returns Обновленный объект или null
    */
   async update(data: z.infer<typeof UpdateMemoryInputSchema>) {
     const { id, ...updateData } = data
@@ -57,14 +57,12 @@ export const memoryRepository = {
       .where(eq(memories.id, id))
       .returning()
 
-    if (!updatedMemory)
-      createTRPCError('NOT_FOUND', `Воспоминание с ID ${id} не найдено.`)
-
-    return updatedMemory
+    return updatedMemory || null
   },
 
   /**
    * Удаляет воспоминание по ID.
+   * @returns Удаленный объект или null
    */
   async delete(id: string) {
     const [deletedMemory] = await db
@@ -72,9 +70,6 @@ export const memoryRepository = {
       .where(eq(memories.id, id))
       .returning()
 
-    if (!deletedMemory)
-      createTRPCError('NOT_FOUND', `Воспоминание с ID ${id} не найдено.`)
-
-    return deletedMemory
+    return deletedMemory || null
   },
 }

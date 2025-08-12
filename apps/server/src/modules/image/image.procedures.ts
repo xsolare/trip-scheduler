@@ -1,43 +1,18 @@
-import { z } from 'zod'
-import { t } from '~/lib/trpc'
-import { imageRepository } from '~/repositories/image.repository'
-import { tripImagePlacementEnum } from '../../../db/schema'
-
-const UploadImageInputSchema = z.object({
-  tripId: z.string().uuid(),
-  imageUrl: z.string().url(),
-  placement: z.enum(tripImagePlacementEnum.enumValues),
-})
-
-// Схема для получения списка изображений
-const GetImagesByTripIdInputSchema = z.object({
-  tripId: z.string().uuid(),
-})
+import { publicProcedure } from '~/lib/trpc'
+import { GetImagesByTripIdInputSchema, UploadImageInputSchema } from './image.schemas'
+import { imageService } from './image.service'
 
 export const imageProcedures = {
-  /**
-   * Процедура для "загрузки" (сохранения URL) изображения
-   */
-  upload: t.procedure
-    .input(UploadImageInputSchema)
-    .mutation(async ({ input }) => {
-      const newImage = await imageRepository.create(
-        input.tripId,
-        input.imageUrl,
-        input.placement,
-      )
-
-      return newImage
-    }),
-
-  /**
-   * Процедура для получения списка всех изображений путешествия
-   */
-  listByTrip: t.procedure
+  listByTrip: publicProcedure
     .input(GetImagesByTripIdInputSchema)
     .query(async ({ input }) => {
-      const images = await imageRepository.getByTripId(input.tripId)
+      return imageService.getByTripId(input.tripId)
+    }),
 
-      return images
+  upload: publicProcedure
+    .input(UploadImageInputSchema)
+    .mutation(async ({ input }) => {
+      const { tripId, imageUrl, placement } = input
+      return imageService.create(tripId, imageUrl, placement)
     }),
 }

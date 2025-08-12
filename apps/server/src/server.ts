@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-/* eslint-disable node/prefer-global/process */
+
 import app from './index'
 
 const port = Number(process.env.PORT) || 8080

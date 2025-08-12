@@ -332,6 +332,12 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     display: flex;
     align-items: center;
     justify-content: space-between;
+    transition: background-color 0.2s ease;
+    border-radius: var(--r-xs);
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
 
     .activity-time {
       position: relative;
@@ -501,7 +507,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     transition: all 0.2s ease;
     &.active {
       background: var(--fg-accent-color);
-      color: white;
+      color: var(--fg-inverted-color);
     }
     &:hover {
       background: var(--bg-hover-color);

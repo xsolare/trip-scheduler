@@ -6,7 +6,7 @@ import { imageRepository } from '~/repositories/image.repository'
 import { memoryRepository } from '~/repositories/memory.repository'
 import { tripImagePlacementEnum } from '../../db/schema'
 
-export async function uploadFileHandler(c: Context) {
+export async function uploadFileController(c: Context) {
   const formData = await c.req.formData()
   const file = formData.get('file')
   const tripId = formData.get('tripId')

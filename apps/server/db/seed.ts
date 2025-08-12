@@ -4,7 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import url from 'node:url'
 import { db } from './index'
-import { activities, days, memories, tripImages, trips } from './schema'
+import { activities, days, memories, tripImages, trips, users } from './schema'
 
 async function copyStaticFiles() {
   const sourceDir = path.join(__dirname, 'mock/static')
@@ -27,53 +27,44 @@ async function copyStaticFiles() {
 
 /**
  * Динамическая загрузка всех моковых данных из папки /mock.
+ * Загружает и разделяет данные на пользователей и путешествия.
  */
-async function loadAllMockData(): Promise<any[]> {
+async function loadAllMockData() {
   const mockDir = path.join(__dirname, 'mock')
   const allFiles = await fs.readdir(mockDir)
-  const mockFiles = allFiles.filter(file => file.endsWith('.ts') && !file.startsWith('_'))
+  const mockFiles = allFiles.filter(file => file.endsWith('.ts') && !file.startsWith('_')).sort()
 
   if (mockFiles.length === 0) {
-    return []
+    return { users: [], trips: [] }
   }
 
   console.log(`🔍 Найдены файлы с моковыми данными: ${mockFiles.join(', ')}`)
 
-  const allMocks = await Promise.all(
-    mockFiles.map(async (file) => {
-      const filePath = path.join(mockDir, file)
-      const module = await import(url.pathToFileURL(filePath).href)
-      return module.MOCK_DATA || []
-    }),
-  )
+  const allUsers: any[] = []
+  const allTrips: any[] = []
 
-  return allMocks.flat()
+  for (const file of mockFiles) {
+    const filePath = path.join(mockDir, file)
+    const module = await import(url.pathToFileURL(filePath).href)
+    // Разделяем данные по типу, чтобы вставлять их в правильном порядке
+    if (module.MOCK_USER_DATA)
+      allUsers.push(...module.MOCK_USER_DATA)
+    if (module.MOCK_DATA)
+      allTrips.push(...module.MOCK_DATA)
+  }
+
+  return { users: allUsers, trips: allTrips }
 }
 
 async function seed() {
   await copyStaticFiles()
   console.log('🌱 Начало заполнения базы данных...')
 
-  let sourceData: any[] = []
+  const { users: usersToInsert, trips: sourceTrips } = await loadAllMockData()
 
-  if (process.argv.includes('--from-dump')) {
-    const dumpPath = path.join(__dirname, 'dump', 'latest.dump.json')
-    try {
-      console.log(`🔄 Загрузка данных из файла дампа: ${dumpPath}`)
-      const dumpContent = await fs.readFile(dumpPath, 'utf-8')
-      sourceData = JSON.parse(dumpContent)
-    }
-    catch {
-      console.error(`❌ Не удалось прочитать файл дампа. Убедитесь, что он существует. Запустите 'bun run db:dump'.`)
-      process.exit(1)
-    }
-  }
-  else {
-    sourceData = await loadAllMockData()
-    if (sourceData.length === 0) {
-      console.warn('⚠️ Моковые данные не найдены. Заполнение базы данных пропущено.')
-      process.exit(0)
-    }
+  if (usersToInsert.length === 0 && sourceTrips.length === 0) {
+    console.warn('⚠️ Моковые данные не найдены. Заполнение базы данных пропущено.')
+    process.exit(0)
   }
 
   console.log('🗑️  Очистка старых данных...')
@@ -82,6 +73,7 @@ async function seed() {
   await db.delete(days)
   await db.delete(tripImages)
   await db.delete(trips)
+  await db.delete(users)
 
   console.log('✈️  Подготовка данных для вставки...')
 
@@ -91,7 +83,7 @@ async function seed() {
   const imagesToInsert: (typeof tripImages.$inferInsert)[] = []
   const memoriesToInsert: (typeof memories.$inferInsert)[] = []
 
-  for (const tripData of sourceData) {
+  for (const tripData of sourceTrips) {
     const { days: mockDays, images: mockImages, memories: mockMemories, ...tripDetails } = tripData
 
     tripsToInsert.push({
@@ -107,15 +99,13 @@ async function seed() {
           ...dayDetails,
           date: new Date(mockDay.date).toISOString().split('T')[0],
         })
-        if (mockActivities) {
+        if (mockActivities)
           activitiesToInsert.push(...mockActivities)
-        }
       }
     }
 
-    if (mockImages) {
+    if (mockImages)
       imagesToInsert.push(...mockImages)
-    }
 
     if (mockMemories) {
       for (const mockMemory of mockMemories) {
@@ -127,8 +117,11 @@ async function seed() {
     }
   }
 
-  console.log(`✈️  Вставка ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней, ${activitiesToInsert.length} активностей, ${imagesToInsert.length} изображений и ${memoriesToInsert.length} воспоминаний...`)
+  console.log(`✈️  Вставка ${usersToInsert.length} пользователей, ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней, ${activitiesToInsert.length} активностей, ${imagesToInsert.length} изображений и ${memoriesToInsert.length} воспоминаний...`)
 
+  // Вставка в правильном порядке для соблюдения foreign key constraints
+  if (usersToInsert.length > 0)
+    await db.insert(users).values(usersToInsert)
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)
   if (daysToInsert.length > 0)

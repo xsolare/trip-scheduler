@@ -1,89 +1,43 @@
-import { z } from 'zod'
-import { CreateTripInputSchema, GetTripsByIdInputSchema, TripSchema, UpdateTripInputSchema } from '~/lib/schemas'
-import { t } from '~/lib/trpc'
-import { tripRepository } from '~/repositories/trip.repository'
+import { protectedProcedure, publicProcedure } from '~/lib/trpc'
+import {
+  CreateTripInputSchema,
+  GetTripByIdInputSchema,
+  UpdateTripInputSchema,
+} from './trip.schemas'
+import { tripService } from './trip.service'
 
 export const tripProcedures = {
-  /**
-   * Получение списка всех путешествий.
-   */
-  list: t.procedure
-    .input(z.void())
-    .output(z.array(TripSchema))
-    .query(async () => {
-      const trips = await tripRepository.getAll()
-      return trips.map(trip => ({
-        ...trip,
-        startDate: new Date(trip.startDate),
-        endDate: new Date(trip.endDate),
-        cities: trip.cities as string[],
-        participants: trip.participants as string[],
-        tags: trip.tags as string[],
-      }))
-    }),
+  list: publicProcedure.query(async () => {
+    return tripService.getAll()
+  }),
 
-  /**
-   * Получение одного путешествия по ID.
-   */
-  getById: t.procedure
-    .input(GetTripsByIdInputSchema)
-    .output(TripSchema.nullable())
+  getById: publicProcedure
+    .input(GetTripByIdInputSchema)
     .query(async ({ input }) => {
-      const trip = await tripRepository.getById(input.tripId)
-      if (!trip)
-        return null
-
-      return {
-        ...trip,
-        startDate: new Date(trip.startDate),
-        endDate: new Date(trip.endDate),
-        cities: trip.cities as string[],
-        participants: trip.participants as string[],
-        tags: trip.tags as string[],
-      }
+      return tripService.getById(input.tripId)
     }),
 
-  /**
-   * Получение путешествия со всеми днями и активностями.
-   */
-  getByIdWithDays: t.procedure
-    .input(GetTripsByIdInputSchema)
+  getByIdWithDays: publicProcedure
+    .input(GetTripByIdInputSchema)
     .query(async ({ input }) => {
-      const trip = await tripRepository.getByIdWithDays(input.tripId)
-      if (!trip)
-        return null
-
-      return {
-        ...trip,
-        startDate: new Date(trip.startDate),
-        endDate: new Date(trip.endDate),
-        cities: trip.cities as string[],
-        participants: trip.participants as string[],
-        tags: trip.tags as string[],
-        days: trip.days.map(day => ({
-          ...day,
-        })),
-      }
+      return tripService.getByIdWithDays(input.tripId)
     }),
 
-  /**
-   * Обновление данных путешествия.
-   */
-  update: t.procedure
+  create: protectedProcedure
+    .input(CreateTripInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      return tripService.create(input, ctx.user.id)
+    }),
+
+  update: publicProcedure
     .input(UpdateTripInputSchema)
     .mutation(async ({ input }) => {
-      return await tripRepository.update(input.id, input.details)
+      return tripService.update(input.id, input.details)
     }),
 
-  create: t.procedure
-    .input(CreateTripInputSchema)
+  delete: publicProcedure
+    .input(GetTripByIdInputSchema)
     .mutation(async ({ input }) => {
-      return await tripRepository.create(input)
-    }),
-
-  delete: t.procedure
-    .input(z.string())
-    .mutation(async ({ input: tripId }) => {
-      return await tripRepository.delete(tripId)
+      return tripService.delete(input.tripId)
     }),
 }

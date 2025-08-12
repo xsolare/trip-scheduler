@@ -6,7 +6,7 @@ import { throttle } from '../../lib/decorators'
 export class MemoryRepository implements IMemoryRepository {
   @throttle(500)
   async getByTripId(tripId: string): Promise<Memory[]> {
-    const result = await trpc.memory.listByTrip.query({ tripId })
+    const result = await trpc.memory.getByTripId.query({ tripId })
     return result as Memory[]
   }
 

@@ -21,21 +21,21 @@ class DayRepository implements IDayRepository {
    */
   @throttle(1_000)
   async createNewDay(dayData: Omit<Day, 'id' | 'activities'>): Promise<Day> {
-    const newDay = await trpc.day.createNewDay.mutate(dayData)
+    const newDay = await trpc.day.create.mutate(dayData)
 
     return newDay as Day
   }
 
   @throttle(1_000)
   async deleteDay(id: string): Promise<Day> {
-    const deletedDay = await trpc.day.deleteDay.mutate({ id })
+    const deletedDay = await trpc.day.delete.mutate({ id })
 
     return deletedDay as unknown as Day
   }
 
   @throttle(1_000)
   async updateDayDetails(id: string, details: Partial<Pick<Day, 'title' | 'description' | 'date'>>): Promise<Day> {
-    const result = await trpc.day.updateDayDetails.mutate({
+    const result = await trpc.day.update.mutate({
       id,
       details,
     })

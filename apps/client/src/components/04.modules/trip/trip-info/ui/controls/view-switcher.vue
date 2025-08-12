@@ -56,6 +56,7 @@ const gliderStyle = computed(() => {
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: space-between;
   background-color: var(--bg-secondary-color);
   border-radius: 8px;
   padding: 4px;

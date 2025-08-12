@@ -25,6 +25,7 @@ export const MOCK_DATA = [
   {
     id: TRIP_PARIS_ID,
     title: 'Большое путешествие в Париж',
+    userId: '1a97d95a-0158-4171-8258-52c7a917e3f0',
     imageUrl: getMemoriesPath('paris-eiffel.png'),
     description: 'Романтическая и культурная поездка в столицу Франции. От Эйфелевой башни до уютных улочек Монмартра.',
     startDate: new Date('2024-06-01'),

@@ -1,0 +1,22 @@
+# Файлы Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Зависимости и результаты сборки
+node_modules
+dist
+.bun
+
+# Файлы IDE и системные файлы
+.idea
+.vscode
+*.DS_Store
+
+# Документация и переменные окружения
+*.md
+.env
+.env.*
