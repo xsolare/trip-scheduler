@@ -290,9 +290,6 @@ function addMemoryToAction(activity: Activity) {
             :is-view-mode="isViewMode"
             :gallery-images="galleryImages"
           />
-          <button v-if="!isViewMode" class="add-memory-to-activity-btn" @click="addMemoryToAction(activity)">
-            <Icon icon="mdi:plus" /> Добавить заметку
-          </button>
         </div>
       </div>
 
@@ -629,25 +626,6 @@ function addMemoryToAction(activity: Activity) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
-}
-
-.add-memory-to-activity-btn {
-  border: 2px dashed var(--border-secondary-color);
-  border-radius: var(--r-m);
-  color: var(--fg-secondary-color);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 120px;
-  font-weight: 500;
-
-  &:hover {
-    color: var(--fg-accent-color);
-    border-color: var(--fg-accent-color);
-    background-color: var(--bg-hover-color);
-  }
 }
 
 .state-info {

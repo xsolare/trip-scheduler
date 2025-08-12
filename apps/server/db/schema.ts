@@ -99,12 +99,33 @@ export const trips = pgTable('trips', {
 })
 
 export const tripImages = pgTable('trip_images', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  url: text('url').notNull(),
+  // --- Существующие поля ---
+  id: uuid('id').defaultRandom().primaryKey(),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
-  placement: tripImagePlacementEnum('placement').notNull().default('route'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  url: text('url').notNull(),
+  placement: tripImagePlacementEnum('placement').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+
+  // --- Обновленные и новые поля для метаданных ---
+  latitude: real('latitude'),
+  longitude: real('longitude'),
+  takenAt: timestamp('taken_at'),
+
+  // --- Максимум полезной информации ---
+  width: integer('width'), // Ширина изображения
+  height: integer('height'), // Высота изображения
+  orientation: integer('orientation'), // EXIF-тег ориентации (число от 1 до 8)
+  cameraMake: text('camera_make'), // Производитель камеры (e.g., "Apple")
+  cameraModel: text('camera_model'), // Модель камеры (e.g., "iPhone 14 Pro")
+  thumbnailUrl: text('thumbnail_url'), // URL на извлеченную миниатюру
+  fNumber: real('f_number'), // Диафрагма
+  exposureTime: real('exposure_time'), // выдержка
+  iso: integer('iso'), // ISO
+  focalLength: real('focal_length'), // Фокусное расстояние
+  apertureValue: real('aperture_value'), // Значение диафрагмы
+
+  // --- Новое поле для хранения всех остальных метаданных ---
+  otherMetadata: jsonb('other_metadata'),
 })
 
 // Таблица для воспоминаний (Memories)
