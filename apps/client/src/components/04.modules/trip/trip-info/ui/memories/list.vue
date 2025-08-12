@@ -13,7 +13,7 @@ import MemoriesItem from './item.vue'
 
 const { memories, gallery, data: tripData, ui } = useModuleStore(['memories', 'gallery', 'data', 'ui'])
 const { memoriesForSelectedDay, unsortedMemories, isLoading } = storeToRefs(memories)
-const { getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(tripData)
+const { getActivitiesForSelectedDay } = storeToRefs(tripData)
 const { isViewMode } = storeToRefs(ui)
 
 const { open, onChange } = useFileDialog({
@@ -123,29 +123,6 @@ const statusInfo = computed(() => {
 
 function updateActivityDetails(activity: Activity, data: Partial<Activity>) {
   tripData.updateActivity(activity.dayId, { ...activity, ...data })
-}
-
-function addMemoryToAction(activity: Activity) {
-  // eslint-disable-next-line no-alert
-  const comment = prompt('Добавьте текстовое воспоминание для этого события:')
-  if (comment) {
-    const tripId = tripData.currentTripId
-    if (!tripId)
-      return
-
-    const dayDate = new Date(getSelectedDay.value!.date)
-    const [startHours, startMinutes] = activity.startTime.split(':').map(Number)
-
-    const memoryTimestamp = new Date(
-      dayDate.getFullYear(),
-      dayDate.getMonth(),
-      dayDate.getDate(),
-      startHours,
-      startMinutes,
-    ).toISOString()
-
-    memories.createMemory({ tripId, comment, timestamp: memoryTimestamp })
-  }
 }
 </script>
 
