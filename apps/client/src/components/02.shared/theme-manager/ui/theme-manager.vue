@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ThemeType } from '~/shared/types/models/theme'
-import { DialogWithClose } from '~/components/01.kit/dialog-with-close'
+import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import ThemeChooser from './sections/theme-chooser.vue'
 import ThemeEditor from './sections/theme-editor.vue'
 
@@ -51,7 +51,7 @@ function handleJsonUpload(event: Event) {
 </script>
 
 <template>
-  <DialogWithClose
+  <KitDialogWithClose
     v-model:visible="isCreatorOpen"
     :title="showCustomizer ? 'Редактор пользовательской темы' : 'Выбор темы оформления'"
   >
@@ -78,7 +78,7 @@ function handleJsonUpload(event: Event) {
       style="display: none"
       @change="handleJsonUpload"
     >
-  </DialogWithClose>
+  </KitDialogWithClose>
 </template>
 
 <style lang="scss" scoped>

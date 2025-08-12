@@ -9,11 +9,29 @@ export enum TripImagePlacement {
 
 export interface TripImage {
   id: string
-  url: string
   tripId: string
+  url: string
   placement: TripImagePlacement
-  createdAt: string
-  updatedAt: string
+  createdAt: string // ISO string
+
+  latitude: number | null
+  longitude: number | null
+  takenAt: string | null // ISO string or null
+
+  width: number | null
+  height: number | null
+  orientation: number | null
+  thumbnailUrl: string | null
+
+  cameraMake: string | null
+  cameraModel: string | null
+  fNumber: number | null
+  exposureTime: number | null
+  iso: number | null
+  focalLength: number | null
+  apertureValue: number | null
+
+  extendedMetadata: Record<string, any> | null
 }
 
 export enum TripStatus {
@@ -25,15 +43,6 @@ export enum TripStatus {
 export enum TripVisibility {
   PUBLIC = 'public',
   PRIVATE = 'private',
-}
-
-export interface TripImage {
-  id: string
-  url: string
-  tripId: string
-  placement: TripImagePlacement
-  createdAt: string
-  updatedAt: string
 }
 
 export interface Trip {

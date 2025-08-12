@@ -5,49 +5,58 @@ import { tripImages } from '../../db/schema'
 
 type Placement = (typeof tripImagePlacementEnum.enumValues)[number]
 
+/**
+ * Определяет структуру метаданных, извлекаемых из изображения.
+ */
 export interface ImageMetadata {
   gps: { latitude: number, longitude: number } | null
   takenAt: Date | null
   width: number | null
   height: number | null
   orientation: number | null
-  cameraMake: string | null
-  cameraModel: string | null
   thumbnailUrl: string | null
-  fNumber: number | null
-  exposureTime: number | null
-  iso: number | null
-  focalLength: number | null
-  apertureValue: number | null
-  otherMetadata?: Record<string, any> | null
+  metadata: {
+    cameraMake: string | null
+    cameraModel: string | null
+    fNumber: number | null
+    exposureTime: number | null
+    iso: number | null
+    focalLength: number | null
+    apertureValue: number | null
+  } | null
+  extendedMetadata: Record<string, any> | null
 }
 
 export const imageRepository = {
   /**
-   * Добавляет ссылку на новое изображение для путешествия со всеми метаданными.
+   * Добавляет новое изображение и его метаданные для путешествия.
+   * @param tripId - ID путешествия.
+   * @param url - URL загруженного изображения.
+   * @param placement - Тип размещения изображения.
+   * @param metadata - Объект с извлеченными метаданными изображения.
+   * @returns Созданная запись об изображении.
    */
-  async create(tripId: string, url: string, placement: Placement, metadata: Partial<ImageMetadata> = {}) {
+  async create(tripId: string, url: string, placement: Placement, metadata: ImageMetadata) {
     const [newImage] = await db
       .insert(tripImages)
       .values({
         tripId,
         url,
         placement,
-        latitude: metadata.gps?.latitude ?? null,
-        longitude: metadata.gps?.longitude ?? null,
-        takenAt: metadata.takenAt ?? null,
-        width: metadata.width ?? null,
-        height: metadata.height ?? null,
-        orientation: metadata.orientation ?? null,
-        cameraMake: metadata.cameraMake ?? null,
-        cameraModel: metadata.cameraModel ?? null,
-        thumbnailUrl: metadata.thumbnailUrl ?? null,
-        fNumber: metadata.fNumber ?? null,
-        exposureTime: metadata.exposureTime ?? null,
-        iso: metadata.iso ?? null,
-        focalLength: metadata.focalLength ?? null,
-        apertureValue: metadata.apertureValue ?? null,
-        otherMetadata: metadata.otherMetadata ?? null,
+        takenAt: metadata.takenAt,
+        gps: metadata.gps,
+        width: metadata.width,
+        height: metadata.height,
+        orientation: metadata.orientation,
+        thumbnailUrl: metadata.thumbnailUrl,
+        cameraMake: metadata.metadata?.cameraMake,
+        cameraModel: metadata.metadata?.cameraModel,
+        fNumber: metadata.metadata?.fNumber,
+        exposureTime: metadata.metadata?.exposureTime,
+        iso: metadata.metadata?.iso,
+        focalLength: metadata.metadata?.focalLength,
+        apertureValue: metadata.metadata?.apertureValue,
+        extendedMetadata: metadata.extendedMetadata,
       })
       .returning()
 

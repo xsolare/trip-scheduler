@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1754992057777,
-      "tag": "0000_fearless_moondragon",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1754997697593,
-      "tag": "0001_serious_sunfire",
+      "when": 1755010926038,
+      "tag": "0000_jittery_mariko_yashida",
       "breakpoints": true
     }
   ]

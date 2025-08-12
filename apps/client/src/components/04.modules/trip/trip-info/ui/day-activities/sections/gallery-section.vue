@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { ImageViewerImage } from '~/components/01.kit/image-viewer'
+import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { ActivitySectionGallery } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { ImageViewer, useImageViewer } from '~/components/01.kit/image-viewer'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitImage } from '~/components/01.kit/kit-image'
+import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { TripImagePlacement } from '~/shared/types/models/trip'
 
@@ -196,7 +196,7 @@ const visibleImages = computed(() =>
       </span>
     </div>
 
-    <ImageViewer
+    <KitImageViewer
       v-model:visible="imageViewer.isOpen.value"
       v-model:current-index="imageViewer.currentIndex.value"
       :images="viewerImages"

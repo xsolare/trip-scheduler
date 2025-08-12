@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ActivitySectionText } from '~/shared/types/models/activity'
-import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
+import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
 interface Props {
@@ -22,7 +22,7 @@ function handleInlineEditorBlur() {
 
 <template>
   <div class="description-section">
-    <InlineEditorWrapper
+    <KitInlineMdEditorWrapper
       v-model="sectionModel"
       :readonly="isViewMode"
       placeholder="Добавьте заметку или описание..."

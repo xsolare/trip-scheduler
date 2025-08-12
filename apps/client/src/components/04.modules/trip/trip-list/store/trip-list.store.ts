@@ -49,7 +49,7 @@ export const useTripListStore = defineStore('tripList', {
           toast.error(`Не удалось загрузить список путешествий: ${error}`)
           console.error('Ошибка при загрузке списка путешествий:', error)
         },
-      }).execute()
+      })
     },
 
     /**
@@ -60,7 +60,7 @@ export const useTripListStore = defineStore('tripList', {
       const router = useRouter()
       const toast = useToast()
 
-      const { data: newTrip } = await useRequest<Trip>({
+      const newTrip = await useRequest<Trip>({
         key: ETripListKeys.CREATE,
         fn: db => db.trips.create(data),
         onSuccess: (createdTrip) => {
@@ -71,7 +71,7 @@ export const useTripListStore = defineStore('tripList', {
         onError: (error) => {
           toast.error(`Ошибка при создании путешествия: ${error}`)
         },
-      }).execute()
+      })
 
       return newTrip
     },

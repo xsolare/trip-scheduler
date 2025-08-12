@@ -99,33 +99,34 @@ export const trips = pgTable('trips', {
 })
 
 export const tripImages = pgTable('trip_images', {
-  // --- Существующие поля ---
   id: uuid('id').defaultRandom().primaryKey(),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
   url: text('url').notNull(),
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
-  // --- Обновленные и новые поля для метаданных ---
+  // --- Координаты и дата съемки ---
   latitude: real('latitude'),
   longitude: real('longitude'),
   takenAt: timestamp('taken_at'),
 
-  // --- Максимум полезной информации ---
-  width: integer('width'), // Ширина изображения
-  height: integer('height'), // Высота изображения
-  orientation: integer('orientation'), // EXIF-тег ориентации (число от 1 до 8)
-  cameraMake: text('camera_make'), // Производитель камеры (e.g., "Apple")
-  cameraModel: text('camera_model'), // Модель камеры (e.g., "iPhone 14 Pro")
-  thumbnailUrl: text('thumbnail_url'), // URL на извлеченную миниатюру
-  fNumber: real('f_number'), // Диафрагма
-  exposureTime: real('exposure_time'), // выдержка
-  iso: integer('iso'), // ISO
-  focalLength: real('focal_length'), // Фокусное расстояние
-  apertureValue: real('aperture_value'), // Значение диафрагмы
+  // --- Основные технические метаданные ---
+  width: integer('width'),
+  height: integer('height'),
+  orientation: integer('orientation'),
+  thumbnailUrl: text('thumbnail_url'),
 
-  // --- Новое поле для хранения всех остальных метаданных ---
-  otherMetadata: jsonb('other_metadata'),
+  // --- Метаданные камеры ---
+  cameraMake: text('camera_make'),
+  cameraModel: text('camera_model'),
+  fNumber: real('f_number'),
+  exposureTime: real('exposure_time'),
+  iso: integer('iso'),
+  focalLength: real('focal_length'),
+  apertureValue: real('aperture_value'),
+
+  // --- Неважные метаданные камеры ---
+  extendedMetadata: jsonb('extended_metadata'),
 })
 
 // Таблица для воспоминаний (Memories)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { IActivity } from '../models/types'
-import Divider from '~/components/01.kit/divider/ui/divider.vue'
+import Divider from '~/components/01.kit/kit-divider/ui/kit-divider.vue'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
 import { EActivityStatus } from '~/shared/types/models/activity'
 import { useModuleStore } from '../composables/use-module'

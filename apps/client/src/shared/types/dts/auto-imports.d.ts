@@ -334,9 +334,6 @@ declare global {
   export type { RouterInput, RouterOutput, AppRouter } from '../trpc'
   import('../trpc')
   // @ts-ignore
-  export type { UseDatabaseOptions, UseDatabaseReturn } from '../../composables/use-database'
-  import('../../composables/use-database')
-  // @ts-ignore
   export type { AppRouteNames } from '../../constants/routes'
   import('../../constants/routes')
 }
@@ -507,7 +504,6 @@ declare module 'vue' {
     readonly useCurrentElement: UnwrapRef<typeof import('@vueuse/core')['useCurrentElement']>
     readonly useCycleList: UnwrapRef<typeof import('@vueuse/core')['useCycleList']>
     readonly useDark: UnwrapRef<typeof import('@vueuse/core')['useDark']>
-    readonly useDatabase: UnwrapRef<typeof import('../../composables/use-database')['useDatabase']>
     readonly useDateFormat: UnwrapRef<typeof import('@vueuse/core')['useDateFormat']>
     readonly useDebounce: UnwrapRef<typeof import('@vueuse/core')['useDebounce']>
     readonly useDebounceFn: UnwrapRef<typeof import('@vueuse/core')['useDebounceFn']>

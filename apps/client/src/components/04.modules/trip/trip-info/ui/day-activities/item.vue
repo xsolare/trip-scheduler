@@ -4,8 +4,8 @@ import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
-import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { TimeField } from '~/components/01.kit/time-field'
+import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
+import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { EActivitySectionType } from '~/shared/types/models/activity'
 import AddSectionMenu from '../controls/add-section-menu.vue'
@@ -194,9 +194,9 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     <div class="activity-header">
       <div class="activity-time">
         <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor" @keydown.esc.prevent="cancelTimeEditing">
-          <TimeField v-if="editingStartTime" v-model="editingStartTime" />
+          <KitTimeField v-if="editingStartTime" v-model="editingStartTime" />
           <span class="time-separator">-</span>
-          <TimeField v-if="editingEndTime" v-model="editingEndTime" />
+          <KitTimeField v-if="editingEndTime" v-model="editingEndTime" />
         </div>
         <div v-else class="time-display" @click="editTime">
           <div class="time-display-preview">
@@ -235,7 +235,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 
     <div class="activity-title">
       <Icon icon="mdi:chevron-right" />
-      <InlineEditorWrapper
+      <KitInlineMdEditorWrapper
         v-model="activityTitle"
         placeholder="Описание активности"
         :readonly="isViewMode"

@@ -27,4 +27,6 @@ export const memoryService = {
   async getByTripId(tripId: string) {
     return await memoryRepository.getByTripId(tripId)
   },
+
+  
 }

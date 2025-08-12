@@ -98,7 +98,6 @@ export const useTripInfoStore = defineStore('tripInfo', {
       useRequest({
         key: ETripInfoKeys.FETCH_DAYS,
         fn: db => db.days.getByTripId(tripId),
-        immediate: true,
         onSuccess: (result) => {
           const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           this.days = sortedDays

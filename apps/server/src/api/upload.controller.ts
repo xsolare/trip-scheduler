@@ -5,7 +5,6 @@ import { join } from 'node:path'
 import exifr from 'exifr'
 import { HTTPException } from 'hono/http-exception'
 import { imageRepository } from '~/repositories/image.repository'
-import { memoryRepository } from '~/repositories/memory.repository'
 import { tripImagePlacementEnum } from '../../db/schema'
 
 export async function uploadFileController(c: Context) {
@@ -13,8 +12,6 @@ export async function uploadFileController(c: Context) {
   const file = formData.get('file')
   const tripId = formData.get('tripId')
   const placement = formData.get('placement') as 'route' | 'memories'
-  const timestampStr = formData.get('timestamp') as string | null
-  const comment = formData.get('comment') as string | null
 
   if (!file || !(file instanceof File)) {
     throw new HTTPException(400, { message: 'Файл не найден в запросе.' })
@@ -34,21 +31,23 @@ export async function uploadFileController(c: Context) {
   const fullPath = join(tripUploadDir, filename)
   const baseURL = import.meta.env.API_URL
 
-  const metadata: ImageMetadata = {
+  const finalMetadata: ImageMetadata = {
     gps: null,
     takenAt: null,
     width: null,
     height: null,
     orientation: null,
-    cameraMake: null,
-    cameraModel: null,
     thumbnailUrl: null,
-    fNumber: null,
-    exposureTime: null,
-    iso: null,
-    focalLength: null,
-    apertureValue: null,
-    otherMetadata: null,
+    metadata: {
+      cameraMake: null,
+      cameraModel: null,
+      fNumber: null,
+      exposureTime: null,
+      iso: null,
+      focalLength: null,
+      apertureValue: null,
+    },
+    extendedMetadata: null,
   }
 
   try {
@@ -70,9 +69,9 @@ export async function uploadFileController(c: Context) {
     ])
 
     if (exifrData) {
-      metadata.takenAt = exifrData.DateTimeOriginal || exifrData.CreateDate || null
+      finalMetadata.takenAt = exifrData.DateTimeOriginal || exifrData.CreateDate || null
       if (exifrData.latitude && exifrData.longitude) {
-        metadata.gps = { latitude: exifrData.latitude, longitude: exifrData.longitude }
+        finalMetadata.gps = { latitude: exifrData.latitude, longitude: exifrData.longitude }
       }
 
       const rawWidth = exifrData.ImageWidth || exifrData.width || exifrData.ExifImageWidth
@@ -80,25 +79,58 @@ export async function uploadFileController(c: Context) {
 
       if (rawWidth && rawHeight) {
         if (rotationData?.dimensionSwapped) {
-          metadata.width = rawHeight
-          metadata.height = rawWidth
+          finalMetadata.width = rawHeight
+          finalMetadata.height = rawWidth
         }
         else {
-          metadata.width = rawWidth
-          metadata.height = rawHeight
+          finalMetadata.width = rawWidth
+          finalMetadata.height = rawHeight
         }
       }
 
-      metadata.orientation = exifrData.Orientation || 1
-      metadata.cameraMake = exifrData.Make || null
-      metadata.cameraModel = exifrData.Model || null
-      metadata.fNumber = exifrData.FNumber || null
-      metadata.exposureTime = exifrData.ExposureTime || null
-      metadata.iso = exifrData.ISO || null
-      metadata.focalLength = exifrData.FocalLength || null
-      metadata.apertureValue = exifrData.ApertureValue || null
+      finalMetadata.orientation = exifrData.Orientation || 1
+
+      // --- Переносим основные поля в `metadata` ---
+      if (finalMetadata.metadata) {
+        finalMetadata.metadata.cameraMake = exifrData.Make || null
+        finalMetadata.metadata.cameraModel = exifrData.Model || null
+        finalMetadata.metadata.fNumber = exifrData.FNumber || null
+        finalMetadata.metadata.exposureTime = exifrData.ExposureTime || null
+        finalMetadata.metadata.iso = exifrData.ISO || null
+        finalMetadata.metadata.focalLength = exifrData.FocalLength || null
+        finalMetadata.metadata.apertureValue = exifrData.ApertureValue || null
+      }
+
+      // --- Фильтруем и собираем `extendedMetadata` ---
+      const fieldsToExclude = new Set([
+        'RedTRC',
+        'Cameras',
+        'Profiles',
+        'BlueTRC',
+        'GreenTRC',
+        'Directory',
+        'ModifyDate',
+        'OffsetTime',
+        'GPSDateStamp',
+        'GPSTimeStamp',
+        'HasExtendedXMP',
+        'MediaBlackPoint',
+        'MediaWhitePoint',
+        'ProfileDateTime',
+        'RedMatrixColumn',
+        'RenderingIntent',
+        'BlueMatrixColumn',
+        'HdrPlusMakernote',
+        'GreenMatrixColumn',
+        'OffsetTimeOriginal',
+        'ChromaticAdaptation',
+        'GPSProcessingMethod',
+        'OffsetTimeDigitized',
+        'ComponentsConfiguration',
+      ])
 
       const primaryKeys = new Set([
+        // Ключи, уже обработанные выше
         'DateTimeOriginal',
         'CreateDate',
         'latitude',
@@ -110,6 +142,7 @@ export async function uploadFileController(c: Context) {
         'height',
         'ExifImageHeight',
         'Orientation',
+        // Ключи, перенесенные в `finalMetadata.metadata`
         'Make',
         'Model',
         'FNumber',
@@ -117,6 +150,8 @@ export async function uploadFileController(c: Context) {
         'ISO',
         'FocalLength',
         'ApertureValue',
+
+        // Системные/вложенные объекты exifr
         'thumbnail',
         'gps',
         'iptc',
@@ -128,17 +163,21 @@ export async function uploadFileController(c: Context) {
         'exif',
       ])
 
-      const otherMeta: Record<string, any> = {}
+      const extendedMeta: Record<string, any> = {}
       for (const key in exifrData) {
-        if (!primaryKeys.has(key) && Object.prototype.hasOwnProperty.call(exifrData, key)) {
+        if (
+          Object.prototype.hasOwnProperty.call(exifrData, key)
+          && !primaryKeys.has(key)
+          && !fieldsToExclude.has(key)
+        ) {
           const value = exifrData[key]
           // eslint-disable-next-line node/prefer-global/buffer
           if (!(value instanceof Buffer)) {
-            otherMeta[key] = value
+            extendedMeta[key] = value
           }
         }
       }
-      metadata.otherMetadata = otherMeta
+      finalMetadata.extendedMetadata = extendedMeta
     }
 
     if (thumbnailBuffer) {
@@ -146,7 +185,7 @@ export async function uploadFileController(c: Context) {
       const thumbFullPath = join(tripUploadDir, thumbFilename)
       await mkdir(tripUploadDir, { recursive: true })
       await Bun.write(thumbFullPath, thumbnailBuffer)
-      metadata.thumbnailUrl = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${thumbFilename}`
+      finalMetadata.thumbnailUrl = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${thumbFilename}`
     }
   }
   catch (err) {
@@ -158,16 +197,7 @@ export async function uploadFileController(c: Context) {
     await Bun.write(fullPath, fileBuffer)
 
     const url = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${filename}`
-    const newImageRecord = await imageRepository.create(tripId, url, placement, metadata)
-
-    if (placement === 'memories') {
-      await memoryRepository.create({
-        tripId,
-        imageId: newImageRecord.id,
-        timestamp: metadata.takenAt?.toISOString() ?? timestampStr,
-        comment: comment || null,
-      })
-    }
+    const newImageRecord = await imageRepository.create(tripId, url, placement, finalMetadata)
 
     return c.json(newImageRecord)
   }

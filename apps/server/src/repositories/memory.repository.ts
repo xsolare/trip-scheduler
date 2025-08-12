@@ -47,13 +47,18 @@ export const memoryRepository = {
    */
   async update(data: z.infer<typeof UpdateMemoryInputSchema>) {
     const { id, ...updateData } = data
+
+    // Создаем объект для обновления
+    const payload: Record<string, any> = { ...updateData, updatedAt: new Date() }
+
+    // Явно обрабатываем поле timestamp, чтобы можно было установить его в null
+    if (Object.prototype.hasOwnProperty.call(updateData, 'timestamp')) {
+      payload.timestamp = updateData.timestamp ? new Date(updateData.timestamp) : null
+    }
+
     const [updatedMemory] = await db
       .update(memories)
-      .set({
-        ...updateData,
-        timestamp: updateData.timestamp ? new Date(updateData.timestamp) : undefined,
-        updatedAt: new Date(),
-      })
+      .set(payload)
       .where(eq(memories.id, id))
       .returning()
 
@@ -71,5 +76,53 @@ export const memoryRepository = {
       .returning()
 
     return deletedMemory || null
+  },
+
+  /**
+   * Устанавливает timestamp для воспоминания, используя 'takenAt' из связанного изображения.
+   * @param id - ID воспоминания.
+   * @returns Обновленный объект или null.
+   */
+  async applyTakenAtTimestamp(id: string) {
+    const memory = await db.query.memories.findFirst({
+      where: eq(memories.id, id),
+      columns: { imageId: true },
+    })
+
+    if (!memory?.imageId) {
+      return null
+    }
+
+    const image = await db.query.tripImages.findFirst({
+      where: eq(tripImages.id, memory.imageId),
+      columns: { takenAt: true },
+    })
+
+    if (!image?.takenAt) {
+      return null
+    }
+
+    const [updatedMemory] = await db
+      .update(memories)
+      .set({ timestamp: image.takenAt, updatedAt: new Date() })
+      .where(eq(memories.id, id))
+      .returning()
+
+    return updatedMemory || null
+  },
+
+  /**
+   * Отвязывает воспоминание от даты, устанавливая timestamp в null.
+   * @param id - ID воспоминания.
+   * @returns Обновленный объект или null.
+   */
+  async unassignTimestamp(id: string) {
+    const [updatedMemory] = await db
+      .update(memories)
+      .set({ timestamp: null, updatedAt: new Date() })
+      .where(eq(memories.id, id))
+      .returning()
+
+    return updatedMemory || null
   },
 }
