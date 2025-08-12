@@ -3,17 +3,26 @@ import type { ImageViewerImage, ImageViewerOptions } from '../models/types'
 export function useImageViewer(options: ImageViewerOptions = {}) {
   const {
     enableKeyboard = true,
+    enableTouch = true,
+    maxZoom = 4,
+    minZoom = 1,
+    zoomStep = 0.5,
+    animationDuration = 300,
   } = options
 
   const isOpen = ref(false)
   const images = ref<ImageViewerImage[]>([])
   const currentIndex = ref(0)
+  const isLoading = ref(false)
 
   const currentImage = computed(() => images.value[currentIndex.value])
   const hasMultipleImages = computed(() => images.value.length > 1)
+  const canZoomIn = computed(() => true) // Will be controlled by component
+  const canZoomOut = computed(() => true) // Will be controlled by component
 
   let originalOverflow = ''
 
+  // Body scroll lock management
   watch(isOpen, (value) => {
     if (value) {
       originalOverflow = document.body.style.overflow
@@ -62,6 +71,7 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
 
     switch (e.key) {
       case 'ArrowRight':
+      case ' ': // Space for next
         e.preventDefault()
         next()
         break
@@ -73,6 +83,14 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
         e.preventDefault()
         close()
         break
+      case 'Home':
+        e.preventDefault()
+        goToIndex(0)
+        break
+      case 'End':
+        e.preventDefault()
+        goToIndex(images.value.length - 1)
+        break
     }
   }
 
@@ -81,15 +99,30 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
   }
 
   return {
+    // State
     isOpen,
+    isLoading,
     currentImage,
     currentIndex,
     hasMultipleImages,
     images,
+    canZoomIn,
+    canZoomOut,
+
+    // Actions
     open,
     close,
     next,
     prev,
     goToIndex,
+
+    // Options
+    options: {
+      enableTouch,
+      maxZoom,
+      minZoom,
+      zoomStep,
+      animationDuration,
+    },
   }
 }

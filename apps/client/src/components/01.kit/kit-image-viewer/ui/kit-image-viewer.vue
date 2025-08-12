@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { ImageViewerImage } from '../models/types'
+import type { ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
+import ImageMetadataPanel from './kit-image-metadata-panel.vue'
 
 interface Props {
   visible: boolean
@@ -10,171 +11,344 @@ interface Props {
   showCounter?: boolean
   enableThumbnails?: boolean
   closeOnOverlayClick?: boolean
+  maxZoom?: number
+  minZoom?: number
+  zoomStep?: number
+  enableTouch?: boolean
+  animationDuration?: number
 }
 
 interface Emits {
   (e: 'update:visible', value: boolean): void
   (e: 'update:currentIndex', value: number): void
   (e: 'close'): void
+  (e: 'imageLoad', image: ImageViewerImage): void
+  (e: 'imageError', error: Event): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showCounter: true,
   enableThumbnails: false,
   closeOnOverlayClick: true,
+  maxZoom: 4,
+  minZoom: 1,
+  zoomStep: 0.5,
+  enableTouch: true,
+  animationDuration: 300,
 })
 
 const emit = defineEmits<Emits>()
 
-const viewerContentRef = ref(null)
+// --- Состояние компонента ---
+const viewerContentRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
-
-const scale = ref(1)
-const offsetX = ref(0)
-const offsetY = ref(0)
+const transform = reactive<ViewerTransform>({ scale: 1, x: 0, y: 0 })
 const isDragging = ref(false)
-const startDrag = reactive({ x: 0, y: 0 })
+const isAnimating = ref(false)
+const wheeling = ref(false)
+let wheelTimeoutId: number | undefined
+const dragStart = reactive<TouchPoint>({ x: 0, y: 0 })
+const transformStart = reactive<ViewerTransform>({ scale: 1, x: 0, y: 0 })
+const touches = ref<TouchPoint[]>([])
+const initialDistance = ref(0)
+const initialScale = ref(1)
+const imageLoaded = ref(false)
+const imageError = ref(false)
+const naturalSize = reactive({ width: 0, height: 0 })
 
-const MIN_SCALE = 1
-const MAX_SCALE = 5
-const SCALE_STEP = 0.3
+const isUiVisible = ref(true)
+const isMetadataPanelVisible = ref(false)
+
+const currentImageMetadata = computed(() => {
+  const imageMeta = props.images[props.currentIndex]?.meta
+  return imageMeta?.memory?.image || imageMeta?.image || null
+})
 
 const imageStyle = computed(() => ({
-  cursor: scale.value > 1 ? (isDragging.value ? 'grabbing' : 'grab') : 'default',
-  transform: `scale(${scale.value}) translate(${offsetX.value}px, ${offsetY.value}px)`,
-  transition: isDragging.value ? 'none' : 'transform 0.2s ease-out',
+  transform: `scale(${transform.scale}) translate(${transform.x}px, ${transform.y}px)`,
+  transition: (isAnimating.value && !isDragging.value && !wheeling.value)
+    ? `transform ${props.animationDuration}ms cubic-bezier(0.4, 0.0, 0.2, 1)`
+    : 'none',
+  cursor: getCursor(),
 }))
 
-function resetZoom() {
-  scale.value = MIN_SCALE
-  offsetX.value = 0
-  offsetY.value = 0
-}
+const canZoomIn = computed(() => transform.scale < props.maxZoom)
+const canZoomOut = computed(() => transform.scale > props.minZoom)
 
-function constrainOffset() {
-  if (!imageRef.value || !containerRef.value)
-    return
-
-  const imageRect = imageRef.value.getBoundingClientRect()
-  const containerRect = containerRef.value.getBoundingClientRect()
-
-  const scaledWidth = imageRect.width * scale.value
-  const scaledHeight = imageRect.height * scale.value
-
-  const maxOffsetX = Math.max(0, (scaledWidth - containerRect.width) / 2)
-  const maxOffsetY = Math.max(0, (scaledHeight - containerRect.height) / 2)
-
-  offsetX.value = Math.max(-maxOffsetX, Math.min(maxOffsetX, offsetX.value))
-  offsetY.value = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY.value))
+function getCursor(): string {
+  if (isDragging.value)
+    return 'grabbing'
+  if (transform.scale > props.minZoom)
+    return 'grab'
+  return 'zoom-in'
 }
 
 watch(() => props.currentIndex, () => {
-  resetZoom()
+  resetTransform()
+  isMetadataPanelVisible.value = false
 })
 
 watch(() => props.visible, (isVisible) => {
-  if (!isVisible) {
-    resetZoom()
-  }
-})
-
-watch(scale, () => {
-  nextTick(() => {
-    constrainOffset()
-  })
-})
-
-function handleDblClick(event: MouseEvent) {
-  event.preventDefault()
-
-  if (scale.value > MIN_SCALE) {
-    resetZoom()
+  if (isVisible) {
+    document.body.style.overflow = 'hidden'
+    // Возвращаем UI при каждом новом открытии
+    isUiVisible.value = true
   }
   else {
-    // Увеличиваем с учетом позиции курсора
-    const rect = imageRef.value?.getBoundingClientRect()
-    if (!rect)
-      return
+    document.body.style.overflow = ''
+    resetTransform()
+    isMetadataPanelVisible.value = false
+  }
+})
 
-    const clickX = event.clientX - rect.left - rect.width / 2
-    const clickY = event.clientY - rect.top - rect.height / 2
+function resetTransform() {
+  isAnimating.value = true
+  transform.scale = props.minZoom
+  transform.x = 0
+  transform.y = 0
+  setTimeout(() => { isAnimating.value = false }, props.animationDuration)
+}
 
-    const newScale = 2
-    scale.value = newScale
+// Функция fitToScreen больше не нужна, так как кнопка удалена
 
-    // Центрируем увеличение на позиции клика
-    offsetX.value = -clickX * (newScale - 1) / newScale
-    offsetY.value = -clickY * (newScale - 1) / newScale
+function calculateBounds(): ViewerBounds {
+  if (!imageRef.value || !containerRef.value)
+    return { minX: 0, maxX: 0, minY: 0, maxY: 0 }
+  const containerRect = containerRef.value.getBoundingClientRect()
+  const scaledWidth = naturalSize.width * transform.scale
+  const scaledHeight = naturalSize.height * transform.scale
+  const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2 / transform.scale)
+  const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2 / transform.scale)
+  return { minX: -maxX, maxX, minY: -maxY, maxY }
+}
+
+function constrainTransform() {
+  const bounds = calculateBounds()
+  transform.x = Math.max(bounds.minX, Math.min(bounds.maxX, transform.x))
+  transform.y = Math.max(bounds.minY, Math.min(bounds.maxY, transform.y))
+}
+
+function zoomTo(newScale: number, centerX = 0, centerY = 0) {
+  const clampedScale = Math.max(props.minZoom, Math.min(props.maxZoom, newScale))
+  if (clampedScale === props.minZoom) {
+    resetTransform()
+    return
+  }
+  const scaleRatio = clampedScale / transform.scale
+  isAnimating.value = true
+  transform.x = centerX - (centerX - transform.x) * scaleRatio
+  transform.y = centerY - (centerY - transform.y) * scaleRatio
+  transform.scale = clampedScale
+  nextTick(() => {
+    constrainTransform()
+    setTimeout(() => { isAnimating.value = false }, props.animationDuration)
+  })
+}
+
+function zoomIn(centerX = 0, centerY = 0) {
+  const newScale = Math.min(transform.scale + props.zoomStep, props.maxZoom)
+  zoomTo(newScale, centerX, centerY)
+}
+
+function zoomOut(centerX = 0, centerY = 0) {
+  const newScale = Math.max(transform.scale - props.zoomStep, props.minZoom)
+  zoomTo(newScale, centerX, centerY)
+}
+
+function handleDoubleClick(event: MouseEvent) {
+  event.preventDefault()
+  if (!imageRef.value)
+    return
+  const rect = imageRef.value.getBoundingClientRect()
+  const centerX = (event.clientX - rect.left - rect.width / 2) / transform.scale
+  const centerY = (event.clientY - rect.top - rect.height / 2) / transform.scale
+  if (transform.scale > props.minZoom) {
+    resetTransform()
+  }
+  else {
+    zoomTo(2, centerX, centerY)
   }
 }
 
 function handleWheel(event: WheelEvent) {
   event.preventDefault()
-
-  const imageEl = imageRef.value
-  if (!imageEl)
+  if (!imageRef.value)
     return
-
-  const rect = imageEl.getBoundingClientRect()
-
-  // Получаем позицию курсора относительно изображения
-  const mouseX = event.clientX - rect.left - rect.width / 2
-  const mouseY = event.clientY - rect.top - rect.height / 2
-
-  const oldScale = scale.value
-  const delta = event.deltaY > 0 ? -SCALE_STEP : SCALE_STEP
-  const newScale = Math.max(MIN_SCALE, Math.min(oldScale + delta, MAX_SCALE))
-
-  if (newScale <= MIN_SCALE) {
-    resetZoom()
+  if (wheelTimeoutId)
+    clearTimeout(wheelTimeoutId)
+  wheeling.value = true
+  isAnimating.value = false
+  const oldScale = transform.scale
+  const zoomFactor = 1.15
+  const newScale = event.deltaY < 0 ? oldScale * zoomFactor : oldScale / zoomFactor
+  const clampedScale = Math.max(props.minZoom, Math.min(props.maxZoom, newScale))
+  if (clampedScale === oldScale) {
+    wheeling.value = false
     return
   }
-
-  // Вычисляем новые смещения для зума в точку курсора
-  const scaleRatio = newScale / oldScale
-
-  offsetX.value = mouseX - (mouseX - offsetX.value) * scaleRatio
-  offsetY.value = mouseY - (mouseY - offsetY.value) * scaleRatio
-
-  scale.value = newScale
+  if (clampedScale <= props.minZoom) {
+    resetTransform()
+    wheeling.value = false
+    return
+  }
+  const rect = imageRef.value.getBoundingClientRect()
+  const centerX = (event.clientX - rect.left - rect.width / 2) / oldScale
+  const centerY = (event.clientY - rect.top - rect.height / 2) / oldScale
+  const scaleRatio = clampedScale / oldScale
+  transform.x = centerX - (centerX - transform.x) * scaleRatio
+  transform.y = centerY - (centerY - transform.y) * scaleRatio
+  transform.scale = clampedScale
+  constrainTransform()
+  wheelTimeoutId = window.setTimeout(() => {
+    wheeling.value = false
+    isAnimating.value = true
+    constrainTransform()
+  }, 150)
 }
 
 function handleMouseDown(event: MouseEvent) {
-  if (scale.value <= MIN_SCALE)
+  if (transform.scale <= props.minZoom)
     return
-
   event.preventDefault()
   isDragging.value = true
-  startDrag.x = event.clientX - offsetX.value
-  startDrag.y = event.clientY - offsetY.value
-
+  isAnimating.value = false
+  dragStart.x = event.clientX
+  dragStart.y = event.clientY
+  transformStart.x = transform.x
+  transformStart.y = transform.y
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp, { once: true })
-  document.addEventListener('mouseleave', handleMouseUp, { once: true })
 }
 
 function handleMouseMove(event: MouseEvent) {
   if (!isDragging.value)
     return
-
-  offsetX.value = event.clientX - startDrag.x
-  offsetY.value = event.clientY - startDrag.y
+  const deltaX = (event.clientX - dragStart.x) / transform.scale
+  const deltaY = (event.clientY - dragStart.y) / transform.scale
+  transform.x = transformStart.x + deltaX
+  transform.y = transformStart.y + deltaY
 }
 
 function handleMouseUp() {
   isDragging.value = false
   document.removeEventListener('mousemove', handleMouseMove)
-  constrainOffset()
+  if (!wheeling.value) {
+    isAnimating.value = true
+  }
+  constrainTransform()
 }
 
-// Предотвращаем контекстное меню на изображении
-function handleContextMenu(event: MouseEvent) {
+function getTouchPoints(event: TouchEvent): TouchPoint[] {
+  return Array.from(event.touches).map(touch => ({ x: touch.clientX, y: touch.clientY }))
+}
+
+function getDistance(point1: TouchPoint, point2: TouchPoint): number {
+  const dx = point1.x - point2.x
+  const dy = point1.y - point2.y
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+function getCenter(point1: TouchPoint, point2: TouchPoint): TouchPoint {
+  return { x: (point1.x + point2.x) / 2, y: (point1.y + point2.y) / 2 }
+}
+
+function handleTouchStart(event: TouchEvent) {
+  if (!props.enableTouch)
+    return
   event.preventDefault()
+  isAnimating.value = false
+  touches.value = getTouchPoints(event)
+  if (touches.value.length === 1) {
+    if (transform.scale > props.minZoom) {
+      isDragging.value = true
+      dragStart.x = touches.value[0].x
+      dragStart.y = touches.value[0].y
+      transformStart.x = transform.x
+      transformStart.y = transform.y
+    }
+  }
+  else if (touches.value.length === 2) {
+    isDragging.value = false
+    initialDistance.value = getDistance(touches.value[0], touches.value[1])
+    initialScale.value = transform.scale
+  }
+}
+
+function handleTouchMove(event: TouchEvent) {
+  if (!props.enableTouch)
+    return
+  event.preventDefault()
+  const currentTouches = getTouchPoints(event)
+  if (isDragging.value && currentTouches.length === 1 && touches.value.length === 1) {
+    if (transform.scale > props.minZoom) {
+      const deltaX = (currentTouches[0].x - dragStart.x) / transform.scale
+      const deltaY = (currentTouches[0].y - dragStart.y) / transform.scale
+      transform.x = transformStart.x + deltaX
+      transform.y = transformStart.y + deltaY
+    }
+  }
+  else if (currentTouches.length === 2 && touches.value.length >= 2) {
+    if (!imageRef.value)
+      return
+    const currentDistance = getDistance(currentTouches[0], currentTouches[1])
+    const scaleRatio = currentDistance / initialDistance.value
+    const newScale = Math.max(props.minZoom, Math.min(props.maxZoom, initialScale.value * scaleRatio))
+    const rect = imageRef.value.getBoundingClientRect()
+    const center = getCenter(currentTouches[0], currentTouches[1])
+    const centerX = (center.x - rect.left - rect.width / 2) / transform.scale
+    const centerY = (center.y - rect.top - rect.height / 2) / transform.scale
+    const currentScaleRatio = newScale / transform.scale
+    transform.x = centerX - (centerX - transform.x) * currentScaleRatio
+    transform.y = centerY - (centerY - transform.y) * currentScaleRatio
+    transform.scale = newScale
+    initialDistance.value = currentDistance
+    initialScale.value = newScale
+  }
+}
+
+function handleTouchEnd(event: TouchEvent) {
+  if (!props.enableTouch)
+    return
+  event.preventDefault()
+  isAnimating.value = true
+  constrainTransform()
+  const remainingTouches = event.touches.length
+  if (remainingTouches === 0) {
+    isDragging.value = false
+    touches.value = []
+  }
+  else if (remainingTouches === 1 && touches.value.length > 1) {
+    isDragging.value = true
+    dragStart.x = event.touches[0].clientX
+    dragStart.y = event.touches[0].clientY
+    transformStart.x = transform.x
+    transformStart.y = transform.y
+    touches.value = getTouchPoints(event)
+  }
+  else {
+    touches.value = getTouchPoints(event)
+  }
 }
 
 const currentImage = computed(() => props.images[props.currentIndex])
 const hasMultipleImages = computed(() => props.images.length > 1)
+
+function handleImageLoad() {
+  imageLoaded.value = true
+  imageError.value = false
+  if (imageRef.value) {
+    naturalSize.width = imageRef.value.naturalWidth
+    naturalSize.height = imageRef.value.naturalHeight
+    emit('imageLoad', currentImage.value)
+  }
+}
+
+function handleImageError(event: Event) {
+  imageLoaded.value = false
+  imageError.value = true
+  emit('imageError', event)
+}
 
 function close() {
   emit('update:visible', false)
@@ -202,103 +376,206 @@ function goToIndex(index: number) {
 }
 
 onClickOutside(viewerContentRef, () => {
-  if (props.closeOnOverlayClick && props.visible && !isDragging.value && scale.value <= MIN_SCALE) {
+  if (props.closeOnOverlayClick && props.visible && !isDragging.value && transform.scale <= props.minZoom && !isMetadataPanelVisible.value) {
     close()
   }
 })
 
-// Блокируем скролл страницы при открытом просмотрщике
-watch(() => props.visible, (isVisible) => {
-  if (isVisible) {
-    document.body.style.overflow = 'hidden'
-  }
-  else {
-    document.body.style.overflow = ''
-  }
-})
+function handleContextMenu(event: MouseEvent) {
+  event.preventDefault()
+}
 
 onUnmounted(() => {
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
   document.body.style.overflow = ''
 })
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="faded">
+    <Transition name="viewer-fade">
       <div
         v-if="visible"
         class="image-viewer-overlay"
-        @wheel.prevent="handleWheel"
+        @wheel="handleWheel"
+        @touchstart.prevent="handleTouchStart"
+        @touchmove.prevent="handleTouchMove"
+        @touchend.prevent="handleTouchEnd"
+        @touchcancel.prevent="handleTouchEnd"
       >
         <div ref="viewerContentRef" class="viewer-wrapper">
+          <!-- Header with controls -->
           <div class="viewer-header">
-            <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
-              {{ currentIndex + 1 }} из {{ images.length }}
+            <!-- Элементы, которые скрываются -->
+            <Transition name="viewer-fade">
+              <div v-if="isUiVisible" class="header-content-wrapper">
+                <div class="header-left">
+                  <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
+                    {{ currentIndex + 1 }} / {{ images.length }}
+                  </div>
+                </div>
+                <div class="header-center">
+                  <div v-if="transform.scale > minZoom" class="scale-indicator">
+                    {{ Math.round(transform.scale * 100) }}%
+                  </div>
+                </div>
+              </div>
+            </Transition>
+
+            <!-- Элементы, которые видны всегда -->
+            <div class="header-right">
+              <div class="control-buttons">
+                <!-- 2. Новая кнопка для скрытия/показа UI -->
+                <button
+                  class="control-btn"
+                  :title="isUiVisible ? 'Скрыть интерфейс' : 'Показать интерфейс'"
+                  @click="isUiVisible = !isUiVisible"
+                >
+                  <Icon :icon="isUiVisible ? 'mdi:eye-off-outline' : 'mdi:eye-outline'" />
+                </button>
+
+                <!-- 3. Группа кнопок, которая будет скрываться -->
+                <Transition name="viewer-fade-fast">
+                  <div v-if="isUiVisible" class="control-buttons-group">
+                    <button
+                      v-if="currentImageMetadata"
+                      class="control-btn"
+                      title="Информация о снимке"
+                      @click="isMetadataPanelVisible = true"
+                    >
+                      <Icon icon="mdi:information-outline" />
+                    </button>
+                    <button
+                      class="control-btn"
+                      title="Zoom out"
+                      :disabled="!canZoomOut"
+                      @click="zoomOut(0, 0)"
+                    >
+                      <Icon icon="mdi:minus" />
+                    </button>
+                    <button
+                      class="control-btn"
+                      title="Zoom in"
+                      :disabled="!canZoomIn"
+                      @click="zoomIn(0, 0)"
+                    >
+                      <Icon icon="mdi:plus" />
+                    </button>
+                    <button
+                      class="control-btn"
+                      title="Reset zoom"
+                      :disabled="transform.scale <= minZoom"
+                      @click="resetTransform"
+                    >
+                      <Icon icon="mdi:backup-restore" />
+                    </button>
+                  </div>
+                </Transition>
+
+                <!-- 4. Кнопка "Закрыть" всегда видима -->
+                <button class="close-btn" title="Close" @click="close">
+                  <Icon icon="mdi:close" />
+                </button>
+              </div>
             </div>
-            <button class="close-btn" @click="close">
-              <Icon icon="mdi:close" />
-            </button>
           </div>
 
+          <!-- Main content area -->
           <div class="viewer-content">
-            <button
-              v-if="hasMultipleImages"
-              class="nav-btn prev-btn"
-              @click="prev"
-            >
-              <Icon icon="mdi:chevron-left" />
-            </button>
+            <!-- Previous button (скрываемый) -->
+            <Transition name="viewer-fade">
+              <button
+                v-if="hasMultipleImages && isUiVisible"
+                class="nav-btn prev-btn"
+                title="Previous image"
+                @click="prev"
+              >
+                <Icon icon="mdi:chevron-left" />
+              </button>
+            </Transition>
 
-            <div
-              ref="containerRef"
-              class="image-container"
-            >
+            <!-- Image container -->
+            <div ref="containerRef" class="image-container">
+              <div v-if="!imageLoaded && !imageError" class="image-placeholder">
+                <div class="loading-spinner">
+                  <Icon icon="mdi:loading" class="spinning" />
+                </div>
+                <span>Loading...</span>
+              </div>
+              <div v-else-if="imageError" class="image-error">
+                <Icon icon="mdi:image-broken-variant" />
+                <span>Failed to load image</span>
+              </div>
               <img
                 v-if="currentImage"
+                :key="currentImage.url"
                 ref="imageRef"
                 :src="currentImage.url"
                 :alt="currentImage.alt || `Image ${currentIndex + 1}`"
                 class="viewer-image"
+                :class="{ loaded: imageLoaded }"
                 :style="imageStyle"
+                @load="handleImageLoad"
+                @error="handleImageError"
                 @mousedown="handleMouseDown"
-                @dblclick="handleDblClick"
+                @dblclick="handleDoubleClick"
                 @contextmenu="handleContextMenu"
                 @dragstart.prevent
               >
             </div>
 
-            <button
-              v-if="hasMultipleImages"
-              class="nav-btn next-btn"
-              @click="next"
-            >
-              <Icon icon="mdi:chevron-right" />
-            </button>
-          </div>
-
-          <div v-if="$slots.footer" class="viewer-footer">
-            <slot name="footer" :image="currentImage" :index="currentIndex" />
-          </div>
-
-          <div v-if="enableThumbnails && hasMultipleImages" class="thumbnails-container">
-            <div class="thumbnails-wrapper">
+            <!-- Next button (скрываемый) -->
+            <Transition name="viewer-fade">
               <button
-                v-for="(image, index) in images"
-                :key="index"
-                class="thumbnail"
-                :class="{ active: index === currentIndex }"
-                @click="goToIndex(index)"
+                v-if="hasMultipleImages && isUiVisible"
+                class="nav-btn next-btn"
+                title="Next image"
+                @click="next"
               >
-                <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+                <Icon icon="mdi:chevron-right" />
               </button>
-            </div>
+            </Transition>
           </div>
 
-          <!-- Индикатор масштаба -->
-          <div v-if="scale > MIN_SCALE" class="scale-indicator">
-            {{ Math.round(scale * 100) }}%
-          </div>
+          <!-- Footer slot (скрываемый) -->
+          <Transition name="viewer-fade">
+            <div v-if="$slots.footer && isUiVisible" class="viewer-footer">
+              <slot
+                name="footer"
+                :image="currentImage"
+                :index="currentIndex"
+                :transform="transform"
+              />
+            </div>
+          </Transition>
+
+          <!-- Thumbnails (скрываемые) -->
+          <Transition name="viewer-fade">
+            <div v-if="enableThumbnails && hasMultipleImages && isUiVisible" class="thumbnails-container">
+              <div class="thumbnails-wrapper">
+                <button
+                  v-for="(image, index) in images"
+                  :key="`thumb-${index}`"
+                  class="thumbnail"
+                  :class="{ active: index === currentIndex }"
+                  :title="`Go to image ${index + 1}`"
+                  @click="goToIndex(index)"
+                >
+                  <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+                  <div v-if="index === currentIndex" class="thumbnail-indicator" />
+                </button>
+              </div>
+            </div>
+          </Transition>
         </div>
+
+        <ImageMetadataPanel
+          v-if="currentImageMetadata"
+          :image="currentImageMetadata"
+          :visible="isMetadataPanelVisible"
+          @close="isMetadataPanelVisible = false"
+        />
       </div>
     </Transition>
   </Teleport>
@@ -313,21 +590,16 @@ onUnmounted(() => {
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  overflow: hidden;
+  touch-action: none;
+  user-select: none;
 }
 
 .viewer-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   width: 100%;
-  max-height: 100%;
+  height: 100%;
   pointer-events: none;
-
   & > * {
     pointer-events: auto;
   }
@@ -335,102 +607,161 @@ onUnmounted(() => {
 
 .viewer-header {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  left: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  padding: 20px;
   z-index: 10;
+  pointer-events: none;
+  & > * {
+    pointer-events: auto;
+  }
 }
 
-.viewer-counter {
-  background: rgba(0, 0, 0, 0.6);
+.header-content-wrapper {
+  display: contents;
+}
+
+.header-left,
+.header-center,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+}
+.header-center {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  transform: translateX(-50%);
+}
+.header-right {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+}
+
+.viewer-counter,
+.scale-indicator {
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 8px 16px;
-  border-radius: var(--r-xl);
-  font-size: 0.9rem;
+  border-radius: 20px;
+  font-size: 14px;
   font-weight: 500;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
 }
 
-.close-btn {
-  margin-left: auto;
-  background: rgba(0, 0, 0, 0.6);
+.scale-indicator {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+// Новая обертка для кнопок, которые скрываются
+.control-buttons-group {
+  display: contents;
+}
+
+.control-btn {
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  border: none;
-  border-radius: var(--r-full);
-  width: 44px;
-  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 18px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.close-btn {
+  background: rgba(220, 38, 38, 0.8);
+  color: white;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.05);
+  }
+  &:active {
+    transform: scale(0.95);
   }
 }
 
 .viewer-content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex: 1;
-  min-height: 0;
-}
-
-.image-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 90vw;
-  max-height: 80vh;
   position: relative;
-  height: 100%;
-}
-
-.viewer-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: var(--r-m);
-  box-shadow: 0 20px 60px var(--bg-overlay-primary-color);
-  background: var(--bg-overlay-primary-color);
-  user-select: none;
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  pointer-events: auto;
-  transform-origin: center;
+  overflow: hidden;
 }
 
 .nav-btn {
-  position: fixed;
+  position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--r-full);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 24px;
   transition: all 0.2s ease;
-  z-index: 10;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  z-index: 5;
 
   &:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -440,37 +771,95 @@ onUnmounted(() => {
   &:active {
     transform: translateY(-50%) scale(0.95);
   }
+
+  &.prev-btn {
+    left: 20px;
+  }
+
+  &.next-btn {
+    right: 20px;
+  }
 }
 
-.prev-btn {
-  left: 20px;
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.next-btn {
-  right: 20px;
+.image-placeholder,
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+
+  .icon {
+    font-size: 48px;
+  }
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+}
+
+.viewer-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: grab;
+  transform-origin: center;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+
+  &.loaded {
+    opacity: 1;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.viewer-footer,
+.thumbnails-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 40px);
+  pointer-events: none;
+  & > * {
+    pointer-events: auto;
+  }
 }
 
 .viewer-footer {
+  bottom: 0;
+  padding: 20px 0;
+  width: 100%;
+  max-width: none;
   display: flex;
   justify-content: center;
-  z-index: 5;
 }
 
 .thumbnails-container {
-  position: absolute;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 80%;
 }
 
 .thumbnails-wrapper {
   display: flex;
   gap: 8px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: var(--r-l);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow-x: auto;
   scrollbar-width: none;
@@ -481,21 +870,22 @@ onUnmounted(() => {
 }
 
 .thumbnail {
+  position: relative;
   flex-shrink: 0;
   width: 60px;
   height: 60px;
-  border: 2px solid transparent;
-  border-radius: var(--r-s);
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: transparent;
-
-  &.active {
-    border-color: white;
-  }
+  border: 2px solid transparent;
 
   &:hover {
+    transform: scale(1.05);
+  }
+
+  &.active {
+    border-color: #3b82f6;
     transform: scale(1.1);
   }
 
@@ -506,75 +896,122 @@ onUnmounted(() => {
   }
 }
 
-.scale-indicator {
+.thumbnail-indicator {
   position: absolute;
-  top: 20px;
+  bottom: 2px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 6px 12px;
-  border-radius: var(--r-m);
-  font-size: 0.8rem;
-  font-weight: 500;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  pointer-events: none;
-  z-index: 10;
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
 }
 
-.faded-enter-active,
-.faded-leave-active {
+// Transitions
+.viewer-fade-enter-active,
+.viewer-fade-leave-active {
   transition: opacity 0.3s ease;
 }
-
-.faded-enter-from,
-.faded-leave-to {
+.viewer-fade-enter-from,
+.viewer-fade-leave-to {
   opacity: 0;
 }
 
-@media (max-width: 767px) {
-  .image-viewer-overlay {
-    padding: 10px;
-  }
+.viewer-fade-fast-enter-active,
+.viewer-fade-fast-leave-active {
+  transition: opacity 0.15s ease;
+}
+.viewer-fade-fast-enter-from,
+.viewer-fade-fast-leave-to {
+  opacity: 0;
+}
 
-  .viewer-header {
-    top: 10px;
-    right: 10px;
-    left: 10px;
+// Animations
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-
-  .image-container {
-    max-width: 95vw;
-    max-height: 75vh;
+  to {
+    transform: rotate(360deg);
   }
+}
 
+@media (max-width: 768px) {
+  .viewer-header,
+  .header-left,
+  .header-center,
+  .header-right {
+    padding: 16px;
+    top: 0;
+    left: 16px;
+    right: 16px;
+  }
+  .viewer-content {
+    padding: 16px;
+  }
+  .control-btn,
+  .close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .close-btn {
+    font-size: 18px;
+  }
   .nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    &.prev-btn {
+      left: 16px;
+    }
+    &.next-btn {
+      right: 16px;
+    }
+  }
+  .viewer-counter {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .scale-indicator {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  .thumbnails-container {
+    bottom: 16px;
+    max-width: calc(100% - 32px);
+  }
+  .thumbnail {
     width: 48px;
     height: 48px;
-    font-size: 1.5rem;
   }
-
-  .prev-btn {
-    left: 10px;
+  .control-buttons {
+    gap: 6px;
   }
+}
 
-  .next-btn {
-    right: 10px;
+@media (max-width: 640px) {
+  .viewer-header {
+    display: block;
   }
-
-  .thumbnails-container {
-    bottom: 10px;
-    max-width: 90%;
+  .header-left,
+  .header-center {
+    justify-content: center;
   }
-
-  .thumbnail {
-    width: 50px;
-    height: 50px;
+  .header-center {
+    left: 50%;
+    transform: translateX(-50%);
   }
+  .header-right {
+    right: 16px;
+  }
+}
 
-  .scale-indicator {
-    top: 60px;
+// High DPI displays
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .viewer-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }
 </style>

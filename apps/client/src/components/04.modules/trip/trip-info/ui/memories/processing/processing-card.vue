@@ -29,9 +29,12 @@ const hasOriginalDate = computed(() => !!props.memory.timestamp)
 const originalDateFormatted = computed(() => {
   if (!props.memory.timestamp)
     return ''
+
   return new Date(props.memory.timestamp).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
+    minute: '2-digit',
+    hour: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
   })
 })

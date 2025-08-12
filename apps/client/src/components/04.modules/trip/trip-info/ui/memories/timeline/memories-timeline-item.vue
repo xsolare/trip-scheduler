@@ -233,7 +233,7 @@ onClickOutside(timeEditorRef, saveTime)
                 :readonly="isViewMode"
                 @blur="saveViewerTime"
               />
-              <Icon height="22" width="22" icon="mdi:clock-outline" class="time-icon" />
+              <Icon height="18" width="18" icon="mdi:clock-outline" class="time-icon" />
             </div>
           </div>
         </div>
@@ -557,7 +557,7 @@ onClickOutside(timeEditorRef, saveTime)
 
   &.is-readonly {
     gap: 8px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.7);
     padding: 12px 16px;
     text-align: center;
   }
