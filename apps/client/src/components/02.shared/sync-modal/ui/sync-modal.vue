@@ -369,7 +369,7 @@ onUnmounted(() => {
     }
 
     &.danger {
-      color: #dc2626;
+      color: var(--fg-error-color);
 
       &:hover:not(:disabled) {
         background-color: var(--bg-error-color);

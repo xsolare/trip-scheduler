@@ -66,7 +66,7 @@ watch(() => isBurgerOpen.value, (newValue) => {
   }
 
   &-menu {
-    background: white;
+    background: var(--bg-primary-color);
     width: 80%;
     max-width: 300px;
     height: 100vh;
@@ -96,8 +96,8 @@ watch(() => isBurgerOpen.value, (newValue) => {
       padding: 12px 0;
       text-decoration: none;
       font-size: 18px;
-      color: #333;
-      border-bottom: 1px solid #eee;
+      color: var(--fg-primary-color);
+      border-bottom: 1px solid var(--bg-primary-color);
 
       &:last-child {
         border-bottom: none;
