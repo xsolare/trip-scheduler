@@ -43,6 +43,7 @@ function handleAddTextNote() {
   if (!day)
     return
 
+  // eslint-disable-next-line no-alert
   const newComment = prompt('Введите текст заметки:')
   if (newComment?.trim()) {
     const newTimestamp = new Date(day.date)

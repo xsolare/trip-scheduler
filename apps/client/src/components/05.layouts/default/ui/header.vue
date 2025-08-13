@@ -1,12 +1,20 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import { SyncIndicator } from '~/components/02.shared/sync-indicator'
+import { useDisplay } from '~/shared/composables/use-display'
 import { AppRoutePaths } from '~/shared/constants/routes'
 import { useThemeStore } from '~/shared/store/theme.store'
+import Burger from './burger.vue'
 
 const headerEl = ref<HTMLElement>()
+const isBurgerOpen = ref<boolean>(false)
 const router = useRouter()
 const themeStore = useThemeStore()
+const { smAndUp } = useDisplay()
+
+function handleBurger() {
+  isBurgerOpen.value = !isBurgerOpen.value
+}
 </script>
 
 <template>
@@ -18,9 +26,8 @@ const themeStore = useThemeStore()
       <!-- Навигационная часть с логотипом -->
       <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
-          <!-- Иконка логотипа стала меньше -->
           <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 24px;" />
-          <span class="logo-text">Trip Scheduler</span>
+          <span v-if="smAndUp" class="logo-text">Trip Scheduler</span>
         </div>
       </div>
 
@@ -28,7 +35,7 @@ const themeStore = useThemeStore()
       <div class="header-center" />
 
       <!-- Утилиты: синхронизация и профиль -->
-      <div class="header-utils">
+      <div v-if="smAndUp" class="header-utils">
         <button class="util-btn" title="Настроить тему" @click="themeStore.openCreator()">
           <Icon icon="mdi:palette-outline" />
         </button>
@@ -38,7 +45,6 @@ const themeStore = useThemeStore()
 
         <div class="profile">
           <div class="profile-img">
-            <!-- Размер иконки профиля скорректирован -->
             <Icon
               icon="mdi:face-man-profile"
               style="font-size: 32px;"
@@ -46,8 +52,12 @@ const themeStore = useThemeStore()
           </div>
         </div>
       </div>
+      <div v-else class="header-burger">
+        <Icon class="header-burger-icon" icon="twemoji:hamburger" width="36" height="36" @click="handleBurger" />
+      </div>
     </div>
   </header>
+  <Burger v-model:is-burger-open="isBurgerOpen" />
 </template>
 
 <style lang="scss" scoped>
@@ -70,10 +80,6 @@ const themeStore = useThemeStore()
   z-index: 3;
   -webkit-backdrop-filter: var(--filter-glass3d);
   backdrop-filter: var(--filter-glass3d);
-  background-color: var(--color-glass3d);
-  background-image: var(--noise-glass3d);
-  background-size: 100px;
-  background-repeat: repeat;
 }
 
 .glass::after {
@@ -96,18 +102,11 @@ const themeStore = useThemeStore()
   top: 0;
   display: flex;
   flex-direction: row;
-  border-bottom: 1px solid var(--border-primary-color);
-  height: 44px;
+  padding: 10px 0px;
+  height: 100%;
   width: 100%;
   z-index: 7;
-  transition:
-    background-color 0.3s ease,
-    backdrop-filter 0.3s ease;
-  background-color: rgb(var(--bg-header-color));
-
-  &.glass {
-    background-color: transparent;
-  }
+  transition: backdrop-filter 0.3s ease;
 
   &-content {
     max-width: 1200px;
@@ -148,6 +147,14 @@ const themeStore = useThemeStore()
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 5px;
+    background-color: white;
+    border-radius: 20px;
+    transition: border-radius 0.5s ease;
+
+    &:hover {
+      border-radius: 10px;
+    }
 
     .util-btn {
       display: flex;
@@ -157,7 +164,6 @@ const themeStore = useThemeStore()
       height: 32px;
       border-radius: var(--r-xs);
       border: none;
-      background: transparent;
       color: var(--fg-secondary-color);
       cursor: pointer;
       transition: all 0.2s ease;
@@ -165,9 +171,14 @@ const themeStore = useThemeStore()
       overflow: hidden;
 
       &:hover {
-        background-color: var(--bg-hover-color);
         color: var(--fg-accent-color);
       }
+    }
+  }
+
+  &-burger {
+    &-icon {
+      cursor: pointer;
     }
   }
 
@@ -187,10 +198,6 @@ const themeStore = useThemeStore()
       align-items: center;
       justify-content: center;
       transition: border-color 0.2s ease-in-out;
-
-      &:hover {
-        border-color: var(--border-accent-color);
-      }
     }
   }
 
@@ -198,7 +205,6 @@ const themeStore = useThemeStore()
     margin: 0;
     height: 20px;
     width: 1px;
-    background-color: var(--border-primary-color);
   }
 }
 </style>
