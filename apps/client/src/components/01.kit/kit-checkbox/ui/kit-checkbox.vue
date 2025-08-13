@@ -3,7 +3,6 @@ import { Icon } from '@iconify/vue'
 import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 
 interface Props {
-  label: string
   disabled?: boolean
 }
 
@@ -22,7 +21,7 @@ const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
   >
     <CheckboxRoot
       :id="id"
-      v-model:checked="model"
+      v-model="model"
       class="kit-checkbox-root"
       :disabled="disabled"
     >
@@ -30,7 +29,10 @@ const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
         <Icon icon="mdi:check" class="kit-checkbox-icon" />
       </CheckboxIndicator>
     </CheckboxRoot>
-    <span class="kit-checkbox-label">{{ label }}</span>
+
+    <span class="kit-checkbox-label">
+      <slot />
+    </span>
   </label>
 </template>
 
@@ -112,13 +114,5 @@ const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
   font-weight: 500;
   line-height: 1.4;
   transition: color 0.2s ease-out;
-
-  .kit-checkbox-wrapper:hover & {
-    color: var(--fg-accent-color);
-  }
-
-  .is-disabled & {
-    color: var(--fg-secondary-color);
-  }
 }
 </style>

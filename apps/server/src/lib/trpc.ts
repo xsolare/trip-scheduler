@@ -64,7 +64,7 @@ export const publicProcedure = t.procedure
 export const protectedProcedure = t.procedure.use(isAuthed)
 
 // Вспомогательная функция для создания tRPC ошибок
-export function createTRPCError(code: 'NOT_FOUND' | 'BAD_REQUEST' | 'INTERNAL_SERVER_ERROR', message: string) {
+export function createTRPCError(code: 'NOT_FOUND' | 'BAD_REQUEST' | 'INTERNAL_SERVER_ERROR' | 'CONFLICT' | 'UNAUTHORIZED', message: string) {
   throw new TRPCError({
     code,
     message,

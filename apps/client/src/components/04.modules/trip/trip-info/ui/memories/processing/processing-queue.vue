@@ -76,8 +76,12 @@ function showMore() {
     </div>
     <div v-show="!isCollapsed" class="queue-content">
       <div class="queue-filters">
-        <KitCheckbox v-model="filters.showWithoutDate" label="Без даты" />
-        <KitCheckbox v-model="filters.showWithDate" label="Снятые в другой день" />
+        <KitCheckbox v-model="filters.showWithoutDate">
+          Без даты
+        </KitCheckbox>
+        <KitCheckbox v-model="filters.showWithDate">
+          Снятые в другой день
+        </KitCheckbox>
       </div>
       <div v-if="paginatedMemories.length > 0" class="queue-grid">
         <MemoryProcessingCard v-for="memory in paginatedMemories" :key="memory.id" :memory="memory" />

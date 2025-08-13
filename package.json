@@ -15,6 +15,7 @@
     "dev:server": "bun --cwd ./apps/server dev",
     "--------------------------------<      BUILD     >--------------------------------": "",
     "build": "bun run --filter='./apps/*' build",
+    "build:web": "bun run --filter='./apps/*' build:web",
     "--------------------------------< LINT & FORMAT >---------------------------------": "",
     "lint": "bun run --filter='./apps/*' lint",
     "typecheck": "bun --filter='./apps/*' typecheck",
@@ -22,7 +23,7 @@
     "postinstall": "simple-git-hooks"
   },
   "devDependencies": {
-    "lint-staged": "^16.1.2",
+    "lint-staged": "^16.1.5",
     "simple-git-hooks": "^2.13.1"
   },
   "simple-git-hooks": {

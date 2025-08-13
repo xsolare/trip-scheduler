@@ -1,7 +1,7 @@
 @use 'sass:map';
 @use '../_variables.scss' as *;
 
-//* ---- Media Mixins ---------------------------------------------------------------------- *//
+//_ ---- Media Mixins ---------------------------------------------------------------------- _//
 
 /**
  * Mobile First миксин: применяет стили ОТ указанного брейкпоинта И ВЫШЕ.
@@ -33,7 +33,18 @@
       @content;
     }
   } @else {
-    @warn "Миксин `media-down` не имеет смысла для брейкпоинта `#{$name}` с шириной 0.";
+    // Обрабатываем 'xs' как особый случай: от 0 до следующего брейкпоинта.
+    // Это предотвращает предупреждение о max-width: -1px.
+    $keys: map-keys($breakpoints);
+    $index: index($keys, $name);
+    $next-key: if($index < length($keys), nth($keys, $index + 1), null);
+
+    @if $next-key {
+      $upper-bound: map.get($breakpoints, $next-key) - 1;
+      @media (max-width: $upper-bound) {
+        @content;
+      }
+    }
   }
 }
 

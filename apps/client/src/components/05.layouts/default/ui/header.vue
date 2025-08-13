@@ -15,19 +15,15 @@ const themeStore = useThemeStore()
     class="header glass"
   >
     <div class="header-content">
-      <!-- Навигационная часть с логотипом -->
       <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
-          <!-- Иконка логотипа стала меньше -->
           <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 24px;" />
           <span class="logo-text">Trip Scheduler</span>
         </div>
       </div>
 
-      <!-- Центральный заполнитель -->
       <div class="header-center" />
 
-      <!-- Утилиты: синхронизация и профиль -->
       <div class="header-utils">
         <button class="util-btn" title="Настроить тему" @click="themeStore.openCreator()">
           <Icon icon="mdi:palette-outline" />
@@ -37,8 +33,7 @@ const themeStore = useThemeStore()
         <div class="vr" />
 
         <div class="profile">
-          <div class="profile-img">
-            <!-- Размер иконки профиля скорректирован -->
+          <div class="profile-img" @click="router.push(AppRoutePaths.Auth.SignIn)">
             <Icon
               icon="mdi:face-man-profile"
               style="font-size: 32px;"

@@ -37,12 +37,15 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
         }"
       >
         <div class="dialog-header">
-          <div class="title-container">
-            <Icon v-if="icon" :icon="icon" class="title-icon" />
-            <DialogTitle class="dialog-title">
-              {{ title }}
-            </DialogTitle>
-          </div>
+          <slot v-if="$slots.header" name="header" />
+          <template v-else>
+            <div class="title-container">
+              <Icon v-if="icon" :icon="icon" class="title-icon" />
+              <DialogTitle class="dialog-title">
+                {{ title }}
+              </DialogTitle>
+            </div>
+          </template>
           <DialogClose as-child>
             <button class="close-button">
               <Icon icon="mdi:close" />

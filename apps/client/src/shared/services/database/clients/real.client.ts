@@ -1,6 +1,7 @@
 import type Database from '@tauri-apps/plugin-sql'
-import type { IActivityRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository } from '../model/types.ts'
+import type { IActivityRepository, IAuthRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository } from '../model/types.ts'
 import { getDb } from '../connection.ts'
+import { AuthRepository } from '../repositories/real/auth.repository.ts'
 import { DayRepository } from '../repositories/real/day.repository.ts'
 import { FileRepository } from '../repositories/real/file.repository.ts'
 import { MemoryRepository } from '../repositories/real/memory.repository.ts'
@@ -15,6 +16,7 @@ class RealDatabaseClient implements IDatabaseClient {
   days!: IDayRepository
   activities!: IActivityRepository
   memories!: IMemoryRepository
+  auth!: IAuthRepository
 
   async initDb(): Promise<this> {
     this.db = await getDb()
@@ -24,6 +26,7 @@ class RealDatabaseClient implements IDatabaseClient {
     this.files = new FileRepository()
     this.activities = new ActivityRepository()
     this.memories = new MemoryRepository(this.db)
+    this.auth = new AuthRepository()
 
     return this
   }
