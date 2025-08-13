@@ -12,9 +12,10 @@ import {
 interface Props {
   maxWidth?: number
   title?: string
+  icon?: string
 }
 
-const { maxWidth = 700, title } = defineProps<Props>()
+const { maxWidth = 700, title, icon } = defineProps<Props>()
 
 const visible = defineModel<boolean>('visible', { required: true })
 
@@ -36,9 +37,12 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
         }"
       >
         <div class="dialog-header">
-          <DialogTitle class="dialog-title">
-            {{ title }}
-          </DialogTitle>
+          <div class="title-container">
+            <Icon v-if="icon" :icon="icon" class="title-icon" />
+            <DialogTitle class="dialog-title">
+              {{ title }}
+            </DialogTitle>
+          </div>
           <DialogClose as-child>
             <button class="close-button">
               <Icon icon="mdi:close" />
@@ -59,14 +63,19 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   position: fixed;
   inset: 0;
   z-index: 1000;
-  animation: overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  &[data-state='open'] {
+    animation: overlay-show 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  &[data-state='closed'] {
+    animation: overlay-hide 200ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  }
 }
 
 .dialog-content-wrapper {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   background-color: var(--bg-primary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: 8px;
@@ -76,13 +85,19 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   z-index: 1001;
   width: 90vw;
   padding: 16px;
-  animation: content-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   gap: 16px;
 
   &:focus {
     outline: none;
+  }
+
+  &[data-state='open'] {
+    animation: content-warp-in 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  &[data-state='closed'] {
+    animation: content-warp-out 200ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
   }
 }
 
@@ -93,10 +108,20 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   flex-shrink: 0;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg-primary-color);
+}
+
+.title-icon {
+  font-size: 1.25rem;
+}
+
 .dialog-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--fg-primary-color);
 }
 
 .close-button {
@@ -130,15 +155,37 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
     opacity: 1;
   }
 }
+@keyframes overlay-hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 
-@keyframes content-show {
+@keyframes content-warp-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.96);
+    transform: translate(-50%, -48%) scale(0.9) rotateX(10deg) skewX(3deg);
+    filter: blur(6px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(1) rotateX(0) skewX(0);
+    filter: blur(0);
+  }
+}
+@keyframes content-warp-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotateX(0) skewX(0);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.85) rotateX(10deg) skewX(4deg);
+    filter: blur(8px);
   }
 }
 </style>

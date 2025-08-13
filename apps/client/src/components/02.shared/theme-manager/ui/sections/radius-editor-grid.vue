@@ -70,6 +70,7 @@ const radiusPalette = defineModel<RadiusPalette>({ required: true })
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 0.9rem;
   transition: all 0.2s ease;
+  width: 100%;
 
   &:focus {
     outline: none;

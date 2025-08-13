@@ -28,5 +28,4 @@ export const memoryService = {
     return await memoryRepository.getByTripId(tripId)
   },
 
-  
 }

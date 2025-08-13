@@ -160,7 +160,6 @@ function handleUpdateActivity(data: Partial<Activity>) {
 </template>
 
 <style scoped lang="scss">
-/* Стили скопированы из memories/list.vue и относятся к activity-timeline-node и его содержимому */
 .activity-timeline-node {
   position: relative;
   padding-left: 24px;
@@ -168,25 +167,27 @@ function handleUpdateActivity(data: Partial<Activity>) {
   padding-bottom: 24px;
   padding-top: 24px;
 
-  &:first-child {
-    padding-top: 16px;
-  }
-
-  &:last-child {
-    border-left-color: transparent;
-    margin-bottom: 32px;
-  }
-
   &::before {
     content: '';
     position: absolute;
     left: -9px;
-    top: 32px;
+    top: 36px;
     width: 16px;
     height: 16px;
     border-radius: 50%;
     background-color: var(--bg-secondary-color);
     border: 3px solid var(--fg-accent-color);
+  }
+
+  &:first-child {
+    padding-top: 16px;
+    &::before {
+      top: 30px;
+    }
+  }
+
+  &:last-child {
+    margin-bottom: 32px;
   }
 }
 

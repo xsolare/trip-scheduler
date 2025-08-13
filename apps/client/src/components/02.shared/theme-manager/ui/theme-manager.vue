@@ -22,11 +22,6 @@ function openCustomizer() {
   showCustomizer.value = true
 }
 
-function closeCreator() {
-  showCustomizer.value = false
-  store.theme.closeCreator()
-}
-
 function triggerJsonUpload() {
   jsonInput.value?.click()
 }
@@ -54,6 +49,8 @@ function handleJsonUpload(event: Event) {
   <KitDialogWithClose
     v-model:visible="isCreatorOpen"
     :title="showCustomizer ? 'Редактор пользовательской темы' : 'Выбор темы оформления'"
+    :icon="showCustomizer ? 'mdi:cogs' : 'mdi:palette'"
+    @after-leave="showCustomizer = false"
   >
     <ThemeChooser
       v-if="!showCustomizer"
@@ -64,8 +61,6 @@ function handleJsonUpload(event: Event) {
 
     <ThemeEditor
       v-else
-      @back="showCustomizer = false"
-      @apply="closeCreator"
       @reset="store.theme.resetCustomTheme"
       @reset-radius="store.theme.resetCustomRadius"
       @upload="triggerJsonUpload"
@@ -87,4 +82,4 @@ function handleJsonUpload(event: Event) {
   если они не были перенесены в дочерние компоненты.
   В идеале этот блок может быть пустым.
 */
-</style>
+</style>```
