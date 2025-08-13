@@ -92,7 +92,6 @@ watch(() => props.currentIndex, () => {
 watch(() => props.visible, (isVisible) => {
   if (isVisible) {
     document.body.style.overflow = 'hidden'
-    // Возвращаем UI при каждом новом открытии
     isUiVisible.value = true
   }
   else {
@@ -112,16 +111,16 @@ function resetTransform() {
   }, props.animationDuration)
 }
 
-// Функция fitToScreen больше не нужна, так как кнопка удалена
-
 function calculateBounds(): ViewerBounds {
   if (!imageRef.value || !containerRef.value)
     return { minX: 0, maxX: 0, minY: 0, maxY: 0 }
+
   const containerRect = containerRef.value.getBoundingClientRect()
   const scaledWidth = naturalSize.width * transform.scale
   const scaledHeight = naturalSize.height * transform.scale
   const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2 / transform.scale)
   const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2 / transform.scale)
+
   return { minX: -maxX, maxX, minY: -maxY, maxY }
 }
 
@@ -133,15 +132,18 @@ function constrainTransform() {
 
 function zoomTo(newScale: number, centerX = 0, centerY = 0) {
   const clampedScale = Math.max(props.minZoom, Math.min(props.maxZoom, newScale))
+
   if (clampedScale === props.minZoom) {
     resetTransform()
     return
   }
+
   const scaleRatio = clampedScale / transform.scale
   isAnimating.value = true
   transform.x = centerX - (centerX - transform.x) * scaleRatio
   transform.y = centerY - (centerY - transform.y) * scaleRatio
   transform.scale = clampedScale
+
   nextTick(() => {
     constrainTransform()
     setTimeout(() => {
@@ -164,9 +166,11 @@ function handleDoubleClick(event: MouseEvent) {
   event.preventDefault()
   if (!imageRef.value)
     return
+
   const rect = imageRef.value.getBoundingClientRect()
   const centerX = (event.clientX - rect.left - rect.width / 2) / transform.scale
   const centerY = (event.clientY - rect.top - rect.height / 2) / transform.scale
+
   if (transform.scale > props.minZoom) {
     resetTransform()
   }
@@ -177,25 +181,31 @@ function handleDoubleClick(event: MouseEvent) {
 
 function handleWheel(event: WheelEvent) {
   event.preventDefault()
+
   if (!imageRef.value)
     return
   if (wheelTimeoutId)
     clearTimeout(wheelTimeoutId)
+
   wheeling.value = true
   isAnimating.value = false
   const oldScale = transform.scale
   const zoomFactor = 1.15
   const newScale = event.deltaY < 0 ? oldScale * zoomFactor : oldScale / zoomFactor
   const clampedScale = Math.max(props.minZoom, Math.min(props.maxZoom, newScale))
+
   if (clampedScale === oldScale) {
     wheeling.value = false
+
     return
   }
   if (clampedScale <= props.minZoom) {
     resetTransform()
     wheeling.value = false
+
     return
   }
+
   const rect = imageRef.value.getBoundingClientRect()
   const centerX = (event.clientX - rect.left - rect.width / 2) / oldScale
   const centerY = (event.clientY - rect.top - rect.height / 2) / oldScale
@@ -203,7 +213,9 @@ function handleWheel(event: WheelEvent) {
   transform.x = centerX - (centerX - transform.x) * scaleRatio
   transform.y = centerY - (centerY - transform.y) * scaleRatio
   transform.scale = clampedScale
+
   constrainTransform()
+
   wheelTimeoutId = window.setTimeout(() => {
     wheeling.value = false
     isAnimating.value = true
@@ -214,6 +226,7 @@ function handleWheel(event: WheelEvent) {
 function handleMouseDown(event: MouseEvent) {
   if (transform.scale <= props.minZoom)
     return
+
   event.preventDefault()
   isDragging.value = true
   isAnimating.value = false
@@ -228,6 +241,7 @@ function handleMouseDown(event: MouseEvent) {
 function handleMouseMove(event: MouseEvent) {
   if (!isDragging.value)
     return
+
   const deltaX = (event.clientX - dragStart.x) / transform.scale
   const deltaY = (event.clientY - dragStart.y) / transform.scale
   transform.x = transformStart.x + deltaX
@@ -236,10 +250,12 @@ function handleMouseMove(event: MouseEvent) {
 
 function handleMouseUp() {
   isDragging.value = false
+
   document.removeEventListener('mousemove', handleMouseMove)
   if (!wheeling.value) {
     isAnimating.value = true
   }
+
   constrainTransform()
 }
 
@@ -250,6 +266,7 @@ function getTouchPoints(event: TouchEvent): TouchPoint[] {
 function getDistance(point1: TouchPoint, point2: TouchPoint): number {
   const dx = point1.x - point2.x
   const dy = point1.y - point2.y
+
   return Math.sqrt(dx * dx + dy * dy)
 }
 
@@ -260,9 +277,11 @@ function getCenter(point1: TouchPoint, point2: TouchPoint): TouchPoint {
 function handleTouchStart(event: TouchEvent) {
   if (!props.enableTouch)
     return
+
   event.preventDefault()
   isAnimating.value = false
   touches.value = getTouchPoints(event)
+
   if (touches.value.length === 1) {
     if (transform.scale > props.minZoom) {
       isDragging.value = true
@@ -282,8 +301,10 @@ function handleTouchStart(event: TouchEvent) {
 function handleTouchMove(event: TouchEvent) {
   if (!props.enableTouch)
     return
+
   event.preventDefault()
   const currentTouches = getTouchPoints(event)
+
   if (isDragging.value && currentTouches.length === 1 && touches.value.length === 1) {
     if (transform.scale > props.minZoom) {
       const deltaX = (currentTouches[0].x - dragStart.x) / transform.scale
@@ -295,6 +316,7 @@ function handleTouchMove(event: TouchEvent) {
   else if (currentTouches.length === 2 && touches.value.length >= 2) {
     if (!imageRef.value)
       return
+
     const currentDistance = getDistance(currentTouches[0], currentTouches[1])
     const scaleRatio = currentDistance / initialDistance.value
     const newScale = Math.max(props.minZoom, Math.min(props.maxZoom, initialScale.value * scaleRatio))
@@ -314,10 +336,12 @@ function handleTouchMove(event: TouchEvent) {
 function handleTouchEnd(event: TouchEvent) {
   if (!props.enableTouch)
     return
+
   event.preventDefault()
   isAnimating.value = true
   constrainTransform()
   const remainingTouches = event.touches.length
+
   if (remainingTouches === 0) {
     isDragging.value = false
     touches.value = []

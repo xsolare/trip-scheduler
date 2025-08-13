@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends string">
+<script setup lang="ts" generic="T extends string | number">
 import type { ViewSwitcherItem } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { useResizeObserver } from '@vueuse/core'
@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const model = defineModel<T>({ required: true })
 
 const switcherRef = ref<HTMLElement | null>(null)
-const buttonRefs = ref<Record<string, HTMLElement>>({})
+const buttonRefs = ref<Record<string | number, HTMLElement>>({})
 
 const gliderStyle = ref({
   opacity: 0,
