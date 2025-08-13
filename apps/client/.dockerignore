@@ -11,6 +11,8 @@ node_modules
 dist
 .bun
 tsconfig.tsbuildinfo
+src-tauri
+.storybook
 
 # Файлы IDE и системные файлы
 .idea
