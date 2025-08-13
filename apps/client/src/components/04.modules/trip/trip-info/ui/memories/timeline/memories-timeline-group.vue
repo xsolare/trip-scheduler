@@ -276,38 +276,61 @@ function handleUpdateActivity(data: Partial<Activity>) {
 .rating-control {
   display: flex;
   align-items: center;
-  padding: 0 10px;
+  gap: 4px;
+  padding: 0 8px;
   background: var(--bg-secondary-color);
-  border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-full);
   cursor: pointer;
-  transition: all 0.2s ease;
-  height: 32px;
+  transition: all 0.25s ease;
+  height: 28px;
+  min-width: 80px;
 
   &:hover {
     border-color: #f1c40f;
+    background: var(--bg-hover-color);
+    .rating-placeholder {
+      color: #f1c40f;
+    }
   }
 
   &.has-rating {
     border-color: #f1c40f;
+    background: linear-gradient(90deg, rgba(241, 196, 15, 0.15), rgba(241, 196, 15, 0.05));
+    .star.filled {
+      color: #f1c40f;
+      filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6));
+    }
   }
 
   .rating-stars {
     display: flex;
+    align-items: center;
     gap: 2px;
+
     .star {
       color: var(--fg-tertiary-color);
+      font-size: 15px;
+      transition:
+        transform 0.15s ease,
+        color 0.2s ease;
+
       &.filled {
-        color: #f1bc0f;
+        color: #f1c40f;
+      }
+
+      &:hover {
+        transform: scale(1.15);
       }
     }
   }
 
   .rating-placeholder {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--fg-secondary-color);
-    font-weight: 600;
+    font-weight: 500;
     font-family: 'Sansation';
+    transition: color 0.2s ease;
+    white-space: nowrap;
   }
 }
 
