@@ -321,6 +321,6 @@ const extendedInfo = computed(() => {
 .fade-height-enter-to,
 .fade-height-leave-from {
   opacity: 1;
-  max-height: 2000px; 
+  max-height: 2000px;
 }
 </style>

@@ -107,7 +107,9 @@ function resetTransform() {
   transform.scale = props.minZoom
   transform.x = 0
   transform.y = 0
-  setTimeout(() => { isAnimating.value = false }, props.animationDuration)
+  setTimeout(() => {
+    isAnimating.value = false
+  }, props.animationDuration)
 }
 
 // Функция fitToScreen больше не нужна, так как кнопка удалена
@@ -142,7 +144,9 @@ function zoomTo(newScale: number, centerX = 0, centerY = 0) {
   transform.scale = clampedScale
   nextTick(() => {
     constrainTransform()
-    setTimeout(() => { isAnimating.value = false }, props.animationDuration)
+    setTimeout(() => {
+      isAnimating.value = false
+    }, props.animationDuration)
   })
 }
 
