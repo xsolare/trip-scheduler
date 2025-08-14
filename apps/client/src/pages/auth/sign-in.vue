@@ -20,6 +20,8 @@ const password = ref('')
 const terms = ref(false)
 const formError = ref<string | null>(null)
 
+const isPasswordVisible = ref(false)
+
 const emailRules = [
   (v: string) => !!v || 'Почтовый адрес обязателен',
   (v: string) => /.[^\n\r@\u2028\u2029]*@.+\..+/.test(v) || 'Неверный формат почты',
@@ -29,8 +31,6 @@ const passwordRules = [
   (v: string) => !!v || 'Пароль обязателен',
   (v: string) => v.length >= 8 || 'Пароль должен быть не менее 8 символов',
 ]
-
-const isLoading = computed(() => store.auth.isLoading)
 
 async function submitSignIn() {
   formError.value = null
@@ -66,6 +66,11 @@ async function handleOAuth(provider: OAuthProviders) {
   await router.push(targetUrl)
 }
 
+const isLoading = computed(() => store.auth.isLoading)
+
+const passwordInputType = computed(() => isPasswordVisible.value ? 'text' : 'password')
+const passwordToggleIcon = computed(() => isPasswordVisible.value ? 'mdi-eye-off-outline' : 'mdi-eye-outline')
+
 watch(formError, (newError) => {
   if (newError) {
     toast.error(newError, { expire: 4000 })
@@ -96,10 +101,10 @@ onMounted(() => {
       <div v-if="isLoading" class="loader-overlay">
         <Icon icon="mdi:loading" class="spinner" />
       </div>
-      <div class="logo">
+      <router-link :to="AppRoutePaths.Root" class="logo">
         <Icon icon="mdi:map-marker-path" class="logo-icon" />
         <span class="logo-text">Trip Scheduler</span>
-      </div>
+      </router-link>
 
       <form class="form" @submit.prevent="submitSignIn">
         <KitInput
@@ -115,12 +120,22 @@ onMounted(() => {
         <KitInput
           v-model="password"
           label="Пароль"
-          type="password"
+          :type="passwordInputType"
           name="password"
           icon="mdi-lock-outline"
           placeholder="••••••••"
           required
-        />
+        >
+          <template #append>
+            <button
+              type="button"
+              class="icon-btn"
+              @click="isPasswordVisible = !isPasswordVisible"
+            >
+              <Icon :icon="passwordToggleIcon" />
+            </button>
+          </template>
+        </KitInput>
 
         <KitCheckbox v-model="terms">
           Я подтверждаю, что прочитал и принимаю <a href="#">Условия использования</a> и <a href="#">Политику конфиденциальности</a>.
@@ -192,6 +207,7 @@ onMounted(() => {
   background-color: rgba(var(--bg-header-color), 0.2);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-secondary-color);
+  box-shadow: var(--s-l);
   border-radius: var(--r-l);
   padding: 32px;
   overflow: hidden;
@@ -229,6 +245,12 @@ onMounted(() => {
   justify-content: center;
   gap: 12px;
   margin-bottom: 32px;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
   color: var(--fg-primary-color);
 
   .logo-icon {

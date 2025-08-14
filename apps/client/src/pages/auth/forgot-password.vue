@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 import { AppRoutePaths } from '~/shared/constants/routes'
 </script>
 
 <template>
   <section class="content">
     <div class="card">
+      <router-link :to="AppRoutePaths.Root" class="logo">
+        <Icon icon="mdi:map-marker-path" class="logo-icon" />
+        <span class="logo-text">Trip Scheduler</span>
+      </router-link>
+
       <h2>Восстановление пароля</h2>
       <p>Эта функциональность пока в разработке.</p>
       <router-link :to="AppRoutePaths.Auth.SignIn" class="back-link">
@@ -47,6 +53,31 @@ import { AppRoutePaths } from '~/shared/constants/routes'
   font-weight: 500;
   &:hover {
     text-decoration: underline;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  color: var(--fg-primary-color);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  .logo-icon {
+    font-size: 2.5rem;
+    color: var(--fg-accent-color);
+  }
+
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: 600;
   }
 }
 </style>

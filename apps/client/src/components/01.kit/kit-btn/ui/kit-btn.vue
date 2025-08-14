@@ -49,7 +49,7 @@ const componentClasses = computed(() => [
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--s-s);
 
   & * {
     pointer-events: none;
@@ -57,9 +57,7 @@ const componentClasses = computed(() => [
 
   &:not(:disabled):hover {
     transform: translateY(-2px);
-    box-shadow:
-      0 7px 14px rgba(50, 50, 93, 0.1),
-      0 3px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-l);
   }
 
   &:not(:disabled):active {
@@ -70,7 +68,7 @@ const componentClasses = computed(() => [
     cursor: not-allowed;
     opacity: 0.6;
     transform: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-s);
   }
 
   &--solid {

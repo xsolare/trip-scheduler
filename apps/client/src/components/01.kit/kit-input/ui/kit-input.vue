@@ -12,7 +12,7 @@ interface Props {
   error?: string | null
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   label: '',
   icon: undefined,
   type: 'text',
@@ -26,15 +26,6 @@ const props = withDefaults(defineProps<Props>(), {
 const model = defineModel<string | number>()
 
 const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
-
-const isPasswordVisible = ref(false)
-
-const inputType = computed(() => {
-  if (props.type === 'password') {
-    return isPasswordVisible.value ? 'text' : 'password'
-  }
-  return props.type
-})
 </script>
 
 <template>
@@ -45,23 +36,15 @@ const inputType = computed(() => {
       <input
         :id="id"
         v-model="model"
-        :type="inputType"
+        :type="type"
         :name="name"
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
-        :class="{ 'has-prefix-icon': !!icon }"
+        :class="{ 'has-prefix-icon': !!icon, 'has-append-icon': $slots.append }"
       >
-      <div class="input-icon-append">
-        <button
-          v-if="type === 'password'"
-          type="button"
-          class="icon-btn"
-          @click="isPasswordVisible = !isPasswordVisible"
-        >
-          <Icon :icon="isPasswordVisible ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" />
-        </button>
-        <slot v-else name="append" />
+      <div v-if="$slots.append" class="input-icon-append">
+        <slot name="append" />
       </div>
     </div>
     <div v-if="error" class="error-message">
@@ -99,7 +82,7 @@ const inputType = computed(() => {
 
   input {
     width: 100%;
-    padding: 12px 12px;
+    padding: 12px;
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-primary-color);
     border-radius: var(--r-s);
@@ -109,6 +92,10 @@ const inputType = computed(() => {
 
     &.has-prefix-icon {
       padding-left: 40px;
+    }
+
+    &.has-append-icon {
+      padding-right: 40px;
     }
 
     &:focus {
@@ -130,12 +117,15 @@ const inputType = computed(() => {
     height: 100%;
     z-index: 1;
 
-    .icon-btn {
+    :deep(.icon-btn) {
       display: flex;
       color: var(--fg-secondary-color);
+      padding: 4px;
+      border-radius: 50%;
 
       &:hover {
         color: var(--fg-primary-color);
+        background-color: rgba(var(--fg-primary-color-rgb), 0.1);
       }
     }
   }

@@ -132,9 +132,7 @@ export const tripImages = pgTable('trip_images', {
 // Таблица для воспоминаний (Memories)
 export const memories = pgTable('memories', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tripId: uuid('trip_id')
-    .notNull()
-    .references(() => trips.id, { onDelete: 'cascade' }),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
   timestamp: timestamp('timestamp', { withTimezone: true }), // Может быть null для неотсортированных
   comment: text('comment'),
   imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка

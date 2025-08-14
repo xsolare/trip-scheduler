@@ -4,9 +4,9 @@ import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
-import { KitEditable } from '~/components/01.kit/kit-editable'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
+import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
@@ -27,9 +27,10 @@ const { updateMemory, deleteMemory } = store.memories
 const { getSelectedDay } = storeToRefs(store.data)
 
 const memoryComment = ref(props.memory.comment || '')
-function saveComment(value: string) {
-  if (value !== props.memory.comment) {
-    updateMemory({ id: props.memory.id, comment: value })
+// ИЗМЕНЕНО: Эта функция теперь будет вызываться по событию blur
+function saveComment() {
+  if (memoryComment.value !== props.memory.comment) {
+    updateMemory({ id: props.memory.id, comment: memoryComment.value })
   }
 }
 
@@ -109,10 +110,11 @@ function openImageViewer() {
   }
 }
 
-function saveViewerComment(value: string) {
+// ИЗМЕНЕНО: Эта функция теперь будет вызываться по событию blur
+function saveViewerComment() {
   const memory = imageViewer.currentImage.value?.meta?.memory
-  if (memory && value !== (memory.comment || '')) {
-    updateMemory({ id: memory.id, comment: value })
+  if (memory && activeViewerComment.value !== (memory.comment || '')) {
+    updateMemory({ id: memory.id, comment: activeViewerComment.value })
   }
 }
 
@@ -144,9 +146,10 @@ onClickOutside(timeEditorRef, saveTime)
     class="memory-item"
     :class="{ 'is-photo': memory.imageId, 'is-note': !memory.imageId, 'is-unsorted': isUnsorted }"
   >
-    <template v-if="memory.imageId && memory.imageUrl">
+    <template v-if="memory.imageId && memory?.image?.url">
+      <!-- ... Часть с фото остается без изменений ... -->
       <div class="photo-wrapper" @click="openImageViewer">
-        <KitImage :src="memory.imageUrl" object-fit="cover" />
+        <KitImage :src="memory!.image!.url" object-fit="cover" />
         <div class="photo-overlay">
           <div v-if="memoryComment" class="memory-comment-overlay">
             <p>{{ memoryComment }}</p>
@@ -184,12 +187,19 @@ onClickOutside(timeEditorRef, saveTime)
     <template v-if="!memory.imageId">
       <div class="memory-content">
         <div class="memory-comment">
-          <KitEditable
+          <KitInlineMdEditorWrapper
             v-model="memoryComment"
             :readonly="isViewMode"
+            :features="{
+              'block-edit': false,
+              'image-block': false,
+              'list-item': false,
+              'link-tooltip': false,
+              'toolbar': false,
+            }"
             placeholder="Заметка..."
             class="comment-editor"
-            @submit="saveComment"
+            @blur="saveComment"
           />
         </div>
       </div>
@@ -218,12 +228,14 @@ onClickOutside(timeEditorRef, saveTime)
           :class="{ 'is-readonly': isViewMode }"
         >
           <div class="viewer-comment-section">
-            <KitEditable
+            <!-- НОВЫЙ КОМПОНЕНТ: Заменяем KitEditable на KitInlineMdEditorWrapper -->
+            <KitInlineMdEditorWrapper
               v-model="activeViewerComment"
               :readonly="isViewMode"
+              :features="{ 'block-edit': false, 'slash-menu': false }"
               placeholder="Комментарий..."
               class="viewer-comment-editor"
-              @submit="saveViewerComment"
+              @blur="saveViewerComment"
             />
           </div>
           <div class="viewer-time-section">
@@ -242,6 +254,7 @@ onClickOutside(timeEditorRef, saveTime)
   </div>
 </template>
 
+<!-- ИЗМЕНЕНО: Стили адаптированы для KitInlineMdEditorWrapper -->
 <style scoped lang="scss">
 .memory-item {
   position: relative;
@@ -296,9 +309,10 @@ onClickOutside(timeEditorRef, saveTime)
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
+
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--s-m);
     }
   }
 
@@ -419,24 +433,24 @@ onClickOutside(timeEditorRef, saveTime)
 
 .memory-comment {
   width: 100%;
+  // Стили для редактора заметки
   .comment-editor {
-    :deep(.kit-editable-area) {
+    :deep(.milkdown .editor) {
       padding: 4px;
       font-size: 0.9rem;
       color: var(--fg-primary-color);
       white-space: pre-wrap;
+      line-height: 1.5;
+      min-height: 28px;
+      p {
+        margin: 0;
+      }
       &:hover {
         background-color: var(--bg-hover-color);
       }
     }
-    :deep(.kit-editable-root[data-editing='false'] .kit-editable-area:hover) {
+    :deep(.prosemirror-editor-wrapper[readonly]) .editor:hover {
       background-color: transparent;
-    }
-    :deep(.kit-editable-input) {
-      padding: 0;
-    }
-    :deep(.kit-editable-controls) {
-      display: none;
     }
   }
 }
@@ -566,39 +580,33 @@ onClickOutside(timeEditorRef, saveTime)
 .viewer-comment-section {
   flex-grow: 1;
   color: white;
-
-  :deep(.kit-editable-area) {
-    display: flex;
-    align-items: center;
-  }
 }
 
 .viewer-time-section {
   flex-shrink: 0;
 }
 
+// Стили для редактора в Image Viewer
 .viewer-comment-editor {
-  :deep(.kit-editable-area) {
-    padding: 8px;
-    border-radius: var(--r-s);
-    min-height: 48px;
-    transition: background-color 0.2s ease;
-  }
-  :deep(.kit-editable-root[data-editing='true'] .kit-editable-area) {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  :deep(.kit-editable-root[data-editing='false'] .kit-editable-area:hover) {
-    background-color: rgba(255, 255, 255, 0.1);
+  :deep(.milkdown) {
+    .editor {
+      padding: 8px;
+      border-radius: var(--r-s);
+      min-height: 48px;
+      transition: background-color 0.2s ease;
+      p {
+        margin: 0;
+      }
+    }
+    &:not([readonly]) .editor:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
   }
 
-  .is-readonly & {
+  &.is-readonly {
     font-size: 1rem;
     pointer-events: none;
-
-    :deep(.kit-editable-controls) {
-      display: none;
-    }
-    :deep(.kit-editable-area) {
+    :deep(.milkdown .editor) {
       padding: 0;
     }
   }

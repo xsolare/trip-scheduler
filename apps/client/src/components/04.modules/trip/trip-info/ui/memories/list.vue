@@ -26,10 +26,10 @@ const galleryImages = computed<ImageViewerImage[]>(() => {
   const allMemories: Memory[] = [...memoriesForSelectedDay.value, ...memoriesToProcess.value]
   const uniqueMemories = [...new Map(allMemories.map(item => [item.id, item])).values()]
   return uniqueMemories
-    .filter(memory => memory.imageId && memory.imageUrl)
+    .filter(memory => memory.imageId && memory?.image?.url)
     .sort((a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime())
     .map(memory => ({
-      url: memory.imageUrl!,
+      url: memory!.image!.url,
       alt: memory.comment || 'Memory Image',
       meta: { memory },
     }))

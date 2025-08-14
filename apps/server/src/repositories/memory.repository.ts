@@ -2,11 +2,12 @@ import type { z } from 'zod'
 import type { CreateMemoryInputSchema, UpdateMemoryInputSchema } from '~/modules/memory/memory.schemas'
 import { db } from 'db'
 import { memories, tripImages } from 'db/schema'
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 
 export const memoryRepository = {
   /**
    * Создает новое воспоминание (текст или фото).
+   * Возвращает полный объект, включая связанные данные изображения.
    */
   async create(data: z.infer<typeof CreateMemoryInputSchema>) {
     const [newMemory] = await db
@@ -17,41 +18,38 @@ export const memoryRepository = {
       })
       .returning()
 
-    return newMemory
+    const result = await db.query.memories.findFirst({
+      where: eq(memories.id, newMemory.id),
+      with: {
+        image: true,
+      },
+    })
+
+    return result
   },
 
   /**
-   * Получает все воспоминания для путешествия, включая URL изображений.
+   * Получает все воспоминания для путешествия, включая полные данные связанных изображений.
    */
   async getByTripId(tripId: string) {
-    return await db
-      .select({
-        id: memories.id,
-        tripId: memories.tripId,
-        timestamp: memories.timestamp,
-        comment: memories.comment,
-        imageId: memories.imageId,
-        imageUrl: tripImages.url,
-        createdAt: memories.createdAt,
-        updatedAt: memories.updatedAt,
-      })
-      .from(memories)
-      .leftJoin(tripImages, eq(memories.imageId, tripImages.id))
-      .where(eq(memories.tripId, tripId))
-      .orderBy(memories.timestamp, memories.createdAt)
+    return await db.query.memories.findMany({
+      where: eq(memories.tripId, tripId),
+      with: {
+        image: true,
+      },
+      orderBy: [asc(memories.timestamp), asc(memories.createdAt)],
+    })
   },
 
   /**
    * Обновляет воспоминание (комментарий или временную метку).
-   * @returns Обновленный объект или null
+   * @returns Обновленный полный объект или null
    */
   async update(data: z.infer<typeof UpdateMemoryInputSchema>) {
     const { id, ...updateData } = data
 
-    // Создаем объект для обновления
     const payload: Record<string, any> = { ...updateData, updatedAt: new Date() }
 
-    // Явно обрабатываем поле timestamp, чтобы можно было установить его в null
     if (Object.prototype.hasOwnProperty.call(updateData, 'timestamp')) {
       payload.timestamp = updateData.timestamp ? new Date(updateData.timestamp) : null
     }
@@ -62,26 +60,41 @@ export const memoryRepository = {
       .where(eq(memories.id, id))
       .returning()
 
-    return updatedMemory || null
+    if (!updatedMemory)
+      return null
+
+    return await db.query.memories.findFirst({
+      where: eq(memories.id, updatedMemory.id),
+      with: {
+        image: true,
+      },
+    })
   },
 
   /**
    * Удаляет воспоминание по ID.
-   * @returns Удаленный объект или null
+   * @returns Полный удаленный объект или null
    */
   async delete(id: string) {
-    const [deletedMemory] = await db
-      .delete(memories)
-      .where(eq(memories.id, id))
-      .returning()
+    const memoryToDelete = await db.query.memories.findFirst({
+      where: eq(memories.id, id),
+      with: {
+        image: true,
+      },
+    })
 
-    return deletedMemory || null
+    if (!memoryToDelete)
+      return null
+
+    await db.delete(memories).where(eq(memories.id, id))
+
+    return memoryToDelete
   },
 
   /**
    * Устанавливает timestamp для воспоминания, используя 'takenAt' из связанного изображения.
    * @param id - ID воспоминания.
-   * @returns Обновленный объект или null.
+   * @returns Обновленный полный объект или null.
    */
   async applyTakenAtTimestamp(id: string) {
     const memory = await db.query.memories.findFirst({
@@ -89,18 +102,16 @@ export const memoryRepository = {
       columns: { imageId: true },
     })
 
-    if (!memory?.imageId) {
+    if (!memory?.imageId)
       return null
-    }
 
     const image = await db.query.tripImages.findFirst({
       where: eq(tripImages.id, memory.imageId),
       columns: { takenAt: true },
     })
 
-    if (!image?.takenAt) {
+    if (!image?.takenAt)
       return null
-    }
 
     const [updatedMemory] = await db
       .update(memories)
@@ -108,13 +119,22 @@ export const memoryRepository = {
       .where(eq(memories.id, id))
       .returning()
 
-    return updatedMemory || null
+    if (!updatedMemory)
+      return null
+
+    // Возвращаем обновленный объект с полными данными
+    return await db.query.memories.findFirst({
+      where: eq(memories.id, updatedMemory.id),
+      with: {
+        image: true,
+      },
+    })
   },
 
   /**
    * Отвязывает воспоминание от даты, устанавливая timestamp в null.
    * @param id - ID воспоминания.
-   * @returns Обновленный объект или null.
+   * @returns Обновленный полный объект или null.
    */
   async unassignTimestamp(id: string) {
     const [updatedMemory] = await db
@@ -123,6 +143,14 @@ export const memoryRepository = {
       .where(eq(memories.id, id))
       .returning()
 
-    return updatedMemory || null
+    if (!updatedMemory)
+      return null
+
+    return await db.query.memories.findFirst({
+      where: eq(memories.id, updatedMemory.id),
+      with: {
+        image: true,
+      },
+    })
   },
 }

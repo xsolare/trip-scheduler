@@ -4,7 +4,7 @@ import { computed, nextTick, onBeforeUnmount, readonly, ref, watch } from 'vue'
 import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 
 interface Props {
-  src: string
+  src?: string
   alt?: string
   aspectRatio?: number
   objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
@@ -152,7 +152,9 @@ defineExpose({
       <transition name="faded">
         <div v-if="isLoading" class="placeholder-wrapper">
           <slot name="loader">
-            <KitSkeleton class="skeleton-placeholder" />
+            <KitSkeleton
+              class="skeleton-placeholder"
+            />
           </slot>
         </div>
       </transition>
@@ -204,15 +206,15 @@ defineExpose({
     inset: 0;
     width: 100%;
     height: 100%;
+
+    .skeleton-placeholder {
+      width: 100% !important;
+      height: 100% !important;
+    }
   }
 
   .image {
     transition: opacity 0.3s ease-out;
-  }
-
-  .skeleton-placeholder {
-    width: 100%;
-    height: 100%;
   }
 
   .error-placeholder {

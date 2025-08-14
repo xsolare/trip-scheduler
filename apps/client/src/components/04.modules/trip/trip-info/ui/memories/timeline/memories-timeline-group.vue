@@ -218,12 +218,13 @@ function handleUpdateActivity(data: Partial<Activity>) {
   gap: 4px;
   padding: 0 10px;
   border-radius: var(--r-full);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid transparent;
-  height: 32px;
+  height: 28px;
+  font-family: 'Sansation';
 
   .status-icon {
     font-size: 1.1rem;
@@ -231,25 +232,27 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   .status-text {
     display: none;
+
     @include media-up(sm) {
       display: inline;
       white-space: nowrap;
       font-family: 'Sansation';
-      font-weight: 600;
       font-size: 0.8rem;
     }
   }
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px var(--bg-hover-color);
+    transform: scale(1.1);
   }
 
   &.status-completed {
     background-color: var(--bg-success-color);
     color: var(--fg-success-color);
-    border-color: var(--border-success-color);
+
     .status-text {
+      color: var(--fg-success-color);
+    }
+    .status-icon {
       color: var(--fg-success-color);
     }
   }
@@ -257,8 +260,11 @@ function handleUpdateActivity(data: Partial<Activity>) {
   &.status-skipped {
     background-color: var(--bg-error-color);
     color: var(--fg-error-color);
-    border-color: var(--border-error-color);
+
     .status-text {
+      color: var(--fg-error-color);
+    }
+    .status-icon {
       color: var(--fg-error-color);
     }
   }
@@ -266,8 +272,11 @@ function handleUpdateActivity(data: Partial<Activity>) {
   &.status-none {
     background: var(--bg-secondary-color);
     color: var(--fg-primary-color);
-    border-color: var(--border-secondary-color);
+
     .status-text {
+      color: var(--fg-secondary-color);
+    }
+    .status-icon {
       color: var(--fg-secondary-color);
     }
   }
@@ -287,7 +296,8 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   &:hover {
     border-color: #f1c40f;
-    background: var(--bg-hover-color);
+    transform: scale(1.1);
+
     .rating-placeholder {
       color: #f1c40f;
     }
@@ -296,6 +306,7 @@ function handleUpdateActivity(data: Partial<Activity>) {
   &.has-rating {
     border-color: #f1c40f;
     background: linear-gradient(90deg, rgba(241, 196, 15, 0.15), rgba(241, 196, 15, 0.05));
+
     .star.filled {
       color: #f1c40f;
       filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6));

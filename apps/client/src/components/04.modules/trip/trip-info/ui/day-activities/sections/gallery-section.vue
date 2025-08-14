@@ -299,7 +299,7 @@ const visibleImages = computed(() =>
     height: 85vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--s-xl);
     overflow: hidden;
   }
 
@@ -503,7 +503,7 @@ const visibleImages = computed(() =>
 
   &:hover {
     transform: scale(1.02);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--s-m);
     border-color: var(--fg-accent-color);
 
     .image-overlay {

@@ -3,21 +3,17 @@ import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
-/**
- * Определяем интерфейс для метаданных.
- * Он основан на предоставленной вами структуре объекта `image`.
- */
 interface ImageMetadata {
-  width?: number
-  height?: number
-  cameraMake?: string
-  cameraModel?: string
-  fNumber?: number
-  exposureTime?: number
-  iso?: number
-  focalLength?: number
-  takenAt?: string
-  extendedMetadata?: Record<string, any>
+  width?: number | null
+  height?: number | null
+  cameraMake?: string | null
+  cameraModel?: string | null
+  fNumber?: number | null
+  exposureTime?: number | null
+  iso?: number | null
+  focalLength?: number | null
+  takenAt?: string | null
+  extendedMetadata?: Record<string, any> | null
 }
 
 interface Props {
@@ -51,7 +47,7 @@ const cameraName = computed(() => [props.image.cameraMake, props.image.cameraMod
 
 // Форматирование выдержки (например, 1/125s)
 const formattedExposureTime = computed(() => {
-  if (props.image.exposureTime === undefined)
+  if (props.image.exposureTime === undefined || props.image.exposureTime === null)
     return ''
   if (props.image.exposureTime < 1 && props.image.exposureTime > 0) {
     const reciprocal = Math.round(1 / props.image.exposureTime)
@@ -84,7 +80,6 @@ const basicInfo = computed(() => ([
   { label: 'Дата съемки', value: takenAtDate.value, icon: 'mdi:calendar-clock' },
 ].filter(item => item.value)))
 
-// Подготовка расширенных данных
 const extendedInfo = computed(() => {
   if (!props.image.extendedMetadata)
     return []
@@ -97,7 +92,7 @@ const extendedInfo = computed(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="slide-fade">
+    <Transition name="slide-from-right">
       <div v-if="visible" class="metadata-overlay">
         <div ref="panelRef" class="metadata-panel">
           <header class="panel-header">
@@ -153,22 +148,22 @@ const extendedInfo = computed(() => {
 .metadata-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.3);
   z-index: 10000;
   display: flex;
   justify-content: flex-end;
+  backdrop-filter: blur(2px);
 }
 
 .metadata-panel {
   width: 100%;
   max-width: 400px;
   height: 100%;
-  background: #1c1c1e;
-  color: #f0f0f0;
+  background: var(--bg-secondary-color);
+  color: var(--fg-primary-color);
   display: flex;
   flex-direction: column;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-  border-left: 1px solid #333;
+  border-left: 1px solid var(--border-primary-color);
+  box-shadow: var(--s-l);
 }
 
 .panel-header {
@@ -176,7 +171,7 @@ const extendedInfo = computed(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-primary-color);
   flex-shrink: 0;
 
   h3 {
@@ -187,19 +182,16 @@ const extendedInfo = computed(() => {
 }
 
 .close-btn-panel {
-  background: none;
-  border: none;
-  color: #aaa;
+  color: var(--fg-tertiary-color);
   font-size: 24px;
-  cursor: pointer;
   transition: color 0.2s;
   &:hover {
-    color: white;
+    color: var(--fg-primary-color);
   }
 }
 
 .panel-content {
-  padding: 20px;
+  padding: 16px;
   overflow-y: auto;
   flex-grow: 1;
   -webkit-overflow-scrolling: touch;
@@ -208,23 +200,25 @@ const extendedInfo = computed(() => {
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 3px;
+    background: var(--border-primary-color);
+    border-radius: var(--r-2xs);
   }
   &::-webkit-scrollbar-track {
-    background: #1c1c1e;
+    background: transparent;
   }
 }
 
 .info-section {
   margin-bottom: 24px;
+
   h4 {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #aaa;
-    margin: 0 0 12px;
+    color: var(--fg-tertiary-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    padding-bottom: 12px;
+    margin: 0;
   }
 }
 
@@ -232,18 +226,27 @@ const extendedInfo = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 8px;
+
+  span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--fg-tertiary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
   button {
-    background: none;
-    border: none;
-    color: #8a8a8e;
+    color: var(--fg-accent-color);
     cursor: pointer;
     font-size: 0.85rem;
     display: flex;
     align-items: center;
     gap: 4px;
+    transition: color 0.2s;
+
     &:hover {
-      color: white;
+      color: var(--bg-action-hover-color);
     }
   }
 }
@@ -257,15 +260,15 @@ const extendedInfo = computed(() => {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 8px 0;
-  border-bottom: 1px solid #2a2a2c;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-primary-color);
 
   &:last-child {
     border-bottom: none;
   }
 
   dt {
-    color: #aaa;
+    color: var(--fg-secondary-color);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -274,7 +277,7 @@ const extendedInfo = computed(() => {
 
   dd {
     margin: 0;
-    color: #f0f0f0;
+    color: var(--fg-primary-color);
     text-align: right;
     word-break: break-all;
   }
@@ -282,30 +285,37 @@ const extendedInfo = computed(() => {
 
 .info-icon {
   font-size: 18px;
-  color: #666;
+  color: var(--fg-muted-color);
 }
 
 .extended-list {
   font-size: 0.85rem;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  background-color: var(--bg-tertiary-color);
+  border-radius: var(--r-s);
   padding: 0 12px;
-  margin-top: 12px;
+
+  .info-item {
+    border-color: var(--border-secondary-color);
+  }
 
   dt {
     font-family: monospace;
     font-size: 0.8rem;
+    color: var(--fg-tertiary-color);
+  }
+
+  dd {
+    color: var(--fg-secondary-color);
   }
 }
 
-.slide-fade-enter-active,
-.slide-fade-leave-active {
+.slide-from-right-enter-active,
+.slide-from-right-leave-active {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.slide-fade-enter-from,
-.slide-fade-leave-to {
+.slide-from-right-enter-from,
+.slide-from-right-leave-to {
   transform: translateX(100%);
-  opacity: 0;
 }
 
 .fade-height-enter-active,

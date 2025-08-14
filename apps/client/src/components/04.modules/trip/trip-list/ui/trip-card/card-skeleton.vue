@@ -68,7 +68,7 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
   width: 100%;
   background-color: var(--bg-secondary-color);
   border-radius: var(--r-l);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--s-m);
   overflow: hidden;
   border: 1px solid var(--border-secondary-color);
 }

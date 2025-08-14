@@ -106,7 +106,7 @@ function onMouseMove() {
   border: 1px solid var(--border-secondary-color);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--s-xl);
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   max-width: 600px;
 }

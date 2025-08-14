@@ -1,4 +1,5 @@
 @use 'sass:map';
+@use 'sass:list'; 
 @use '../_variables.scss' as *;
 
 //_ ---- Media Mixins ---------------------------------------------------------------------- _//
@@ -35,9 +36,9 @@
   } @else {
     // Обрабатываем 'xs' как особый случай: от 0 до следующего брейкпоинта.
     // Это предотвращает предупреждение о max-width: -1px.
-    $keys: map-keys($breakpoints);
-    $index: index($keys, $name);
-    $next-key: if($index < length($keys), nth($keys, $index + 1), null);
+    $keys: map.keys($breakpoints);
+    $index: list.index($keys, $name);
+    $next-key: if(list.length($keys) > $index, list.nth($keys, $index + 1), null);
 
     @if $next-key {
       $upper-bound: map.get($breakpoints, $next-key) - 1;
@@ -56,15 +57,17 @@
 @mixin media-only($name) {
   $min-width: map.get($breakpoints, $name);
 
-  $keys: map-keys($breakpoints);
-  $index: index($keys, $name);
-  $next-key: if($index < length($keys), nth($keys, $index + 1), null);
+  $keys: map.keys($breakpoints);
+  $index: list.index($keys, $name);
+  $next-key: if(list.length($keys) > $index, list.nth($keys, $index + 1), null);
 
   // Случай для xs (от 0 до sm - 1)
   @if $min-width == 0 {
-    $max-width: map.get($breakpoints, $next-key) - 1;
-    @media (max-width: $max-width) {
-      @content;
+    @if $next-key {
+      $max-width: map.get($breakpoints, $next-key) - 1;
+      @media (max-width: $max-width) {
+        @content;
+      }
     }
   }
   // Случай для всех, кроме последнего (xxl)

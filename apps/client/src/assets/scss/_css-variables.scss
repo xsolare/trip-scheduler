@@ -18,4 +18,10 @@
       --r-#{$radiusType}: #{$radius};
     }
   }
+
+  @if map.has-key($theme, 'shadows') {
+    @each $shadowType, $shadow in map.get($theme, 'shadows') {
+      --s-#{$shadowType}: #{$shadow};
+    }
+  }
 }

@@ -58,7 +58,7 @@ const swipeStyle = computed(() => {
 .kit-toast-item {
   margin-left: auto;
   padding: var(--p-m, 16px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--s-m);
   pointer-events: all;
   border-radius: var(--r-m, 12px);
   display: flex;

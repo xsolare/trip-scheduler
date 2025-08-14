@@ -172,7 +172,7 @@ const visibilityIcon = computed(() => {
   width: 100%;
   background-color: var(--bg-secondary-color);
   border-radius: var(--r-l);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--s-m);
   cursor: pointer;
   overflow: hidden;
   transition:
@@ -181,7 +181,7 @@ const visibilityIcon = computed(() => {
   border: 1px solid transparent;
 
   .travel-card-wrapper:hover & {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--s-xl);
     border-color: var(--border-primary-color);
   }
 }

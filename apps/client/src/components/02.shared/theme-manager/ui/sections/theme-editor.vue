@@ -12,17 +12,19 @@ import ColorEditorGrid from './color-editor-grid.vue'
 import ColorPresetSelector from './preset-selector.vue'
 import RadiusEditorGrid from './radius-editor-grid.vue'
 import RadiusPresetSelector from './radius-preset-selector.vue'
+import ShadowEditorSection from './shadow-editor-section.vue'
 
 const emit = defineEmits<{
   (e: 'upload'): void
   (e: 'reset'): void
   (e: 'resetRadius'): void
+  (e: 'resetShadows'): void
 }>()
 
 const themeStore = useThemeStore()
 const { customThemePalette, customThemeRadius } = storeToRefs(themeStore)
 
-type EditorTab = 'presets' | 'colors' | 'radius'
+type EditorTab = 'presets' | 'colors' | 'radius' | 'shadows'
 
 const activeTab = ref<EditorTab>('presets')
 
@@ -30,6 +32,7 @@ const viewItems: ViewSwitcherItem<EditorTab>[] = [
   { id: 'presets', label: 'Пресеты', icon: 'mdi:palette-swatch-outline' },
   { id: 'colors', label: 'Цвета', icon: 'mdi:eyedropper-variant' },
   { id: 'radius', label: 'Радиусы', icon: 'mdi:vector-radius' },
+  { id: 'shadows', label: 'Тени', icon: 'mdi:box-shadow' },
 ]
 
 function applyPreset(palette: ColorPalette) {
@@ -79,11 +82,23 @@ const { mdAndDown } = useDisplay()
             <h3 class="pane-subtitle">
               Ручная настройка
             </h3>
-            <KitBtn icon="mdi:radius" variant="outlined" color="secondary" @click="emit('resetRadius')">
+            <KitBtn icon="mdi:restore" variant="outlined" color="secondary" @click="emit('resetRadius')">
               {{ mdAndDown ? '' : 'Сбросить радиус' }}
             </KitBtn>
           </div>
           <RadiusEditorGrid v-model="customThemeRadius" />
+        </div>
+      </template>
+
+      <!-- Слот для вкладки 'shadows' -->
+      <template #shadows>
+        <div class="tab-pane">
+          <div class="tab-pane__actions">
+            <KitBtn icon="mdi:restore" variant="outlined" color="secondary" @click="emit('resetShadows')">
+              {{ mdAndDown ? '' : 'Сбросить тени' }}
+            </KitBtn>
+          </div>
+          <ShadowEditorSection />
         </div>
       </template>
     </KitTabs>
