@@ -7,7 +7,7 @@ import { authUtils } from './auth.utils'
 
 export async function createContext(_: FetchCreateContextFnOptions, c: Context) {
   const req = c.req
-  const token = req.header('authorization')?.split(' ')[1] // Bearer TOKEN
+  const token = req.header('authorization')?.split(' ')[1]
 
   if (!token) {
     return { user: null, db, c }
@@ -38,6 +38,7 @@ const t = initTRPC
           ...shape.data,
           code: error.code,
           httpStatus: shape.data.httpStatus,
+          stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
         },
       }
     },
