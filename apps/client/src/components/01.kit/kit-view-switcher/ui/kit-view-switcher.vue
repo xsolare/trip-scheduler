@@ -126,6 +126,7 @@ function handleItemClick(itemId: T) {
   border: 1px solid var(--border-secondary-color);
   user-select: none;
   transition: opacity 0.2s ease-out;
+  height: 46px;
 
   &.is-disabled {
     opacity: 0.6;

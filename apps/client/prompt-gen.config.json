@@ -4,5 +4,5 @@
   "output": "project_prompt.md",
   "format": "structured",
   "maxSize": "35",
-  "excludePaths": "**/configs/**,**/build/**,**/public/**,**/test/**,**/*.spec.ts,version.json,bun.lock,**/.vscode/**,**/data/**,**/constant/**,**/auto-imports.d.ts/**,**/mock/**,**/real/**,**/assets/**,**/.storybook/**,**/src-tauri/**,**/stubs/**,**/service-worker/**"
+  "excludePaths": "**/theme-manager/**,**/stories/**,**/configs/**,**/build/**,**/public/**,**/test/**,**/*.spec.ts,version.json,bun.lock,**/.vscode/**,**/data/**,**/constant/**,**/auto-imports.d.ts/**,**/mock/**,**/real/**,**/assets/**,**/.storybook/**,**/src-tauri/**,**/stubs/**,**/service-worker/**"
 }

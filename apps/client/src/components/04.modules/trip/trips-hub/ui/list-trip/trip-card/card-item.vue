@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ITrip } from '../../models/types'
+import type { ITrip } from '../../../models/types'
 import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitImage } from '~/components/01.kit/kit-image'

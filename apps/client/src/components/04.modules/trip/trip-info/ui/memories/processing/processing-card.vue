@@ -75,10 +75,10 @@ async function handleApply() {
   if (!selectedDate.value || !selectedTime.value)
     return
 
-  const selectedDateStr = selectedDate.value.toString() 
+  const selectedDateStr = selectedDate.value.toString()
   if (!validTripDates.value.has(selectedDateStr)) {
     toast.error('Выбранная дата не существует в рамках этого путешествия.')
-    return 
+    return
   }
 
   isSaving.value = true

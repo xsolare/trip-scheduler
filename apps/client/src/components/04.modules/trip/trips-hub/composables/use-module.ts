@@ -1,9 +1,9 @@
 import { createStoreHook } from '~/shared/lib/create-store-hook'
 
-import { useTripListStore } from '../store/trip-list.store'
+import { useTripHubStore } from '../store/trips-hub.store'
 
 const moduleStores = {
-  tripList: useTripListStore,
+  hub: useTripHubStore,
 }
 
 export const useModuleStore = createStoreHook(moduleStores)

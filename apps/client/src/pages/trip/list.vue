@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NavigationBack } from '~/components/02.shared/navigation-back/index'
-import { TripList } from '~/components/04.modules/trip/trip-list/index'
+import { TripsHub } from '~/components/04.modules/trip/trips-hub'
 
 const hasFetchError = ref(false)
 </script>
@@ -11,13 +11,19 @@ const hasFetchError = ref(false)
     :class="{ 'has-error': hasFetchError }"
   >
     <NavigationBack />
-    <TripList @update:has-error="hasFetchError = $event" />
+    <TripsHub @update:has-error="hasFetchError = $event" />
   </section>
 </template>
 
 <style lang="scss" scoped>
 .content-wrapper {
   transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 
   &.has-error {
     background: transparent;

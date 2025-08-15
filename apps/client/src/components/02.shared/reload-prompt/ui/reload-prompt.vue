@@ -72,9 +72,9 @@ async function close() {
   display: flex;
   align-items: flex-start;
   gap: var(--p-m, 16px);
-  padding: var(--p-m, 16px);
+  padding: 16px;
   border: 1px solid var(--border-primary-color);
-  border-radius: var(--r-m, 12px);
+  border-radius: 12px;
   z-index: 10000;
   background-color: var(--bg-secondary-color);
   color: var(--fg-primary-color);

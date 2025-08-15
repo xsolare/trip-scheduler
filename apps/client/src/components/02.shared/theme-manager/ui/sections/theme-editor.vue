@@ -61,7 +61,7 @@ const { mdAndDown } = useDisplay()
       <!-- Слот для вкладки 'colors' -->
       <template #colors>
         <div class="tab-pane">
-          <div class="tab-pane__actions">
+          <div class="tab-pane-actions">
             <KitBtn icon="mdi:upload" variant="outlined" color="secondary" @click="emit('upload')">
               {{ mdAndDown ? '' : 'Загрузить' }}
             </KitBtn>
@@ -78,7 +78,7 @@ const { mdAndDown } = useDisplay()
         <div class="tab-pane">
           <RadiusPresetSelector :presets="radiusPresets" @apply-preset="applyRadiusPreset" />
           <div class="divider" />
-          <div class="tab-pane__actions tab-pane__actions--between">
+          <div class="tab-pane-actions tab-pane-actions--between">
             <h3 class="pane-subtitle">
               Ручная настройка
             </h3>
@@ -93,7 +93,7 @@ const { mdAndDown } = useDisplay()
       <!-- Слот для вкладки 'shadows' -->
       <template #shadows>
         <div class="tab-pane">
-          <div class="tab-pane__actions">
+          <div class="tab-pane-actions">
             <KitBtn icon="mdi:restore" variant="outlined" color="secondary" @click="emit('resetShadows')">
               {{ mdAndDown ? '' : 'Сбросить тени' }}
             </KitBtn>
@@ -130,7 +130,7 @@ const { mdAndDown } = useDisplay()
   min-height: 200px;
 }
 
-.tab-pane__actions {
+.tab-pane-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;

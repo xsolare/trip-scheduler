@@ -228,11 +228,16 @@ onClickOutside(timeEditorRef, saveTime)
           :class="{ 'is-readonly': isViewMode }"
         >
           <div class="viewer-comment-section">
-            <!-- НОВЫЙ КОМПОНЕНТ: Заменяем KitEditable на KitInlineMdEditorWrapper -->
             <KitInlineMdEditorWrapper
               v-model="activeViewerComment"
               :readonly="isViewMode"
-              :features="{ 'block-edit': false, 'slash-menu': false }"
+              :features="{
+                'block-edit': false,
+                'image-block': false,
+                'list-item': false,
+                'link-tooltip': false,
+                'toolbar': false,
+              }"
               placeholder="Комментарий..."
               class="viewer-comment-editor"
               @blur="saveViewerComment"

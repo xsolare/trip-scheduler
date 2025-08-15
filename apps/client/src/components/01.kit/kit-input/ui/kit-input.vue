@@ -89,6 +89,7 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
     color: var(--fg-primary-color);
     font-size: 1rem;
     transition: border-color 0.2s;
+    height: 46px;
 
     &.has-prefix-icon {
       padding-left: 40px;
