@@ -4,6 +4,7 @@ import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog/composables/use-confirm'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
@@ -25,6 +26,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const store = useModuleStore(['memories', 'data'])
+const confirm = useConfirm()
+
 const { updateMemory, deleteMemory, removeTimestamp } = store.memories
 const { getSelectedDay } = storeToRefs(store.data)
 
@@ -76,16 +79,24 @@ const displayTime = computed(() => {
   return `${hours}:${minutes}`
 })
 
-function handleDelete() {
-  // eslint-disable-next-line no-alert
-  if (confirm('Вы уверены, что хотите удалить это воспоминание?')) {
+async function handleDelete() {
+  const isConfirmed = await confirm({
+    title: 'Удалить воспоминание?',
+    description: 'Это действие нельзя будет отменить. Воспоминание будет удалено навсегда.',
+  })
+
+  if (isConfirmed) {
     deleteMemory(props.memory.id)
   }
 }
 
-function handleRemoveTimestamp() {
-  // eslint-disable-next-line no-alert
-  if (confirm('Убрать временную метку? Воспоминание будет перемещено в блок "Фотографии для обработки".')) {
+async function handleRemoveTimestamp() {
+  const isConfirmed = await confirm({
+    title: 'Убрать временную метку?',
+    description: 'Воспоминание будет перемещено в блок "Фотографии для обработки".',
+  })
+  
+  if (isConfirmed) {
     removeTimestamp(props.memory.id)
   }
 }

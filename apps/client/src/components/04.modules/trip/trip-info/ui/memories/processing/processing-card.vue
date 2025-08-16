@@ -4,6 +4,7 @@ import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { getLocalTimeZone, parseDate, Time } from '@internationalized/date'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog/composables/use-confirm'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
@@ -16,6 +17,7 @@ const props = defineProps<{ memory: Memory }>()
 const { memories: memoriesStore, data: tripDataStore } = useModuleStore(['memories', 'data'])
 const { getSelectedDay, getAllDays } = storeToRefs(tripDataStore)
 const toast = useToast()
+const confirm = useConfirm()
 
 const comment = ref(props.memory.comment || '')
 const memoryDate = computed(() => (props.memory.timestamp ? new Date(props.memory.timestamp) : null))
@@ -85,8 +87,12 @@ async function handleApply() {
 }
 
 async function handleDelete() {
-  // eslint-disable-next-line no-alert
-  if (confirm('Вы уверены, что хотите удалить это воспоминание?')) {
+  const isConfirmed = await confirm({
+    title: 'Удалить воспоминание?',
+    description: 'Это действие нельзя будет отменить. Фотография будет удалена навсегда.',
+  })
+
+  if (isConfirmed) {
     isDeleting.value = true
     try {
       await memoriesStore.deleteMemory(props.memory.id)
