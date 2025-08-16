@@ -216,28 +216,60 @@ function handleUpdateActivity(data: Partial<Activity>) {
   width: 100%;
   border-radius: var(--r-xs) var(--r-l) var(--r-l) var(--r-xs);
   min-height: 40px;
-}
 
-.collapse-toggle-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--fg-secondary-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  .activity-time {
+    background-color: var(--bg-secondary-color);
+    padding: 4px 10px;
+    border: 1px solid var(--border-secondary-color);
+    border-radius: var(--r-s);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--fg-secondary-color);
+    white-space: nowrap;
+  }
+
+  .collapse-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--fg-secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    opacity: 0;
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+      color: var(--fg-primary-color);
+    }
+  }
+
+  .header-spacer {
+    flex-grow: 1;
+  }
 
   &:hover {
-    background-color: var(--bg-hover-color);
-    color: var(--fg-primary-color);
+    .collapse-toggle-btn {
+      opacity: 1;
+    }
+  }
+  @include media-down(sm) {
+    .collapse-toggle-btn {
+      opacity: 1;
+    }
   }
 }
 
-.header-spacer {
-  flex-grow: 1;
+.activity-title {
+  margin: 8px 0 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .activity-header-controls {
@@ -275,10 +307,6 @@ function handleUpdateActivity(data: Partial<Activity>) {
       font-family: 'Sansation';
       font-size: 0.8rem;
     }
-  }
-
-  &:hover {
-    transform: scale(1.1);
   }
 
   &.status-completed {
@@ -332,7 +360,6 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   &:hover {
     border-color: #f1c40f;
-    transform: scale(1.1);
 
     .rating-placeholder {
       color: #f1c40f;
@@ -379,26 +406,6 @@ function handleUpdateActivity(data: Partial<Activity>) {
     transition: color 0.2s ease;
     white-space: nowrap;
   }
-}
-
-.activity-time {
-  background-color: var(--bg-secondary-color);
-  padding: 4px 10px;
-  border: 1px solid var(--border-secondary-color);
-  border-radius: var(--r-s);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--fg-secondary-color);
-  white-space: nowrap;
-}
-
-.activity-title {
-  margin: 8px 0 20px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 :deep(.kit-dropdown-content) {

@@ -34,11 +34,14 @@ const filteredMemories = computed(() => {
   if (!memoriesToProcess.value)
     return []
   return memoriesToProcess.value.filter((memory) => {
-    const hasTimestamp = !!memory.timestamp
+    const hasTimestamp = !!memory.image?.takenAt
+
     if (hasTimestamp && filters.showWithDate)
       return true
+
     if (!hasTimestamp && filters.showWithoutDate)
       return true
+
     return false
   })
 })

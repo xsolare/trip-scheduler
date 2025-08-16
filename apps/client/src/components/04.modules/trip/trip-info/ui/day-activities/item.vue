@@ -428,11 +428,13 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     display: flex;
     margin-top: 4px;
     gap: 4px;
+
     .iconify {
       height: 24px;
       opacity: 0.5;
       color: var(--fg-secondary-color);
     }
+
     &-editor {
       width: 100%;
       :deep(.milkdown) {

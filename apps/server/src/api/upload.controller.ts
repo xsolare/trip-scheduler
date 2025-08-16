@@ -4,6 +4,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import exifr from 'exifr'
 import { HTTPException } from 'hono/http-exception'
+import sharp from 'sharp'
 import { imageRepository } from '~/repositories/image.repository'
 import { tripImagePlacementEnum } from '../../db/schema'
 
@@ -190,6 +191,29 @@ export async function uploadFileController(c: Context) {
   }
   catch (err) {
     console.warn('Не удалось прочитать все метаданные:', (err as Error).message)
+  }
+
+  // Если thumbnailUrl все еще null, генерируем его с помощью sharp
+  if (!finalMetadata.thumbnailUrl) {
+    try {
+      const thumbFilename = `${baseFilename}-thumb.webp`
+      const thumbFullPath = join(tripUploadDir, thumbFilename)
+      await mkdir(tripUploadDir, { recursive: true })
+
+      // eslint-disable-next-line node/prefer-global/buffer
+      await sharp(Buffer.from(fileBuffer))
+        .resize(200, 200, {
+          fit: 'cover',
+          position: 'entropy',
+        })
+        .webp({ quality: 75 })
+        .toFile(thumbFullPath)
+
+      finalMetadata.thumbnailUrl = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${thumbFilename}`
+    }
+    catch (sharpError) {
+      console.error('Ошибка при генерации thumbnail с помощью sharp:', sharpError)
+    }
   }
 
   try {

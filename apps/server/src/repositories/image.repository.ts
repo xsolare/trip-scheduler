@@ -75,4 +75,18 @@ export const imageRepository = {
       orderBy: (images, { desc }) => [desc(images.createdAt)],
     })
   },
+
+  /**
+   * Удаляет изображение по его ID.
+   * @param id - ID изображения для удаления.
+   * @returns Объект удаленного изображения или null, если не найден.
+   */
+  async delete(id: string) {
+    const [deletedImage] = await db
+      .delete(tripImages)
+      .where(eq(tripImages.id, id))
+      .returning()
+
+    return deletedImage || null
+  },
 }

@@ -49,20 +49,6 @@ watch(getSelectedDay, (newDay) => {
     selectedDate.value = parseDate(newDay.date.split('T')[0])
 })
 
-const hasOriginalDate = computed(() => !!props.memory.timestamp)
-
-const originalDateFormatted = computed(() => {
-  if (!props.memory.timestamp)
-    return ''
-  return new Date(props.memory.timestamp).toLocaleString('ru-RU', {
-    minute: '2-digit',
-    hour: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-})
-
 const selectedDateFormatted = computed(() => {
   const date = selectedDate.value.toDate(getLocalTimeZone())
   const year = date.getFullYear()
@@ -137,7 +123,7 @@ function saveComment() {
     </div>
 
     <div class="card-content">
-      <div v-if="hasOriginalDate" class="original-date-info">
+      <!-- <div v-if="hasOriginalDate" class="original-date-info">
         <Icon icon="mdi:calendar-alert" class="info-icon" />
         <span class="info-text">Снято: <strong>{{ originalDateFormatted }}</strong></span>
         <div class="info-actions">
@@ -148,7 +134,7 @@ function saveComment() {
             Убрать дату
           </KitBtn>
         </div>
-      </div>
+      </div> -->
 
       <div class="comment-editor-wrapper">
         <KitInlineMdEditorWrapper
@@ -244,7 +230,6 @@ function saveComment() {
 .image-container {
   height: 200px;
   width: 100%;
-  padding: 5%;
   background-color: var(--bg-tertiary-color);
 }
 
@@ -262,46 +247,6 @@ function saveComment() {
   flex-grow: 1;
 }
 
-.original-date-info {
-  background-color: var(--bg-highlight-color);
-  border: 1px solid var(--border-primary-color);
-  border-radius: var(--r-s);
-  padding: 10px;
-  font-size: 0.85rem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    'icon text'
-    'actions actions';
-  gap: 4px 8px;
-  align-items: center;
-
-  .info-icon {
-    grid-area: icon;
-    color: var(--fg-accent-color);
-    font-size: 1.1rem;
-  }
-  .info-text {
-    grid-area: text;
-    color: var(--fg-primary-color);
-  }
-  .info-actions {
-    grid-area: actions;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-secondary-color);
-
-    :deep(.kit-btn) {
-      padding: 0.25rem 0.75rem;
-      font-size: 0.8rem;
-      flex-grow: 1;
-    }
-  }
-}
-
 .comment-editor-wrapper {
   flex-grow: 1;
   border-bottom: 1px solid var(--border-secondary-color);
@@ -310,11 +255,6 @@ function saveComment() {
 .comment-editor :deep(.milkdown) .editor {
   padding: 4px;
   min-height: 24px;
-  * {
-    color: white;
-    font-size: 0.7rem;
-    line-height: 1rem;
-  }
 }
 
 .assignment-controls {

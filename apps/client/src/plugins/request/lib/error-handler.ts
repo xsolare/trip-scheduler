@@ -47,8 +47,6 @@ export interface IApiErrorHandlerOptions {
   }
   /** Показывать ли toast-уведомление. По умолчанию `true`. */
   showToast?: boolean
-  /** Выполнять ли редирект при ошибках 401/403. По умолчанию `true`. */
-  redirectOnAuth?: boolean
 }
 
 /**
@@ -56,7 +54,6 @@ export interface IApiErrorHandlerOptions {
  * @param options - Опции для кастомизации обработчика.
  */
 export function createApiErrorHandler(options: IApiErrorHandlerOptions = {}) {
-  const router = useRouter()
   const { add: addToast } = useToast()
 
   return (payload: IErrorCallback) => {
@@ -91,16 +88,13 @@ export function createApiErrorHandler(options: IApiErrorHandlerOptions = {}) {
 
     // 4. Стандартная логика определения сообщения
     let description = 'Произошла неизвестная ошибка. Пожалуйста, попробуйте позже.'
-    let isAuthError = false
 
     switch (statusCode) {
       case 401:
         description = 'Вы не авторизованы. Пожалуйста, войдите в систему.'
-        isAuthError = true
         break
       case 403:
         description = 'Сессия истекла или у вас нет прав доступа.'
-        isAuthError = true
         break
       case 409:
         description = error?.shape?.message
@@ -123,10 +117,5 @@ export function createApiErrorHandler(options: IApiErrorHandlerOptions = {}) {
     // 5. Показываем toast-уведомление
     if (options.showToast ?? true)
       addToast({ type: 'error', detail: description, expire: 5000 })
-
-    // 6. Выполняем редирект при ошибках авторизации
-    const shouldRedirect = options.redirectOnAuth ?? true
-    if (isAuthError && shouldRedirect)
-      router.push(AppRoutePaths.Auth.SignIn)
   }
 }

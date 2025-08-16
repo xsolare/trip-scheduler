@@ -11,7 +11,7 @@ import ProcessingQueue from './processing/processing-queue.vue'
 import MemoriesTimeline from './timeline/memories-timeline.vue'
 
 const { memories, gallery, data: tripData, ui } = useModuleStore(['memories', 'gallery', 'data', 'ui'])
-const { memoriesForSelectedDay, memoriesToProcess, isLoading } = storeToRefs(memories)
+const { memoriesForSelectedDay, memoriesToProcess, isLoadingMemories: isLoading } = storeToRefs(memories)
 const { getActivitiesForSelectedDay } = storeToRefs(tripData)
 const { isViewMode } = storeToRefs(ui)
 
@@ -55,17 +55,25 @@ function handleAddTextNote() {
   }
 }
 
+function handleUpdateActivity({ activity, data }: { activity: Activity, data: Partial<Activity> }) {
+  tripData.updateActivity(activity.dayId, { ...activity, ...data })
+}
+
 onChange(async (files) => {
   if (!files)
     return
+
   isUploading.value = true
   const tripId = tripData.currentTripId
+
   if (!tripId) {
     isUploading.value = false
     return
   }
+
   for (const file of Array.from(files)) {
     const newImage = await gallery.uploadImage(file, TripImagePlacement.MEMORIES)
+
     if (newImage) {
       await memories.createMemory({
         tripId,
@@ -76,10 +84,6 @@ onChange(async (files) => {
   }
   isUploading.value = false
 })
-
-function handleUpdateActivity({ activity, data }: { activity: Activity, data: Partial<Activity> }) {
-  tripData.updateActivity(activity.dayId, { ...activity, ...data })
-}
 </script>
 
 <template>

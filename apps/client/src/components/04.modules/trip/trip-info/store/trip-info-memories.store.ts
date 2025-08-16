@@ -1,5 +1,3 @@
-// apps/client/src/components/04.modules/trip/trip-info/store/trip-info-memories.store.ts
-
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestStatus } from '~/plugins/request'
@@ -19,17 +17,22 @@ export enum ETripMemoriesKeys {
   REMOVE_TIMESTAMP = 'memories:remove-timestamp',
 }
 
+export interface ITripInfoMemoriesState {
+  memories: Memory[]
+  currentTripId: string | null
+}
+
 export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
-  state: () => ({
-    memories: [] as Memory[],
-    currentTripId: null as string | null,
+  state: (): ITripInfoMemoriesState => ({
+    memories: [],
+    currentTripId: null,
   }),
 
   getters: {
     /**
      * Статус загрузки списка воспоминаний.
      */
-    isLoading: () => useRequestStatus(ETripMemoriesKeys.FETCH).value,
+    isLoadingMemories: () => useRequestStatus(ETripMemoriesKeys.FETCH).value,
 
     /**
      * Получает отсортированные воспоминания для выбранного дня.

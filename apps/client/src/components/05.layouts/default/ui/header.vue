@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
+import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { AppRoutePaths } from '~/shared/constants/routes'
 import { useThemeStore } from '~/shared/store/theme.store'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()
-const themeStore = useThemeStore()
+const store = useAppStore(['auth', 'theme'])
 </script>
 
 <template>
@@ -24,14 +25,22 @@ const themeStore = useThemeStore()
       <div class="header-center" />
 
       <div class="header-utils">
-        <button class="util-btn" title="Настроить тему" @click="themeStore.openCreator()">
+        <button class="util-btn" title="Настроить тему" @click="store.theme.openCreator()">
           <Icon icon="mdi:palette-outline" />
         </button>
 
         <div class="vr" />
 
         <div class="profile">
-          <div class="profile-img" @click="router.push(AppRoutePaths.Auth.SignIn)">
+          <KitAvatar
+            v-if="store.auth.isAuthenticated"
+            :src="`${store.auth.user?.avatarUrl}`"
+          />
+          <div
+            v-else
+            class="profile-img"
+            @click="router.push(AppRoutePaths.Auth.SignIn)"
+          >
             <Icon
               icon="mdi:face-man-profile"
               style="font-size: 32px;"

@@ -1,6 +1,4 @@
 import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import { useRequest, useRequestStatus } from '~/plugins/request'
 
 export enum ETripGalleryKeys {
@@ -8,75 +6,95 @@ export enum ETripGalleryKeys {
   UPLOAD_IMAGE = 'gallery:upload-image',
 }
 
+export interface ITripInfoGalleryState {
+  tripImages: TripImage[]
+  currentTripId: string | null
+}
+
 /**
  * Стор для управления галереей и изображениями на странице путешествия.
  */
-export const useTripInfoGalleryStore = defineStore('tripInfoGallery', () => {
+export const useTripInfoGalleryStore = defineStore('tripInfoGallery', {
   // --- STATE ---
-  const tripImages = ref<TripImage[]>([])
-  const currentTripId = ref<string | null>('null')
+  state: (): ITripInfoGalleryState => ({
+    tripImages: [],
+    currentTripId: null,
+  }),
 
   // --- GETTERS ---
-  const isFetchingImages = useRequestStatus(ETripGalleryKeys.FETCH_IMAGES)
-  const isUploadingImage = useRequestStatus(ETripGalleryKeys.UPLOAD_IMAGE)
+  getters: {
+    isFetchingImages: () => useRequestStatus(ETripGalleryKeys.FETCH_IMAGES).value,
+    isUploadingImage: () => useRequestStatus(ETripGalleryKeys.UPLOAD_IMAGE).value,
+  },
 
   // --- ACTIONS ---
-  function setTripId(tripId: string) {
-    if (currentTripId.value !== tripId) {
-      currentTripId.value = tripId
-      tripImages.value = []
-      fetchTripImages()
-    }
-  }
+  actions: {
+    /**
+     * Устанавливает ID текущего путешествия и запускает загрузку изображений,
+     * если ID изменился.
+     * @param tripId - ID путешествия
+     */
+    setTripId(tripId: string) {
+      if (this.currentTripId !== tripId) {
+        this.currentTripId = tripId
+        this.tripImages = []
+        this.fetchTripImages()
+      }
+    },
 
-  function fetchTripImages() {
-    const tripId = currentTripId.value
-    if (!tripId)
-      return
+    /**
+     * Загружает изображения для текущего путешествия.
+     */
+    fetchTripImages() {
+      if (!this.currentTripId) {
+        console.error('Trip ID не установлен для загрузки изображений.')
+        return
+      }
 
-    useRequest<TripImage[]>({
-      key: ETripGalleryKeys.FETCH_IMAGES,
-      fn: db => db.files.listImageByTrip(tripId),
-      onSuccess: (result) => {
-        tripImages.value = result
-      },
+      useRequest<TripImage[]>({
+        key: ETripGalleryKeys.FETCH_IMAGES,
+        fn: db => db.files.listImageByTrip(this.currentTripId!),
+        onSuccess: (result) => {
+          this.tripImages = result
+        },
+        onError: (error) => {
+          console.error(`Ошибка при загрузке изображений для путешествия ${this.currentTripId}:`, error)
+        },
+      })
+    },
 
-    })
-  }
+    /**
+     * Загружает новое изображение в галерею путешествия.
+     * @param file - Загружаемый файл
+     * @param placement - Место размещения изображения
+     * @returns Promise с загруженным изображением или null в случае ошибки.
+     */
+    async uploadImage(file: File, placement: TripImagePlacement): Promise<TripImage | null> {
+      if (!this.currentTripId) {
+        console.error('Trip ID не установлен для загрузки изображения.')
+        return null
+      }
 
-  async function uploadImage(file: File, placement: TripImagePlacement): Promise<TripImage | null> {
-    const tripId = currentTripId.value
-    if (!tripId) {
-      console.error('Trip ID не установлен для загрузки изображения.')
-      return null
-    }
+      const newImage = await useRequest<TripImage>({
+        key: ETripGalleryKeys.UPLOAD_IMAGE,
+        fn: db => db.files.uploadFile(file, this.currentTripId!, placement),
+        onSuccess: (result) => {
+          this.tripImages.push(result)
+        },
+        onError: (error) => {
+          console.error(`Ошибка при загрузке изображения для путешествия ${this.currentTripId}:`, error)
+        },
+      })
 
-    const data = await useRequest({
-      key: ETripGalleryKeys.UPLOAD_IMAGE,
-      fn: db => db.files.uploadFile(file, tripId, placement),
-      onSuccess: (newImage) => {
-        tripImages.value.push(newImage)
-      },
-      onError: (error) => {
-        console.error(`Ошибка при загрузке изображения для путешествия ${tripId}:`, error)
-      },
-    })
+      return newImage
+    },
 
-    return data
-  }
-
-  function reset() {
-    tripImages.value = []
-    currentTripId.value = null
-  }
-
-  return {
-    tripImages,
-    isUploadingImage,
-    isFetchingImages,
-    setTripId,
-    fetchTripImages,
-    uploadImage,
-    reset,
-  }
+    /**
+     * Сбрасывает состояние стора к исходному.
+     */
+    reset() {
+      this.tripImages = []
+      this.currentTripId = null
+    },
+  },
 })

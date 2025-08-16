@@ -16,23 +16,23 @@ export enum ETripInfoKeys {
   REMOVE_ACTIVITY = 'trip:remove-activity',
 }
 
+export interface ITripInfoState {
+  days: IDay[]
+  currentTripId: string | null
+  currentDayId: string | null
+}
+
 /**
  * Стор для управления ДАННЫМИ о конкретном путешествии,
  * включая его дни и активности.
  */
 export const useTripInfoStore = defineStore('tripInfo', {
-  // --- STATE ---
-  state: (): {
-    days: IDay[]
-    currentTripId: string | null
-    currentDayId: string | null
-  } => ({
+  state: (): ITripInfoState => ({
     days: [],
     currentTripId: null,
     currentDayId: null,
   }),
 
-  // --- GETTERS ---
   getters: {
     isLoading: () => useRequestStatus(ETripInfoKeys.FETCH_DAYS).value,
     fetchError: () => useRequestError(ETripInfoKeys.FETCH_DAYS).value,
@@ -76,7 +76,6 @@ export const useTripInfoStore = defineStore('tripInfo', {
     },
   },
 
-  // --- ACTIONS ---
   actions: {
     setCurrentDay(dayId: string): void {
       this.currentDayId = dayId

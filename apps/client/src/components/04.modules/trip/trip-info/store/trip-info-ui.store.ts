@@ -1,19 +1,23 @@
-import type { ActiveView } from '../models/types'
+import type { RemovableRef } from '@vueuse/core'
+import type { ActiveView, InteractionMode } from '../models/types'
 import { useStorage } from '@vueuse/core'
-import { defineStore } from 'pinia'
+
+export interface ITripInfoUiState {
+  isDaysPanelOpen: boolean
+  isDaysPanelPinned: boolean
+  activeView: RemovableRef<ActiveView>
+  interactionMode: RemovableRef<InteractionMode>
+}
 
 /**
  * Стор для управления состоянием UI на странице информации о путешествии.
  */
 export const useTripInfoUiStore = defineStore('tripInfoUi', {
-  state: () => ({
+  state: (): ITripInfoUiState => ({
     isDaysPanelOpen: false,
     isDaysPanelPinned: false,
     activeView: useStorage<ActiveView>('trip-active-view', 'plan'),
-    interactionMode: useStorage<'view' | 'edit'>(
-      'tripinfo-interaction-mode',
-      'view',
-    ),
+    interactionMode: useStorage<InteractionMode>('tripinfo-interaction-mode', 'view'),
   }),
 
   getters: {

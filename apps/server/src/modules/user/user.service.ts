@@ -28,6 +28,7 @@ export const userService = {
    */
   async signIn(input: z.infer<typeof SignInInputSchema>) {
     const user = await userRepository.findByEmail(input.email)
+
     if (!user || !user?.password) {
       throw createTRPCError('UNAUTHORIZED', 'Неверный email или пароль.')
     }

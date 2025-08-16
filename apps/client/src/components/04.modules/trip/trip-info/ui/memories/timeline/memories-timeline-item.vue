@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const store = useModuleStore(['memories', 'data'])
-const { updateMemory, deleteMemory } = store.memories
+const { updateMemory, deleteMemory, removeTimestamp } = store.memories
 const { getSelectedDay } = storeToRefs(store.data)
 
 const memoryComment = ref(props.memory.comment || '')
@@ -80,6 +80,13 @@ function handleDelete() {
   // eslint-disable-next-line no-alert
   if (confirm('Вы уверены, что хотите удалить это воспоминание?')) {
     deleteMemory(props.memory.id)
+  }
+}
+
+function handleRemoveTimestamp() {
+  // eslint-disable-next-line no-alert
+  if (confirm('Убрать временную метку? Воспоминание будет перемещено в блок "Фотографии для обработки".')) {
+    removeTimestamp(props.memory.id)
   }
 }
 
@@ -176,6 +183,9 @@ onClickOutside(timeEditorRef, saveTime)
             <span v-else @click.stop="handleTimeClick">{{ displayTime }}</span>
           </div>
           <div class="memory-actions">
+            <button v-if="!isViewMode && memory.timestamp" title="Убрать временную метку" @click.stop="handleRemoveTimestamp">
+              <Icon icon="mdi:calendar-remove-outline" />
+            </button>
             <button v-if="!isViewMode" title="Удалить" @click.stop="handleDelete">
               <Icon icon="mdi:trash-can-outline" />
             </button>
@@ -220,6 +230,9 @@ onClickOutside(timeEditorRef, saveTime)
           <span>{{ displayTime }}</span>
         </div>
         <div v-if="!isViewMode" class="memory-actions is-note-actions">
+          <button v-if="memory.timestamp" title="Убрать временную метку" @click="handleRemoveTimestamp">
+            <Icon icon="mdi:calendar-remove-outline" />
+          </button>
           <button title="Удалить" @click="handleDelete">
             <Icon icon="mdi:trash-can-outline" />
           </button>
@@ -422,7 +435,7 @@ onClickOutside(timeEditorRef, saveTime)
 
 .memory-meta-badge {
   position: absolute;
-  bottom: 8px;
+  top: 8px;
   right: 8px;
   display: flex;
   align-items: center;
@@ -491,6 +504,8 @@ onClickOutside(timeEditorRef, saveTime)
   z-index: 3;
   opacity: 0;
   transition: opacity 0.2s ease;
+  display: flex;
+  gap: 4px;
 
   .photo-wrapper:hover & {
     opacity: 1;
@@ -510,8 +525,7 @@ onClickOutside(timeEditorRef, saveTime)
   }
 
   button {
-    background: rgba(var(--bg-primary-color-rgb), 0.7);
-    backdrop-filter: blur(4px);
+    background: var(--bg-primary-color);
     border: 1px solid var(--border-secondary-color);
     border-radius: var(--r-full);
     width: 28px;
@@ -520,12 +534,23 @@ onClickOutside(timeEditorRef, saveTime)
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--fg-secondary-color);
+    color: var(--fg-inverted-color);
+    transition: all 0.2s;
 
     &:hover {
-      color: var(--fg-error-color);
-      border-color: var(--fg-error-color);
+      color: var(--fg-primary-color);
+      border-color: var(--border-primary-color);
     }
+  }
+
+  button[title='Удалить'] {
+    color: var(--fg-error-color);
+    border-color: var(--fg-error-color);
+  }
+
+  button[title='Убрать временную метку'] {
+    color: var(--fg-accent-color);
+    border-color: var(--fg-accent-color);
   }
 }
 
@@ -615,7 +640,7 @@ onClickOutside(timeEditorRef, saveTime)
     font-size: 0.9rem;
   }
   .activity-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   hr {
