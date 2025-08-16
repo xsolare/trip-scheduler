@@ -1,9 +1,8 @@
-<!-- /ui/memories/memories-timeline-group.vue -->
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Activity } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { EActivityStatus } from '~/shared/types/models/activity'
 import MemoriesItem from './memories-timeline-item.vue'
@@ -14,16 +13,20 @@ interface TimelineGroup {
   memories: any[]
   activity?: Activity
 }
+type TimelineGroups = TimelineGroup[]
 
 const props = defineProps<{
   group: TimelineGroup
   isViewMode: boolean
   galleryImages: ImageViewerImage[]
+  timelineGroups: TimelineGroups
 }>()
 
 const emit = defineEmits<{
   (e: 'updateActivity', payload: { activity: Activity, data: Partial<Activity> }): void
 }>()
+
+const isCollapsed = ref(false)
 
 const statusOptions: { value: EActivityStatus, label: string, icon: string }[] = [
   { value: EActivityStatus.COMPLETED, label: 'Пройден', icon: 'mdi:check-circle-outline' },
@@ -46,11 +49,14 @@ function handleUpdateActivity(data: Partial<Activity>) {
 </script>
 
 <template>
-  <div class="activity-timeline-node">
+  <div class="activity-timeline-node" :class="{ 'is-collapsed': isCollapsed }">
     <div class="activity-header">
       <div class="activity-time">
         <span>{{ group.activity ? group.activity.startTime : '...' }}</span>
       </div>
+      <button class="collapse-toggle-btn" @click="isCollapsed = !isCollapsed">
+        <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
+      </button>
       <div class="header-spacer" />
       <div v-if="group.type === 'activity' && group.activity" class="activity-header-controls">
         <template v-if="!isViewMode">
@@ -143,18 +149,21 @@ function handleUpdateActivity(data: Partial<Activity>) {
       </div>
     </div>
 
-    <h5 class="activity-title">
-      {{ group.title }}
-    </h5>
+    <div v-show="!isCollapsed" class="collapsible-content">
+      <h5 class="activity-title">
+        {{ group.title }}
+      </h5>
 
-    <div v-if="group.memories.length > 0" class="memories-for-activity">
-      <MemoriesItem
-        v-for="memory in group.memories"
-        :key="memory.id"
-        :memory="memory"
-        :is-view-mode="isViewMode"
-        :gallery-images="galleryImages"
-      />
+      <div v-if="group.memories.length > 0" class="memories-for-activity">
+        <MemoriesItem
+          v-for="memory in group.memories"
+          :key="memory.id"
+          :memory="memory"
+          :is-view-mode="isViewMode"
+          :gallery-images="galleryImages"
+          :timeline-groups="timelineGroups"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -166,6 +175,15 @@ function handleUpdateActivity(data: Partial<Activity>) {
   border-left: 2px solid var(--border-secondary-color);
   padding-bottom: 24px;
   padding-top: 24px;
+  transition: padding-bottom 0.3s ease;
+
+  &.is-collapsed {
+    padding-bottom: 0;
+
+    &:not(:last-child) {
+      border-left-style: dashed;
+    }
+  }
 
   &::before {
     content: '';
@@ -198,6 +216,24 @@ function handleUpdateActivity(data: Partial<Activity>) {
   width: 100%;
   border-radius: var(--r-xs) var(--r-l) var(--r-l) var(--r-xs);
   min-height: 40px;
+}
+
+.collapse-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--bg-hover-color);
+    color: var(--fg-primary-color);
+  }
 }
 
 .header-spacer {

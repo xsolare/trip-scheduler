@@ -36,6 +36,12 @@ const viewerImages = computed<ImageViewerImage[]>(() =>
   })),
 )
 
+const routeImages = computed(() => {
+  return tripImages.value.filter(
+    img => img.placement === TripImagePlacement.ROUTE,
+  )
+})
+
 function deleteImage(index: number) {
   const updatedUrls = images.value.filter((_, i) => i !== index)
   emit('updateSection', { ...props.section, imageUrls: updatedUrls })
@@ -220,9 +226,9 @@ const visibleImages = computed(() =>
               <Icon icon="mdi:loading" class="spinner" />
               <p>Загружаем изображения...</p>
             </div>
-            <div v-else-if="tripImages.length > 0" class="image-grid">
+            <div v-else-if="routeImages.length > 0" class="image-grid">
               <div
-                v-for="tripImg in tripImages"
+                v-for="tripImg in routeImages"
                 :key="tripImg.id"
                 class="grid-item"
                 :class="{
@@ -241,10 +247,10 @@ const visibleImages = computed(() =>
             </div>
             <div v-else class="empty-trip-gallery">
               <Icon icon="mdi:image-off-outline" />
-              <p>В галерее путешествия еще нет загруженных изображений.</p>
+              <p>В галерее путешествия нет изображений, предназначенных для маршрута.</p>
             </div>
           </div>
-          <div v-if="!isFetchingImages && tripImages.length > 0" class="modal-footer">
+          <div v-if="!isFetchingImages && routeImages.length > 0" class="modal-footer">
             <KitBtn appearance="secondary" @click="closeImagePicker">
               Отмена
             </KitBtn>

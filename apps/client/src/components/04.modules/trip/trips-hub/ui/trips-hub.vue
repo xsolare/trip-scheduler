@@ -1,30 +1,21 @@
 <script setup lang="ts">
-import type { TDisplayMode, TripsHubTab } from '../store/trips-hub.store'
+import type { TDisplayMode, TripsHubTab } from '../composables/use-trips-hub'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
-import { useModuleStore } from '../composables/use-module'
+import { TripsHubKey, useTripsHub } from '../composables/use-trips-hub'
 import TripsFilters from './controls/trips-filters.vue'
 import TripList from './list-trip/list.vue'
 import CreateTripFlow from './new-trip/create-trip-flow.vue'
 
 const emit = defineEmits(['update:hasError'])
 
-const store = useModuleStore(['hub'])
+const tripsHub = useTripsHub()
 const { mdAndUp } = useDisplay()
 
-const {
-  currentTrips,
-  isLoading,
-  fetchError,
-  searchQuery,
-  activeTab,
-  displayMode,
-} = storeToRefs(store.hub)
-
 const currentTab = computed({
-  get: () => activeTab.value,
-  set: (tab: TripsHubTab) => store.hub.setActiveTab(tab),
+  get: () => tripsHub.activeTab.value,
+  set: (tab: TripsHubTab) => tripsHub.setActiveTab(tab),
 })
 
 const tabItems: ViewSwitcherItem<TripsHubTab>[] = [
@@ -38,23 +29,24 @@ const displayModeItems: ViewSwitcherItem<TDisplayMode>[] = [
 ]
 
 const currentDisplayMode = computed({
-  get: () => displayMode.value,
-  set: (mode: TDisplayMode) => store.hub.setDisplayMode(mode),
+  get: () => tripsHub.displayMode.value,
+  set: (mode: TDisplayMode) => tripsHub.setDisplayMode(mode),
 })
 
-watch(fetchError, (newError) => {
+watch(tripsHub.fetchError, (newError) => {
   emit('update:hasError', !!newError)
 })
 
 onMounted(() => {
-  store.hub.fetchTrips()
-
-  store.hub.setActiveTab('my')
+  tripsHub.fetchTrips()
+  tripsHub.setActiveTab('my')
 })
 
 onBeforeUnmount(() => {
-  store.hub.reset()
+  tripsHub.reset()
 })
+
+provide(TripsHubKey, tripsHub)
 </script>
 
 <template>
@@ -64,7 +56,7 @@ onBeforeUnmount(() => {
         <h1>Путешествия</h1>
         <p>Ваши планы и приключения в одном месте.</p>
       </div>
-      <KitBtn icon="mdi:plus" @click="store.hub.openCreateModal">
+      <KitBtn icon="mdi:plus" @click="tripsHub.openCreateModal">
         Создать
       </KitBtn>
     </div>
@@ -75,7 +67,7 @@ onBeforeUnmount(() => {
         :items="tabItems"
       />
       <div class="spacer" />
-      <TripsFilters v-model:search-query="searchQuery" />
+      <TripsFilters v-model:search-query="tripsHub.searchQuery.value" />
       <KitViewSwitcher
         v-if="mdAndUp"
         v-model="currentDisplayMode"
@@ -83,12 +75,12 @@ onBeforeUnmount(() => {
       />
     </div>
 
-    <div class="hub-content" :class="`display-mode--${displayMode}`">
+    <div class="hub-content" :class="`display-mode--${tripsHub.displayMode.value}`">
       <TripList
-        :is-loading="isLoading"
-        :error="fetchError"
-        :trips="currentTrips"
-        @retry="() => store.hub.fetchTrips()"
+        :is-loading="tripsHub.isLoading.value"
+        :error="tripsHub.fetchError.value"
+        :trips="tripsHub.currentTrips.value"
+        @retry="() => tripsHub.fetchTrips()"
       />
     </div>
 

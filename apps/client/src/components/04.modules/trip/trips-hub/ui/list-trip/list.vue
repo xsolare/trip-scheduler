@@ -21,19 +21,17 @@ const displayData = computed(() => (props.trips.length > 0 ? props.trips : null)
 
 <template>
   <AsyncStateWrapper
-    :loading="props.isLoading"
-    :error="props.error"
+    :loading="isLoading"
+    :error="error"
     :data="displayData"
     :retry-handler="() => emit('retry')"
     transition="slide-up"
     class="trip-list-wrapper"
   >
-    <!-- Состояние загрузки -->
     <template #loading>
       <TripListSkeleton />
     </template>
 
-    <!-- Успешное состояние с данными -->
     <template #success="{ data }">
       <TripCard
         v-for="trip in data"
@@ -42,12 +40,10 @@ const displayData = computed(() => (props.trips.length > 0 ? props.trips : null)
       />
     </template>
 
-    <!-- Состояние, когда данные загружены, но список пуст -->
     <template #empty>
       <TripListEmpty />
     </template>
 
-    <!-- Состояние ошибки будет обработано внутри AsyncStateWrapper по умолчанию -->
   </AsyncStateWrapper>
 </template>
 

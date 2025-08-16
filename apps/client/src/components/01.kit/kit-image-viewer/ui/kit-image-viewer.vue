@@ -817,6 +817,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: 5%;
 }
 
 .image-placeholder,

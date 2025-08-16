@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import { inject } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { TripsHubKey } from '../../../composables/use-trips-hub'
+
+const tripsHub = inject(TripsHubKey)
+
+if (!tripsHub) {
+  throw new Error('TripsHub logic was not provided.')
+}
 </script>
 
 <template>
@@ -18,7 +26,7 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
       <p class="message">
         Самое время запланировать ваше следующее приключение!
       </p>
-      <KitBtn>
+      <KitBtn @click="tripsHub.openCreateModal">
         <Icon icon="mdi:plus" />
         Создать путешествие
       </KitBtn>

@@ -1,42 +1,41 @@
 <script setup lang="ts">
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
-import { useModuleStore } from '../../composables/use-module'
+import { TripsHubKey } from '../../composables/use-trips-hub'
+import StepBasicInfo from './step-basic-info.vue'
 
-const store = useModuleStore(['hub'])
-const {
-  isCreateModalOpen,
-  newTripData,
-  isCreating,
-} = storeToRefs(store.hub)
+const tripsHub = inject(TripsHubKey)
+
+if (!tripsHub)
+  throw new Error('TripsHub logic was not provided.')
 
 const isFormValid = computed(() => {
-  return newTripData.value.title.trim().length > 0
+  return tripsHub.newTripData.value.title.trim().length > 0
 })
 </script>
 
 <template>
   <KitDialogWithClose
-    v-model:visible="isCreateModalOpen"
+    v-model:visible="tripsHub.isCreateModalOpen.value"
     title="Новое путешествие"
     icon="mdi:map-plus-outline"
     :max-width="500"
   >
     <div class="create-trip-flow">
-      <StepBasicInfo v-model="newTripData" />
+      <StepBasicInfo v-model="tripsHub.newTripData.value" />
 
       <div class="flow-actions">
         <KitBtn
           variant="outlined"
           color="secondary"
-          @click="store.hub.closeCreateModal"
+          @click="tripsHub.closeCreateModal"
         >
           Отмена
         </KitBtn>
         <KitBtn
-          :disabled="!isFormValid || isCreating"
-          :loading="isCreating"
-          @click="store.hub.createTrip"
+          :disabled="!isFormValid || tripsHub.isCreating.value"
+          :loading="tripsHub.isCreating.value"
+          @click="tripsHub.createTrip"
         >
           Создать и перейти
         </KitBtn>

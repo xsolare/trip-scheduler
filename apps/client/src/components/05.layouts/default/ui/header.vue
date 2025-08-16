@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
-import { SyncIndicator } from '~/components/02.shared/sync-indicator'
 import { AppRoutePaths } from '~/shared/constants/routes'
 import { useThemeStore } from '~/shared/store/theme.store'
 
@@ -29,7 +28,6 @@ const themeStore = useThemeStore()
           <Icon icon="mdi:palette-outline" />
         </button>
 
-        <SyncIndicator />
         <div class="vr" />
 
         <div class="profile">

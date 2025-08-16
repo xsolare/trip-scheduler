@@ -90,6 +90,7 @@ function onUpdateActivity(payload: { activity: Activity, data: Partial<Activity>
       :group="group"
       :is-view-mode="isViewMode"
       :gallery-images="galleryImages"
+      :timeline-groups="timelineGroups"
       @update-activity="onUpdateActivity"
     />
   </div>

@@ -83,10 +83,9 @@ async function handleApply() {
 
   isSaving.value = true
   try {
-    const datePart = selectedDate.value.toString() // YYYY-MM-DD
+    const datePart = selectedDate.value.toString()
     const timePart = `${selectedTime.value.hour.toString().padStart(2, '0')}:${selectedTime.value.minute.toString().padStart(2, '0')}:00`
-    const localDateTime = new Date(`${datePart}T${timePart}`)
-    const newTimestamp = localDateTime.toISOString()
+    const newTimestamp = `${datePart}T${timePart}.000Z`
 
     await memoriesStore.updateMemory({
       id: props.memory.id,
@@ -245,6 +244,7 @@ function saveComment() {
 .image-container {
   height: 200px;
   width: 100%;
+  padding: 5%;
   background-color: var(--bg-tertiary-color);
 }
 
@@ -311,6 +311,7 @@ function saveComment() {
   padding: 4px;
   min-height: 24px;
   * {
+    color: white;
     font-size: 0.7rem;
     line-height: 1rem;
   }

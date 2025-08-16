@@ -6,11 +6,14 @@ import { KitInput } from '~/components/01.kit/kit-input'
 const searchQuery = defineModel<string>('searchQuery', { default: '' })
 
 const debouncedSearchQuery = useDebounce(searchQuery, 300)
+
+const { mdAndUp } = useDisplay()
 </script>
 
 <template>
   <div class="trips-filters">
     <KitInput
+      v-if="mdAndUp"
       v-model="debouncedSearchQuery"
       icon="mdi:magnify"
       placeholder="Поиск по названию..."

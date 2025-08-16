@@ -15,11 +15,13 @@ interface Props {
   galleryImages?: ImageViewerImage[]
   isUnsorted?: boolean
   isViewMode?: boolean
+  timelineGroups?: any[]
 }
 const props = withDefaults(defineProps<Props>(), {
   galleryImages: () => [],
   isUnsorted: false,
   isViewMode: false,
+  timelineGroups: () => [],
 })
 
 const store = useModuleStore(['memories', 'data'])
@@ -27,7 +29,7 @@ const { updateMemory, deleteMemory } = store.memories
 const { getSelectedDay } = storeToRefs(store.data)
 
 const memoryComment = ref(props.memory.comment || '')
-// ИЗМЕНЕНО: Эта функция теперь будет вызываться по событию blur
+
 function saveComment() {
   if (memoryComment.value !== props.memory.comment) {
     updateMemory({ id: props.memory.id, comment: memoryComment.value })
@@ -44,7 +46,7 @@ function handleTimeClick() {
   isTimeEditing.value = true
   if (props.memory.timestamp) {
     const d = new Date(props.memory.timestamp)
-    editingTime.value = new Time(d.getHours(), d.getMinutes())
+    editingTime.value = new Time(d.getUTCHours(), d.getUTCMinutes())
   }
   else {
     editingTime.value = new Time()
@@ -57,8 +59,8 @@ function saveTime() {
 
   const datePart = getSelectedDay.value.date.split('T')[0]
   const timePart = `${editingTime.value.hour.toString().padStart(2, '0')}:${editingTime.value.minute.toString().padStart(2, '0')}:00`
-  const localDateTimeString = `${datePart}T${timePart}`
-  const newTimestamp = new Date(localDateTimeString).toISOString()
+
+  const newTimestamp = `${datePart}T${timePart}.000Z`
 
   updateMemory({ id: props.memory.id, timestamp: newTimestamp })
   isTimeEditing.value = false
@@ -67,7 +69,11 @@ function saveTime() {
 const displayTime = computed(() => {
   if (!props.memory.timestamp)
     return ''
-  return new Date(props.memory.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+
+  const d = new Date(props.memory.timestamp)
+  const hours = d.getUTCHours().toString().padStart(2, '0')
+  const minutes = d.getUTCMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes}`
 })
 
 function handleDelete() {
@@ -79,7 +85,16 @@ function handleDelete() {
 
 const imageViewer = useImageViewer()
 const activeViewerComment = ref('')
+const activeViewerActivityTitle = ref('')
 const activeViewerTime = shallowRef<Time | null>(null)
+
+const formattedActiveViewerTime = computed(() => {
+  if (!activeViewerTime.value)
+    return ''
+  const hours = String(activeViewerTime.value.hour).padStart(2, '0')
+  const minutes = String(activeViewerTime.value.minute).padStart(2, '0')
+  return `${hours}:${minutes}`
+})
 
 watch(imageViewer.currentImage, (newImage) => {
   if (newImage?.meta?.memory) {
@@ -87,11 +102,14 @@ watch(imageViewer.currentImage, (newImage) => {
     activeViewerComment.value = mem.comment || ''
     if (mem.timestamp) {
       const d = new Date(mem.timestamp)
-      activeViewerTime.value = new Time(d.getHours(), d.getMinutes())
+      activeViewerTime.value = new Time(d.getUTCHours(), d.getUTCMinutes())
     }
     else {
       activeViewerTime.value = null
     }
+    const memoryId = mem.id
+    const group = props.timelineGroups?.find(g => g.memories.some((m: Memory) => m.id === memoryId))
+    activeViewerActivityTitle.value = group ? group.title : ''
   }
 }, { deep: true })
 
@@ -110,7 +128,6 @@ function openImageViewer() {
   }
 }
 
-// ИЗМЕНЕНО: Эта функция теперь будет вызываться по событию blur
 function saveViewerComment() {
   const memory = imageViewer.currentImage.value?.meta?.memory
   if (memory && activeViewerComment.value !== (memory.comment || '')) {
@@ -124,14 +141,10 @@ function saveViewerTime() {
   if (!memory || !activeViewerTime.value || !day)
     return
 
-  const dayDate = new Date(day.date)
-  const newTimestamp = new Date(
-    dayDate.getFullYear(),
-    dayDate.getMonth(),
-    dayDate.getDate(),
-    activeViewerTime.value.hour,
-    activeViewerTime.value.minute,
-  ).toISOString()
+  const datePart = day.date.split('T')[0]
+  const timePart = `${activeViewerTime.value.hour.toString().padStart(2, '0')}:${activeViewerTime.value.minute.toString().padStart(2, '0')}:00`
+
+  const newTimestamp = `${datePart}T${timePart}.000Z`
 
   if (newTimestamp !== memory.timestamp) {
     updateMemory({ id: memory.id, timestamp: newTimestamp })
@@ -147,7 +160,6 @@ onClickOutside(timeEditorRef, saveTime)
     :class="{ 'is-photo': memory.imageId, 'is-note': !memory.imageId, 'is-unsorted': isUnsorted }"
   >
     <template v-if="memory.imageId && memory?.image?.url">
-      <!-- ... Часть с фото остается без изменений ... -->
       <div class="photo-wrapper" @click="openImageViewer">
         <KitImage :src="memory!.image!.url" object-fit="cover" />
         <div class="photo-overlay">
@@ -229,6 +241,7 @@ onClickOutside(timeEditorRef, saveTime)
         >
           <div class="viewer-comment-section">
             <KitInlineMdEditorWrapper
+              v-if="!isViewMode"
               v-model="activeViewerComment"
               :readonly="isViewMode"
               :features="{
@@ -242,15 +255,26 @@ onClickOutside(timeEditorRef, saveTime)
               class="viewer-comment-editor"
               @blur="saveViewerComment"
             />
+            <div v-else>
+              <span class="activity-title">
+                {{ activeViewerActivityTitle }}
+              </span>
+              <hr v-if="activeViewerComment && activeViewerActivityTitle">
+              <span class="activity-comment">
+                {{ activeViewerComment }}
+              </span>
+            </div>
           </div>
           <div class="viewer-time-section">
             <div class="viewer-time-display">
               <KitTimeField
+                v-if="!isViewMode"
                 v-model="activeViewerTime"
                 :readonly="isViewMode"
                 @blur="saveViewerTime"
               />
-              <Icon height="18" width="18" icon="mdi:clock-outline" class="time-icon" />
+              <span v-else>{{ formattedActiveViewerTime }}</span>
+              <Icon height="19" width="19" icon="mdi:clock-outline" class="time-icon" />
             </div>
           </div>
         </div>
@@ -259,7 +283,6 @@ onClickOutside(timeEditorRef, saveTime)
   </div>
 </template>
 
-<!-- ИЗМЕНЕНО: Стили адаптированы для KitInlineMdEditorWrapper -->
 <style scoped lang="scss">
 .memory-item {
   position: relative;
@@ -413,6 +436,7 @@ onClickOutside(timeEditorRef, saveTime)
   border-radius: var(--r-full);
   z-index: 3;
   transition: background-color 0.2s ease;
+  height: 28px;
 
   :deep(.kit-time-field) {
     background-color: transparent;
@@ -438,7 +462,7 @@ onClickOutside(timeEditorRef, saveTime)
 
 .memory-comment {
   width: 100%;
-  // Стили для редактора заметки
+
   .comment-editor {
     :deep(.milkdown .editor) {
       padding: 4px;
@@ -576,7 +600,7 @@ onClickOutside(timeEditorRef, saveTime)
 
   &.is-readonly {
     gap: 8px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.2);
     padding: 12px 16px;
     text-align: center;
   }
@@ -585,13 +609,31 @@ onClickOutside(timeEditorRef, saveTime)
 .viewer-comment-section {
   flex-grow: 1;
   color: white;
+  opacity: 0.8;
+
+  .activity-comment {
+    font-size: 0.9rem;
+  }
+  .activity-title {
+    font-size: 1.1rem;
+  }
+
+  hr {
+    border: 1px solid white;
+    opacity: 0.1;
+    width: 90%;
+    margin: 8px auto;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .viewer-time-section {
   flex-shrink: 0;
 }
 
-// Стили для редактора в Image Viewer
 .viewer-comment-editor {
   :deep(.milkdown) {
     .editor {
@@ -599,8 +641,11 @@ onClickOutside(timeEditorRef, saveTime)
       border-radius: var(--r-s);
       min-height: 48px;
       transition: background-color 0.2s ease;
+      color: white;
+
       p {
         margin: 0;
+        font-size: 0.9rem;
       }
     }
     &:not([readonly]) .editor:hover {

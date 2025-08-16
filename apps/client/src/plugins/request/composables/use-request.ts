@@ -12,7 +12,7 @@ const pendingPromises = new Map<string, Promise<any | null>>()
  * @param options - Объект с параметрами операции.
  * @returns Promise, который разрешается в данные запроса или null в случае ошибки.
  */
-export function useRequest<T>(
+export async function useRequest<T>(
   options: UseRequestOptions<T>,
 ): Promise<T | null> {
   const defaultErrorHandler = createApiErrorHandler()
@@ -33,8 +33,11 @@ export function useRequest<T>(
   if (!force && pendingPromises.has(key))
     return pendingPromises.get(key)!
 
-  if (!force && store.statuses.get(key) === 'success' && store.cache.has(key))
-    return Promise.resolve(store.cache.get(key) as T)
+  if (!force && store.statuses.get(key) === 'success' && store.cache.has(key)) {
+    await onSuccess?.(toRaw(store.cache.get(key)))
+
+    return toRaw(store.cache.get(key))
+  }
 
   const controller = new AbortController()
 
