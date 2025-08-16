@@ -102,14 +102,6 @@ function handleResetDate() {
     selectedDate.value = parseDate(getSelectedDay.value.date.split('T')[0])
 }
 
-function applyOriginalDate() {
-  memoriesStore.applyOriginalTimestamp(props.memory.id)
-}
-
-function removeDate() {
-  memoriesStore.removeTimestamp(props.memory.id)
-}
-
 function saveComment() {
   if (comment.value !== props.memory.comment)
     memoriesStore.updateMemory({ id: props.memory.id, comment: comment.value })
@@ -119,23 +111,10 @@ function saveComment() {
 <template>
   <div class="processing-card">
     <div class="image-container">
-      <KitImage :src="memory.image?.url" class="card-image" :alt="comment || 'Фото для сортировки'" />
+      <KitImage :src="memory.image?.thumbnailUrl ?? memory.image?.url" class="card-image" :alt="comment || 'Фото для сортировки'" />
     </div>
 
     <div class="card-content">
-      <!-- <div v-if="hasOriginalDate" class="original-date-info">
-        <Icon icon="mdi:calendar-alert" class="info-icon" />
-        <span class="info-text">Снято: <strong>{{ originalDateFormatted }}</strong></span>
-        <div class="info-actions">
-          <KitBtn variant="outlined" color="primary" @click="applyOriginalDate">
-            Принять дату
-          </KitBtn>
-          <KitBtn variant="outlined" color="secondary" @click="removeDate">
-            Убрать дату
-          </KitBtn>
-        </div>
-      </div> -->
-
       <div class="comment-editor-wrapper">
         <KitInlineMdEditorWrapper
           v-model="comment"

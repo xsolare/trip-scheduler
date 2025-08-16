@@ -15,7 +15,7 @@ const { memoriesForSelectedDay, memoriesToProcess, isLoadingMemories: isLoading 
 const { getActivitiesForSelectedDay } = storeToRefs(tripData)
 const { isViewMode } = storeToRefs(ui)
 
-const { open, onChange } = useFileDialog({
+const { open: openFileDialog, onChange, reset } = useFileDialog({
   accept: 'image/*',
   multiple: true,
 })
@@ -60,7 +60,9 @@ function handleUpdateActivity({ activity, data }: { activity: Activity, data: Pa
 }
 
 onChange(async (files) => {
-  if (!files)
+  console.log('files', files)
+
+  if (!files || files.length === 0)
     return
 
   isUploading.value = true
@@ -71,9 +73,8 @@ onChange(async (files) => {
     return
   }
 
-  for (const file of Array.from(files)) {
+  const uploadPromises = Array.from(files).map(async (file) => {
     const newImage = await gallery.uploadImage(file, TripImagePlacement.MEMORIES)
-
     if (newImage) {
       await memories.createMemory({
         tripId,
@@ -81,15 +82,19 @@ onChange(async (files) => {
         timestamp: newImage.takenAt,
       })
     }
-  }
+  })
+
+  await Promise.all(uploadPromises)
+
   isUploading.value = false
+  reset()
 })
 </script>
 
 <template>
   <div class="memories-list">
     <div v-if="!isViewMode" class="upload-section">
-      <button class="upload-button" :disabled="isUploading" @click="() => open()">
+      <button class="upload-button" :disabled="isUploading" @click="() => openFileDialog()">
         <Icon :icon="isUploading ? 'mdi:loading' : 'mdi:camera-plus-outline'" :class="{ spin: isUploading }" />
         <span>{{ isUploading ? 'Загрузка...' : 'Загрузить фотографии' }}</span>
       </button>

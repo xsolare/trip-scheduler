@@ -56,15 +56,23 @@ function triggerFileUpload() {
 
 async function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
+  const files = target.files
 
-  if (!file)
+  if (!files || files.length === 0)
     return
 
-  const newImageRecord = await store.gallery.uploadImage(file, TripImagePlacement.ROUTE)
+  const uploadPromises = Array.from(files).map(file =>
+    store.gallery.uploadImage(file, TripImagePlacement.ROUTE),
+  )
 
-  if (newImageRecord) {
-    const updatedUrls = [...images.value, newImageRecord.url]
+  const newImageRecords = await Promise.all(uploadPromises)
+
+  const newUrls = newImageRecords
+    .filter((record): record is NonNullable<typeof record> => record !== null)
+    .map(record => record.url)
+
+  if (newUrls.length > 0) {
+    const updatedUrls = [...images.value, ...newUrls]
     emit('updateSection', { ...props.section, imageUrls: updatedUrls })
   }
 
@@ -145,6 +153,7 @@ const visibleImages = computed(() =>
       ref="fileInput"
       type="file"
       accept="image/*"
+      multiple
       class="hidden-file-input"
       @change="handleFileUpload"
     >
