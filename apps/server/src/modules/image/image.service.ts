@@ -21,7 +21,7 @@ export const imageService = {
   /**
    * Получает все изображения для путешествия.
    */
-  async getByTripId(tripId: string) {
-    return await imageRepository.getByTripId(tripId)
+  async getByTripId(tripId: string, placement?: Placement) {
+    return await imageRepository.getByTripId(tripId, placement)
   },
 }

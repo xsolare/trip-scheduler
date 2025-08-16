@@ -27,8 +27,7 @@ export interface IActivityRepository {
 
 export interface IFileRepository {
   uploadFile: (file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null) => Promise<TripImage>
-  listImageByTrip: (tripId: string) => Promise<TripImage[]>
-  addImage: (tripId: string, imageUrl: string, placement: TripImagePlacement) => Promise<TripImage>
+  listImageByTrip: (tripId: string, placement: TripImagePlacement) => Promise<TripImage[]>
 }
 
 export interface IAuthRepository {

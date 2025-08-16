@@ -147,13 +147,6 @@ export function useTripsHub() {
     }, 300)
   }
 
-  function reset() {
-    activeTab.value = 'my'
-    searchQuery.value = ''
-    isInitialized.value = false
-    trips.value = []
-  }
-
   return {
     // State
     trips: readonly(trips),
@@ -179,7 +172,6 @@ export function useTripsHub() {
     setDisplayMode,
     openCreateModal,
     closeCreateModal,
-    reset,
   }
 }
 

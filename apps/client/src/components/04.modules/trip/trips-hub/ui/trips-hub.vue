@@ -42,10 +42,6 @@ onMounted(() => {
   tripsHub.setActiveTab('my')
 })
 
-onBeforeUnmount(() => {
-  tripsHub.reset()
-})
-
 provide(TripsHubKey, tripsHub)
 </script>
 

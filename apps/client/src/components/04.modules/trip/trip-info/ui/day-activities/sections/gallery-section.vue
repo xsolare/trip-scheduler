@@ -7,7 +7,6 @@ import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
-import { TripImagePlacement } from '~/shared/types/models/trip'
 
 interface Props {
   section: ActivitySectionGallery
@@ -16,8 +15,8 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits(['updateSection'])
 
-const store = useModuleStore(['gallery', 'ui'])
-const { tripImages, isUploadingImage, isFetchingImages } = storeToRefs(store.gallery)
+const store = useModuleStore(['routeGallery', 'ui'])
+const { tripImages, isUploadingImage, isFetchingImages } = storeToRefs(store.routeGallery)
 const { isViewMode } = storeToRefs(store.ui)
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -25,14 +24,6 @@ const isImagePickerOpen = ref(false)
 const selectedImagesFromTrip = ref<string[]>([])
 
 const images = computed(() => props.section.imageUrls || [])
-
-const routeImages = computed(() => {
-  return tripImages.value.filter(img => img.placement === TripImagePlacement.ROUTE)
-})
-
-const availableTripImages = computed(() => {
-  return routeImages.value.filter(img => !images.value.includes(img.url))
-})
 
 const imageViewer = useImageViewer({
   enableKeyboard: true,
@@ -62,7 +53,7 @@ async function handleFileUpload(event: Event) {
     return
 
   const uploadPromises = Array.from(files).map(file =>
-    store.gallery.uploadImage(file, TripImagePlacement.ROUTE),
+    store.routeGallery.uploadImage(file),
   )
 
   const newImageRecords = await Promise.all(uploadPromises)
@@ -73,6 +64,7 @@ async function handleFileUpload(event: Event) {
 
   if (newUrls.length > 0) {
     const updatedUrls = [...images.value, ...newUrls]
+
     emit('updateSection', { ...props.section, imageUrls: updatedUrls })
   }
 
@@ -234,13 +226,13 @@ const visibleImages = computed(() =>
             <Icon icon="mdi:loading" class="spinner" />
             <p>Загружаем изображения...</p>
           </div>
-          <div v-else-if="routeImages.length === 0" class="empty-trip-gallery">
+          <div v-else-if="tripImages.length === 0" class="empty-trip-gallery">
             <Icon icon="mdi:image-off-outline" />
             <p>В галерее путешествия еще нет изображений для маршрута.</p>
           </div>
-          <div v-else-if="availableTripImages.length > 0" class="image-grid">
+          <div v-else-if="tripImages.length > 0" class="image-grid">
             <div
-              v-for="tripImg in availableTripImages"
+              v-for="tripImg in tripImages"
               :key="tripImg.id"
               class="grid-item"
               :class="{
@@ -260,7 +252,7 @@ const visibleImages = computed(() =>
             <p>Все доступные изображения уже добавлены в эту галерею.</p>
           </div>
         </div>
-        <div v-if="!isFetchingImages && routeImages.length > 0" class="picker-footer">
+        <div v-if="!isFetchingImages && tripImages.length > 0" class="picker-footer">
           <KitBtn variant="text" @click="onDialogClose">
             Отмена
           </KitBtn>

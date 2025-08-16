@@ -4,14 +4,15 @@ import type { Activity } from '~/shared/types/models/activity'
 import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { useFileDialog } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
-import { TripImagePlacement } from '~/shared/types/models/trip'
 import ProcessingQueue from './processing/processing-queue.vue'
+import UploadingQueue from './processing/uploading-queue.vue'
 import MemoriesTimeline from './timeline/memories-timeline.vue'
 
-const { memories, gallery, data: tripData, ui } = useModuleStore(['memories', 'gallery', 'data', 'ui'])
-const { memoriesForSelectedDay, memoriesToProcess, isLoadingMemories: isLoading } = storeToRefs(memories)
+const { memories, data: tripData, ui } = useModuleStore(['memories', 'data', 'ui'])
+const { memoriesForSelectedDay, memoriesToProcess, getProcessingMemories, isLoadingMemories: isLoading } = storeToRefs(memories)
+
 const { getActivitiesForSelectedDay } = storeToRefs(tripData)
 const { isViewMode } = storeToRefs(ui)
 
@@ -20,7 +21,7 @@ const { open: openFileDialog, onChange, reset } = useFileDialog({
   multiple: true,
 })
 
-const isUploading = ref(false)
+const isProcessing = computed(() => getProcessingMemories.value.length > 0)
 
 const galleryImages = computed<ImageViewerImage[]>(() => {
   const allMemories: Memory[] = [...memoriesForSelectedDay.value]
@@ -59,34 +60,12 @@ function handleUpdateActivity({ activity, data }: { activity: Activity, data: Pa
   tripData.updateActivity(activity.dayId, { ...activity, ...data })
 }
 
-onChange(async (files) => {
-  console.log('files', files)
-
+onChange((files) => {
   if (!files || files.length === 0)
     return
 
-  isUploading.value = true
-  const tripId = tripData.currentTripId
+  Array.from(files).forEach(file => memories.uploadMemoryImage(file))
 
-  if (!tripId) {
-    isUploading.value = false
-    return
-  }
-
-  const uploadPromises = Array.from(files).map(async (file) => {
-    const newImage = await gallery.uploadImage(file, TripImagePlacement.MEMORIES)
-    if (newImage) {
-      await memories.createMemory({
-        tripId,
-        imageId: newImage.id,
-        timestamp: newImage.takenAt,
-      })
-    }
-  })
-
-  await Promise.all(uploadPromises)
-
-  isUploading.value = false
   reset()
 })
 </script>
@@ -94,15 +73,24 @@ onChange(async (files) => {
 <template>
   <div class="memories-list">
     <div v-if="!isViewMode" class="upload-section">
-      <button class="upload-button" :disabled="isUploading" @click="() => openFileDialog()">
-        <Icon :icon="isUploading ? 'mdi:loading' : 'mdi:camera-plus-outline'" :class="{ spin: isUploading }" />
-        <span>{{ isUploading ? 'Загрузка...' : 'Загрузить фотографии' }}</span>
+      <button class="upload-button" :disabled="isProcessing" @click="() => openFileDialog()">
+        <Icon :icon="isProcessing ? 'mdi:loading' : 'mdi:camera-plus-outline'" :class="{ spin: isProcessing }" />
+        <span>{{ isProcessing ? `Загрузка (${getProcessingMemories.length})...` : 'Загрузить фотографии' }}</span>
       </button>
       <button class="add-note-button" @click="handleAddTextNote">
         <Icon icon="mdi:note-plus-outline" />
         <span>Добавить заметку</span>
       </button>
     </div>
+
+    <!-- Новый компонент для отображения процесса загрузки -->
+    <UploadingQueue
+      v-if="isProcessing"
+      :processing-memories="getProcessingMemories"
+      @cancel="memories.cancelMemoryUpload"
+      @retry="memories.retryMemoryUpload"
+      @remove="memories.removeProcessingMemory"
+    />
 
     <ProcessingQueue v-if="!isViewMode && memoriesToProcess.length > 0" />
 
@@ -118,7 +106,7 @@ onChange(async (files) => {
     <div v-if="isLoading" class="state-info">
       Загрузка воспоминаний...
     </div>
-    <div v-else-if="memories.memories.length === 0" class="state-info">
+    <div v-else-if="memories.memories.length === 0 && !isProcessing" class="state-info">
       <p>В этом дне пока нет воспоминаний.</p>
       <p>Добавьте свои первые фотографии или заметки, чтобы создать ленту этого дня!</p>
     </div>

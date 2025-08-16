@@ -18,7 +18,7 @@ const emit = defineEmits(['update:hasError'])
 const route = useRoute()
 const router = useRouter()
 
-const store = useModuleStore(['data', 'ui', 'gallery', 'memories'])
+const store = useModuleStore(['data', 'ui', 'routeGallery', 'memories'])
 const { days, isLoading, fetchError, getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(store.data)
 
 const tripId = computed(() => route.params.id as string)
@@ -59,13 +59,13 @@ watch(
 
 if (tripId.value) {
   store.data.fetchDaysForTrip(tripId.value, dayId.value)
-  store.gallery.setTripId(tripId.value)
+  store.routeGallery.setTripId(tripId.value)
   store.memories.fetchMemories(tripId.value)
 }
 
 onBeforeUnmount(() => {
   store.data.reset()
-  store.gallery.reset()
+  store.routeGallery.reset()
   store.ui.reset()
 })
 </script>

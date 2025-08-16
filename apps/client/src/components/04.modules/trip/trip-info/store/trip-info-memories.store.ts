@@ -1,38 +1,52 @@
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import { defineStore } from 'pinia'
-import { useRequest, useRequestStatus } from '~/plugins/request'
+import { v4 as uuidv4 } from 'uuid'
+import { useAbortRequest, useRequest, useRequestStatus } from '~/plugins/request'
 import { trpc } from '~/shared/services/trpc/trpc.service'
-import { useTripInfoGalleryStore } from './trip-info-gallery.store'
+import { TripImagePlacement } from '~/shared/types/models/trip'
 import { useTripInfoStore } from './trip-info.store'
 
-/**
- * Ключи запросов, используемые в сторе воспоминаний.
- */
+export interface IProcessingMemory {
+  tempId: string
+  file: File
+  previewUrl: string
+  status: 'uploading' | 'error' | 'success'
+  error?: string
+}
+
 export enum ETripMemoriesKeys {
   FETCH = 'memories:fetch',
   CREATE = 'memories:create',
   UPDATE = 'memories:update',
   DELETE = 'memories:delete',
+  UPLOAD = 'memories:upload',
   APPLY_TIMESTAMP = 'memories:apply-timestamp',
   REMOVE_TIMESTAMP = 'memories:remove-timestamp',
 }
 
 export interface ITripInfoMemoriesState {
   memories: Memory[]
+  processingMemories: Map<string, IProcessingMemory>
   currentTripId: string | null
 }
 
 export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
   state: (): ITripInfoMemoriesState => ({
     memories: [],
+    processingMemories: new Map(),
     currentTripId: null,
   }),
 
   getters: {
-    /**
-     * Статус загрузки списка воспоминаний.
-     */
     isLoadingMemories: () => useRequestStatus(ETripMemoriesKeys.FETCH).value,
+    isCreateMemory: () => useRequestStatus(ETripMemoriesKeys.CREATE).value,
+
+    /**
+     * Геттер для получения списка загружаемых в данный момент воспоминаний.
+     */
+    getProcessingMemories(state): IProcessingMemory[] {
+      return Array.from(state.processingMemories.values())
+    },
 
     /**
      * Получает отсортированные воспоминания для выбранного дня.
@@ -49,7 +63,7 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
       return state.memories
         .filter((m) => {
           if (!m.timestamp)
-            return false // Исключаем воспоминания без даты
+            return false
           const memoryDateStr = new Date(m.timestamp).toISOString().split('T')[0]
           return memoryDateStr === selectedDateStr
         })
@@ -71,15 +85,12 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
       const selectedDateStr = new Date(selectedDay.date).toISOString().split('T')[0]
 
       return state.memories.filter((m) => {
-        // В обработку попадают только фотографии.
         if (!m.imageId)
           return false
 
-        // Сценарий 1: Фотография без какой-либо временной метки.
         if (!m.timestamp)
           return true
 
-        // Сценарий 2: Фотография с временной меткой, но из другого дня.
         const memoryDateStr = new Date(m.timestamp).toISOString().split('T')[0]
         return memoryDateStr !== selectedDateStr
       })
@@ -107,7 +118,95 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
     },
 
     /**
-     * Создает новое воспоминание.
+     * Новая экшен для загрузки файла, создания изображения и последующего создания воспоминания.
+     * @param file - Файл для загрузки.
+     */
+    async uploadMemoryImage(file: File) {
+      const tripId = useTripInfoStore().currentTripId
+      if (!tripId) {
+        console.error('Trip ID не установлен для загрузки воспоминания.')
+        return
+      }
+
+      const tempId = uuidv4()
+      const previewUrl = URL.createObjectURL(file)
+      const requestKey = `${ETripMemoriesKeys.UPLOAD}:${tempId}`
+
+      // 1. Оптимистичное добавление в очередь на обработку
+      this.processingMemories.set(tempId, {
+        tempId,
+        file,
+        previewUrl,
+        status: 'uploading',
+      })
+
+      await useRequest<Memory>({
+        key: requestKey,
+        fn: async (db) => {
+          const newImage = await db.files.uploadFile(file, tripId, TripImagePlacement.MEMORIES)
+          return await db.memories.create({
+            tripId,
+            imageId: newImage.id,
+            timestamp: newImage.takenAt,
+          })
+        },
+        onSuccess: (newMemory) => {
+          this.memories.push(newMemory)
+          URL.revokeObjectURL(previewUrl)
+          this.processingMemories.delete(tempId)
+        },
+        onError: (error) => {
+          console.error(`Ошибка при загрузке воспоминания (tempId: ${tempId}):`, error)
+          const processingItem = this.processingMemories.get(tempId)
+          if (processingItem) {
+            processingItem.status = 'error'
+            processingItem.error = (error as Error).message || 'Неизвестная ошибка'
+          }
+        },
+        onAbort: () => {
+          URL.revokeObjectURL(previewUrl)
+          this.processingMemories.delete(tempId)
+        },
+      })
+    },
+
+    /**
+     * Отменяет загрузку конкретного воспоминания.
+     * @param tempId - Временный ID загружаемого элемента.
+     */
+    cancelMemoryUpload(tempId: string) {
+      const { abort } = useAbortRequest()
+      const requestKey = `${ETripMemoriesKeys.UPLOAD}:${tempId}`
+      abort(requestKey)
+    },
+
+    /**
+     * Повторяет загрузку для элемента, который завершился с ошибкой.
+     * @param tempId - Временный ID элемента.
+     */
+    retryMemoryUpload(tempId: string) {
+      const processingItem = this.processingMemories.get(tempId)
+      if (processingItem && processingItem.status === 'error') {
+        // Удаляем старый элемент и запускаем загрузку заново
+        this.processingMemories.delete(tempId)
+        this.uploadMemoryImage(processingItem.file)
+      }
+    },
+
+    /**
+     * Удаляет элемент из очереди обработки.
+     * @param tempId - Временный ID элемента.
+     */
+    removeProcessingMemory(tempId: string) {
+      const item = this.processingMemories.get(tempId)
+      if (item) {
+        URL.revokeObjectURL(item.previewUrl)
+        this.processingMemories.delete(tempId)
+      }
+    },
+
+    /**
+     * Создает новое воспоминание (для текстовых заметок).
      * @param data - Данные для создания.
      */
     async createMemory(data: CreateMemoryInput) {
@@ -175,23 +274,18 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
 
       const originalMemory = { ...memory }
 
-      // Для оптимистичного обновления находим `takenAt` в галерее
-      const galleryStore = useTripInfoGalleryStore()
-      const image = galleryStore.tripImages.find(img => img.id === memory.imageId)
-      if (image && image.takenAt) {
-        memory.timestamp = image.takenAt
-      }
+      // Для этого действия нам не нужно лезть в другой стор,
+      // так как `takenAt` приходит с сервера при создании.
+      // Мы можем просто вызвать мутацию.
 
       await useRequest({
         key: `${ETripMemoriesKeys.APPLY_TIMESTAMP}:${memoryId}`,
         fn: () => trpc.memory.applyTakenAt.mutate({ id: memoryId }),
         onSuccess: (updatedMemory) => {
-          // Финальное обновление данными с сервера
           if (updatedMemory)
             Object.assign(memory, updatedMemory)
         },
         onError: () => {
-          // Откат в случае ошибки
           Object.assign(memory, originalMemory)
         },
       })
@@ -224,7 +318,11 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
      * Сбрасывает состояние стора.
      */
     reset() {
+      // При сбросе также отменяем все текущие загрузки
+      this.getProcessingMemories.forEach(p => this.cancelMemoryUpload(p.tempId))
+
       this.memories = []
+      this.processingMemories.clear()
       this.currentTripId = null
     },
   },

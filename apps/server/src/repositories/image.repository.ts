@@ -1,5 +1,5 @@
 import type { tripImagePlacementEnum } from '../../db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { tripImages } from '../../db/schema'
 
@@ -67,11 +67,17 @@ export const imageRepository = {
   /**
    * Получает все изображения для конкретного путешествия.
    * @param tripId - ID путешествия.
+   * @param placement - Опциональный фильтр по типу размещения.
    * @returns Массив изображений.
    */
-  async getByTripId(tripId: string) {
+  async getByTripId(tripId: string, placement?: Placement) {
+    const conditions = [eq(tripImages.tripId, tripId)]
+    if (placement) {
+      conditions.push(eq(tripImages.placement, placement))
+    }
+
     return await db.query.tripImages.findMany({
-      where: eq(tripImages.tripId, tripId),
+      where: and(...conditions),
       orderBy: (images, { desc }) => [desc(images.createdAt)],
     })
   },

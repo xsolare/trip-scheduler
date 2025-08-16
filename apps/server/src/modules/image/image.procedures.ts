@@ -6,6 +6,6 @@ export const imageProcedures = {
   listByTrip: publicProcedure
     .input(GetImagesByTripIdInputSchema)
     .query(async ({ input }) => {
-      return imageService.getByTripId(input.tripId)
+      return imageService.getByTripId(input.tripId, input.placement)
     }),
 }
