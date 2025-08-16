@@ -1,54 +1,59 @@
+import type { RemovableRef } from '@vueuse/core'
+import type { ActiveView, InteractionMode } from '../models/types'
 import { useStorage } from '@vueuse/core'
+
+export interface ITripInfoUiState {
+  isDaysPanelOpen: boolean
+  isDaysPanelPinned: boolean
+  activeView: RemovableRef<ActiveView>
+  interactionMode: RemovableRef<InteractionMode>
+}
 
 /**
  * Стор для управления состоянием UI на странице информации о путешествии.
  */
-export const useTripInfoUiStore = defineStore('tripInfoUi', () => {
-  // STATE
-  const isDaysPanelOpen = ref<boolean>(false)
-  const isDaysPanelPinned = ref<boolean>(false)
+export const useTripInfoUiStore = defineStore('tripInfoUi', {
+  state: (): ITripInfoUiState => ({
+    isDaysPanelOpen: false,
+    isDaysPanelPinned: false,
+    activeView: useStorage<ActiveView>('trip-active-view', 'plan'),
+    interactionMode: useStorage<InteractionMode>('tripinfo-interaction-mode', 'view'),
+  }),
 
-  const interactionMode = useStorage<'view' | 'edit'>(
-    'tripinfo-interaction-mode',
-    'view',
-  )
+  getters: {
+    /**
+     * Проверяет, находится ли пользователь в режиме просмотра.
+     * @param state - Текущее состояние стора.
+     */
+    isViewMode: state => state.interactionMode === 'view',
+  },
 
-  // GETTERS
-  const isViewMode = computed(() => interactionMode.value === 'view')
+  actions: {
+    openDaysPanel() {
+      this.isDaysPanelOpen = true
+    },
 
-  // ACTIONS
-  function openDaysPanel() {
-    isDaysPanelOpen.value = true
-  }
+    closeDaysPanel() {
+      this.isDaysPanelOpen = false
+    },
 
-  function closeDaysPanel() {
-    isDaysPanelOpen.value = false
-  }
+    toggleDaysPanelPinned() {
+      this.isDaysPanelPinned = !this.isDaysPanelPinned
+    },
 
-  function toggleDaysPanelPinned() {
-    isDaysPanelPinned.value = !isDaysPanelPinned.value
-  }
+    setInteractionMode(mode: 'view' | 'edit') {
+      this.interactionMode = mode
+    },
 
-  function setInteractionMode(mode: 'view' | 'edit') {
-    interactionMode.value = mode
-  }
+    setActiveView(view: ActiveView) {
+      this.activeView = view
+    },
 
-  function reset() {
-    isDaysPanelOpen.value = false
-    isDaysPanelPinned.value = false
-  }
-
-  return {
-    // State & Getters
-    isDaysPanelOpen,
-    isDaysPanelPinned,
-    interactionMode,
-    isViewMode,
-    // Actions
-    openDaysPanel,
-    closeDaysPanel,
-    toggleDaysPanelPinned,
-    setInteractionMode,
-    reset,
-  }
+    reset() {
+      this.isDaysPanelOpen = false
+      this.isDaysPanelPinned = false
+      this.activeView = 'plan'
+      this.interactionMode = 'view'
+    },
+  },
 })

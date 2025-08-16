@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ThemePreset } from '../../constants/theme-presets'
+import type { ThemePreset } from '../../constants/color-presets'
 import type { ColorPalette } from '~/shared/store/theme.store'
 
 defineProps<{
@@ -14,9 +14,6 @@ const emit = defineEmits<{
 <template>
   <div class="preset-selector">
     <div class="presets-description">
-      <h4 class="presets-title">
-        Вариации пресетов
-      </h4>
       <p>
         Пресеты — это готовые наборы цветовых переменных, которые определяют внешний вид интерфейса.
         Вы можете выбрать один из предложенных пресетов в качестве отправной точки для своей
@@ -52,13 +49,6 @@ const emit = defineEmits<{
   margin-bottom: 24px;
   padding: 0 6px;
 
-  .presets-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--fg-primary-color);
-    margin: 0 0 8px 0;
-  }
-
   p {
     font-size: 0.95rem;
     color: var(--fg-secondary-color);
@@ -76,7 +66,7 @@ const emit = defineEmits<{
 
 .preset-card {
   border: 1px solid var(--border-primary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -91,7 +81,7 @@ const emit = defineEmits<{
 .preset-preview {
   display: flex;
   height: 24px;
-  border-radius: 4px;
+  border-radius: var(--r-2xs);
   overflow: hidden;
   margin-bottom: 8px;
   border: 1px solid var(--border-secondary-color);

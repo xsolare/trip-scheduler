@@ -1,5 +1,6 @@
 import type { App } from 'vue'
 import { useThemeStore } from '~/shared/store/theme.store'
+import { setupCssVariablesUpdater } from './css-variables'
 import { setupThemeColorMetaTagUpdater } from './meta-updater'
 
 export const themePlugin = {
@@ -12,24 +13,13 @@ export const themePlugin = {
 
     const themeStore = useThemeStore(pinia)
 
+    // 1. Загружаем начальное состояние темы
     themeStore.loadInitialTheme()
 
-    watchEffect(() => {
-      const htmlElement = document.documentElement
-      htmlElement.style.cssText = ''
+    // 2. Инициализируем модуль обновления CSS-переменных
+    setupCssVariablesUpdater()
 
-      if (themeStore.isCustomThemeActive) {
-        htmlElement.setAttribute('data-theme', 'custom')
-        const palette = themeStore.customThemePalette
-        for (const key in palette) {
-          htmlElement.style.setProperty(`--${key}`, palette[key])
-        }
-      }
-      else {
-        htmlElement.setAttribute('data-theme', themeStore.activeThemeName)
-      }
-    })
-
+    // 3. Инициализируем модуль обновления мета-тега theme-color
     setupThemeColorMetaTagUpdater()
   },
 }

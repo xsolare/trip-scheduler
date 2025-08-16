@@ -1,0 +1,416 @@
+const TRIP_CHINA_ID = '3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a'
+
+// eslint-disable-next-line unused-imports/no-unused-vars
+const description = `
+Великое Китайское Путешествие: от Неоновых Вершин до Сердца Шелкового Пути
+
+Это не просто поездка, а настоящее погружение в калейдоскоп китайской цивилизации — двухнедельное приключение, ведущее из самого сердца футуристической Азии в колыбель древних караванных путей. Путешествие начинается в вибрирующем мегаполисе Шанхае, продолжается через поэтические пейзажи Сучжоу и Ханчжоу — городов, которые веками вдохновляли поэтов и художников, — и завершается грандиозным финалом в Урумчи, на перекрестке культур у подножия величественных Тянь-Шанских гор.
+
+Часть I: Одиссея в Шанхае — Город Контрастов
+
+Наше приключение стартует в Шанхае. Первый вечер — это мягкое погружение: спокойная прогулка по современному парку вдоль реки Сучжоу и ужин у подножия архитектурного чуда "Тысяча Деревьев", где природа и урбанизм сливаются в единое целое. Это идеальное начало, чтобы привыкнуть к ритму города.
+
+Со следующего дня начинается исследование двух душ Шанхая. Сначала мы отправляемся в его историческое сердце: проходим через шумную, сияющую неоном пешеходную улицу Нанкин, которая выводит нас на легендарную набережную Вайтан. Здесь, на берегу реки Хуанпу, замирает время. Перед нами предстает знаменитая панорама: с одной стороны — величественные колониальные здания, свидетели эпохи международных концессий, а с другой — устремленные в небо футуристические небоскребы района Пудун. Мы посещаем древние храмы Нефритового Будды и Цзинъань, которые, словно острова спокойствия, сохранились посреди бушующего океана современности.
+
+Затем мы пересекаем реку, чтобы лично поприветствовать этот "лес из стали и стекла". День в Пудуне — это гимн человеческим амбициям. Мы поднимаемся на головокружительную высоту одной из высочайших башен мира, будь то Шанхайская башня или культовая "Восточная жемчужина", чтобы взглянуть на город с высоты птичьего полета. После обеда в одном из роскошных моллов мы находим умиротворение в огромном Сентенниал-парке, доказывая, что даже в самом технологичном районе есть место природе. Вечер дарит нам классический вид: мы возвращаемся на Вайтан, чтобы увидеть, как небоскребы Пудуна вспыхивают миллионами огней, создавая незабываемое световое шоу.
+
+Но Шанхай — это не только небоскребы и история. Мы посвящаем дни погружению в его традиционную культуру: блуждаем по извилистым тропинкам и мостикам классического сада Юй Юань, заглядываем в Даосский храм городского божества, гуляем по отреставрированному району Синьтяньди, где историческая архитектура "шикумен" соседствует с модными бутиками. Особым открытием становится район Тяньцзыфан — лабиринт узких улочек бывшей французской концессии, наполненный арт-галереями, ремесленными лавками, уютными кафе и чайными домами.
+
+Чтобы отдохнуть от городской суеты, мы совершаем однодневную поездку в Чжуцзяцзяо, "шанхайскую Венецию". Здесь мы катаемся на лодках по древним каналам, пересекаем каменные мосты, обедаем с видом на воду и наслаждаемся аутентичной чайной церемонией, вдыхая аромат веков.
+
+Часть II: Интерлюдия в Райских Садах — Сучжоу и Ханчжоу
+
+На скоростных поездах мы совершаем два побега из Шанхая в города, которые китайцы называют "раем на земле".
+
+Первая остановка — Сучжоу. Это путешествие в ожившую китайскую акварель. Мы посещаем Сад Скромного Чиновника, шедевр садово-паркового искусства ЮНЕСКО, где каждый камень, пруд и павильон создают идеальную гармонию. Затем мы гуляем по мощеной улице Пинцзян вдоль канала, наблюдая за неспешной жизнью, и поднимаемся к "китайской Пизанской башне" — древней наклонной пагоде на Тигрином холме.
+
+Вторая поездка — в Ханчжоу, город, который Марко Поло назвал самым прекрасным в мире. Сердце города — живописное озеро Сиху, окруженное ивами, пагодами и дамбами. Мы посещаем величественный буддийский храм Линъинь, где гигантские статуи высечены прямо в скалах, а завершаем день в чайной деревне Мэйцзяу. Здесь, среди бескрайних плантаций, мы пробуем знаменитый чай Лунцзин ("Колодец Дракона") и ужинаем в фермерском ресторане, наслаждаясь блюдами, приготовленными с душой.
+
+Часть III: Финал на Шелковом Пути — Урумчи
+
+Попрощавшись с восточным побережьем, мы совершаем перелет через всю страну на запад, в Урумчи — столицу Синьцзян-Уйгурского автономного района. Это уже совсем другой Китай — мир пустынь, заснеженных гор и смешения культур.
+
+Первым делом мы отправляемся к жемчужине Тянь-Шанских гор — Небесному озеру Тяньчи. Это потрясающей красоты высокогорное озеро, кристально чистая вода которого отражает вечные ледники и пики, окружающие его. Здесь, на высоте почти двух тысяч метров, дышится иначе, а величие природы ощущается особенно остро.
+
+Последний день нашего грандиозного путешествия посвящен знакомству с самим Урумчи. Мы поднимаемся на Красную гору, чтобы окинуть взглядом панораму города, гуляем по зеленым паркам, а затем погружаемся в самое сердце этого региона — Международный Большой Базар. Это не просто рынок, а целый город в городе с его уникальной архитектурой, мечетями, башнями и бесконечными рядами, где продают шелка, специи, орехи, фрукты и сувениры. Здесь воздух пропитан ароматами плова и шашлыка, а в шуме толпы слышны языки разных народов, веками проходивших по Великому Шелковому пути.
+
+Это путешествие — настоящая эпопея, которая начинается с головокружительной высоты шанхайских небоскребов и заканчивается в колоритной атмосфере древнего базара. Это история о том, как за две недели можно прожить несколько жизней, увидев Китай во всем его невероятном многообразии: от блеска мировых финансовых центров до безмятежной красоты священных озер и вечной мудрости древних садов.
+`
+
+// Генерируем уникальные ID для каждого из 14 дней
+const DAY_IDS = Array.from({ length: 14 }, () => crypto.randomUUID())
+
+// Вспомогательные функции для создания корректных путей к статическим файлам
+// eslint-disable-next-line unused-imports/no-unused-vars
+const getChinaMemoriesPath = (filename: string) => `/static/trip-china/memories/${filename}`
+const getChinaRoutePath = (filename: string) => `/static/trip-china/route/${filename}`
+
+// === СОБИРАЕМ ВСЕ ИЗОБРАЖЕНИЯ ИЗ ПУТЕШЕСТВИЯ ===
+// Это необходимо, чтобы создать централизованный список изображений для таблицы `trip_images`.
+const ALL_IMAGE_FILENAMES = [
+  'tianchi2.jpg',
+  '20250216013656.png',
+  '20250216013458.png',
+  '20250221130326.png',
+  '20250216013213.png',
+  '20250217210256.png',
+  '20250217212046.png',
+  '20250217212501.png',
+  '20250217212416.png',
+  '20250217213525.png',
+  '20250217213134.png',
+  '20250217222310.png',
+  '20250217214524.png',
+  '20250217214032.png',
+  '20250217214445.png',
+  '20250217223336.png',
+  '20250217223428.png',
+  '20250217223444.png',
+  '20250217230124.png',
+  '20250217225444.png',
+  '20250217230103.png',
+  '20250217230859.png',
+  '20250217223609.png',
+  '20250220190555.png',
+  '20250220190346.png',
+  '20250220190301.png',
+  '20250217232059.png',
+  '20250217232335.png',
+  '20250313233958.png',
+  '20250313234517.png',
+  '20250313233753.png',
+  '20250313234400.png',
+  '20250313234435.png',
+  '20250313234851.png',
+  '20250314004804.png',
+  '20250314004824.png',
+  '20250314004848.png',
+  '20250314004632.png',
+  '20250309004803.png',
+  '20250309004958.png',
+  '20250309005052.png',
+  '20250309005112.png',
+  '20250309005133.png',
+  '20250309005739.png',
+  '20250309005903.png',
+  '20250309010228.png',
+  '20250309010246.png',
+  '20250309171231.png',
+  '20250309163606.png',
+  '20250309163617.png',
+  '20250309171739.png',
+  '20250309171818.png',
+  '20250223152330.png',
+  '20250309174226.png',
+  '20250309174651.png',
+  '20250309181742.png',
+  '20250309175314.png',
+  '20250309181154.png',
+  '20250309182313.png',
+  '20250309175856.png',
+  '20250309180345.png',
+  '20250221144249.png',
+  '20250221154010.png',
+  '20250221154201.png',
+  '20250221154416.png',
+  '20250221154551.png',
+  '20250221154742.png',
+  '20250221155358.png',
+  '20250221155028.png',
+  '20250221155103.png',
+  '20250221170009.png',
+  '20250221170416.png',
+  '20250221164850.png',
+  '20250221164918.png',
+  '20250221164947.png',
+  '20250221171153.png',
+  '20250221161326.png',
+  '20250221161351.png',
+  '20250221171445.png',
+  '20250223220410.png',
+  '20250216165042.png',
+  '20250223220711.png',
+  '20250223231212.png',
+  '20250223231820.png',
+  '20250223161225.png',
+  '20250223232114.png',
+  '20250223233156.png',
+  '20250216022953.png',
+  '20250223233629.png',
+  '20250223202038.png',
+  '20250223234549.png',
+  '20250223233825.png',
+  '20250223202226.png',
+  '20250223235116.png',
+  '20250223202356.png',
+  '20250505090216.png',
+  '20250505090316.png',
+  '20250311220840.png',
+  '20250314010452.png',
+  '20250314010555.png',
+  '20250314010608.png',
+  '20250314011414.png',
+  '20250314011512.png',
+  '20250314011957.png',
+  '20250314011847.png',
+  'Meijiawu Tea Plantation Path.png',
+  'Meijiawu Tea Plantation 1.jpg',
+  'Meijiawu Tea Plantation 2.jpg',
+  '20250314012046.png',
+  '20250314012322.png',
+  '20250506095740.png',
+  '0206a12000990mnse338F_W_1280_853_R5.webp',
+  '0206112000990n39g16CC_W_1280_853_R5.webp',
+  '20250506100018.png',
+  '202505031601413.png',
+  'unnamed.jpg',
+  'depositphotos_139790534-stock-photo-xinjiang-china-may-09-2015.webp',
+  'B62a46a9b9ffe8860d.jpeg',
+  '20250226210917.png',
+  '20250226211046.png',
+  '20250226211112.png',
+  '20250226211533.png',
+  '20250226211619.png',
+  '20250226212040.png',
+  '20250226212249.png',
+  '20250226213252.png',
+  '20250226214429.png',
+  '20250226214848.png',
+  '20250226214829.png',
+  '20250226215018.png',
+]
+
+// Преобразуем имена файлов в объекты для вставки в БД
+const allImageObjects = [...new Set(ALL_IMAGE_FILENAMES)].map(filename => ({
+  id: crypto.randomUUID(),
+  tripId: TRIP_CHINA_ID,
+  url: getChinaRoutePath(filename),
+  placement: 'route',
+}))
+
+export const MOCK_DATA = [
+  // =================================================================
+  // ===================== Путешествие по Китаю =======================
+  // =================================================================
+  {
+    id: TRIP_CHINA_ID,
+    title: 'Путешествие по Китаю',
+    userId: '1a97d95a-0158-4171-8258-52c7a917e3f0',
+    imageUrl: getChinaRoutePath('20250217213134.png'),
+    description: 'Двухнедельное приключение, охватывающее футуристический Шанхай, классические сады Сучжоу и Ханчжоу, и заканчивающееся в сердце древнего Шелкового пути — Урумчи.',
+    startDate: new Date('2025-08-10'),
+    endDate: new Date('2025-08-23'),
+    cities: ['Шанхай', 'Сучжоу', 'Ханчжоу', 'Урумчи'],
+    status: 'planned' as const,
+    budget: 2000,
+    currency: 'USD',
+    participants: ['Евгений'],
+    tags: ['Китай', 'Шанхай', 'Урумчи', 'культура', 'еда', 'приключения'],
+    visibility: 'private' as const,
+    images: allImageObjects,
+    memories: [], // Воспоминания не добавляем по запросу
+    days: [
+      // Day 1
+      {
+        id: DAY_IDS[0],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-10'),
+        title: 'Начало пути',
+        description: 'Наше китайское приключение начинается с прибытия в аэропорт Хунцяо. Вечерняя программа идеально подходит для первого знакомства с городом без лишней нагрузки: спокойная прогулка по современному парку и ужин у архитектурного шедевра "Тысяча Деревьев".',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[0], startTime: '16:00', endTime: '17:00', title: 'Прибытие в Аэропорт Хунцяо (SHA)', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прибытие и трансфер в отель.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[0], startTime: '17:00', endTime: '18:15', title: 'Заселение в отель Yunhe Yebo Hotel', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Заселение, короткий отдых после перелета.\nАдрес: `2-5F, Area C, 1F, No.503 Wuning Road, Путуо, Шанхай`' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[0], startTime: '18:15', endTime: '18:30', title: 'Путь к метро Caoyang Road', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка до станции метро **Caoyang Road (曹杨路)** или **Fengqiao Rd. (枫桥路)**. \n\n*Совет*: Приобретите транспортную карту Shanghai Transportation Card для удобства передвижения по городу (доступна в AliPay).' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250216013656.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[0], startTime: '18:30', endTime: '19:30', title: 'Прогулка по парку Suzhouhe Mengqing Garden', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: '**Environmental Theme Park of Suzhouhe Mengqing Garden(苏州河梦清园环保主题公园)**\n\nЖивописный парк вдоль реки Сучжоу — идеальное место для акклиматизации. \n*Что посмотреть*: Красивый ландшафтный дизайн, пешеходные мостики, местные растения, виды на реку.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250216013458.png'), getChinaRoutePath('20250221130326.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[0], startTime: '19:30', endTime: '22:00', title: 'Ужин в Tian\'an Thousand Trees', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Посещение уникального архитектурного комплекса **Ocean Jewel · Tian\'an Thousand Trees (大洋晶典·天安千树)**, напоминающего "вертикальный лес". \n\n**Рекомендуемые заведения:**\n* *Element Fresh* — европейская кухня с легкими блюдами\n* *Haidilao (海底捞)* — знаменитый китайский хотпот (требуется бронирование)\n* *Costa Coffee* — для любителей кофе и легких закусок' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250216013213.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[0], startTime: '22:00', endTime: '22:30', title: 'Возвращение в отель', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на метро обратно в отель для отдыха. \n\n**Важно:** Последние поезда метро отправляются примерно в 22:30-23:00!' }] },
+        ],
+      },
+      // Day 2
+      {
+        id: DAY_IDS[1],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-11'),
+        title: 'Привет Шанхай (Waitan)',
+        description: 'Насыщенный день, который начнется с Народной площади, проведет через шумную торговую улицу Nanjing Road к знаменитой набережной Вайтан с ее колониальной архитектурой, а завершится посещением храмов и ночной прогулкой.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '10:00', endTime: '10:30', title: 'Народная площадь и People\'s Park', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Начало дня с прогулки по центральному парку города (**People\'s Park 上海人民公园**).' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250217210256.png'), getChinaRoutePath('20250217212046.png'), getChinaRoutePath('20250217212501.png'), getChinaRoutePath('20250217212416.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '10:30', endTime: '11:30', title: 'Прогулка по Nanjing Road Pedestrian Street', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Исследование главной торговой улицы Шанхая **(南京路步行街)**, проба местных закусок. Будьте готовы к толпам!' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250217213525.png'), getChinaRoutePath('20250217213134.png'), getChinaRoutePath('20250217222310.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '11:30', endTime: '13:00', title: 'Набережная Вайтан и мост Waibaidu', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка вдоль набережной с видом на небоскребы Пудуна, фото у исторического моста **Waibaidu Bridge** и в парке **North Bund Green Land (北外滩滨江绿地)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250217214524.png'), getChinaRoutePath('20250217214032.png'), getChinaRoutePath('20250217214445.png'), getChinaRoutePath('20250217223336.png'), getChinaRoutePath('20250217223428.png'), getChinaRoutePath('20250217223444.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '13:30', endTime: '15:00', title: 'Обед', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Обед в районе **Changshou Rd. (长寿路)**, например, в **Miss Fu in Chengdu (付小姐在成都)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250217230124.png'), getChinaRoutePath('20250217225444.png'), getChinaRoutePath('20250217230103.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '15:00', endTime: '16:00', title: 'Посещение храма Нефритового Будды', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Визит в один из самых известных действующих буддийских храмов Шанхая **(Jade Buddha Temple 玉佛禅寺)**. Работает до 16:30.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250217230859.png'), getChinaRoutePath('20250217223609.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '17:10', endTime: '18:50', title: 'Храм и парк Цзинъань (Jing\'an)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Осмотр древнего храма **Jing\'an Temple (静安寺)**, который дал название всему району, и прогулка по прилегающему парку.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250220190555.png'), getChinaRoutePath('20250220190346.png'), getChinaRoutePath('20250220190301.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[1], startTime: '19:00', endTime: '20:30', title: 'Ночная Nanjing Road', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Возвращение на главную пешеходную улицу, чтобы увидеть ее в сиянии неоновых огней.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250217232059.png'), getChinaRoutePath('20250217232335.png')] }] },
+        ],
+      },
+      // Day 3
+      {
+        id: DAY_IDS[2],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-12'),
+        title: 'Ура небоскребам (Pudong)',
+        description: 'День, посвященный футуристическому району Пудун. Подъем на один из самых высоких небоскребов мира, посещение огромного океанариума и парков, и, конечно, классический вид на ночной Пудун с набережной Вайтан.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[2], startTime: '10:00', endTime: '11:00', title: 'Дорога в Пудун', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на метро до станции **Lujiazui (陆家嘴)**, финансового центра Шанхая.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250313233958.png'), getChinaRoutePath('20250313234517.png'), getChinaRoutePath('20250313233753.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[2], startTime: '11:00', endTime: '12:30', title: 'Подъем на небоскреб', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: '**Варианты:**\n\n*   **Shanghai Tower (上海中心):** Самый высокий вид (546 м). *Цена: 180 CNY*. [Билеты](https://us.trip.com/travel-guide/attraction/shanghai/shanghai-tower-24591219/?locale=en-XX&curr=CNY)\n*   **Oriental Pearl Tower (东方明珠):** Самая узнаваемая башня со стеклянным полом. *Цена: 160 CNY*. [Билеты](https://us.trip.com/travel-guide/attraction/shanghai/oriental-pearl-radio-and-television-tower-75627/?locale=en-US&curr=CNY)' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250313234400.png'), getChinaRoutePath('20250313234435.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[2], startTime: '12:30', endTime: '14:00', title: 'Обед в IFC Mall', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Обед в одном из лучших торговых центров Пудуна **(国金中心商场)**. \n\n**Рекомендация:** Ресторан **Din Tai Fung (鼎泰丰)** на 3 этаже для дегустации знаменитых пельменей сяолунбао.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250313234851.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[2], startTime: '14:30', endTime: '16:00', title: 'Прогулка по Century Park', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Крупнейший городской парк Шанхая **(世纪公园)** с озерами и садами. Вход: 10 юаней.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250314004804.png'), getChinaRoutePath('20250314004824.png'), getChinaRoutePath('20250314004848.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[2], startTime: '16:30', endTime: '20:00', title: 'Прогулка по району и ужин', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Свободное время для исследования района и ужин в **Super Brand Mall (正大广场)**. Попробуйте **Shanghai Min (小南国)** для аутентичной шанхайской кухни.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[2], startTime: '20:30', endTime: '21:30', title: 'Вечерняя прогулка по набережной The Bund', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Возвращение на другую сторону реки, чтобы насладиться культовым видом на освещенные небоскребы Пудуна. Лучшие фото получаются именно отсюда!' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250314004632.png')] }] },
+        ],
+      },
+      // Day 4
+      {
+        id: DAY_IDS[3],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-13'),
+        title: 'Сады, Храмы и Чаи',
+        description: 'День погружения в традиционный Китай в самом сердце Шанхая. Мы исследуем классический сад Юй Юань, прогуляемся по отреставрированным кварталам Xintiandi и затеряемся в лабиринте узких улочек Tian Zi Fang.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[3], startTime: '10:00', endTime: '13:00', title: 'Посещение сада Юй Юань (Yu Garden)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Исследование классического китайского сада династии Мин **(豫园)** с его прудами, павильонами и мостиками. \n\n**Обязательно к посещению:**\n* *Sansui Hall (三穗堂)*\n* *Wanhua Chamber (万花楼)*\n* *Dianchun Hall (点春堂)*' }, { id: crypto.randomUUID(), type: 'description', text: '**Бронирование:** Настоятельно рекомендуется бронировать билеты заранее, особенно в выходные, через Trip.com или Klook. Цена: ~30-40 CNY.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250309004803.png'), getChinaRoutePath('20250309004958.png'), getChinaRoutePath('20250309005052.png'), getChinaRoutePath('20250309005112.png'), getChinaRoutePath('20250309005133.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[3], startTime: '13:00', endTime: '14:00', title: 'Старый город и улица Fangbang', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка мимо Даосского храма городского божества **(上海城隍庙)** по старинной улочке **Fangbang Middle Road (方浜中路)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250309005739.png'), getChinaRoutePath('20250309005903.png'), getChinaRoutePath('20250309010228.png'), getChinaRoutePath('20250309010246.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[3], startTime: '14:00', endTime: '16:00', title: 'Прогулка и обед в Xintiandi', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Исследование пешеходного района **(新天地)** с домами "шикумен", где история встречается с современностью. Обед в одном из модных кафе.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250309171231.png'), getChinaRoutePath('20250309163606.png'), getChinaRoutePath('20250309163617.png'), getChinaRoutePath('20250309171739.png'), getChinaRoutePath('20250309171818.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[3], startTime: '16:30', endTime: '19:00', title: 'Исследование района Tian Zi Fang', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Погружение в лабиринт узких улочек **(田子坊)** бывшей французской концессии, наполненных художественными галереями, крафтовыми магазинами, кафе и чайными домами. \n\n*Ищите:* уникальные сувениры, уличную еду (например, жареные булочки *生煎包*) и многочисленных кошек!' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223152330.png'), getChinaRoutePath('20250309174226.png')] }] },
+        ],
+      },
+      // Day 5
+      {
+        id: DAY_IDS[4],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-14'),
+        title: 'Древний город (Zhujiajiao Water Town)',
+        description: 'Однодневная поездка в Чжуцзяцзяо, "шанхайскую Венецию". Мы будем гулять по старинным улочкам, пересекать каменные мосты, обедать с видом на каналы и наслаждаться аутентичной чайной церемонией.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[4], startTime: '09:30', endTime: '11:30', title: 'Дорога в Zhujiajiao', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на метро (17 линия) до древнего города на воде **(朱家角)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250309174651.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[4], startTime: '11:30', endTime: '13:00', title: 'Исследование North Street и моста Fangsheng', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка по главной улице **(北大街)** с магазинами и чайными домиками, подъем на самый известный мост **Fangsheng Bridge (放生桥)** для панорамных видов.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250309181742.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[4], startTime: '13:00', endTime: '15:00', title: 'Прогулка по турзоне и обед', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Обед в одном из ресторанов с видом на воду в **Shanghai Zhujiajiao Ancient Town Tourist Zone (上海朱家角古镇旅游区)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250309175314.png'), getChinaRoutePath('20250309181154.png'), getChinaRoutePath('20250309182313.png'), getChinaRoutePath('20250309175856.png'), getChinaRoutePath('20250309180345.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[4], startTime: '15:00', endTime: '16:30', title: 'Прогулка по секретным переулкам или посещение храма', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: '**Вариант 1 (Переулки):** Откройте для себя **Yujia Lane (郁家弄)** с резными ручками XVIII века и мастерской гончара Mr. Chen.\n\n**Вариант 2 (Храм):** Посетите маленький действующий **Храм городского божества (城隍庙)** недалеко от моста Fangsheng.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[4], startTime: '16:30', endTime: '18:00', title: 'Чайная церемония в Zhuxi Teahouse', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Посещение аутентичного чайного дома **Zhuxi Teahouse (竹溪茶楼)** (Адрес: 92 Xihe Street). \nЗакажите набор «Четыре сезона» (80 RMB) и попробуйте закуску «лунный кролик».' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[4], startTime: '18:00', endTime: '19:30', title: 'Ужин и дегустация рисового вина', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Ужин в ресторане **Shui Mian Lou (睡面楼)** со столиками над водой. \n\nПосле этого — дегустация местного рисового вина в лавке **Qian Niang Jiu Fang (前酿酒坊)**.' }] },
+        ],
+      },
+      // Day 6
+      {
+        id: DAY_IDS[5],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-15'),
+        title: 'Искусство и Архитектура',
+        description: 'Свободный день для отдыха, самостоятельного исследования или повторного посещения наиболее понравившихся мест. Отличная возможность отойти от плотного графика и насладиться городом в собственном темпе.',
+        activities: [{ id: crypto.randomUUID(), dayId: DAY_IDS[5], startTime: '10:00', endTime: '22:00', title: 'Свободный день', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Этот день оставлен свободным для того, чтобы вы могли повторить то, что понравилось больше всего, или исследовать что-то новое по своему усмотрению.' }] }],
+      },
+      // Day 7
+      {
+        id: DAY_IDS[6],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-16'),
+        title: 'Гимн Спокойствию (Suzhou)',
+        description: 'Однодневная поездка на скоростном поезде в Сучжоу, "Восточную Венецию". День будет посвящен исследованию шедевров китайского садово-паркового искусства, внесенных в список ЮНЕСКО, и прогулкам по живописным улицам вдоль каналов.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '09:20', endTime: '10:20', title: 'Дорога до вокзала и поездка в Сучжоу', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на метро до вокзала **Hongqiao (虹桥火车站)** и 30-минутное путешествие на скоростном поезде.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250221144249.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '11:20', endTime: '13:00', title: 'Сад Скромного Чиновника', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Самый большой и знаменитый сад Сучжоу **(The Humble Administrator\'s Garden 拙政园)**. Вход: 70 CNY.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250221154010.png'), getChinaRoutePath('20250221154201.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '11:20', endTime: '13:00', title: 'Альтернатива: Сад Львиного Леса', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Лабиринт из камней, напоминающих львов, в **Lion Grove Garden (狮子林)**. Вход: 40 CNY.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250221154416.png'), getChinaRoutePath('20250221154551.png'), getChinaRoutePath('20250221154742.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '13:00', endTime: '14:50', title: 'Прогулка и обед на Pingjiang Road', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка по мощеной исторической улице **Pingjiang Road** с чайными, мастерскими и сувенирными лавками. Обед в местной пельменной.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250221155358.png'), getChinaRoutePath('20250221155028.png'), getChinaRoutePath('20250221155103.png'), getChinaRoutePath('20250221170009.png'), getChinaRoutePath('20250221170416.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '15:30', endTime: '17:30', title: 'Tiger Hill Pagoda (Пагода на Тигрином холме)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Посещение "китайской Пизанской башни" - древней наклонной пагоды **(云岩寺塔)** с богатой историей. \n\n[Видео обзор](https://youtu.be/V69OAJ2gE5E?si=iO74r6JVdQeTRT35)' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250221164850.png'), getChinaRoutePath('20250221164918.png'), getChinaRoutePath('20250221164947.png'), getChinaRoutePath('20250221171153.png'), getChinaRoutePath('20250221161326.png'), getChinaRoutePath('20250221161351.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '17:30', endTime: '19:42', title: 'Ужин и возвращение на вокзал', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Ужин перед отправлением обратно в Шанхай.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250221171445.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[6], startTime: '19:42', endTime: '20:15', title: 'Скоростной поезд в Шанхай', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Возвращение в Шанхай.' }] },
+        ],
+      },
+      // Day 8
+      {
+        id: DAY_IDS[7],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-17'),
+        title: 'Коммерческий мир',
+        description: 'День исследования района Сюйцзяхуэй, одного из крупнейших коммерческих центров Шанхая. Мы увидим впечатляющий неоготический собор, а затем переместимся на набережную West Bund — культурный коридор с множеством музеев современного искусства.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[7], startTime: '11:00', endTime: '12:00', title: 'Собор Сюйцзяхуэй (Xujiahui Cathedral)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Посещение впечатляющего католического собора **(徐家汇天主堂)** в неоготическом стиле.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223220410.png'), getChinaRoutePath('20250216165042.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[7], startTime: '12:00', endTime: '12:30', title: 'Библиотека Xujiahui Origin', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Посещение расположенной рядом живописной библиотеки **Xujiahui Origin Scenic Spot (徐家汇源景区)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223220711.png'), getChinaRoutePath('20250223231212.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[7], startTime: '12:30', endTime: '14:00', title: 'Обед и шопинг в Metro-City', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Обед и прогулка по одному из самых узнаваемых торговых центров района **(美罗城)** с огромным шаром на крыше.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223231820.png'), getChinaRoutePath('20250223161225.png'), getChinaRoutePath('20250223232114.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[7], startTime: '14:00', endTime: '16:30', title: 'Прогулка по набережной Xuhui Riverside', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Исследование **West Bund (西岸)** — зоны с музеями современного искусства и арт-объектами:\n\n*   **Long Museum West Bund (龙美术馆西岸馆)**\n*   **Yuz Museum (余德耀美术馆)**\n*   **Tank Shanghai (油罐艺术中心)**' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223233156.png'), getChinaRoutePath('20250216022953.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[7], startTime: '16:50', endTime: '18:40', title: 'World Expo Cultural Park', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка по огромному парку **(世博文化公园)**, созданному на месте проведения Expo 2010.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223233629.png'), getChinaRoutePath('20250223202038.png'), getChinaRoutePath('20250223234549.png'), getChinaRoutePath('20250223233825.png'), getChinaRoutePath('20250223202226.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[7], startTime: '18:40', endTime: '20:30', title: 'Ужин в The River Mall и вид на China Art Museum', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Ужин в ТЦ **The River Mall (世博源)** и наслаждение ночным видом на подсвеченный **Дворец искусств Китая (中华艺术宫)** (бывший павильон Китая).' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250223235116.png'), getChinaRoutePath('20250223202356.png'), getChinaRoutePath('20250505090216.png'), getChinaRoutePath('20250505090316.png')] }] },
+        ],
+      },
+      // Day 9
+      {
+        id: DAY_IDS[8],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-18'),
+        title: 'Культурный шок',
+        description: 'День отдыха и культурных развлечений. После свободного времени днем, вечер будет посвящен уникальному театрализованному представлению с ужином, а после — исследованию ночной жизни Шанхая в одном из популярных баров или клубов.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[8], startTime: '10:00', endTime: '16:00', title: 'Свободное время', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Время для отдыха или самостоятельных прогулок.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[8], startTime: '16:00', endTime: '20:00', title: 'Представление в XUYAN Shanghai Signature Store', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Погружение в китайскую культуру через театральное представление **(XUYAN)**, совмещенное с ужином и напитками. \n\n*Цена:* ~400 CNY. [Забронировать на Trip.com](https://us.trip.com/travel-guide/attraction/shanghai/xuyan-145736045/?locale=en-XX&curr=CNY)' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250311220840.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[8], startTime: '20:00', endTime: '23:00', title: 'Посещение бара / клуба', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Знакомство с ночной жизнью Шанхая. \n\n| Название | Примечания |\n| :--- | :--- |\n| **Dada** | Классика, недорогие напитки. |\n| **Celia by Pulse** | Техно и хаус до утра. |\n| **Bar Rogue** | Популярный клуб на набережной. |\n| **M1NT** | Премиум-клуб с панорамным видом и аквариумом с акулами. |\n\nБольше вариантов: [smartshanghai](https://www.smartshanghai.com/)' }] },
+        ],
+      },
+      // Day 10
+      {
+        id: DAY_IDS[9],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-19'),
+        title: 'Приход в чувства',
+        description: 'Свободный день для восстановления сил после насыщенной недели. Можно выспаться, неспешно прогуляться по городу, вернуться в любимые места или открыть для себя что-то совершенно новое, не придерживаясь плана.',
+        activities: [{ id: crypto.randomUUID(), dayId: DAY_IDS[9], startTime: '10:00', endTime: '22:00', title: 'Свободный день', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Этот день оставлен свободным для того, чтобы вы могли отдохнуть, восстановиться и подготовиться к следующему этапу путешествия.' }] }],
+      },
+      // Day 11
+      {
+        id: DAY_IDS[10],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-20'),
+        title: 'Небесный Рай (Hangzhou)',
+        description: 'Однодневная поездка в Ханчжоу, который Марко Поло называл "самым прекрасным городом в мире". Мы совершим прогулку по живописному озеру Сиху, посетим знаменитый буддийский храм Линъинь и продегустируем один из лучших чаев Китая, Лунцзин, прямо на плантациях.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[10], startTime: '09:00', endTime: '11:00', title: 'Дорога до вокзала и поездка в Ханчжоу', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на метро до вокзала **Hongqiao (虹桥火车站)** и путешествие на скоростном поезде (G-серия).' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250314010452.png'), getChinaRoutePath('20250314010555.png'), getChinaRoutePath('20250314010608.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[10], startTime: '11:30', endTime: '14:00', title: 'Прогулка по озеру Сиху (West Lake)', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Осмотр озера **(西湖)**, включенного в список Всемирного наследия ЮНЕСКО, и прогулка по дамбе **Су (苏堤)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250314011414.png'), getChinaRoutePath('20250314011512.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[10], startTime: '14:30', endTime: '15:30', title: 'Посещение храма Линъинь (Lingyin Temple)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Визит в один из самых знаменитых буддийских храмов Китая **(灵隐寺)**, известный своими статуями, вырезанными в скалах. Вход: 45 CNY.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250314011957.png'), getChinaRoutePath('20250314011847.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[10], startTime: '16:30', endTime: '19:50', title: 'Посещение чайной деревни и ужин', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: '**Вариант 1: Деревня Мэйцзяу (Meijiawu Tea Village 梅家坞)**\nБолее аутентичная атмосфера, панорамные виды на плантации. Ужин в фермерском ресторане (*农家乐*).\n\n**Вариант 2: Деревня Лунцзин (Longjing Tea Village 龙井村)**\nПрогулка по знаменитым плантациям, дегустация чая "Колодец Дракона" и ужин в ресторане, где готовят блюда с чаем.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('Meijiawu Tea Plantation Path.png'), getChinaRoutePath('Meijiawu Tea Plantation 1.jpg'), getChinaRoutePath('Meijiawu Tea Plantation 2.jpg'), getChinaRoutePath('20250314012046.png'), getChinaRoutePath('20250314012322.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[10], startTime: '21:21', endTime: '22:22', title: 'Возвращение в Шанхай', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на скоростном поезде обратно в Шанхай.' }] },
+        ],
+      },
+      // Day 12
+      {
+        id: DAY_IDS[11],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-21'),
+        title: 'Побег',
+        description: 'День отъезда из Шанхая. После завтрака и сборов у нас будет немного свободного времени для последней прогулки перед отправлением в аэропорт Пудун для вылета в следующую точку нашего путешествия.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[11], startTime: '09:30', endTime: '11:00', title: 'Завтрак и выселение из отеля', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Собираем вещи, выселяемся из отеля. Можно попросить оставить багаж на ресепшене, если планируете еще погулять.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[11], startTime: '11:00', endTime: '13:00', title: 'Прощальная прогулка', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Свободное время для покупки сувениров или прогулки.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[11], startTime: '14:00', endTime: '17:05', title: 'Дорога в аэропорт и вылет', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прибытие в Аэропорт Пудун (PVG) за 3 часа до вылета, регистрация на рейс и вылет.' }] },
+        ],
+      },
+      // Day 13
+      {
+        id: DAY_IDS[12],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-22'),
+        title: 'На распутье (Урумчи)',
+        description: 'После ночного прилета в Урумчи и короткого отдыха, мы отправимся в однодневную поездку к жемчужине Тянь-Шанских гор — Небесному озеру (Тяньчи). Нас ждут потрясающие виды высокогорного озера в окружении заснеженных пиков.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[12], startTime: '00:20', endTime: '01:30', title: 'Прилет в Урумчи и заселение в отель', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Ночное прибытие, трансфер на такси и заселение в **Atour Hotel (乌鲁木齐北京南路中营工地铁站亚朵酒店)**. [Отель на карте](https://j.map.baidu.com/10/dMWg)' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250506095740.png'), getChinaRoutePath('0206a12000990mnse338F_W_1280_853_R5.webp'), getChinaRoutePath('0206112000990n39g16CC_W_1280_853_R5.webp')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[12], startTime: '09:30', endTime: '12:30', title: 'Поездка до Национального парка Тяньшань Тяньчи', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Дорога до **Международного автовокзала Урумчи Гаоте (乌鲁木齐高铁国际汽车客运站)**. \n\nТам нужно купить билет на туристический автобус до **Тяньчи (天山天池)**. Поездка на автобусе займет около 1.5 часов.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250506100018.png'), getChinaRoutePath('202505031601413.png'), getChinaRoutePath('unnamed.jpg')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[12], startTime: '12:30', endTime: '17:00', title: 'Исследование Небесного озера (Тяньчи)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на шаттле до озера. \n\n**Возможные активности:**\n*   Прогулка по дорожкам\n*   Поездка на лодке (за доп. плату)\n*   Посещение даосского храма на берегу\n*   Обед в кафе на территории.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('tianchi2.jpg'), getChinaRoutePath('depositphotos_139790534-stock-photo-xinjiang-china-may-09-2015.webp')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[12], startTime: '17:00', endTime: '19:00', title: 'Возвращение в Урумчи', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Поездка на автобусе обратно в город. \n\n**Важно:** Уточните время отправления последнего автобуса при покупке билета! Обычно последние рейсы около 17:30-18:30.' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[12], startTime: '19:00', endTime: '21:30', title: 'Вечерняя прогулка и ужин', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка по парку **Liyu Mountain Park (鲤鱼山公园)** напротив отеля и ужин в одном из местных ресторанов.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('B62a46a9b9ffe8860d.jpeg')] }] },
+        ],
+      },
+      // Day 14
+      {
+        id: DAY_IDS[13],
+        tripId: TRIP_CHINA_ID,
+        date: new Date('2025-08-23'),
+        title: 'По базарам (Урумчи)',
+        description: 'Последний день нашего путешествия. Мы познакомимся с Урумчи: поднимемся на Красную гору для панорамного вида на город, прогуляемся по паркам и окунемся в атмосферу знаменитого Международного Большого Базара.',
+        activities: [
+          { id: crypto.randomUUID(), dayId: DAY_IDS[13], startTime: '09:00', endTime: '10:00', title: 'Завтрак и выселение', tag: 'relax' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Позавтракать, собрать вещи и оставить их на хранение в отеле. \n\n*Фраза для ресепшена:* "Можно оставить багаж?" (可以寄存行李吗? - Kěyǐ jìcún xínglǐ ma?).' }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[13], startTime: '10:30', endTime: '11:30', title: 'Парк "Красная гора" (Hongshan Park)', tag: 'attraction' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Осмотр парка **(红山公园)** и подъем на пагоду для панорамного вида на город.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250226210917.png'), getChinaRoutePath('20250226211046.png'), getChinaRoutePath('20250226211112.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[13], startTime: '11:30', endTime: '12:30', title: 'Народный парк (People\'s Park)', tag: 'walk' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Прогулка по зеленому оазису в центре города **(乌鲁木齐人民公园)**.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250226211533.png'), getChinaRoutePath('20250226211619.png'), getChinaRoutePath('20250226212040.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[13], startTime: '12:30', endTime: '15:30', title: 'Обед и Большой Международный Базар', tag: 'food' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: 'Обед по пути и исследование знаменитого **International Grand Bazaar (国际大巴扎)**. \n\nДо базара можно доехать на метро (станция **Erdaoqiao / 二道桥**). Осмотр архитектуры, мечети и сувенирных лавок.' }, { id: crypto.randomUUID(), type: 'gallery', imageUrls: [getChinaRoutePath('20250226212249.png'), getChinaRoutePath('20250226213252.png'), getChinaRoutePath('20250226214429.png'), getChinaRoutePath('20250226214848.png'), getChinaRoutePath('20250226214829.png'), getChinaRoutePath('20250226215018.png')] }] },
+          { id: crypto.randomUUID(), dayId: DAY_IDS[13], startTime: '15:30', endTime: '20:00', title: 'Возвращение за багажом и вылет', tag: 'transport' as const, sections: [{ id: crypto.randomUUID(), type: 'description', text: '**План действий:**\n1.  На метро от Базара доехать до станции отеля (**Zhongyinggong / 中营工**).\n2.  Забрать багаж из отеля.\n3.  Заказать такси до аэропорта (URC) и вылететь домой.' }] },
+        ],
+      },
+    ],
+  },
+]

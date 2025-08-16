@@ -8,10 +8,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { ActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType } from '~/shared/types/models/activity'
 
 interface SectionOption {
-  type: ActivitySectionType
+  type: EActivitySectionType
   label: string
   icon: string
   shortcut?: string
@@ -20,14 +20,14 @@ interface SectionOption {
 }
 
 const emit = defineEmits<{
-  addSection: [type: ActivitySectionType]
+  addSection: [type: EActivitySectionType]
 }>()
 
 const isOpen = ref(false)
 
 const sectionOptions: SectionOption[] = [
   {
-    type: ActivitySectionType.DESCRIPTION,
+    type: EActivitySectionType.DESCRIPTION,
     label: 'Заметка',
     icon: 'mdi:text-box-plus-outline',
     shortcut: 'T',
@@ -35,7 +35,7 @@ const sectionOptions: SectionOption[] = [
     category: 'content',
   },
   {
-    type: ActivitySectionType.GALLERY,
+    type: EActivitySectionType.GALLERY,
     label: 'Галерея',
     icon: 'mdi:image-multiple-outline',
     shortcut: 'G',
@@ -43,7 +43,7 @@ const sectionOptions: SectionOption[] = [
     category: 'media',
   },
   {
-    type: ActivitySectionType.GEOLOCATION,
+    type: EActivitySectionType.GEOLOCATION,
     label: 'Локация',
     icon: 'mdi:map-marker-plus-outline',
     shortcut: 'L',
@@ -56,7 +56,7 @@ const contentOptions = computed(() => sectionOptions.filter(opt => opt.category 
 const mediaOptions = computed(() => sectionOptions.filter(opt => opt.category === 'media'))
 const locationOptions = computed(() => sectionOptions.filter(opt => opt.category === 'location'))
 
-function handleAddSection(type: ActivitySectionType) {
+function handleAddSection(type: EActivitySectionType) {
   emit('addSection', type)
   isOpen.value = false
 }
@@ -219,7 +219,7 @@ useEventListener('keydown', (e) => {
   gap: 8px;
   padding: 10px 16px;
   border: 2px dashed var(--border-secondary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   background: transparent;
   color: var(--fg-secondary-color);
   font-size: 0.9rem;
@@ -273,10 +273,8 @@ useEventListener('keydown', (e) => {
   padding: 12px;
   background: var(--bg-primary-color);
   border: 1px solid var(--border-primary-color);
-  border-radius: 12px;
-  box-shadow:
-    0 10px 25px -5px rgb(0 0 0 / 0.1),
-    0 4px 6px -2px rgb(0 0 0 / 0.05);
+  border-radius: var(--r-m);
+  box-shadow: var(--s-l);
   z-index: 50;
 
   &[data-side='top'] {
@@ -351,7 +349,7 @@ useEventListener('keydown', (e) => {
   gap: 12px;
   width: 100%;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
@@ -371,7 +369,7 @@ useEventListener('keydown', (e) => {
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: var(--r-s);
     background: var(--bg-secondary-color);
     color: var(--fg-accent-color);
     flex-shrink: 0;
@@ -384,7 +382,7 @@ useEventListener('keydown', (e) => {
 
   &[data-highlighted] .option-icon {
     background: var(--fg-accent-color);
-    color: white;
+    color: var(--fg-inverted-color);
     transform: scale(1.05);
   }
 
@@ -409,7 +407,7 @@ useEventListener('keydown', (e) => {
   .option-shortcut {
     padding: 4px 8px;
     background: var(--bg-secondary-color);
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
     font-size: 11px;
     font-weight: 600;
     color: var(--fg-secondary-color);
@@ -421,7 +419,7 @@ useEventListener('keydown', (e) => {
 
   &[data-highlighted] .option-shortcut {
     background: var(--fg-accent-color);
-    color: white;
+    color: var(--fg-inverted-color);
   }
 }
 

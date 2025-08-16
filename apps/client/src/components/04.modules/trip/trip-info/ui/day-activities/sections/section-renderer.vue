@@ -2,7 +2,7 @@
 import type { ActivitySection, ActivitySectionGallery, ActivitySectionGeolocation, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
-import { ActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType } from '~/shared/types/models/activity'
 import DescriptionSection from './description-section.vue'
 import GallerySection from './gallery-section.vue'
 import GeolocationSection from './geolocation-section.vue'
@@ -28,17 +28,17 @@ function toggleAttached() {
 <template>
   <div class="activity-section-renderer" :class="{ 'is-attached': section.isAttached }">
     <DescriptionSection
-      v-if="section.type === ActivitySectionType.DESCRIPTION"
+      v-if="section.type === EActivitySectionType.DESCRIPTION"
       :section="section as ActivitySectionText"
       @update-section="onUpdate"
     />
     <GallerySection
-      v-else-if="section.type === ActivitySectionType.GALLERY"
+      v-else-if="section.type === EActivitySectionType.GALLERY"
       :section="section as ActivitySectionGallery"
       @update-section="onUpdate"
     />
     <GeolocationSection
-      v-else-if="section.type === ActivitySectionType.GEOLOCATION"
+      v-else-if="section.type === EActivitySectionType.GEOLOCATION"
       :section="section as ActivitySectionGeolocation"
       @update-section="onUpdate"
     />
@@ -87,7 +87,7 @@ function toggleAttached() {
 .control-btn {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: var(--r-full);
   background-color: var(--bg-tertiary-color);
   border: 1px solid var(--border-secondary-color);
   color: var(--fg-secondary-color);

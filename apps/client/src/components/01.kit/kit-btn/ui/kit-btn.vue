@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 
 interface Props {
   icon?: string
-  variant?: 'solid' | 'outlined'
+  variant?: 'solid' | 'outlined' | 'text'
   color?: 'primary' | 'secondary'
   disabled?: boolean
 }
@@ -27,14 +27,14 @@ const componentClasses = computed(() => [
     :disabled="props.disabled"
     type="button"
   >
-    <span class="kit-btn__content">
+    <span class="kit-btn-content">
       <Icon v-if="props.icon" :icon="props.icon" />
       <slot />
     </span>
   </button>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .kit-btn {
   display: inline-flex;
   align-items: center;
@@ -45,24 +45,22 @@ const componentClasses = computed(() => [
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: var(--r-2xs);
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--s-s);
 
   & * {
     pointer-events: none;
   }
 
-  &:not(:disabled):hover {
+  &:not(.kit-btn--text):not(:disabled):hover {
     transform: translateY(-2px);
-    box-shadow:
-      0 7px 14px rgba(50, 50, 93, 0.1),
-      0 3px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-l);
   }
 
-  &:not(:disabled):active {
+  &:not(.kit-btn--text):not(:disabled):active {
     transform: translateY(0px);
   }
 
@@ -70,7 +68,7 @@ const componentClasses = computed(() => [
     cursor: not-allowed;
     opacity: 0.6;
     transform: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-s);
   }
 
   &--solid {
@@ -116,11 +114,33 @@ const componentClasses = computed(() => [
       }
     }
   }
-}
 
-.kit-btn__content {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  &--text {
+    background-color: transparent;
+    box-shadow: none;
+    border-color: transparent;
+
+    &.kit-btn--color-primary {
+      color: var(--fg-accent-color);
+
+      &:not(:disabled):hover {
+        background-color: var(--bg-disabled-color);
+      }
+    }
+    &.kit-btn--color-secondary {
+      color: var(--fg-secondary-color);
+
+      &:not(:disabled):hover {
+        background-color: var(--bg-hover-color);
+        color: var(--fg-primary-color);
+      }
+    }
+  }
+
+  &-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 }
 </style>

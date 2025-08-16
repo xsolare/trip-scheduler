@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
-import { SyncIndicator } from '~/components/02.shared/sync-indicator'
+import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { AppRoutePaths } from '~/shared/constants/routes'
-import { useThemeStore } from '~/shared/store/theme.store'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()
-const themeStore = useThemeStore()
+const store = useAppStore(['auth', 'theme'])
 </script>
 
 <template>
@@ -15,30 +14,32 @@ const themeStore = useThemeStore()
     class="header glass"
   >
     <div class="header-content">
-      <!-- Навигационная часть с логотипом -->
       <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
-          <!-- Иконка логотипа стала меньше -->
           <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 24px;" />
           <span class="logo-text">Trip Scheduler</span>
         </div>
       </div>
 
-      <!-- Центральный заполнитель -->
       <div class="header-center" />
 
-      <!-- Утилиты: синхронизация и профиль -->
       <div class="header-utils">
-        <button class="util-btn" title="Настроить тему" @click="themeStore.openCreator()">
+        <button class="util-btn" title="Настроить тему" @click="store.theme.openCreator()">
           <Icon icon="mdi:palette-outline" />
         </button>
 
-        <SyncIndicator />
         <div class="vr" />
 
         <div class="profile">
-          <div class="profile-img">
-            <!-- Размер иконки профиля скорректирован -->
+          <KitAvatar
+            v-if="store.auth.isAuthenticated"
+            :src="`${store.auth.user?.avatarUrl}`"
+          />
+          <div
+            v-else
+            class="profile-img"
+            @click="router.push(AppRoutePaths.Auth.SignIn)"
+          >
             <Icon
               icon="mdi:face-man-profile"
               style="font-size: 32px;"
@@ -99,7 +100,7 @@ const themeStore = useThemeStore()
   border-bottom: 1px solid var(--border-primary-color);
   height: 44px;
   width: 100%;
-  z-index: 100;
+  z-index: 7;
   transition:
     background-color 0.3s ease,
     backdrop-filter 0.3s ease;
@@ -155,7 +156,7 @@ const themeStore = useThemeStore()
       justify-content: center;
       width: 32px;
       height: 32px;
-      border-radius: 6px;
+      border-radius: var(--r-xs);
       border: none;
       background: transparent;
       color: var(--fg-secondary-color);
@@ -177,7 +178,7 @@ const themeStore = useThemeStore()
     justify-content: center;
 
     &-img {
-      border-radius: 50%;
+      border-radius: var(--r-full);
       border: 1px solid var(--border-primary-color);
       overflow: hidden;
       cursor: pointer;

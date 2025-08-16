@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ThemeType } from '~/shared/types/models/theme'
-import { DialogWithClose } from '~/components/01.kit/dialog-with-close'
+import { Icon } from '@iconify/vue'
+import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import ThemeChooser from './sections/theme-chooser.vue'
 import ThemeEditor from './sections/theme-editor.vue'
 
@@ -20,11 +21,6 @@ function selectTheme(themeName: ThemeType) {
 function openCustomizer() {
   store.theme.setTheme('custom')
   showCustomizer.value = true
-}
-
-function closeCreator() {
-  showCustomizer.value = false
-  store.theme.closeCreator()
 }
 
 function triggerJsonUpload() {
@@ -51,10 +47,28 @@ function handleJsonUpload(event: Event) {
 </script>
 
 <template>
-  <DialogWithClose
+  <KitDialogWithClose
     v-model:visible="isCreatorOpen"
-    :title="showCustomizer ? 'Редактор пользовательской темы' : 'Выбор темы оформления'"
+    @after-leave="showCustomizer = false"
   >
+    <template #header>
+      <div class="header-content">
+        <Icon :icon="showCustomizer ? 'mdi:cogs' : 'mdi:palette'" class="title-icon" />
+
+        <span v-if="!showCustomizer" class="dialog-title">
+          Выбор темы оформления
+        </span>
+
+        <div v-else class="breadcrumb-nav">
+          <button class="breadcrumb-link" @click="showCustomizer = false">
+            Выбор темы
+          </button>
+          <span class="breadcrumb-separator">/</span>
+          <span class="dialog-title">Редактор</span>
+        </div>
+      </div>
+    </template>
+
     <ThemeChooser
       v-if="!showCustomizer"
       :active-theme-name="activeThemeName"
@@ -64,9 +78,8 @@ function handleJsonUpload(event: Event) {
 
     <ThemeEditor
       v-else
-      @back="showCustomizer = false"
-      @apply="closeCreator"
       @reset="store.theme.resetCustomTheme"
+      @reset-radius="store.theme.resetCustomRadius"
       @upload="triggerJsonUpload"
     />
 
@@ -77,13 +90,53 @@ function handleJsonUpload(event: Event) {
       style="display: none"
       @change="handleJsonUpload"
     >
-  </DialogWithClose>
+  </KitDialogWithClose>
 </template>
 
 <style lang="scss" scoped>
-/*
-  Здесь могут остаться только самые общие стили,
-  если они не были перенесены в дочерние компоненты.
-  В идеале этот блок может быть пустым.
-*/
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: var(--fg-primary-color);
+}
+
+.title-icon {
+  font-size: 1.25rem;
+}
+
+.dialog-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--fg-accent-color);
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--bg-action-hover-color);
+    text-decoration: underline;
+  }
+}
+
+.breadcrumb-separator {
+  color: var(--fg-tertiary-color);
+  font-weight: 500;
+  font-size: 1.125rem;
+}
 </style>

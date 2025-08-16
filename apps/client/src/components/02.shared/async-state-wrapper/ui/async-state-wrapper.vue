@@ -21,10 +21,13 @@ const emit = defineEmits<{
 const currentState = computed<AsyncState>(() => {
   if (props.loading)
     return 'loading'
+
   if (props.error)
     return 'error'
+
   if (props.data)
     return 'success'
+
   return 'empty'
 })
 
@@ -35,9 +38,8 @@ watch(currentState, (_newState, oldState) => {
 })
 
 const transitionName = computed(() => {
-  if (previousState.value === 'loading' && currentState.value === 'success') {
+  if (previousState.value === 'loading' && currentState.value === 'success')
     return 'no-transition'
-  }
 
   return props.transition ?? 'faded'
 })
@@ -57,6 +59,7 @@ function handleRetry() {
       <div
         v-if="currentState === 'loading'"
         key="loading"
+        class="async-state-wrapper-content"
       >
         <slot
           v-if="currentState === 'loading'"
@@ -71,6 +74,7 @@ function handleRetry() {
       <div
         v-else-if="currentState === 'error'"
         key="error"
+        class="async-state-wrapper-content"
       >
         <slot
           name="error"
@@ -91,6 +95,7 @@ function handleRetry() {
       <div
         v-else-if="currentState === 'success' && !!data"
         key="success"
+        class="async-state-wrapper-content"
       >
         <slot
           name="success"
@@ -107,7 +112,15 @@ function handleRetry() {
   </div>
 </template>
 
-<style>
+<style lang="scss">
+.async-state-wrapper {
+  height: 100%;
+
+  &-content {
+    height: 100%;
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease-in-out;

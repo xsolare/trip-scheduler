@@ -11,9 +11,29 @@ class ActivityRepository implements IActivityRepository {
    */
   @throttle(1000)
   async create(activityData: Omit<Activity, 'id'>): Promise<Activity> {
-    const createdActivity = await trpc.activity.create.mutate(activityData)
+    const payload = {
+      ...activityData,
+      sections: activityData.sections || [],
+    }
+    const createdActivity = await trpc.activity.create.mutate(payload)
 
-    return createdActivity as unknown as Activity
+    return createdActivity as Activity
+  }
+
+  /**
+   * Обновляет активность через tRPC мутацию.
+   * @param activityData - Полный объект активности с изменениями.
+   * @returns Promise<Activity> - Обновленная активность от сервера.
+   */
+  @throttle(500)
+  async update(activityData: Activity): Promise<Activity> {
+    const payload = {
+      ...activityData,
+      sections: activityData.sections || [],
+    }
+    const updatedActivity = await trpc.activity.update.mutate(payload)
+
+    return updatedActivity as Activity
   }
 
   /**
@@ -25,7 +45,7 @@ class ActivityRepository implements IActivityRepository {
   async remove(id: string): Promise<Activity> {
     const deletedActivity = await trpc.activity.delete.mutate({ id })
 
-    return deletedActivity as unknown as Activity
+    return deletedActivity as Activity
   }
 }
 

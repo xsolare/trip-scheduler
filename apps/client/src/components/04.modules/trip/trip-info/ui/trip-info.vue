@@ -1,24 +1,28 @@
 <script setup lang="ts">
 import type { IActivity } from '../models/types'
-import Divider from '~/components/01.kit/divider/ui/divider.vue'
+import Divider from '~/components/01.kit/kit-divider/ui/kit-divider.vue'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { EActivityStatus } from '~/shared/types/models/activity'
 import { useModuleStore } from '../composables/use-module'
 import { minutesToTime, timeToMinutes } from '../lib/helpers'
 import { EActivityTag } from '../models/types'
-import AddDayActivity from './controls/add-day-activity.vue'
+import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
+import ViewSwitcher from './controls/view-switcher.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
+import MemoriesList from './memories/list.vue'
 import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
 const emit = defineEmits(['update:hasError'])
 const route = useRoute()
+const router = useRouter()
 
-const store = useModuleStore(['data', 'ui', 'gallery'])
+const store = useModuleStore(['data', 'ui', 'gallery', 'memories'])
 const { days, isLoading, fetchError, getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(store.data)
-const { isViewMode } = storeToRefs(store.ui)
 
 const tripId = computed(() => route.params.id as string)
+const dayId = computed(() => route.query.day as string)
 
 function handleAddNewActivity() {
   if (!getSelectedDay.value)
@@ -35,6 +39,7 @@ function handleAddNewActivity() {
     endTime: minutesToTime(endTimeMinutes),
     tag: EActivityTag.ATTRACTION,
     sections: [],
+    status: EActivityStatus.NONE,
   }
 
   store.data.addActivity(getSelectedDay.value.id, newActivity)
@@ -44,20 +49,33 @@ watch(fetchError, (newError) => {
   emit('update:hasError', !!newError)
 })
 
+watch(
+  () => store.data.currentDayId,
+  (newDayId) => {
+    if (newDayId && newDayId !== route.query.day)
+      router.replace({ query: { ...route.query, day: newDayId } })
+  },
+)
+
+if (tripId.value) {
+  store.data.fetchDaysForTrip(tripId.value, dayId.value)
+  store.gallery.setTripId(tripId.value)
+  store.memories.fetchMemories(tripId.value)
+}
+
 onBeforeUnmount(() => {
   store.data.reset()
   store.gallery.reset()
   store.ui.reset()
 })
-
-if (tripId.value) {
-  store.data.fetchDaysForTrip(tripId.value)
-  store.gallery.setTripId(tripId.value)
-}
 </script>
 
 <template>
-  <DaysControls />
+  <template v-if="!fetchError">
+    <ViewSwitcher />
+    <DaysControls />
+  </template>
+
   <AsyncStateWrapper
     :loading="isLoading || store.data.isLoadingNewDay"
     :error="fetchError"
@@ -71,19 +89,21 @@ if (tripId.value) {
     </template>
 
     <template #success>
-      <div class="trip-info">
+      <div :key="store.data.currentDayId!" class="trip-info">
         <Divider :is-loading="store.data.isLoadingUpdateDay">
           о дне
         </Divider>
         <DayHeader />
-        <Divider>
-          маршрут
-        </Divider>
-        <DayActivitiesList @add="handleAddNewActivity" />
-        <AddDayActivity
-          v-if="!isViewMode"
-          @add="handleAddNewActivity"
-        />
+
+        <template v-if="store.ui.activeView === 'plan'">
+          <Divider :is-loading="store.data.isLoadingUpdateActivity">
+            маршрут
+          </Divider>
+          <DayActivitiesList @add="handleAddNewActivity" />
+        </template>
+        <MemoriesList v-else-if="store.ui.activeView === 'memories'" />
+
+        <DayNavigation v-if="!isLoading && days.length > 1" />
       </div>
     </template>
 
@@ -99,11 +119,17 @@ if (tripId.value) {
 </template>
 
 <style lang="scss" scoped>
-.trip-info-wrapper {
+.trip-info {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 
-  @include media-down(sm) {
-    padding: 0 4px;
+  &-wrapper {
+    height: 100%;
+
+    @include media-down(sm) {
+      padding: 0 4px;
+    }
   }
 }
 </style>

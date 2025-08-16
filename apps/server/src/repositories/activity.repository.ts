@@ -1,10 +1,9 @@
 import type { z } from 'zod'
-import type { CreateActivityInputSchema } from '~/lib/schemas'
+import type { CreateActivityInputSchema, UpdateActivityInputSchema } from '~/modules/activity/activity.schemas'
 import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { db } from '~/db'
-import { activities } from '~/db/schema'
-import { createTRPCError } from '~/lib/trpc'
+import { db } from '../../db'
+import { activities } from '../../db/schema'
 
 type ActivityInsert = typeof activities.$inferInsert
 
@@ -20,6 +19,8 @@ export const activityRepository = {
       .values({
         ...data,
         tag: data.tag ?? null,
+        status: data.status ?? 'none',
+        rating: data.rating ?? null,
         id: uuidv4(),
       } satisfies ActivityInsert)
       .returning()
@@ -28,9 +29,25 @@ export const activityRepository = {
   },
 
   /**
+   * Обновляет существующую активность.
+   * @param data - Полный объект активности с ID.
+   * @returns Обновленный объект активности или null, если не найден.
+   */
+  async update(data: z.infer<typeof UpdateActivityInputSchema>) {
+    const { id, ...updateData } = data
+    const [updatedActivity] = await db
+      .update(activities)
+      .set(updateData)
+      .where(eq(activities.id, id))
+      .returning()
+
+    return updatedActivity || null
+  },
+
+  /**
    * Удаляет активность по ее ID.
    * @param id - ID активности для удаления.
-   * @returns Объект удаленной активности.
+   * @returns Объект удаленной активности или null, если не найден.
    */
   async delete(id: string) {
     const [deletedActivity] = await db
@@ -38,10 +55,6 @@ export const activityRepository = {
       .where(eq(activities.id, id))
       .returning()
 
-    if (!deletedActivity) {
-      createTRPCError('NOT_FOUND', `Активность с ID ${id} не найдена.`)
-    }
-
-    return deletedActivity
+    return deletedActivity || null
   },
 }

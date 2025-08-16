@@ -1,56 +1,34 @@
-import { z } from 'zod'
-import { CreateDayInputSchema, GetTripsByIdInputSchema, UpdateDayInputSchema } from '~/lib/schemas'
-import { createTRPCError, t } from '~/lib/trpc'
-import { dayRepository } from '~/repositories/day.repository'
+import { protectedProcedure, publicProcedure } from '~/lib/trpc'
+import {
+  CreateDayInputSchema,
+  DeleteDayInputSchema,
+  GetDayByIdInputSchema,
+  UpdateDayInputSchema,
+} from './day.schemas'
+import { dayService } from './day.service'
 
 export const dayProcedures = {
-  getByTripId: t.procedure
-    .input(GetTripsByIdInputSchema)
+  getByTripId: publicProcedure
+    .input(GetDayByIdInputSchema)
     .query(async ({ input }) => {
-      const days = await dayRepository.getByTripId(input.tripId)
-
-      return days.map(day => ({
-        ...day,
-      }))
+      return dayService.getByTripId(input.tripId)
     }),
 
-  getById: t.procedure
-    .input(z.object({ dayId: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const day = await dayRepository.getById(input.dayId)
-      if (!day)
-        return null
-
-      return {
-        ...day,
-      }
-    }),
-
-  createNewDay: t.procedure
+  create: protectedProcedure
     .input(CreateDayInputSchema)
     .mutation(async ({ input }) => {
-      const dateForDb = new Date(input.date).toISOString().split('T')[0]
-      const newDay = await dayRepository.create({
-        ...input,
-        date: dateForDb,
-        description: input.description || '',
-      })
-      return newDay
+      return dayService.create(input)
     }),
 
-  updateDayDetails: t.procedure
+  update: protectedProcedure
     .input(UpdateDayInputSchema)
     .mutation(async ({ input }) => {
-      try {
-        const updatedDay = await dayRepository.update(input.id, input.details)
-        if (!updatedDay) {
-          throw createTRPCError('NOT_FOUND', `День с ID ${input.id} не найден.`)
-        }
-        return updatedDay
-      }
-      catch (error) {
-        console.error('Ошибка при обновлении дня:', error)
-        throw createTRPCError('INTERNAL_SERVER_ERROR', 'Не удалось обновить день.')
-      }
+      return dayService.update(input.id, input.details)
+    }),
+
+  delete: protectedProcedure
+    .input(DeleteDayInputSchema)
+    .mutation(async ({ input }) => {
+      return dayService.delete(input.id)
     }),
 }

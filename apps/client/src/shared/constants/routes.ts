@@ -3,8 +3,13 @@ export enum AppRouteNames {
 
   NotFound = 'not-found',
 
-  TripInfo = 'trip-unfo',
+  TripInfo = 'trip-info',
   TripList = 'trip-list',
+
+  SignIn = 'sign-in',
+  SignUp = 'sign-up',
+  ForgotPassword = 'forgot-password',
+  AuthCallback = 'auth-callback',
 }
 
 export const AppRoutePaths = {
@@ -15,5 +20,12 @@ export const AppRoutePaths = {
   Trip: {
     List: `/trips`,
     Info: (id: string) => `/trip/${id}`,
+  },
+
+  Auth: {
+    SignIn: '/auth/sign-in',
+    SignUp: '/auth/sign-up',
+    ForgotPassword: '/auth/forgot-password',
+    Callback: '/auth/callback',
   },
 }

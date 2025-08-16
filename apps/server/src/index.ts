@@ -3,12 +3,16 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
-import { uploadFileHandler } from './api/upload.controller'
+import { authController } from './api/auth.controller'
+import { uploadFileController } from './api/upload.controller'
+import { createContext } from './lib/trpc'
 import { appRouter } from './router'
 
 const app = new Hono()
 
-const apiRoutes = new Hono().post('/upload', uploadFileHandler)
+const apiRoutes = new Hono()
+  .post('/upload', uploadFileController)
+  .route('/auth', authController)
 
 app.route('/api', apiRoutes)
 app.use('/static/*', serveStatic({ root: './' }))
@@ -26,7 +30,7 @@ app.use(
   }),
   trpcServer({
     router: appRouter,
-    createContext: () => ({}),
+    createContext,
     onError: ({ error, path }) => {
       console.error(`tRPC Error on ${path}:`, error)
     },
@@ -44,7 +48,7 @@ app.onError((error, c) => {
   console.error('Application error:', error)
   return c.json({
     error: 'Internal Server Error',
-    // eslint-disable-next-line node/prefer-global/process
+
     message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
   }, 500)
 })

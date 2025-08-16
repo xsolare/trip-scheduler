@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { Skeleton } from '~/components/01.kit/skeleton'
+import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 </script>
 
 <template>
   <div class="trip-info-skeleton">
     <!-- Divider "о дне" -->
     <div class="divider-skeleton">
-      <Skeleton width="80px" height="12px" border-radius="4px" type="wave" />
+      <KitSkeleton width="80px" height="12px" border-radius="4px" type="wave" />
     </div>
 
     <!-- Day Header Skeleton (this was okay) -->
     <div class="day-header-skeleton">
-      <Skeleton width="60%" height="32px" border-radius="6px" type="wave" style="margin-bottom: 16px;" />
-      <Skeleton width="85%" height="18px" border-radius="6px" type="wave" />
+      <KitSkeleton width="60%" height="32px" border-radius="6px" type="wave" style="margin-bottom: 16px;" />
+      <KitSkeleton width="85%" height="18px" border-radius="6px" type="wave" />
     </div>
 
     <!-- Divider "маршрут" -->
     <div class="divider-skeleton">
-      <Skeleton width="120px" height="12px" border-radius="4px" type="wave" />
+      <KitSkeleton width="120px" height="12px" border-radius="4px" type="wave" />
     </div>
 
     <!-- Corrected Activities List Skeleton -->
@@ -25,17 +25,17 @@ import { Skeleton } from '~/components/01.kit/skeleton'
       <div v-for="i in 4" :key="i" class="activity-item-skeleton">
         <!-- Diamond marker is handled by pseudo-element in styles -->
         <div class="activity-header-skeleton">
-          <Skeleton width="40%" height="20px" border-radius="4px" type="wave" />
+          <KitSkeleton width="40%" height="20px" border-radius="4px" type="wave" />
         </div>
         <div class="activity-body-skeleton">
-          <Skeleton width="65%" height="24px" border-radius="6px" type="wave" />
+          <KitSkeleton width="65%" height="24px" border-radius="6px" type="wave" />
           <!-- Conditionally add the description block to match the image -->
           <div v-if="i === 3" class="description-block-skeleton">
-            <Skeleton width="90%" height="18px" border-radius="4px" type="wave" />
+            <KitSkeleton width="90%" height="18px" border-radius="4px" type="wave" />
           </div>
           <!-- Skeleton for "Добавить блок" -->
           <div class="add-block-skeleton-wrapper">
-            <Skeleton width="120px" height="17px" border-radius="4px" type="wave" />
+            <KitSkeleton width="120px" height="17px" border-radius="4px" type="wave" />
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
 
     <!-- Corrected Add Activity Button Skeleton -->
     <div class="add-activity-skeleton">
-      <Skeleton width="180px" height="20px" border-radius="4px" type="wave" />
+      <KitSkeleton width="180px" height="20px" border-radius="4px" type="wave" />
     </div>
   </div>
 </template>
@@ -96,7 +96,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
   padding: 32px;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 4px 4px 16px 16px;
+  border-radius: var(--r-2xs) var(--r-2xs) var(--r-l) var(--r-l);
   margin-bottom: 32px;
   margin-top: 16px;
 }
@@ -151,7 +151,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
     padding: 10px;
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-secondary-color);
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
   }
 
   .add-block-skeleton-wrapper {
@@ -159,7 +159,7 @@ import { Skeleton } from '~/components/01.kit/skeleton'
     width: fit-content;
     padding: 10px 12px;
     border: 2px dashed var(--border-secondary-color);
-    border-radius: 8px;
+    border-radius: var(--r-s);
   }
 }
 

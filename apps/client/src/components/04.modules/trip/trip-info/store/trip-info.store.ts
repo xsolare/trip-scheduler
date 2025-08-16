@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import type { IActivity, IDay } from '../models/types'
 import { defineStore } from 'pinia'
+import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestError, useRequestStatus, useRequestStore } from '~/plugins/request'
 import { getActivityDuration, minutesToTime, timeToMinutes } from '../lib/helpers'
 
@@ -15,28 +16,29 @@ export enum ETripInfoKeys {
   REMOVE_ACTIVITY = 'trip:remove-activity',
 }
 
+export interface ITripInfoState {
+  days: IDay[]
+  currentTripId: string | null
+  currentDayId: string | null
+}
+
 /**
  * Стор для управления ДАННЫМИ о конкретном путешествии,
  * включая его дни и активности.
  */
 export const useTripInfoStore = defineStore('tripInfo', {
-  // --- STATE ---
-  state: (): {
-    days: IDay[]
-    currentTripId: string | null
-    currentDayId: string | null
-  } => ({
+  state: (): ITripInfoState => ({
     days: [],
     currentTripId: null,
     currentDayId: null,
   }),
 
-  // --- GETTERS ---
   getters: {
     isLoading: () => useRequestStatus(ETripInfoKeys.FETCH_DAYS).value,
     fetchError: () => useRequestError(ETripInfoKeys.FETCH_DAYS).value,
     isLoadingUpdateDay: () => useRequestStatus(ETripInfoKeys.UPDATE_DAY).value,
     isLoadingNewDay: () => useRequestStatus(ETripInfoKeys.ADD_DAY).value,
+    isLoadingUpdateActivity: () => useRequestStatus(ETripInfoKeys.UPDATE_ACTIVITY).value,
 
     getAllDays(state): IDay[] {
       return state.days
@@ -54,38 +56,74 @@ export const useTripInfoStore = defineStore('tripInfo', {
         .slice()
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)) ?? []
     },
+
+    currentDayIndex(state): number {
+      if (!state.currentDayId || !state.days)
+        return -1
+      return state.days.findIndex(day => day.id === state.currentDayId)
+    },
+
+    getPreviousDayId(): string | null {
+      if (this.currentDayIndex > 0)
+        return this.days[this.currentDayIndex - 1].id
+      return null
+    },
+
+    getNextDayId(): string | null {
+      if (this.currentDayIndex !== -1 && this.currentDayIndex < this.days.length - 1)
+        return this.days[this.currentDayIndex + 1].id
+      return null
+    },
   },
 
-  // --- ACTIONS ---
   actions: {
-    fetchDaysForTrip(tripId: string) {
+    setCurrentDay(dayId: string): void {
+      this.currentDayId = dayId
+    },
+
+    selectNextDay() {
+      if (this.getNextDayId)
+        this.setCurrentDay(this.getNextDayId)
+    },
+
+    selectPreviousDay() {
+      if (this.getPreviousDayId)
+        this.setCurrentDay(this.getPreviousDayId)
+    },
+
+    fetchDaysForTrip(tripId: string, initialDayIdFromQuery?: string) {
       this.currentTripId = tripId
 
       useRequest({
         key: ETripInfoKeys.FETCH_DAYS,
         fn: db => db.days.getByTripId(tripId),
-        immediate: true,
         onSuccess: (result) => {
           const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           this.days = sortedDays
-          this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+          const dayFromQueryIsValid = initialDayIdFromQuery && sortedDays.some(d => d.id === initialDayIdFromQuery)
+
+          if (dayFromQueryIsValid) {
+            this.currentDayId = initialDayIdFromQuery
+          }
+          else {
+            this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+          }
         },
         onError: (error) => {
           this.days = []
           this.currentDayId = null
+
           console.error(`Ошибка при загрузке дней для путешествия ${tripId}: `, error)
+          useToast().error(`Ошибка при загрузке дней для путешествия: ${error}`)
         },
       })
-    },
-
-    setCurrentDay(dayId: string): void {
-      this.currentDayId = dayId
     },
 
     updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date'>>) {
       const dayIndex = this.days.findIndex(d => d.id === dayId)
       if (dayIndex === -1) {
         console.error('Не удалось найти день для обновления:', dayId)
+        useToast().error(`Не удалось найти день для обновления`)
         return
       }
       const originalDay = { ...this.days[dayIndex] }
@@ -112,6 +150,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
             this.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
           console.error(`Ошибка при обновлении дня ${dayId}: `, error)
+          useToast().error(`Ошибка при обновлении дня: ${error}`)
         },
       })
     },
@@ -120,6 +159,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const day = this.days.find(d => d.id === dayId)
       if (!day) {
         console.error('Не удалось найти день для добавления активности:', dayId)
+        useToast().error(`Не удалось найти день для добавления активности`)
         return
       }
 
@@ -145,12 +185,13 @@ export const useTripInfoStore = defineStore('tripInfo', {
           console.log(`Активность ${createdActivityFromServer.id} успешно создана.`)
         },
         onError: (error) => {
-          console.error(`Ошибка при создании активности: `, error)
           const activityIndex = day.activities.findIndex(a => a.id === tempId)
           if (activityIndex !== -1) {
             day.activities.splice(activityIndex, 1)
           }
-          // TODO: Показать уведомление пользователю об ошибке
+
+          console.error(`Ошибка при создании активности: `, error)
+          useToast().error(`Ошибка при создании активности: ${error}`)
         },
       })
     },
@@ -159,12 +200,14 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const day = this.days.find(d => d.id === dayId)
       if (!day) {
         console.error('Не удалось найти день для удаления активности:', dayId)
+        useToast().error(`Не удалось найти день для удаления активности.`)
         return
       }
 
       const activityIndex = day.activities.findIndex(a => a.id === activityId)
       if (activityIndex === -1) {
         console.error('Не удалось найти активность для удаления:', activityId)
+        useToast().error(`Не удалось найти активность для удаления.`)
         return
       }
 
@@ -180,11 +223,13 @@ export const useTripInfoStore = defineStore('tripInfo', {
         },
         onError: (error) => {
           // 3. При ошибке откатываем изменения (возвращаем активность)
-          console.error(`Ошибка при удалении активности ${activityId}: `, error)
           if (day)
             day.activities.splice(activityIndex, 0, removedActivity)
-          // TODO: Показать уведомление пользователю об ошибке
+
+          console.error(`Ошибка при удалении активности ${activityId}: `, error)
+          useToast().error(`Ошибка при удалении активности: ${error}`)
         },
+
       })
     },
 
@@ -198,33 +243,34 @@ export const useTripInfoStore = defineStore('tripInfo', {
         return
 
       // 1. Сохраняем оригинальное состояние и оптимистично обновляем
-      // const originalActivity = { ...day.activities[activityIndex] }
+      const originalActivity = JSON.parse(JSON.stringify(day.activities[activityIndex]))
       day.activities[activityIndex] = updatedActivity
 
       // 2. Отправляем запрос на сервер
-      // TODO: Реализовать на сервере и в API-слое
-      /*
       useRequest({
-        key: `${ETripInfoKeys.UPDATE_ACTIVITY}:${updatedActivity.id}`,
-        fn: db => db.activities.update(updatedActivity.id, updatedActivity), // db.activities.update не существует, нужно добавить
+        key: ETripInfoKeys.UPDATE_ACTIVITY,
+        fn: db => db.activities.update(updatedActivity),
         onSuccess: (activityFromServer) => {
-          // При успехе можно обновить данные с сервера, если они отличаются
-          Object.assign(day.activities[activityIndex], activityFromServer)
-          console.log(`Активность ${updatedActivity.id} успешно обновлена.`)
+          const finalIndex = day.activities.findIndex(a => a.id === activityFromServer.id)
+          if (finalIndex !== -1)
+            day.activities[finalIndex] = activityFromServer
         },
         onError: (error) => {
-          // 3. При ошибке откатываем
+          // 3. В случае ошибки откатываем изменения
+          const revertIndex = day.activities.findIndex(a => a.id === updatedActivity.id)
+          if (revertIndex !== -1)
+            day.activities[revertIndex] = originalActivity
+
           console.error(`Ошибка при обновлении активности ${updatedActivity.id}: `, error)
-          day.activities[activityIndex] = originalActivity
-          // TODO: Показать уведомление пользователю об ошибке
+          useToast().error(`Ошибка при обновлении активности: ${error}`)
         },
       })
-      */
     },
 
     addNewDay() {
       if (!this.currentTripId) {
         console.error('Невозможно добавить день: ID путешествия не установлен.')
+        useToast().error(`Невозможно добавить день: ID путешествия не установлен.`)
         return
       }
 
@@ -261,13 +307,15 @@ export const useTripInfoStore = defineStore('tripInfo', {
           }
         },
         onError: (error) => {
-          console.error('Ошибка при добавлении нового дня:', error)
           const tempDayIndex = this.days.findIndex(d => d.id === tempId)
           if (tempDayIndex !== -1)
             this.days.splice(tempDayIndex, 1)
 
           if (this.currentDayId === tempId)
             this.currentDayId = this.days.length > 0 ? this.days[this.days.length - 1].id : null
+
+          console.error('Ошибка при добавлении нового дня:', error)
+          useToast().error(`Ошибка при добавлении нового дня: ${error}`)
         },
       })
     },
@@ -275,6 +323,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
     deleteDay() {
       if (!this.currentDayId) {
         console.error('Невозможно удалить день: день не выбран.')
+        useToast().error(`Невозможно удалить день: день не выбран.`)
         return
       }
 
@@ -282,10 +331,13 @@ export const useTripInfoStore = defineStore('tripInfo', {
       const dayIndex = this.days.findIndex(d => d.id === dayIdToDelete)
       if (dayIndex === -1) {
         console.error('Не удалось найти день для удаления:', dayIdToDelete)
+        useToast().error(`Не удалось найти день для удаления.`)
         return
       }
 
-      // const originalDays = [...this.days]
+      const deletedDay = this.days[dayIndex]
+      const originalCurrentDayId = this.currentDayId
+
       this.days.splice(dayIndex, 1)
 
       if (this.days.length > 0) {
@@ -296,8 +348,20 @@ export const useTripInfoStore = defineStore('tripInfo', {
         this.currentDayId = null
       }
 
-      console.log(`Day ${dayIdToDelete} deleted optimistically.`)
-      // TODO: Добавить useRequest для удаления с сервера и отката
+      useRequest({
+        key: ETripInfoKeys.DELETE_DAY,
+        fn: db => db.days.deleteDay(dayIdToDelete),
+        onSuccess: () => {
+          console.log(`День ${dayIdToDelete} успешно удален с сервера.`)
+        },
+        onError: (error) => {
+          this.days.splice(dayIndex, 0, deletedDay)
+          this.currentDayId = originalCurrentDayId
+
+          console.error(`Ошибка при удалении дня ${dayIdToDelete}: `, error)
+          useToast().error(`Ошибка при удалении дня: ${error}`)
+        },
+      })
     },
 
     reorderActivities(newOrder: IActivity[]) {

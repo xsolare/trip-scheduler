@@ -4,10 +4,10 @@ import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
-import { InlineEditorWrapper } from '~/components/01.kit/inline-editor'
-import { TimeField } from '~/components/01.kit/time-field'
+import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
+import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
-import { ActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType } from '~/shared/types/models/activity'
 import AddSectionMenu from '../controls/add-section-menu.vue'
 import { ActivitySectionRenderer } from './sections'
 
@@ -26,15 +26,17 @@ const { isViewMode } = storeToRefs(store.ui)
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
 
+const activityTitle = ref(props.activity.title)
+
 const editingStartTime = shallowRef<Time | null>(null)
 const editingEndTime = shallowRef<Time | null>(null)
 
 const expandedSections = ref<Record<string, Record<string, boolean>>>({})
 
-const sectionTypeIcons: Record<ActivitySectionType, string> = {
-  [ActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
-  [ActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
-  [ActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
+const sectionTypeIcons: Record<EActivitySectionType, string> = {
+  [EActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
+  [EActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
+  [EActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
 }
 
 function toggleSection(groupId: string, sectionId: string) {
@@ -87,11 +89,6 @@ function cancelTimeEditing() {
   isTimeEditing.value = false
 }
 
-const activityTitle = computed({
-  get: () => props.activity.title,
-  set: newTitle => updateActivity({ title: newTitle }),
-})
-
 function updateSection(sectionId: string, newSectionData: ActivitySection) {
   const newSections = [...(props.activity.sections || [])]
   const sectionIndex = newSections.findIndex(s => s.id === sectionId)
@@ -102,27 +99,28 @@ function updateSection(sectionId: string, newSectionData: ActivitySection) {
   }
 }
 
-function addSection(type: ActivitySectionType) {
+function addSection(type: EActivitySectionType) {
   let newSection: ActivitySection
+
   switch (type) {
-    case ActivitySectionType.DESCRIPTION:
+    case EActivitySectionType.DESCRIPTION:
       newSection = {
         id: uuidv4(),
-        type: ActivitySectionType.DESCRIPTION,
+        type: EActivitySectionType.DESCRIPTION,
         text: '',
       } as ActivitySectionText
       break
-    case ActivitySectionType.GALLERY:
+    case EActivitySectionType.GALLERY:
       newSection = {
         id: uuidv4(),
-        type: ActivitySectionType.GALLERY,
+        type: EActivitySectionType.GALLERY,
         imageUrls: [],
       } as ActivitySectionGallery
       break
-    case ActivitySectionType.GEOLOCATION:
+    case EActivitySectionType.GEOLOCATION:
       newSection = {
         id: uuidv4(),
-        type: ActivitySectionType.GEOLOCATION,
+        type: EActivitySectionType.GEOLOCATION,
         latitude: 0,
         longitude: 0,
         address: '',
@@ -182,6 +180,10 @@ function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
   return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
 
+function handleInlineEditorBlur() {
+  updateActivity({ title: activityTitle.value })
+}
+
 onClickOutside(timeEditorRef, saveTimeChanges)
 </script>
 
@@ -192,9 +194,9 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     <div class="activity-header">
       <div class="activity-time">
         <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor" @keydown.esc.prevent="cancelTimeEditing">
-          <TimeField v-if="editingStartTime" v-model="editingStartTime" />
+          <KitTimeField v-if="editingStartTime" v-model="editingStartTime" />
           <span class="time-separator">-</span>
-          <TimeField v-if="editingEndTime" v-model="editingEndTime" />
+          <KitTimeField v-if="editingEndTime" v-model="editingEndTime" />
         </div>
         <div v-else class="time-display" @click="editTime">
           <div class="time-display-preview">
@@ -233,12 +235,13 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 
     <div class="activity-title">
       <Icon icon="mdi:chevron-right" />
-      <InlineEditorWrapper
+      <KitInlineMdEditorWrapper
         v-model="activityTitle"
         placeholder="Описание активности"
         :readonly="isViewMode"
         class="activity-title-editor"
         :features="{ 'block-edit': false }"
+        @blur="handleInlineEditorBlur"
       />
     </div>
 
@@ -329,6 +332,12 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     display: flex;
     align-items: center;
     justify-content: space-between;
+    transition: background-color 0.2s ease;
+    border-radius: var(--r-xs);
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
 
     .activity-time {
       position: relative;
@@ -352,7 +361,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         cursor: pointer;
         padding: 2px 4px;
         margin: -2px -4px;
-        border-radius: 4px;
+        border-radius: var(--r-2xs);
         transition: background-color 0.2s ease;
 
         &-preview {
@@ -387,7 +396,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         justify-content: center;
         width: 28px;
         height: 28px;
-        border-radius: 50%;
+        border-radius: var(--r-full);
         background: transparent;
         border: 1px solid var(--border-secondary-color);
         color: var(--fg-secondary-color);
@@ -419,11 +428,13 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     display: flex;
     margin-top: 4px;
     gap: 4px;
+
     .iconify {
       height: 24px;
       opacity: 0.5;
       color: var(--fg-secondary-color);
     }
+
     &-editor {
       width: 100%;
       :deep(.milkdown) {
@@ -480,7 +491,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     gap: 4px;
     background: var(--bg-secondary-color);
     padding: 4px;
-    border-radius: 16px;
+    border-radius: var(--r-l);
     border: 1px solid var(--border-secondary-color);
   }
 
@@ -490,7 +501,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     border: none;
     background: var(--bg-tertiary-color);
     color: var(--fg-secondary-color);
@@ -498,7 +509,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     transition: all 0.2s ease;
     &.active {
       background: var(--fg-accent-color);
-      color: white;
+      color: var(--fg-inverted-color);
     }
     &:hover {
       background: var(--bg-hover-color);
@@ -515,7 +526,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 50%;
+    border-radius: var(--r-full);
     border: 1px solid var(--border-secondary-color);
     background: transparent;
     color: var(--fg-secondary-color);

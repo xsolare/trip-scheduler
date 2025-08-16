@@ -26,6 +26,10 @@ function onSelectDay(dayId: string) {
   emit('selectDay', dayId)
   if (!isDaysPanelPinned.value)
     emit('close')
+
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  })
 }
 
 function getShortWeekday(date: string): string {
@@ -96,7 +100,7 @@ function getShortWeekday(date: string): string {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  z-index: 98;
 }
 
 .panel {
@@ -106,7 +110,7 @@ function getShortWeekday(date: string): string {
   width: 400px;
   height: 100%;
   background-color: var(--bg-primary-color);
-  z-index: 1000;
+  z-index: 99;
   transform: translateX(-100%);
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   display: flex;
@@ -116,7 +120,7 @@ function getShortWeekday(date: string): string {
   &.open {
     opacity: 1;
     transform: translateX(0);
-    box-shadow: 4px 0px 15px var(--color-background-content);
+    box-shadow: var(--s-xl);
   }
 
   &.pinned {
@@ -130,6 +134,16 @@ function getShortWeekday(date: string): string {
 
     .close-btn {
       display: none;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 8px;
+      bottom: -47px;
+      right: -1px;
+      border-right: 1px solid var(--border-secondary-color);
+      height: 47px;
     }
   }
 
@@ -219,7 +233,7 @@ function getShortWeekday(date: string): string {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
-    border-radius: 4px;
+    border-radius: var(--r-2xs);
     background-color: var(--bg-secondary-color);
     color: var(--fg-secondary-color);
     font-size: 0.85rem;
@@ -257,7 +271,7 @@ function getShortWeekday(date: string): string {
     background-color: var(--bg-secondary-color);
     color: var(--fg-secondary-color);
     padding: 3px 8px;
-    border-radius: 6px;
+    border-radius: var(--r-xs);
     font-size: 0.7rem;
     font-weight: 800;
     line-height: 1;
@@ -269,7 +283,7 @@ function getShortWeekday(date: string): string {
 
     .day-number {
       background-color: var(--fg-accent-color);
-      color: white;
+      color: var(--fg-inverted-color);
     }
     .day-title {
       color: var(--fg-accent-color);
@@ -289,6 +303,7 @@ function getShortWeekday(date: string): string {
   padding: 16px 20px;
   border-top: 1px solid var(--border-secondary-color);
   flex-shrink: 0;
+  z-index: 100;
 }
 
 .add-day-btn {
@@ -298,7 +313,7 @@ function getShortWeekday(date: string): string {
   justify-content: center;
   gap: 8px;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   border: 1px solid var(--border-secondary-color);
   background-color: transparent;
   color: var(--fg-secondary-color);

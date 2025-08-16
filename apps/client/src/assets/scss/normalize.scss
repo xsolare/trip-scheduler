@@ -36,7 +36,7 @@ p {
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: 10px;
+  border-radius: var(--r-m);
   background-color: var(--color-background-content);
   box-shadow: inset 0 0 5px var(--color-background-content);
 }

@@ -15,6 +15,7 @@
     "dev:server": "bun --cwd ./apps/server dev",
     "--------------------------------<      BUILD     >--------------------------------": "",
     "build": "bun run --filter='./apps/*' build",
+    "build:web": "bun run --filter='./apps/*' build:web",
     "--------------------------------< LINT & FORMAT >---------------------------------": "",
     "lint": "bun run --filter='./apps/*' lint",
     "typecheck": "bun --filter='./apps/*' typecheck",
@@ -26,7 +27,7 @@
     "simple-git-hooks": "^2.13.1"
   },
   "simple-git-hooks": {
-    "pre-commit": "lint-staged && bun run typecheck",
+    "pre-commit": "bunx lint-staged && bun run typecheck",
     "post-commit": "git status",
     "post-merge": "bun i"
   },

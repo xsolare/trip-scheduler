@@ -36,7 +36,7 @@ function toggleMode() {
   justify-content: center;
   background: transparent;
   border: 1px solid var(--border-secondary-color);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 8px;
   cursor: pointer;
   color: var(--fg-secondary-color);

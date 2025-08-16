@@ -25,3 +25,6 @@ dist-ssr
 .env
 tsconfig.tsbuildinfo
 dist-web
+
+*storybook.log
+storybook-static

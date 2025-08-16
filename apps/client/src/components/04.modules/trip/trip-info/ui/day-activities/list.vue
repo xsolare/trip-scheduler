@@ -2,9 +2,10 @@
 import type { IActivity } from '~/components/04.modules/trip/trip-info/models/types'
 import draggable from 'vuedraggable'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import AddDayActivity from '../controls/add-day-activity.vue'
 import ActivityItem from './item.vue'
 
-defineEmits(['add'])
+const emit = defineEmits(['add'])
 
 const { data, ui } = useModuleStore(['data', 'ui'])
 
@@ -71,6 +72,11 @@ const draggableActivities = computed({
       <div v-if="getActivitiesForSelectedDay.length === 0" class="empty-state">
         <p>На этот день нет запланированных активностей</p>
       </div>
+
+      <AddDayActivity
+        v-if="!isViewMode "
+        @add="emit('add')"
+      />
     </div>
   </div>
 </template>
@@ -93,7 +99,7 @@ const draggableActivities = computed({
       justify-content: center;
       padding: 40px 20px;
       border: 2px dashed var(--border-secondary-color);
-      border-radius: 8px;
+      border-radius: var(--r-s);
       margin-top: 20px;
 
       p {
@@ -108,14 +114,14 @@ const draggableActivities = computed({
 .ghost-activity {
   opacity: 0.5;
   background: var(--bg-secondary-color);
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   > div {
     visibility: hidden;
   }
 }
 
 .chosen-activity {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--s-l);
   transform: scale(1.02);
   z-index: 10;
 }
