@@ -11,6 +11,8 @@ import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { useRequestStatus } from '~/plugins/request'
+import { ETripMemoriesKeys } from '../../../store/trip-info-memories.store'
 
 const props = defineProps<{ memory: Memory }>()
 
@@ -34,8 +36,13 @@ const selectedTime = shallowRef<Time>(
     : new Time(12, 0),
 )
 
-const isSaving = ref(false)
-const isDeleting = ref(false)
+const isUpdatingMemory = computed(() =>
+  useRequestStatus(`${ETripMemoriesKeys.UPDATE}:${props.memory.id}`).value,
+)
+
+const isDeletingMemory = computed(() =>
+  useRequestStatus(`${ETripMemoriesKeys.DELETE}:${props.memory.id}`).value,
+)
 
 const validTripDates = computed(() => {
   if (!getAllDays.value)
@@ -69,21 +76,15 @@ async function handleApply() {
     return
   }
 
-  isSaving.value = true
-  try {
-    const datePart = selectedDate.value.toString()
-    const timePart = `${selectedTime.value.hour.toString().padStart(2, '0')}:${selectedTime.value.minute.toString().padStart(2, '0')}:00`
-    const newTimestamp = `${datePart}T${timePart}.000Z`
+  const datePart = selectedDate.value.toString()
+  const timePart = `${selectedTime.value.hour.toString().padStart(2, '0')}:${selectedTime.value.minute.toString().padStart(2, '0')}:00`
+  const newTimestamp = `${datePart}T${timePart}.000Z`
 
-    await memoriesStore.updateMemory({
-      id: props.memory.id,
-      timestamp: newTimestamp,
-      comment: comment.value,
-    })
-  }
-  finally {
-    isSaving.value = false
-  }
+  await memoriesStore.updateMemory({
+    id: props.memory.id,
+    timestamp: newTimestamp,
+    comment: comment.value,
+  })
 }
 
 async function handleDelete() {
@@ -92,15 +93,8 @@ async function handleDelete() {
     description: 'Это действие нельзя будет отменить. Фотография будет удалена навсегда.',
   })
 
-  if (isConfirmed) {
-    isDeleting.value = true
-    try {
-      await memoriesStore.deleteMemory(props.memory.id)
-    }
-    finally {
-      isDeleting.value = false
-    }
-  }
+  if (isConfirmed)
+    await memoriesStore.deleteMemory(props.memory.id)
 }
 
 function handleResetDate() {
@@ -174,21 +168,21 @@ function saveComment() {
           <KitBtn
             variant="outlined"
             color="secondary"
-            :disabled="isDeleting"
+            :disabled="isDeletingMemory"
             title="Удалить"
             class="delete-btn"
             @click="handleDelete"
           >
-            <Icon v-if="isDeleting" icon="mdi:loading" class="spin" />
+            <Icon v-if="isDeletingMemory" icon="mdi:loading" class="spin" />
             <Icon v-else icon="mdi:trash-can-outline" />
           </KitBtn>
           <KitBtn
             color="primary"
-            :disabled="isSaving"
+            :disabled="isUpdatingMemory"
             class="apply-btn"
             @click="handleApply"
           >
-            <Icon v-if="isSaving" icon="mdi:loading" class="spin" />
+            <Icon v-if="isUpdatingMemory" icon="mdi:loading" class="spin" />
             <span v-else>Применить</span>
           </KitBtn>
         </div>

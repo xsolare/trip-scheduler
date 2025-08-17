@@ -3,8 +3,12 @@ import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Activity } from '~/shared/types/models/activity'
 import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
+import { Time } from '@internationalized/date'
 import { useFileDialog } from '@vueuse/core'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
+import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import ProcessingQueue from './processing/processing-queue.vue'
 import UploadingQueue from './processing/uploading-queue.vue'
@@ -35,25 +39,39 @@ const galleryImages = computed<ImageViewerImage[]>(() => {
     }))
 })
 
+const isAddNoteModalVisible = ref(false)
+const newNoteText = ref('')
+const newNoteTime = shallowRef<Time | null>(null)
+
 function handleAddTextNote() {
-  const tripId = tripData.currentTripId
-  if (!tripId)
-    return
-  const day = tripData.getSelectedDay
-  if (!day)
+  newNoteText.value = ''
+  newNoteTime.value = new Time(12, 0)
+  isAddNoteModalVisible.value = true
+}
+
+function onModalClose() {
+  isAddNoteModalVisible.value = false
+}
+
+function saveNewNote() {
+  if (!newNoteTime.value)
     return
 
-  // eslint-disable-next-line no-alert
-  const newComment = prompt('Введите текст заметки:')
-  if (newComment?.trim()) {
-    const newTimestamp = new Date(day.date)
-    newTimestamp.setUTCHours(0, 0, 0, 0)
-    memories.createMemory({
-      tripId,
-      comment: newComment.trim(),
-      timestamp: newTimestamp.toISOString(),
-    })
-  }
+  const tripId = tripData.currentTripId
+  const day = tripData.getSelectedDay
+  if (!tripId || !day || !newNoteText.value.trim())
+    return
+
+  const datePart = day.date.split('T')[0]
+  const timePart = `${newNoteTime.value.hour.toString().padStart(2, '0')}:${newNoteTime.value.minute.toString().padStart(2, '0')}:00`
+  const newTimestamp = `${datePart}T${timePart}.000Z`
+
+  memories.createMemory({
+    tripId,
+    comment: newNoteText.value.trim(),
+    timestamp: newTimestamp,
+  })
+  onModalClose()
 }
 
 function handleUpdateActivity({ activity, data }: { activity: Activity, data: Partial<Activity> }) {
@@ -110,6 +128,29 @@ onChange((files) => {
       <p>В этом дне пока нет воспоминаний.</p>
       <p>Добавьте свои первые фотографии или заметки, чтобы создать ленту этого дня!</p>
     </div>
+
+    <KitDialogWithClose
+      v-model:visible="isAddNoteModalVisible"
+      title="Добавить заметку"
+      icon="mdi:note-plus-outline"
+      @update:visible="!$event && onModalClose()"
+    >
+      <div class="add-note-content">
+        <textarea v-model="newNoteText" placeholder="Введите текст заметки..." class="note-textarea" />
+        <div class="time-picker">
+          <label for="note-time">Время:</label>
+          <KitTimeField id="note-time" v-model="newNoteTime" />
+        </div>
+      </div>
+      <div class="add-note-footer">
+        <KitBtn variant="text" @click="onModalClose">
+          Отмена
+        </KitBtn>
+        <KitBtn :disabled="!newNoteText.trim()" @click="saveNewNote">
+          Сохранить
+        </KitBtn>
+      </div>
+    </KitDialogWithClose>
   </div>
 </template>
 
@@ -200,5 +241,39 @@ onChange((files) => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.add-note-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+.note-textarea {
+  width: 100%;
+  min-height: 120px;
+  border-radius: var(--r-s);
+  border: 1px solid var(--border-secondary-color);
+  background-color: var(--bg-primary-color);
+  color: var(--fg-primary-color);
+  padding: 8px;
+  font-family: inherit;
+  resize: vertical;
+  &:focus {
+    outline: none;
+    border-color: var(--fg-accent-color);
+  }
+}
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg-secondary-color);
+}
+.add-note-footer {
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

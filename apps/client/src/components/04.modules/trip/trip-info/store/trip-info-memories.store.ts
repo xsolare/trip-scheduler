@@ -58,13 +58,16 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
       if (!selectedDay)
         return []
 
+      // Дата выбранного дня в формате YYYY-MM-DD (в UTC, чтобы избежать смещений)
       const selectedDateStr = new Date(selectedDay.date).toISOString().split('T')[0]
 
       return state.memories
         .filter((m) => {
           if (!m.timestamp)
             return false
-          const memoryDateStr = new Date(m.timestamp).toISOString().split('T')[0]
+          // `m.timestamp` это строка "2025-08-17T12:00:00.000Z"
+          // Просто берем из нее дату
+          const memoryDateStr = m.timestamp.split('T')[0]
           return memoryDateStr === selectedDateStr
         })
         .sort((a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime())
@@ -87,11 +90,10 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
       return state.memories.filter((m) => {
         if (!m.imageId)
           return false
-
         if (!m.timestamp)
           return true
 
-        const memoryDateStr = new Date(m.timestamp).toISOString().split('T')[0]
+        const memoryDateStr = m.timestamp.split('T')[0]
         return memoryDateStr !== selectedDateStr
       })
     },

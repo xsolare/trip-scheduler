@@ -15,7 +15,7 @@ const confirmStore = useConfirmDialogStore()
 </script>
 
 <template>
-  <AlertDialogRoot :open="confirmStore.isOpen" @update:open="confirmStore._cancel">
+  <AlertDialogRoot :open="confirmStore.isOpen">
     <AlertDialogPortal>
       <AlertDialogOverlay class="dialog-overlay" />
       <AlertDialogContent class="dialog-content-wrapper">
@@ -34,7 +34,10 @@ const confirmStore = useConfirmDialogStore()
           </AlertDialogCancel>
           <AlertDialogAction
             class="dialog-button confirm"
-            @click="confirmStore._confirm"
+            @click="() => {
+              console.log('123');
+              confirmStore._confirm()
+            }"
           >
             Подтвердить
           </AlertDialogAction>

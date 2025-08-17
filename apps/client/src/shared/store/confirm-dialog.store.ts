@@ -25,6 +25,7 @@ export const useConfirmDialogStore = defineStore('confirmDialog', {
         this.isOpen = true
         this.title = options.title
         this.description = options.description
+
         this.resolve = resolve
         this.reject = reject
       })

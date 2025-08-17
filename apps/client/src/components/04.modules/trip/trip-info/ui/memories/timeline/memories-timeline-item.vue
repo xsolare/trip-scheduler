@@ -74,8 +74,10 @@ const displayTime = computed(() => {
     return ''
 
   const d = new Date(props.memory.timestamp)
+
   const hours = d.getUTCHours().toString().padStart(2, '0')
   const minutes = d.getUTCMinutes().toString().padStart(2, '0')
+  
   return `${hours}:${minutes}`
 })
 
@@ -86,7 +88,7 @@ async function handleDelete() {
   })
 
   if (isConfirmed) {
-    deleteMemory(props.memory.id)
+    await deleteMemory(props.memory.id)
   }
 }
 
@@ -95,7 +97,7 @@ async function handleRemoveTimestamp() {
     title: 'Убрать временную метку?',
     description: 'Воспоминание будет перемещено в блок "Фотографии для обработки".',
   })
-  
+
   if (isConfirmed) {
     removeTimestamp(props.memory.id)
   }
@@ -238,7 +240,13 @@ onClickOutside(timeEditorRef, saveTime)
       </div>
       <div class="note-footer" :class="{ isEditing: !isViewMode }">
         <div v-if="!isUnsorted && displayTime" class="memory-meta">
-          <span>{{ displayTime }}</span>
+          <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor-inline">
+            <KitTimeField v-if="editingTime" v-model="editingTime" />
+            <button class="save-time-btn-inline" @click.stop="saveTime">
+              <Icon icon="mdi:check" />
+            </button>
+          </div>
+          <span v-else @click.stop="handleTimeClick">{{ displayTime }}</span>
         </div>
         <div v-if="!isViewMode" class="memory-actions is-note-actions">
           <button v-if="memory.timestamp" title="Убрать временную метку" @click="handleRemoveTimestamp">
@@ -482,6 +490,21 @@ onClickOutside(timeEditorRef, saveTime)
 .memory-meta {
   color: var(--fg-secondary-color);
   font-size: 0.75rem;
+  > span {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--r-2xs);
+    transition: background-color 0.2s ease;
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
+  }
+
+  .time-editor-inline {
+    :deep(.kit-time-field) {
+      background-color: var(--bg-tertiary-color);
+    }
+  }
 }
 
 .memory-comment {
