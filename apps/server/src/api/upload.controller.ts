@@ -1,5 +1,5 @@
-/* eslint-disable node/prefer-global/buffer */
 import type { Context } from 'hono'
+import type { ImageMetadata } from '~/repositories/image.repository'
 import { tripImagePlacementEnum } from 'db/schema'
 import { HTTPException } from 'hono/http-exception'
 import { imageRepository } from '~/repositories/image.repository'
@@ -36,7 +36,7 @@ export async function uploadFileController(c: Context) {
     try {
       const thumbnailBuffer = embeddedThumbnailBuffer ?? await generateThumbnail(fileBuffer)
       await saveFile(paths.thumbFullPath, thumbnailBuffer)
-      finalThumbnailUrl = paths.thumbnailUrl
+      finalThumbnailUrl = paths.thumbFullPath
     }
     catch (thumbError) {
       console.error('Не удалось создать или сохранить thumbnail:', thumbError)
@@ -45,14 +45,16 @@ export async function uploadFileController(c: Context) {
     // 5. Сохранение основного файла (делегировано сервису)
     await saveFile(paths.fullPath, fileBuffer)
 
-    // Выведи в консоль локальное время снимка
-    console.log('> TIME', TODO)
-    
     // 6. Сохранение записи в БД
-    const newImageRecord = await imageRepository.create(tripId, paths.url, placement, {
-      ...metadata,
-      thumbnailUrl: finalThumbnailUrl,
-    })
+    const newImageRecord = await imageRepository.create(
+      tripId,
+      `/${paths.fullPath}`,
+      placement,
+      {
+        ...metadata,
+        thumbnailUrl: `/${finalThumbnailUrl}`,
+      } as ImageMetadata,
+    )
 
     // 7. Отправка ответа
     return c.json(newImageRecord)

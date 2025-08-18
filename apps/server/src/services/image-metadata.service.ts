@@ -1,170 +1,171 @@
-import type { ImageMetadata, TripImage } from 'db/schema' // Предполагается, что типы импортируются отсюда
-import exifreader from 'exifreader'
+import type { TripImage } from '~/models/image'
+import exifr from 'exifr'
 import sharp from 'sharp'
 
-// --- Константы ---
-const THUMBNAIL_SIZE = 500 // 500px по большей стороне
+type ExtractedImageData = Omit<TripImage, 'id' | 'tripId' | 'url' | 'placement' | 'createdAt'>
 
-// --- Типы для внутреннего использования ---
-// Описываем только ту часть TripImage, которую мы конструируем в этом сервисе
-type ExtractedImageData = Omit<TripImage, 'id' | 'tripId' | 'url' | 'placement' | 'createdAt' | 'thumbnailUrl'>
-
-interface MetadataExtractionResult {
-  metadata: ExtractedImageData
+interface Params {
+  metadata: Partial<ExtractedImageData>
   embeddedThumbnailBuffer: Buffer | null
 }
 
-// --- Вспомогательные функции ---
-
-/**
- * Преобразует дату из формата EXIF (YYYY:MM:DD HH:MM:SS) в строку ISO 8601.
- * @param exifDate - Строка с датой из EXIF.
- * @returns Строка в формате ISO 8601 или null, если формат неверный.
- */
-function parseExifDate(exifDate: string): string | null {
-  if (!exifDate || typeof exifDate !== 'string')
-    return null
-  try {
-    // Заменяем первые два ':' на '-', чтобы строка соответствовала формату ISO
-    const formattedDate = exifDate.replace(':', '-').replace(':', '-')
-    return new Date(formattedDate).toISOString()
+function parseTimezoneOffset(offsetString: string | undefined): number | undefined {
+  if (!offsetString) {
+    return undefined
   }
-  catch (error) {
-    console.error('Не удалось распарсить EXIF дату:', exifDate, error)
-    return null
+  if (offsetString.toUpperCase() === 'Z') {
+    return 0
   }
+  const matches = offsetString.match(/([+-])(\d{2}):(\d{2})/)
+  if (!matches) {
+    return undefined
+  }
+  const sign = matches[1] === '-' ? -1 : 1
+  const hours = Number.parseInt(matches[2], 10)
+  const minutes = Number.parseInt(matches[3], 10)
+  return sign * (hours * 60 + minutes)
 }
 
-/**
- * Конвертирует GPS-координаты из формата DMS (градусы, минуты, секунды) в десятичные градусы.
- * @param dms - Массив из трех чисел [градусы, минуты, секунды].
- * @param ref - Направление ('N', 'S', 'E', 'W').
- * @returns Координата в формате десятичных градусов или null.
- */
-function convertDmsToDecimal(dms: number[], ref: 'N' | 'S' | 'E' | 'W'): number | null {
-  if (!dms || dms.length !== 3 || !ref)
-    return null
-
-  const [degrees, minutes, seconds] = dms
-  let decimal = degrees + minutes / 60 + seconds / 3600
-
-  if (ref === 'S' || ref === 'W') {
-    decimal = -decimal
-  }
-
-  return decimal
+export async function generateThumbnail(fileBuffer: Buffer): Promise<Buffer> {
+  return sharp(fileBuffer)
+    .resize(400, 400, {
+      fit: 'cover',
+      position: 'entropy',
+    })
+    .webp({ quality: 80 })
+    .toBuffer()
 }
 
-// --- Основные функции сервиса ---
-
-/**
- * Извлекает, структурирует метаданные из буфера изображения и возвращает встроенный thumbnail.
- * @param fileBuffer - Буфер с данными файла изображения.
- * @returns Объект с метаданными и буфером встроенного thumbnail (если есть).
- */
-export async function extractAndStructureMetadata(fileBuffer: Buffer): Promise<MetadataExtractionResult> {
+export async function extractAndStructureMetadata(fileBuffer: Buffer): Promise<Params> {
   try {
-    const tags = exifreader.load(fileBuffer, { thumbnail: true })
-
-    // --- Извлечение ключевых, часто запрашиваемых данных ---
-    const takenAt = parseExifDate(tags.DateTimeOriginal?.description)
-      ?? parseExifDate(tags.CreateDate?.description)
-      ?? parseExifDate(tags.DateTime?.description)
-
-    if (takenAt) {
-      console.log(takenAt)
-      console.log(`Локальное время снимка: ${new Date(takenAt).toLocaleString('ru-RU')}`)
+    const exifrOptions = {
+      exif: true,
+      gps: true,
+      iptc: true,
+      xmp: true,
+      icc: true,
+      interop: true,
+      reviveValues: true,
+      translateValues: false,
     }
 
-    const latitude = tags.GPSLatitude && tags.GPSLatitudeRef
-      ? convertDmsToDecimal(tags.GPSLatitude.value, tags.GPSLatitudeRef.value[0])
-      : null
+    const [exifData, embeddedThumbnailBuffer] = await Promise.all([
+      exifr.parse(fileBuffer, exifrOptions),
+      exifr.thumbnail(fileBuffer).catch(() => null),
+    ])
 
-    const longitude = tags.GPSLongitude && tags.GPSLongitudeRef
-      ? convertDmsToDecimal(tags.GPSLongitude.value, tags.GPSLongitudeRef.value[0])
-      : null
+    if (!exifData) {
+      console.warn('Не удалось извлечь EXIF данные из файла.')
+      return { metadata: {}, embeddedThumbnailBuffer: null }
+    }
 
-    const width = tags.ExifImageWidth?.value ?? tags.ImageWidth?.value ?? null
-    const height = tags.ExifImageHeight?.value ?? tags.ImageHeight?.value ?? null
+    const sharpMeta = await sharp(fileBuffer).metadata()
+    const structuredMeta: Partial<ExtractedImageData> = {}
 
-    // --- Структурирование всех остальных метаданных в JSONB ---
-    const metadata: ImageMetadata = {
+    const takenAtDate = exifData.DateTimeOriginal || exifData.CreateDate
+    const offset = exifData.OffsetTimeOriginal ?? exifData.OffsetTime ?? exifData.OffsetTimeDigitized
+
+    if (takenAtDate instanceof Date) {
+      const offsetMinutes = parseTimezoneOffset(offset)
+      if (offsetMinutes !== undefined) {
+        const originalTime = takenAtDate.getTime()
+        const timezoneOffset = takenAtDate.getTimezoneOffset()
+        const adjustedTime = originalTime - (offsetMinutes + timezoneOffset) * 60 * 1000
+        structuredMeta.takenAt = new Date(adjustedTime)
+      }
+      else {
+        structuredMeta.takenAt = takenAtDate
+      }
+    }
+
+    if (exifData.latitude && exifData.longitude) {
+      structuredMeta.latitude = exifData.latitude
+      structuredMeta.longitude = exifData.longitude
+    }
+
+    structuredMeta.width = sharpMeta.width
+    structuredMeta.height = sharpMeta.height
+
+    structuredMeta.metadata = {
+      timezoneOffset: parseTimezoneOffset(offset),
       camera: {
-        make: tags.Make?.description,
-        model: tags.Model?.description,
-        lens: tags.LensModel?.description,
+        make: exifData.Make,
+        model: exifData.Model,
+        lens: exifData.LensModel,
+        serialNumber: exifData.BodySerialNumber,
       },
       settings: {
-        iso: tags.ISOSpeedRatings?.value,
-        aperture: tags.FNumber?.value,
-        shutterSpeed: tags.ExposureTime?.description,
-        focalLength: tags.FocalLength?.value,
-        flash: tags.Flash?.description.includes('fired'),
+        iso: exifData.ISO,
+        aperture: exifData.FNumber,
+        apertureValue: exifData.ApertureValue,
+        shutterSpeed: exifData.ExposureTime ? `1/${Math.round(1 / exifData.ExposureTime)}s` : undefined,
+        exposureTime: exifData.ExposureTime,
+        focalLength: exifData.FocalLength,
+        focalLengthIn35mmFormat: exifData.FocalLengthIn35mmFilm,
+        exposureMode: exifData.ExposureMode,
+        whiteBalance: exifData.WhiteBalance,
+        meteringMode: exifData.MeteringMode,
+        flash: exifData.Flash,
+      },
+      gps: {
+        altitude: exifData.GPSAltitude,
+        speed: exifData.GPSSpeed,
+        bearing: exifData.GPSImgDirection,
+        destBearing: exifData.GPSDestBearing,
+        gpsDate: exifData.GPSDateStamp && exifData.GPSTimeStamp ? `${exifData.GPSDateStamp} ${exifData.GPSTimeStamp}` : undefined,
       },
       technical: {
-        format: tags.FileType?.description,
-        colorSpace: tags.ColorSpace?.description,
-        orientation: tags.Orientation?.value,
+        format: sharpMeta.format,
+        colorSpace: exifData.ColorSpace,
+        orientation: exifData.Orientation,
         fileSize: fileBuffer.length,
+        resolutionX: exifData.XResolution,
+        resolutionY: exifData.YResolution,
+        resolutionUnit: exifData.ResolutionUnit,
       },
       software: {
-        software: tags.Software?.description,
-        creator: tags.Artist?.description,
-        copyright: tags.Copyright?.description,
+        software: exifData.Software,
+        creator: exifData.CreatorTool,
+        copyright: exifData.Copyright,
+        modifyDate: exifData.ModifyDate,
       },
-      // Сохраняем все "сырые" теги на всякий случай
-      rawExif: tags,
+      iptc: {
+        headline: exifData.Headline,
+        caption: exifData.Caption,
+        keywords: exifData.Keywords,
+        city: exifData.City,
+        country: exifData.Country,
+      },
     }
 
-    // --- Извлечение встроенного thumbnail ---
-    const embeddedThumbnailBuffer = tags.Thumbnail?.buffer ? Buffer.from(tags.Thumbnail.buffer) : null
-
     return {
-      metadata: {
-        takenAt,
-        latitude,
-        longitude,
-        width,
-        height,
-        metadata,
-      },
-      embeddedThumbnailBuffer,
+      metadata: structuredMeta,
+      embeddedThumbnailBuffer: (embeddedThumbnailBuffer as Buffer) ?? null,
     }
   }
   catch (error) {
-    console.error('Ошибка при извлечении метаданных EXIF:', error)
-    // Возвращаем пустую структуру, если метаданные извлечь не удалось
-    return {
-      metadata: {
+    console.warn('Не удалось извлечь метаданные из изображения:', error)
+
+    const sharpMeta = await sharp(fileBuffer).metadata().catch(() => null)
+    if (sharpMeta) {
+      return {
         metadata: {
-          technical: {
-            fileSize: fileBuffer.length,
+          width: sharpMeta.width,
+          height: sharpMeta.height,
+          metadata: {
+            technical: {
+              format: sharpMeta.format,
+              fileSize: fileBuffer.length,
+            },
           },
         },
-      },
+        embeddedThumbnailBuffer: null,
+      }
+    }
+
+    return {
+      metadata: {},
       embeddedThumbnailBuffer: null,
     }
-  }
-}
-
-/**
- * Генерирует thumbnail из буфера изображения с помощью Sharp.
- * @param fileBuffer - Буфер с данными исходного файла.
- * @returns Promise, который разрешается буфером с thumbnail в формате WebP.
- */
-export async function generateThumbnail(fileBuffer: Buffer): Promise<Buffer> {
-  try {
-    return await sharp(fileBuffer)
-      .rotate() // Автоматически поворачивает изображение согласно EXIF-тегу Orientation
-      .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
-        fit: 'inside', // Сохраняет пропорции, вписывая в квадрат THUMBNAIL_SIZE x THUMBNAIL_SIZE
-        withoutEnlargement: true, // Не увеличивает изображения, которые меньше THUMBNAIL_SIZE
-      })
-      .webp({ quality: 80 }) // Конвертируем в WebP для лучшего сжатия
-      .toBuffer()
-  }
-  catch (error) {
-    console.error('Ошибка при генерации thumbnail с помощью Sharp:', error)
-    throw new Error('Не удалось сгенерировать thumbnail.')
   }
 }

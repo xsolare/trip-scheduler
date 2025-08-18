@@ -693,7 +693,6 @@ onUnmounted(() => {
   align-items: center;
 }
 
-// Новая обертка для кнопок, которые скрываются
 .control-buttons-group {
   display: contents;
 }
@@ -865,6 +864,10 @@ onUnmounted(() => {
   max-width: none;
   display: flex;
   justify-content: center;
+
+  @include media-down(sm) {
+    padding: 8px;
+  }
 }
 
 .thumbnails-container {
@@ -956,13 +959,18 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .viewer-header,
-  .header-left,
   .header-center,
   .header-right {
+    display: flex;
+    justify-content: flex-end;
     padding: 16px;
     top: 0;
-    left: 16px;
-    right: 16px;
+    left: 0px;
+    right: 0px;
+    padding: 16px 0;
+  }
+  .header-left {
+    justify-content: flex-start;
   }
   .viewer-content {
     padding: 16px;
@@ -1014,7 +1022,7 @@ onUnmounted(() => {
   }
   .header-left,
   .header-center {
-    justify-content: center;
+    justify-content: flex-start;
   }
   .header-center {
     left: 50%;

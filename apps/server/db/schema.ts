@@ -105,7 +105,7 @@ export const tripImages = pgTable('trip_images', {
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
-  takenAt: timestamp('taken_at'), // Для сортировки по времени
+  takenAt: timestamp('taken_at'),
   latitude: real('latitude'), // Для отображения на карте
   longitude: real('longitude'), // Для отображения на карте
 

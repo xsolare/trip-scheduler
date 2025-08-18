@@ -45,12 +45,14 @@ export const imageRepository = {
         tripId,
         url,
         placement,
+        
         takenAt: metadata.takenAt,
         latitude: metadata.latitude,
         longitude: metadata.longitude,
         width: metadata.width,
         height: metadata.height,
         thumbnailUrl: metadata.thumbnailUrl,
+
         metadata: metadata.metadata,
       })
       .returning()
