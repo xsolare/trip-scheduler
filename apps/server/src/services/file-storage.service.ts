@@ -20,7 +20,11 @@ function createUniqueFilename(originalFilename: string): { base: string, ext: st
  * @param originalFilename - Исходное имя загруженного файла.
  * @returns Объект с путями и URL для основного файла и его thumbnail.
  */
-export function generateFilePaths(tripId: string, placement: string, originalFilename: string) {
+export function generateFilePaths(
+  tripId: string,
+  placement: string,
+  originalFilename: string,
+) {
   const staticRoot = process.env.STATIC_PATH
   const baseURL = process.env.API_URL
 
@@ -42,8 +46,8 @@ export function generateFilePaths(tripId: string, placement: string, originalFil
   const thumbFullPath = join(staticRoot, relativeDir, thumbFilename)
 
   // Публичные URL-адреса, используя URL конструктор для надежности
-  const url = new URL(join('static', relativeDir, filename), baseURL).toString()
-  const thumbnailUrl = new URL(join('static', relativeDir, thumbFilename), baseURL).toString()
+  const url = new URL(join('static/trips', relativeDir, filename), baseURL).toString()
+  const thumbnailUrl = new URL(join('static/trips', relativeDir, thumbFilename), baseURL).toString()
 
   return {
     fullPath, // e.g., /var/www/static/trip-uuid/memories/12345.jpg

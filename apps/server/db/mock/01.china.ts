@@ -42,8 +42,8 @@ const DAY_IDS = Array.from({ length: 14 }, () => crypto.randomUUID())
 
 // Вспомогательные функции для создания корректных путей к статическим файлам
 // eslint-disable-next-line unused-imports/no-unused-vars
-const getChinaMemoriesPath = (filename: string) => `/static/trip-china/memories/${filename}`
-const getChinaRoutePath = (filename: string) => `/static/trip-china/route/${filename}`
+const getChinaMemoriesPath = (filename: string) => `/static/images/trips/3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a/memories/${filename}`
+const getChinaRoutePath = (filename: string) => `/static/images/trips/3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a/route/${filename}`
 
 // === СОБИРАЕМ ВСЕ ИЗОБРАЖЕНИЯ ИЗ ПУТЕШЕСТВИЯ ===
 // Это необходимо, чтобы создать централизованный список изображений для таблицы `trip_images`.
