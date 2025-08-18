@@ -148,7 +148,7 @@ function handleBurger() {
     align-items: center;
     gap: 8px;
     padding: 5px;
-    background-color: var(--fg-inverted-color);
+    background-color: var(--bg-secondary-color);
     border-radius: 20px;
     transition: border-radius 0.5s ease;
 
