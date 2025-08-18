@@ -29,7 +29,7 @@ const isProcessing = computed(() => getProcessingMemories.value.length > 0)
 
 const galleryImages = computed<ImageViewerImage[]>(() => {
   const allMemories: Memory[] = [...memoriesForSelectedDay.value]
-  
+
   return allMemories
     .filter(memory => memory.imageId && memory?.image?.url)
     .sort((a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime())

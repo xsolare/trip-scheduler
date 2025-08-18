@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
-import { useThrottleFn } from '@vueuse/core' // Импортируем useThrottleFn для троттлинга
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue' // Добавляем watch
-
+import { useThrottleFn } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { useDisplay } from '~/shared/composables/use-display'
 import { AppRoutePaths } from '~/shared/constants/routes'

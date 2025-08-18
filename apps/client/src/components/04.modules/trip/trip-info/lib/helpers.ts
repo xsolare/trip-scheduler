@@ -7,7 +7,7 @@ import { EActivityTag } from '../models/types'
  * @param offsetMinutes - Смещение часового пояса в минутах.
  * @returns Объект Date, представляющий локальное время.
  */
-export function getLocalDate(utcDate: Date | string, offsetMinutes: number ): Date {
+export function getLocalDate(utcDate: Date | string, offsetMinutes: number): Date {
   const date = typeof utcDate === 'string' ? new Date(utcDate) : utcDate
 
   // Получаем время в миллисекундах и прибавляем смещение (в миллисекундах)

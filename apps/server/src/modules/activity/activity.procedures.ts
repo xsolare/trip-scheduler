@@ -1,4 +1,4 @@
-import { protectedProcedure, publicProcedure } from '~/lib/trpc'
+import { protectedProcedure } from '~/lib/trpc'
 import {
   CreateActivityInputSchema,
   DeleteActivityInputSchema,

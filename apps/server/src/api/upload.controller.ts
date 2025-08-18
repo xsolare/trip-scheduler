@@ -47,7 +47,7 @@ export async function uploadFileController(c: Context) {
 
     // Выведи в консоль локальное время снимка
     console.log('> TIME', TODO)
-    
+
     // 6. Сохранение записи в БД
     const newImageRecord = await imageRepository.create(tripId, paths.url, placement, {
       ...metadata,

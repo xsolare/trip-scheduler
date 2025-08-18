@@ -15,7 +15,7 @@ async function getLatestDumpFile(): Promise<string | null> {
     const allFiles = await fs.readdir(dumpDir)
     const jsonFiles = allFiles
       .filter(file => file.endsWith('.json'))
-      .sort() 
+      .sort()
 
     if (jsonFiles.length === 0)
       return null

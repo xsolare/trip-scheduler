@@ -176,7 +176,7 @@ const extendedInfo = computed(() => {
     'GPSLatitude',
     'GPSLongitude',
     'GPSLatitudeRef',
-    'GPSLongitudeRef', 
+    'GPSLongitudeRef',
   ])
 
   return Object.entries(props.image.metadata)
