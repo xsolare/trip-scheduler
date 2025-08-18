@@ -15,14 +15,12 @@ function createUniqueFilename(originalFilename: string): { base: string, ext: st
 
 /**
  * Генерирует все необходимые пути и URL для нового изображения.
- * @param tripId - ID путешествия.
- * @param placement - Место размещения ('route' или 'memories').
+ * @param path - Место размещения.
  * @param originalFilename - Исходное имя загруженного файла.
  * @returns Объект с путями и URL для основного файла и его thumbnail.
  */
 export function generateFilePaths(
-  tripId: string,
-  placement: string,
+  path: string,
   originalFilename: string,
 ) {
   const staticRoot = process.env.STATIC_PATH
@@ -39,21 +37,21 @@ export function generateFilePaths(
   const thumbFilename = `${base}-thumb.webp`
 
   // Относительный путь от корня статики
-  const relativeDir = join(tripId, placement)
+  const relativeDir = join(path)
 
   // Абсолютные пути в файловой системе для сохранения
   const fullPath = join(staticRoot, relativeDir, filename)
   const thumbFullPath = join(staticRoot, relativeDir, thumbFilename)
 
   // Публичные URL-адреса, используя URL конструктор для надежности
-  const url = new URL(join('static/trips', relativeDir, filename), baseURL).toString()
-  const thumbnailUrl = new URL(join('static/trips', relativeDir, thumbFilename), baseURL).toString()
+  const url = new URL(join(staticRoot, relativeDir, filename), baseURL).toString()
+  const thumbnailUrl = new URL(join(staticRoot, relativeDir, thumbFilename), baseURL).toString()
 
   return {
-    fullPath, // e.g., /var/www/static/trip-uuid/memories/12345.jpg
-    thumbFullPath, // e.g., /var/www/static/trip-uuid/memories/12345-thumb.webp
-    url, // e.g., http://api.example.com/static/trip-uuid/memories/12345.jpg
-    thumbnailUrl, // e.g., http://api.example.com/static/trip-uuid/memories/12345-thumb.webp
+    fullPath, // e.g., /var/www/static/images/trips/trip-uuid/memories/12345.jpg
+    thumbFullPath, // e.g., /var/www/static/images/trips/trip-uuid/memories/12345-thumb.webp
+    url, // e.g., http://api.example.com/static/images/trips/trip-uuid/memories/12345.jpg
+    thumbnailUrl, // e.g., http://api.example.com/static/images/trips/trip-uuid/memories/12345-thumb.webp
   }
 }
 

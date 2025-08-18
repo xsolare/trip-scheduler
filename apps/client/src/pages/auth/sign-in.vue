@@ -53,9 +53,7 @@ async function submitSignIn() {
   }
 
   try {
-    toast.warn(`В процессе разработки :)`)
-    // await store.auth.signIn({ email: email.value, password: password.value })
-
+    await store.auth.signIn({ email: email.value, password: password.value })
     await router.push(AppRoutePaths.Trip.List)
   }
   catch (error: any) {

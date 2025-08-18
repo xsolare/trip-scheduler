@@ -28,11 +28,8 @@ function parseTimezoneOffset(offsetString: string | undefined): number | undefin
 
 export async function generateThumbnail(fileBuffer: Buffer): Promise<Buffer> {
   return sharp(fileBuffer)
-    .resize(400, 400, {
-      fit: 'cover',
-      position: 'centre',
-    })
-    .webp({ quality: 100 })
+    .resize({ width: 800 })
+    .webp({ quality: 70, preset: 'photo' })
     .toBuffer()
 }
 

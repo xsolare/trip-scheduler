@@ -569,7 +569,7 @@ const extendedInfo = computed(() => {
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-s);
   padding: 0 12px;
-  margin-top: 12px;
+
   .info-item {
     border-color: var(--border-primary-color);
   }

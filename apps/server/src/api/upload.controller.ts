@@ -26,15 +26,15 @@ export async function uploadFileController(c: Context) {
   try {
     // 2. Подготовка данных
     const fileBuffer = Buffer.from(await file.arrayBuffer())
-    const paths = generateFilePaths(tripId, placement, file.name)
+    const paths = generateFilePaths(`/trips/${tripId}/${placement}`, file.name)
 
     // 3. Извлечение метаданных (делегировано сервису)
-    const { metadata, embeddedThumbnailBuffer } = await extractAndStructureMetadata(fileBuffer)
+    const { metadata } = await extractAndStructureMetadata(fileBuffer)
 
     // 4. Обработка Thumbnail (оркестрация)
     let finalThumbnailUrl: string | null = null
     try {
-      const thumbnailBuffer = embeddedThumbnailBuffer ?? await generateThumbnail(fileBuffer)
+      const thumbnailBuffer = await generateThumbnail(fileBuffer)
       await saveFile(paths.thumbFullPath, thumbnailBuffer)
       finalThumbnailUrl = paths.thumbFullPath
     }
