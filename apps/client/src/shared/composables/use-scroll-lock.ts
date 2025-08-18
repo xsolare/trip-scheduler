@@ -1,19 +1,16 @@
 import type { Ref } from 'vue'
 
 export function useScrollLock(isOpen: Ref<boolean>) {
-  let originalOverflow = ''
-
   const enableScrollLock = () => {
-    originalOverflow = document.body.style.overflow || ''
     document.body.style.overflow = 'hidden'
   }
 
   const disableScrollLock = () => {
-    document.body.style.overflow = originalOverflow
+    document.body.style.overflow = ''
   }
 
   const cleanup = () => {
-    document.body.style.overflow = originalOverflow
+    document.body.style.overflow = ''
   }
 
   watch(isOpen, (value) => {

@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
+import { useThrottleFn } from '@vueuse/core' // Импортируем useThrottleFn для троттлинга
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue' // Добавляем watch
+
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { useDisplay } from '~/shared/composables/use-display'
 import { AppRoutePaths } from '~/shared/constants/routes'
@@ -11,15 +14,69 @@ const router = useRouter()
 const store = useAppStore(['auth', 'theme'])
 const { smAndUp } = useDisplay()
 
+const isHeaderHidden = ref(false)
+let lastScrollY = 0
+let headerHeight = 0
+
 function handleBurger() {
   isBurgerOpen.value = !isBurgerOpen.value
 }
+
+const handleScroll = useThrottleFn(() => {
+  if (smAndUp.value) {
+    isHeaderHidden.value = false
+    lastScrollY = window.scrollY
+    return
+  }
+
+  const currentScrollY = window.scrollY
+
+  if (!headerEl.value?.clientHeight) {
+    return
+  }
+
+  if (headerHeight === 0) {
+    headerHeight = headerEl.value.clientHeight
+  }
+
+  if (currentScrollY < lastScrollY || currentScrollY < headerHeight / 2) {
+    isHeaderHidden.value = false
+  }
+  else if (currentScrollY > lastScrollY && currentScrollY > headerHeight) {
+    isHeaderHidden.value = true
+  }
+
+  lastScrollY = currentScrollY
+}, 100)
+
+watch(smAndUp, () => {
+  isHeaderHidden.value = false
+  lastScrollY = window.scrollY
+  if (headerEl.value) {
+    headerHeight = headerEl.value.clientHeight
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  nextTick(() => {
+    if (headerEl.value) {
+      headerHeight = headerEl.value.clientHeight
+    }
+  })
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <header
     ref="headerEl"
     class="header glass"
+    :class="{ 'header--hidden': isHeaderHidden && !smAndUp }"
+    :style="{ top: isHeaderHidden && !smAndUp ? `-${headerHeight}px` : '0' }"
   >
     <div class="header-content">
       <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
@@ -56,7 +113,7 @@ function handleBurger() {
         </div>
       </div>
       <div v-else class="header-burger">
-        <Icon class="header-burger-icon" icon="twemoji:hamburger" width="36" height="36" @click="handleBurger" />
+        <Icon class="header-burger-icon" icon="mdi:hamburger-menu" width="36" height="36" @click="handleBurger" />
       </div>
     </div>
   </header>
@@ -106,10 +163,12 @@ function handleBurger() {
   display: flex;
   flex-direction: row;
   padding: 10px 0px;
-  height: 100%;
+  min-height: 56px;
   width: 100%;
   z-index: 7;
-  transition: backdrop-filter 0.3s ease;
+  transition:
+    top 0.3s ease-out,
+    backdrop-filter 0.3s ease;
 
   &-content {
     max-width: 1200px;

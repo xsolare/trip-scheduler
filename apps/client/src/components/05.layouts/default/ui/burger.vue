@@ -1,20 +1,14 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import SyncModal from '~/components/02.shared/sync-modal/ui/sync-modal.vue'
 import { useScrollLock } from '~/shared/composables/use-scroll-lock'
 import { useThemeStore } from '~/shared/store/theme.store'
 
 const isBurgerOpen = defineModel<boolean>('isBurgerOpen', { required: true })
-const isSyncModalOpen = ref<boolean>(false)
 const themeStore = useThemeStore()
 const { enableScrollLock, disableScrollLock } = useScrollLock(isBurgerOpen)
 
 function closeMenu() {
   isBurgerOpen.value = false
-}
-
-function handleOpenSyncModal() {
-  isSyncModalOpen.value = !isSyncModalOpen.value
 }
 
 watch(() => isBurgerOpen.value, (newValue) => {
@@ -36,9 +30,7 @@ watch(() => isBurgerOpen.value, (newValue) => {
               <button class="burger-nav-btn" @click="closeMenu">
                 Профиль
               </button>
-              <button class="burger-nav-btn" @click="handleOpenSyncModal">
-                Синхронизировать
-              </button>
+
               <button class="burger-nav-btn" @click="themeStore.openCreator()">
                 Настроить тему
               </button>
@@ -48,7 +40,6 @@ watch(() => isBurgerOpen.value, (newValue) => {
       </div>
     </Transition>
   </Teleport>
-  <SyncModal v-model="isSyncModalOpen" />
 </template>
 
 <style lang="scss" scoped>
@@ -67,8 +58,7 @@ watch(() => isBurgerOpen.value, (newValue) => {
 
   &-menu {
     background: var(--bg-primary-color);
-    width: 80%;
-    max-width: 300px;
+    width: 100%;
     height: 100vh;
     padding: 20px;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
@@ -108,7 +98,7 @@ watch(() => isBurgerOpen.value, (newValue) => {
     }
   }
 }
-// Анимации
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
