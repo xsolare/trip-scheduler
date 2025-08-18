@@ -1,4 +1,7 @@
 import type { IActivity } from '../models/types'
+import type { IImageViewerImageMeta, ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
+import type { Memory } from '~/shared/types/models/memory'
+import type { TripImage } from '~/shared/types/models/trip'
 import { EActivityTag } from '../models/types'
 
 /**
@@ -7,7 +10,7 @@ import { EActivityTag } from '../models/types'
  * @param offsetMinutes - Смещение часового пояса в минутах.
  * @returns Объект Date, представляющий локальное время.
  */
-export function getLocalDate(utcDate: Date | string, offsetMinutes: number ): Date {
+export function getLocalDate(utcDate: Date | string, offsetMinutes: number): Date {
   const date = typeof utcDate === 'string' ? new Date(utcDate) : utcDate
 
   // Получаем время в миллисекундах и прибавляем смещение (в миллисекундах)
@@ -47,4 +50,55 @@ export const activityTagColors: Record<EActivityTag, string> = {
   [EActivityTag.FOOD]: '#fff8e1',
   [EActivityTag.ATTRACTION]: '#f3e5f5',
   [EActivityTag.RELAX]: '#e0f2f1',
+}
+
+// Расширенный тип метаданных для внутреннего использования, чтобы хранить ID для обратной связи
+export interface CustomImageViewerImageMeta extends IImageViewerImageMeta {
+  memoryId?: string
+  imageId: string
+}
+
+/**
+ * Преобразует объект TripImage в формат, необходимый для kit-image-viewer.
+ * @param image - Объект TripImage.
+ * @returns Объект ImageViewerImage.
+ */
+export function tripImageToViewerImage(image: TripImage): ImageViewerImage {
+  const meta: CustomImageViewerImageMeta = {
+    ...(image.metadata || {}),
+    latitude: image.latitude,
+    longitude: image.longitude,
+    takenAt: image.takenAt,
+    width: image.width,
+    height: image.height,
+    imageId: image.id,
+  }
+
+  return {
+    url: image.url,
+    alt: image.metadata?.iptc?.headline || 'Trip Image',
+    caption: image.metadata?.iptc?.caption,
+    meta,
+  }
+}
+
+/**
+ * Преобразует объект Memory (содержащий TripImage) в формат для kit-image-viewer.
+ * @param memory - Объект Memory.
+ * @returns Объект ImageViewerImage или null, если изображение отсутствует.
+ */
+export function memoryToViewerImage(memory: Memory): ImageViewerImage | null {
+  if (!memory.image) {
+    return null
+  }
+  const viewerImage = tripImageToViewerImage(memory.image)
+
+  viewerImage.alt = memory.comment || viewerImage.alt
+  viewerImage.caption = memory.comment || viewerImage.caption
+  
+  if (viewerImage.meta) {
+    (viewerImage.meta as CustomImageViewerImageMeta).memoryId = memory.id
+  }
+
+  return viewerImage
 }

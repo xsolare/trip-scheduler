@@ -1,8 +1,19 @@
+import type { ImageMetadata } from '~/shared/types/models/trip'
+
+export interface IImageViewerImageMeta extends ImageMetadata {
+  latitude?: number | null
+  longitude?: number | null
+  takenAt?: string | null // ISO string
+  width?: number | null
+  height?: number | null
+
+}
+
 export interface ImageViewerImage {
   url: string
   alt?: string
   caption?: string
-  meta?: any
+  meta?: IImageViewerImageMeta
 }
 
 export interface ImageViewerOptions {

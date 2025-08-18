@@ -470,6 +470,6 @@ function handleUpdateActivity(data: Partial<Activity>) {
 .memories-for-activity {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 8px;
 }
 </style>

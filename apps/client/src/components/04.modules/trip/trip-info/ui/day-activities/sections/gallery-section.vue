@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { ActivitySectionGallery } from '~/shared/types/models/activity'
+import type { TripImage } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { tripImageToViewerImage } from '~/components/04.modules/trip/trip-info/lib/helpers'
 
 interface Props {
   section: ActivitySectionGallery
@@ -23,21 +25,26 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const isImagePickerOpen = ref(false)
 const selectedImagesFromTrip = ref<string[]>([])
 
-const images = computed(() => props.section.imageUrls || [])
+const imageUrls = computed(() => props.section.imageUrls || [])
+
+// НАЙТИ ПОЛНЫЕ ОБЪЕКТЫ ИЗОБРАЖЕНИЙ ПО URL
+const fullImagesData = computed(() => {
+  return imageUrls.value
+    .map(url => tripImages.value.find(tripImg => tripImg.url === url))
+    .filter((img): img is NonNullable<typeof img> => !!img)
+})
 
 const imageViewer = useImageViewer({
   enableKeyboard: true,
 })
 
+// ПРЕОБРАЗОВАТЬ ПОЛНЫЕ ОБЪЕКТЫ В ФОРМАТ VIEWER'А
 const viewerImages = computed<ImageViewerImage[]>(() =>
-  images.value.map((url, index) => ({
-    url,
-    alt: `Изображение ${index + 1}`,
-  })),
+  fullImagesData.value.map(tripImage => tripImageToViewerImage(tripImage)),
 )
 
 function deleteImage(index: number) {
-  const updatedUrls = images.value.filter((_, i) => i !== index)
+  const updatedUrls = imageUrls.value.filter((_, i) => i !== index)
   emit('updateSection', { ...props.section, imageUrls: updatedUrls })
 }
 
@@ -59,11 +66,11 @@ async function handleFileUpload(event: Event) {
   const newImageRecords = await Promise.all(uploadPromises)
 
   const newUrls = newImageRecords
-    .filter((record): record is NonNullable<typeof record> => record !== null)
+    .filter((record): record is NonNullable<TripImage> => record !== null)
     .map(record => record.url)
 
   if (newUrls.length > 0) {
-    const updatedUrls = [...images.value, ...newUrls]
+    const updatedUrls = [...imageUrls.value, ...newUrls]
 
     emit('updateSection', { ...props.section, imageUrls: updatedUrls })
   }
@@ -89,9 +96,9 @@ function toggleImageSelection(url: string) {
 }
 
 function confirmImageSelection() {
-  const newImages = selectedImagesFromTrip.value.filter(url => !images.value.includes(url))
+  const newImages = selectedImagesFromTrip.value.filter(url => !imageUrls.value.includes(url))
   if (newImages.length > 0) {
-    const updatedUrls = [...images.value, ...newImages]
+    const updatedUrls = [...imageUrls.value, ...newImages]
     emit('updateSection', { ...props.section, imageUrls: updatedUrls })
   }
   onDialogClose()
@@ -102,7 +109,7 @@ function openViewer(index: number) {
 }
 
 const galleryClass = computed(() => {
-  const count = images.value.length
+  const count = imageUrls.value.length
   if (count <= 3)
     return 'gallery-small'
   if (count <= 6)
@@ -110,14 +117,14 @@ const galleryClass = computed(() => {
   return 'gallery-large'
 })
 const maxVisibleImages = computed(() => {
-  const count = images.value.length
+  const count = imageUrls.value.length
   return count <= 4 ? count : 4
 })
 const remainingImagesCount = computed(() =>
-  Math.max(0, images.value.length - maxVisibleImages.value),
+  Math.max(0, imageUrls.value.length - maxVisibleImages.value),
 )
 const visibleImages = computed(() =>
-  images.value.slice(0, maxVisibleImages.value),
+  imageUrls.value.slice(0, maxVisibleImages.value),
 )
 </script>
 
@@ -150,7 +157,7 @@ const visibleImages = computed(() =>
       @change="handleFileUpload"
     >
 
-    <div v-if="images.length > 0" class="gallery-container" :class="galleryClass">
+    <div v-if="imageUrls.length > 0" class="gallery-container" :class="galleryClass">
       <div
         v-for="(image, index) in visibleImages"
         :key="`${image}-${index}`"
@@ -181,7 +188,7 @@ const visibleImages = computed(() =>
       >
         <KitImage
           class="image-item"
-          :src="images[maxVisibleImages]"
+          :src="imageUrls[maxVisibleImages]"
           alt="More images"
           object-fit="cover"
         />
@@ -208,11 +215,10 @@ const visibleImages = computed(() =>
       v-model:current-index="imageViewer.currentIndex.value"
       :images="viewerImages"
       :show-counter="true"
-      :enable-thumbnails="images.length > 1"
+      :enable-thumbnails="imageUrls.length > 1"
       :close-on-overlay-click="true"
     />
 
-    <!-- ЗАМЕНА: Используем KitDialogWithClose вместо Teleport -->
     <KitDialogWithClose
       v-model:visible="isImagePickerOpen"
       title="Галерея путешествия"

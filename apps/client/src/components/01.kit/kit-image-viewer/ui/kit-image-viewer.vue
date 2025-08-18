@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
-import type { TripImage } from '~/shared/types/models/trip'
+import type { IImageViewerImageMeta, ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
@@ -61,8 +60,8 @@ const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const currentImageMetadata = computed((): TripImage | null => {
-  const meta = props.images[props.currentIndex]?.meta
+const currentImageMeta = computed((): IImageViewerImageMeta | null => {
+  const meta = toRaw(props.images[props.currentIndex]?.meta)
 
   return meta || null
 })
@@ -410,10 +409,6 @@ onClickOutside(viewerContentRef, () => {
   }
 })
 
-function handleContextMenu(event: MouseEvent) {
-  event.preventDefault()
-}
-
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
@@ -465,7 +460,7 @@ onUnmounted(() => {
                 <!-- 3. Группа кнопок, которая будет скрываться -->
                 <div v-if="isUiVisible" class="control-buttons-group">
                   <button
-                    v-if="currentImageMetadata"
+                    v-if="currentImageMeta"
                     class="control-btn"
                     title="Информация о снимке"
                     @click="isMetadataPanelVisible = true"
@@ -543,7 +538,6 @@ onUnmounted(() => {
                 @error="handleImageError"
                 @mousedown="handleMouseDown"
                 @dblclick="handleDoubleClick"
-                @contextmenu="handleContextMenu"
                 @dragstart.prevent
               >
             </div>
@@ -588,8 +582,8 @@ onUnmounted(() => {
         </div>
 
         <ImageMetadataPanel
-          v-if="currentImageMetadata"
-          :image="currentImageMetadata"
+          v-if="currentImageMeta"
+          :meta="currentImageMeta"
           :visible="isMetadataPanelVisible"
           @close="isMetadataPanelVisible = false"
         />
@@ -835,6 +829,7 @@ onUnmounted(() => {
   transform-origin: center;
   transition: opacity 0.3s ease;
   opacity: 0;
+  border-radius: var(--r-2xs);
 
   &.loaded {
     opacity: 1;
@@ -859,7 +854,7 @@ onUnmounted(() => {
 
 .viewer-footer {
   bottom: 0;
-  padding: 20px 0;
+  padding: 8px 0;
   width: 100%;
   max-width: none;
   display: flex;

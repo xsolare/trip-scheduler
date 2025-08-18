@@ -28,8 +28,10 @@ const timelineGroups = computed(() => {
   // 1. Отделяем воспоминания без конкретного времени (00:00)
   const unlinkedMemories = memories.filter((m) => {
     if (!m.timestamp)
-      return true // На всякий случай
+      return true
+
     const time = new Date(m.timestamp!)
+
     return time.getUTCHours() === 0 && time.getUTCMinutes() === 0
   })
 

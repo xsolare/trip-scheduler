@@ -30,9 +30,9 @@ export async function generateThumbnail(fileBuffer: Buffer): Promise<Buffer> {
   return sharp(fileBuffer)
     .resize(400, 400, {
       fit: 'cover',
-      position: 'entropy',
+      position: 'centre',
     })
-    .webp({ quality: 80 })
+    .webp({ quality: 100 })
     .toBuffer()
 }
 
