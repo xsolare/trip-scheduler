@@ -5,6 +5,10 @@ services:
     image: postgres:15-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=trip-scheduler
+      - POSTGRES_PASSWORD=trip-scheduler
+      - POSTGRES_DB=trip_scheduler_dev
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

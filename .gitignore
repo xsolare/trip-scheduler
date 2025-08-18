@@ -23,5 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 *.env
-!docker/*/.env*
+!docker/*/.env.example
 src_prompt.md

@@ -1,15 +1,18 @@
 FROM node:lts-trixie-slim as build
 
-WORKDIR /any
+WORKDIR /data
 
-COPY ./app/client/ ./
+COPY ./app/client/* ./
 
 RUN npm install
 
-RUN npm run build
+RUN bun run build:web
 
 FROM nginx:stable-bookworm-perl
 
-COPY --from=build /any /usr/share/nginx/html
+WORKDIR /data
+
+COPY --from=build /data/dist ./dist
+COPY --from=build --from=builder /data/package.json ./package.json
 
 CMD ["nginx", "-g", "daemon off;"]
