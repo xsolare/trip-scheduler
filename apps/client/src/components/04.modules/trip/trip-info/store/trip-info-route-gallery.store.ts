@@ -39,7 +39,6 @@ export const useTripInfoGalleryStore = defineStore('tripInfoRouteGallery', {
       if (this.currentTripId !== tripId) {
         this.currentTripId = tripId
         this.tripImages = []
-        this.fetchTripImages()
       }
     },
 
@@ -54,6 +53,7 @@ export const useTripInfoGalleryStore = defineStore('tripInfoRouteGallery', {
 
       await useRequest<TripImage[]>({
         key: ETripGalleryKeys.FETCH_IMAGES,
+        abortOnUnmount: true,
         fn: db => db.files.listImageByTrip(this.currentTripId!, TripImagePlacement.ROUTE),
         onSuccess: (result) => {
           this.tripImages = result

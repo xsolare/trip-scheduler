@@ -201,12 +201,12 @@ export const MOCK_DATA = [
     startDate: new Date('2025-05-10'),
     endDate: new Date('2025-05-23'),
     cities: ['Шанхай', 'Сучжоу', 'Ханчжоу', 'Урумчи'],
-    status: 'planned' as const,
-    budget: 2000,
-    currency: 'USD',
+    status: 'completed' as const,
+    budget: 150000,
+    currency: 'RUB',
     participants: ['Евгений'],
     tags: ['Китай', 'Шанхай', 'Урумчи', 'культура', 'еда', 'приключения'],
-    visibility: 'private' as const,
+    visibility: 'public' as const,
     images: allImageObjects,
     memories: [], // Воспоминания не добавляем по запросу
     days: [

@@ -2,7 +2,7 @@ import type { InjectionKey } from 'vue'
 import type { ITrip } from '../models/types'
 import { useRouter } from 'vue-router'
 import { useToast } from '~/components/01.kit/kit-toast'
-import { useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
+import { useAbortRequest, useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
 import { AppRoutePaths } from '~/shared/constants/routes'
 import { TripStatus, TripVisibility } from '~/shared/types/models/trip'
 
@@ -28,6 +28,8 @@ function getDefaultTripData() {
 }
 
 export function useTripsHub() {
+  const { abort } = useAbortRequest()
+
   // State
   const trips = ref<ITrip[]>([])
   const isInitialized = ref(false)
@@ -70,6 +72,7 @@ export function useTripsHub() {
       force,
       key: ETripHubKeys.FETCH_ALL,
       fn: db => db.trips.getAll(),
+      cancelPrevious: true,
       onSuccess: (result) => {
         trips.value = result.sort(
           (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
@@ -146,6 +149,10 @@ export function useTripsHub() {
       newTripData.value = getDefaultTripData()
     }, 300)
   }
+
+  onUnmounted(() => {
+    abort(ETripHubKeys.FETCH_ALL)
+  })
 
   return {
     // State

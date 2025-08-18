@@ -1,5 +1,5 @@
 {
-  "extensions": "ts",
+  "extensions": "ts,json",
   "directory": "./",
   "output": "project_prompt.md",
   "format": "structured",

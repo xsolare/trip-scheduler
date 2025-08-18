@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
+import type { TripImage } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
@@ -60,11 +61,11 @@ const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const currentImageMetadata = computed(() => {
-  const imageMeta = props.images[props.currentIndex]?.meta
-  return imageMeta?.memory?.image || imageMeta?.image || null
-})
+const currentImageMetadata = computed((): TripImage | null => {
+  const meta = props.images[props.currentIndex]?.meta
 
+  return meta || null
+})
 const imageStyle = computed(() => ({
   transform: `scale(${transform.scale}) translate(${transform.x}px, ${transform.y}px)`,
   transition: (isAnimating.value && !isDragging.value && !wheeling.value)

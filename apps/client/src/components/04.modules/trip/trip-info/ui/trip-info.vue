@@ -61,6 +61,13 @@ function handleAddNewActivity() {
   store.data.addActivity(getSelectedDay.value.id, newActivity)
 }
 
+if (tripId.value) {
+  store.data.fetchDaysForTrip(tripId.value, dayId.value)
+  store.routeGallery.setTripId(tripId.value)
+  store.routeGallery.fetchTripImages()
+  store.memories.fetchMemories(tripId.value)
+}
+
 watch(fetchError, (newError) => {
   emit('update:hasError', !!newError)
 })
@@ -72,12 +79,6 @@ watch(
       router.replace({ query: { ...route.query, day: newDayId } })
   },
 )
-
-if (tripId.value) {
-  store.data.fetchDaysForTrip(tripId.value, dayId.value)
-  store.routeGallery.setTripId(tripId.value)
-  store.memories.fetchMemories(tripId.value)
-}
 
 onBeforeUnmount(() => {
   store.data.reset()

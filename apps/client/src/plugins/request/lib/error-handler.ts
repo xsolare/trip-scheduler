@@ -1,7 +1,5 @@
 import type { ToastMessage } from '~/shared/types/models/toast'
-import { useRouter } from 'vue-router'
 import { useToast } from '~/components/01.kit/kit-toast'
-import { AppRoutePaths } from '~/shared/constants/routes'
 
 /**
  * Гибкий интерфейс ошибки, совместимый с форматом ошибок от tRPC и другими возможными форматами.

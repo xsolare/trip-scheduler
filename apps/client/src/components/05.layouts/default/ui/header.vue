@@ -2,7 +2,6 @@
 import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { AppRoutePaths } from '~/shared/constants/routes'
-import { useThemeStore } from '~/shared/store/theme.store'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()

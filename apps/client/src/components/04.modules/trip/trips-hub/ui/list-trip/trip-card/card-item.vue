@@ -113,6 +113,10 @@ const visibilityIcon = computed(() => {
       </div>
 
       <div class="card-content">
+        <div v-if="description" class="card-description">
+          {{ description }}
+        </div>
+
         <div class="card-meta">
           <div class="meta-item">
             <Icon icon="mdi:calendar-month-outline" />
@@ -352,6 +356,12 @@ const visibilityIcon = computed(() => {
   flex-grow: 1;
   position: relative;
   overflow: hidden;
+}
+
+.card-description {
+  color: var(--fg-secondary-color);
+  padding-bottom: 4px;
+  font-size: 0.9rem;
 }
 
 .card-meta {

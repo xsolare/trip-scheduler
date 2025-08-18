@@ -12,6 +12,7 @@ import { useToast } from '~/components/01.kit/kit-toast'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { useRequestStatus } from '~/plugins/request'
+import { getLocalDate } from '../../../lib/helpers'
 import { ETripMemoriesKeys } from '../../../store/trip-info-memories.store'
 
 const props = defineProps<{ memory: Memory }>()
@@ -22,19 +23,39 @@ const toast = useToast()
 const confirm = useConfirm()
 
 const comment = ref(props.memory.comment || '')
-const memoryDate = computed(() => (props.memory.timestamp ? new Date(props.memory.timestamp) : null))
 
-const selectedDate = shallowRef<CalendarDate>(
-  memoryDate.value
-    ? parseDate(memoryDate.value.toISOString().split('T')[0])
-    : parseDate(getSelectedDay.value!.date.split('T')[0]),
-)
+function initializeDateTime() {
+  // Приоритет 1: Использовать `takenAt` из EXIF изображения
+  if (props.memory.image?.takenAt) {
+    const takenAtDate = getLocalDate(
+      props.memory.image.takenAt,
+      props.memory.image.metadata?.timezoneOffset ?? 0,
+    )
+    return {
+      date: parseDate(takenAtDate.toISOString().split('T')[0]),
+      time: new Time(takenAtDate.getHours(), takenAtDate.getMinutes()),
+    }
+  }
 
-const selectedTime = shallowRef<Time>(
-  memoryDate.value
-    ? new Time(memoryDate.value.getHours(), memoryDate.value.getMinutes())
-    : new Time(12, 0),
-)
+  // Приоритет 2: Использовать существующий `timestamp` воспоминания
+  if (props.memory.timestamp) {
+    const tsDate = new Date(props.memory.timestamp)
+    return {
+      date: parseDate(tsDate.toISOString().split('T')[0]),
+      time: new Time(tsDate.getHours(), tsDate.getMinutes()),
+    }
+  }
+
+  // Фоллбэк: Использовать дату выбранного дня и время 00:00
+  return {
+    date: parseDate(getSelectedDay.value!.date.split('T')[0]),
+    time: new Time(0, 0),
+  }
+}
+
+const initialValues = initializeDateTime()
+const selectedDate = shallowRef<CalendarDate>(initialValues.date)
+const selectedTime = shallowRef<Time>(initialValues.time)
 
 const isUpdatingMemory = computed(() =>
   useRequestStatus(`${ETripMemoriesKeys.UPDATE}:${props.memory.id}`).value,
@@ -97,9 +118,16 @@ async function handleDelete() {
     await memoriesStore.deleteMemory(props.memory.id)
 }
 
-function handleResetDate() {
+function handleResetDateInPopover() {
   if (getSelectedDay.value)
     selectedDate.value = parseDate(getSelectedDay.value.date.split('T')[0])
+}
+
+function handleResetDateTime() {
+  if (getSelectedDay.value) {
+    selectedDate.value = parseDate(getSelectedDay.value.date.split('T')[0])
+    selectedTime.value = new Time(0, 0)
+  }
 }
 
 function saveComment() {
@@ -150,7 +178,7 @@ function saveComment() {
                 color="secondary"
                 class="reset-date-in-popover"
                 icon="mdi:calendar-refresh-outline"
-                @click="handleResetDate"
+                @click="handleResetDateInPopover"
               >
                 Сбросить на текущий день
               </KitBtn>
@@ -165,6 +193,15 @@ function saveComment() {
         </div>
 
         <div class="action-buttons">
+          <KitBtn
+            variant="outlined"
+            color="secondary"
+            title="Сбросить дату и время"
+            class="reset-btn"
+            @click="handleResetDateTime"
+          >
+            <Icon icon="mdi:restore" />
+          </KitBtn>
           <KitBtn
             variant="outlined"
             color="secondary"
@@ -291,15 +328,16 @@ function saveComment() {
   justify-content: flex-end;
 }
 
+.reset-btn,
 .delete-btn {
   min-width: 38px;
   padding: 0.625rem !important;
+}
 
-  &:hover:not(:disabled) {
-    background-color: var(--bg-error-color) !important;
-    color: var(--fg-error-color) !important;
-    border-color: var(--border-error-color) !important;
-  }
+.delete-btn:hover:not(:disabled) {
+  background-color: var(--bg-error-color) !important;
+  color: var(--fg-error-color) !important;
+  border-color: var(--border-error-color) !important;
 }
 
 .apply-btn {

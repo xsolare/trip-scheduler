@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useAbortRequest, useRequest, useRequestStatus } from '~/plugins/request'
 import { trpc } from '~/shared/services/trpc/trpc.service'
 import { TripImagePlacement } from '~/shared/types/models/trip'
+import { getLocalDate } from '../lib/helpers'
 import { useTripInfoStore } from './trip-info.store'
 
 export interface IProcessingMemory {
@@ -65,9 +66,11 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
         .filter((m) => {
           if (!m.timestamp)
             return false
+
           // `m.timestamp` это строка "2025-08-17T12:00:00.000Z"
           // Просто берем из нее дату
           const memoryDateStr = m.timestamp.split('T')[0]
+
           return memoryDateStr === selectedDateStr
         })
         .sort((a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime())
@@ -80,21 +83,11 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
      * 2. С временной меткой, дата которой НЕ совпадает с выбранным днем.
      */
     memoriesToProcess(state): Memory[] {
-      const tripInfoStore = useTripInfoStore()
-      const selectedDay = tripInfoStore.getSelectedDay
-      if (!selectedDay)
-        return []
-
-      const selectedDateStr = new Date(selectedDay.date).toISOString().split('T')[0]
-
       return state.memories.filter((m) => {
         if (!m.imageId)
           return false
-        if (!m.timestamp)
-          return true
 
-        const memoryDateStr = m.timestamp.split('T')[0]
-        return memoryDateStr !== selectedDateStr
+        return !m.timestamp
       })
     },
   },
@@ -112,6 +105,7 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
 
       useRequest<Memory[]>({
         key: `${ETripMemoriesKeys.FETCH}:${tripId}`,
+        abortOnUnmount: true,
         fn: db => db.memories.getByTripId(tripId),
         onSuccess: (result) => {
           this.memories = result
@@ -124,7 +118,8 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
      * @param file - Файл для загрузки.
      */
     async uploadMemoryImage(file: File) {
-      const tripId = useTripInfoStore().currentTripId
+      const tripInfoStore = useTripInfoStore()
+      const tripId = tripInfoStore.currentTripId
       if (!tripId) {
         console.error('Trip ID не установлен для загрузки воспоминания.')
         return
@@ -146,10 +141,33 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
         key: requestKey,
         fn: async (db) => {
           const newImage = await db.files.uploadFile(file, tripId, TripImagePlacement.MEMORIES)
+          const selectedDay = tripInfoStore.getSelectedDay
+
+          const getTimestamp = () => {
+            if (!newImage.takenAt)
+              return null
+
+            const imageDate = (newImage.metadata?.timezoneOffset !== undefined && newImage.metadata?.timezoneOffset !== null)
+              ? getLocalDate(newImage.takenAt, newImage.metadata?.timezoneOffset)
+              : new Date(newImage.takenAt)
+
+            const imageDateStr = imageDate.toISOString().split('T')[0]
+
+            if (!selectedDay)
+              return null
+
+            const selectedDayStr = new Date(selectedDay.date).toISOString().split('T')[0]
+
+            if (imageDateStr === selectedDayStr)
+              return imageDate.toISOString()
+
+            return null
+          }
+
           return await db.memories.create({
             tripId,
             imageId: newImage.id,
-            timestamp: newImage.takenAt,
+            timestamp: getTimestamp(),
           })
         },
         onSuccess: (newMemory) => {

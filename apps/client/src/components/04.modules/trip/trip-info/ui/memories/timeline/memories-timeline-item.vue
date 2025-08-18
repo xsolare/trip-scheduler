@@ -70,15 +70,22 @@ function saveTime() {
 }
 
 const displayTime = computed(() => {
-  if (!props.memory.timestamp)
+  if (!props.memory.timestamp) {
     return ''
+  }
 
   const d = new Date(props.memory.timestamp)
 
   const hours = d.getUTCHours().toString().padStart(2, '0')
   const minutes = d.getUTCMinutes().toString().padStart(2, '0')
-  
-  return `${hours}:${minutes}`
+
+  const formattedTime = `${hours}:${minutes}`
+
+  if (formattedTime === '00:00') {
+    return ''
+  }
+
+  return formattedTime
 })
 
 async function handleDelete() {
@@ -109,11 +116,19 @@ const activeViewerActivityTitle = ref('')
 const activeViewerTime = shallowRef<Time | null>(null)
 
 const formattedActiveViewerTime = computed(() => {
-  if (!activeViewerTime.value)
+  if (!activeViewerTime.value) {
     return ''
+  }
+
   const hours = String(activeViewerTime.value.hour).padStart(2, '0')
   const minutes = String(activeViewerTime.value.minute).padStart(2, '0')
-  return `${hours}:${minutes}`
+  const formattedTime = `${hours}:${minutes}`
+
+  if (formattedTime === '00:00') {
+    return ''
+  }
+
+  return formattedTime
 })
 
 watch(imageViewer.currentImage, (newImage) => {
@@ -181,12 +196,15 @@ onClickOutside(timeEditorRef, saveTime)
   >
     <template v-if="memory.imageId && memory?.image?.url">
       <div class="photo-wrapper" @click="openImageViewer">
-        <KitImage :src="memory!.image!.url" object-fit="cover" />
+        <KitImage :src="memory!.image?.thumbnailUrl ?? memory!.image!.url" object-fit="cover" />
         <div class="photo-overlay">
           <div v-if="memoryComment" class="memory-comment-overlay">
             <p>{{ memoryComment }}</p>
           </div>
-          <div v-if="!isUnsorted && displayTime" class="memory-meta-badge">
+          <div
+            v-if="!isUnsorted && displayTime"
+            class="memory-meta-badge"
+          >
             <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor-inline">
               <KitTimeField v-if="editingTime" v-model="editingTime" />
               <button class="save-time-btn-inline" @click.stop="saveTime">
@@ -297,16 +315,19 @@ onClickOutside(timeEditorRef, saveTime)
               </span>
             </div>
           </div>
+
           <div class="viewer-time-section">
-            <div class="viewer-time-display">
+            <div v-if="!isViewMode || formattedActiveViewerTime" class="viewer-time-display">
               <KitTimeField
                 v-if="!isViewMode"
                 v-model="activeViewerTime"
                 :readonly="isViewMode"
                 @blur="saveViewerTime"
               />
-              <span v-else>{{ formattedActiveViewerTime }}</span>
-              <Icon height="19" width="19" icon="mdi:clock-outline" class="time-icon" />
+              <template v-else>
+                <span>{{ formattedActiveViewerTime }}</span>
+                <Icon height="19" width="19" icon="mdi:clock-outline" class="time-icon" />
+              </template>
             </div>
           </div>
         </div>

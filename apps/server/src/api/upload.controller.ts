@@ -1,14 +1,13 @@
+/* eslint-disable node/prefer-global/buffer */
 import type { Context } from 'hono'
-import type { ImageMetadata } from '~/repositories/image.repository'
-import { mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
-import exifr from 'exifr'
+import { tripImagePlacementEnum } from 'db/schema'
 import { HTTPException } from 'hono/http-exception'
-import sharp from 'sharp'
 import { imageRepository } from '~/repositories/image.repository'
-import { tripImagePlacementEnum } from '../../db/schema'
+import { generateFilePaths, saveFile } from '~/services/file-storage.service'
+import { extractAndStructureMetadata, generateThumbnail } from '~/services/image-metadata.service'
 
 export async function uploadFileController(c: Context) {
+  // 1. Валидация HTTP-запроса
   const formData = await c.req.formData()
   const file = formData.get('file')
   const tripId = formData.get('tripId')
@@ -21,212 +20,45 @@ export async function uploadFileController(c: Context) {
     throw new HTTPException(400, { message: 'Необходимо указать ID путешествия (tripId).' })
   }
   if (!placement || !tripImagePlacementEnum.enumValues.includes(placement)) {
-    throw new HTTPException(400, { message: 'Необходимо указать корректный тип размещения (placement): "route" или "memories".' })
-  }
-
-  const fileBuffer = await file.arrayBuffer()
-  const fileExtension = file.name.split('.').pop()
-  const baseFilename = `${Date.now()}-${crypto.randomUUID()}`
-  const filename = `${baseFilename}.${fileExtension}`
-  const tripUploadDir = join(`${import.meta.env.STATIC_PATH}/${tripId}`, placement)
-  const fullPath = join(tripUploadDir, filename)
-  const baseURL = import.meta.env.API_URL
-
-  const finalMetadata: ImageMetadata = {
-    gps: null,
-    takenAt: null,
-    width: null,
-    height: null,
-    orientation: null,
-    thumbnailUrl: null,
-    metadata: {
-      cameraMake: null,
-      cameraModel: null,
-      fNumber: null,
-      exposureTime: null,
-      iso: null,
-      focalLength: null,
-      apertureValue: null,
-    },
-    extendedMetadata: null,
+    throw new HTTPException(400, { message: 'Необходимо указать корректный тип размещения.' })
   }
 
   try {
-    const exifrOptions = {
-      xmp: true,
-      icc: true,
-      iptc: true,
-      exif: true,
-      gps: true,
-      interop: true,
-      translateValues: false,
-      reviveValues: true,
-    }
+    // 2. Подготовка данных
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const paths = generateFilePaths(tripId, placement, file.name)
 
-    const [exifrData, rotationData, thumbnailBuffer] = await Promise.all([
-      exifr.parse(fileBuffer, exifrOptions),
-      exifr.rotation(fileBuffer),
-      exifr.thumbnail(fileBuffer),
-    ])
+    // 3. Извлечение метаданных (делегировано сервису)
+    const { metadata, embeddedThumbnailBuffer } = await extractAndStructureMetadata(fileBuffer)
 
-    if (exifrData) {
-      finalMetadata.takenAt = exifrData.DateTimeOriginal || exifrData.CreateDate || null
-      if (exifrData.latitude && exifrData.longitude) {
-        finalMetadata.gps = { latitude: exifrData.latitude, longitude: exifrData.longitude }
-      }
-
-      const rawWidth = exifrData.ImageWidth || exifrData.width || exifrData.ExifImageWidth
-      const rawHeight = exifrData.ImageHeight || exifrData.height || exifrData.ExifImageHeight
-
-      if (rawWidth && rawHeight) {
-        if (rotationData?.dimensionSwapped) {
-          finalMetadata.width = rawHeight
-          finalMetadata.height = rawWidth
-        }
-        else {
-          finalMetadata.width = rawWidth
-          finalMetadata.height = rawHeight
-        }
-      }
-
-      finalMetadata.orientation = exifrData.Orientation || 1
-
-      // --- Переносим основные поля в `metadata` ---
-      if (finalMetadata.metadata) {
-        finalMetadata.metadata.cameraMake = exifrData.Make || null
-        finalMetadata.metadata.cameraModel = exifrData.Model || null
-        finalMetadata.metadata.fNumber = exifrData.FNumber || null
-        finalMetadata.metadata.exposureTime = exifrData.ExposureTime || null
-        finalMetadata.metadata.iso = exifrData.ISO || null
-        finalMetadata.metadata.focalLength = exifrData.FocalLength || null
-        finalMetadata.metadata.apertureValue = exifrData.ApertureValue || null
-      }
-
-      // --- Фильтруем и собираем `extendedMetadata` ---
-      const fieldsToExclude = new Set([
-        'RedTRC',
-        'Cameras',
-        'Profiles',
-        'BlueTRC',
-        'GreenTRC',
-        'Directory',
-        'ModifyDate',
-        'OffsetTime',
-        'GPSDateStamp',
-        'GPSTimeStamp',
-        'HasExtendedXMP',
-        'MediaBlackPoint',
-        'MediaWhitePoint',
-        'ProfileDateTime',
-        'RedMatrixColumn',
-        'RenderingIntent',
-        'BlueMatrixColumn',
-        'HdrPlusMakernote',
-        'GreenMatrixColumn',
-        'OffsetTimeOriginal',
-        'ChromaticAdaptation',
-        'GPSProcessingMethod',
-        'OffsetTimeDigitized',
-        'ComponentsConfiguration',
-      ])
-
-      const primaryKeys = new Set([
-        // Ключи, уже обработанные выше
-        'DateTimeOriginal',
-        'CreateDate',
-        'latitude',
-        'longitude',
-        'ImageWidth',
-        'width',
-        'ExifImageWidth',
-        'ImageHeight',
-        'height',
-        'ExifImageHeight',
-        'Orientation',
-        // Ключи, перенесенные в `finalMetadata.metadata`
-        'Make',
-        'Model',
-        'FNumber',
-        'ExposureTime',
-        'ISO',
-        'FocalLength',
-        'ApertureValue',
-
-        // Системные/вложенные объекты exifr
-        'thumbnail',
-        'gps',
-        'iptc',
-        'xmp',
-        'icc',
-        'makerNote',
-        'ifd0',
-        'ifd1',
-        'exif',
-      ])
-
-      const extendedMeta: Record<string, any> = {}
-      for (const key in exifrData) {
-        if (
-          Object.prototype.hasOwnProperty.call(exifrData, key)
-          && !primaryKeys.has(key)
-          && !fieldsToExclude.has(key)
-        ) {
-          const value = exifrData[key]
-          // eslint-disable-next-line node/prefer-global/buffer
-          if (!(value instanceof Buffer)) {
-            extendedMeta[key] = value
-          }
-        }
-      }
-      finalMetadata.extendedMetadata = extendedMeta
-    }
-
-    if (thumbnailBuffer) {
-      const thumbFilename = `${baseFilename}-thumb.jpg`
-      const thumbFullPath = join(tripUploadDir, thumbFilename)
-      await mkdir(tripUploadDir, { recursive: true })
-      await Bun.write(thumbFullPath, thumbnailBuffer)
-      finalMetadata.thumbnailUrl = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${thumbFilename}`
-    }
-  }
-  catch (err) {
-    console.warn('Не удалось прочитать все метаданные:', (err as Error).message)
-  }
-
-  // Если thumbnailUrl все еще null, генерируем его с помощью sharp
-  if (!finalMetadata.thumbnailUrl) {
+    // 4. Обработка Thumbnail (оркестрация)
+    let finalThumbnailUrl: string | null = null
     try {
-      const thumbFilename = `${baseFilename}-thumb.webp`
-      const thumbFullPath = join(tripUploadDir, thumbFilename)
-      await mkdir(tripUploadDir, { recursive: true })
-
-      // eslint-disable-next-line node/prefer-global/buffer
-      await sharp(Buffer.from(fileBuffer))
-        .resize(200, 200, {
-          fit: 'cover',
-          position: 'entropy',
-        })
-        .webp({ quality: 75 })
-        .toFile(thumbFullPath)
-
-      finalMetadata.thumbnailUrl = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${thumbFilename}`
+      const thumbnailBuffer = embeddedThumbnailBuffer ?? await generateThumbnail(fileBuffer)
+      await saveFile(paths.thumbFullPath, thumbnailBuffer)
+      finalThumbnailUrl = paths.thumbnailUrl
     }
-    catch (sharpError) {
-      console.error('Ошибка при генерации thumbnail с помощью sharp:', sharpError)
+    catch (thumbError) {
+      console.error('Не удалось создать или сохранить thumbnail:', thumbError)
     }
-  }
 
-  try {
-    await mkdir(tripUploadDir, { recursive: true })
-    await Bun.write(fullPath, fileBuffer)
+    // 5. Сохранение основного файла (делегировано сервису)
+    await saveFile(paths.fullPath, fileBuffer)
 
-    const url = `${baseURL}/${import.meta.env.STATIC_PATH}/${tripId}/${placement}/${filename}`
-    const newImageRecord = await imageRepository.create(tripId, url, placement, finalMetadata)
+    // Выведи в консоль локальное время снимка
+    console.log('> TIME', TODO)
+    
+    // 6. Сохранение записи в БД
+    const newImageRecord = await imageRepository.create(tripId, paths.url, placement, {
+      ...metadata,
+      thumbnailUrl: finalThumbnailUrl,
+    })
 
+    // 7. Отправка ответа
     return c.json(newImageRecord)
   }
   catch (error) {
-    console.error('Ошибка при сохранении файла или записи в БД:', error)
-    throw new HTTPException(500, { message: 'Не удалось сохранить файл.' })
+    console.error('Ошибка при обработке загруженного файла:', error)
+    throw new HTTPException(500, { message: 'Внутренняя ошибка при обработке файла.' })
   }
 }

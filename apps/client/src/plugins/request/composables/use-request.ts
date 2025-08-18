@@ -26,9 +26,17 @@ export async function useRequest<T>(
     onAbort,
     force = false,
     cancelPrevious = true,
+    abortOnUnmount = false,
   } = options
 
   const store = useRequestStore()
+
+  if (abortOnUnmount && getCurrentInstance()) {
+    onUnmounted(() => {
+      if (store.statuses.get(key) === 'pending')
+        store.abort(key)
+    })
+  }
 
   if (!force && pendingPromises.has(key))
     return pendingPromises.get(key)!

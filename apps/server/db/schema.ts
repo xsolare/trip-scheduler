@@ -105,28 +105,16 @@ export const tripImages = pgTable('trip_images', {
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
-  // --- Координаты и дата съемки ---
-  latitude: real('latitude'),
-  longitude: real('longitude'),
-  takenAt: timestamp('taken_at'),
+  takenAt: timestamp('taken_at'), // Для сортировки по времени
+  latitude: real('latitude'), // Для отображения на карте
+  longitude: real('longitude'), // Для отображения на карте
 
-  // --- Основные технические метаданные ---
   width: integer('width'),
   height: integer('height'),
-  orientation: integer('orientation'),
   thumbnailUrl: text('thumbnail_url'),
 
-  // --- Метаданные камеры ---
-  cameraMake: text('camera_make'),
-  cameraModel: text('camera_model'),
-  fNumber: real('f_number'),
-  exposureTime: real('exposure_time'),
-  iso: integer('iso'),
-  focalLength: real('focal_length'),
-  apertureValue: real('aperture_value'),
-
-  // --- Неважные метаданные камеры ---
-  extendedMetadata: jsonb('extended_metadata'),
+  // --- Все остальные метаданные в одном поле JSONB ---
+  metadata: jsonb('metadata'),
 })
 
 // Таблица для воспоминаний (Memories)

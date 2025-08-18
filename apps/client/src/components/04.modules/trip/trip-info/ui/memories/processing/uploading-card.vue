@@ -16,11 +16,11 @@ const emit = defineEmits(['cancel', 'retry', 'remove'])
       <KitImage :src="memory.previewUrl" class="card-image" alt="Uploading preview" />
       <div class="overlay">
         <div v-if="memory.status === 'uploading'" class="status-indicator">
-          <Icon icon="mdi:loading" class="spin" />
+          <Icon width="24" height="24" icon="mdi:loading" class="spin" />
           <span>Загрузка...</span>
         </div>
         <div v-if="memory.status === 'error'" class="status-indicator error">
-          <Icon icon="mdi:alert-circle-outline" />
+          <Icon width="24" height="24" icon="mdi:alert-circle-outline" />
           <span>Ошибка</span>
         </div>
 
