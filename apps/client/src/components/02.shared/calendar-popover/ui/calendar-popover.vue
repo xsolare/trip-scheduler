@@ -30,7 +30,7 @@ function handleUpdateValue(value: CalendarDate | null) {
       class="date-picker-trigger"
       :disabled="disabled"
     >
-      <slot />
+      <slot name="trigger" />
     </PopoverTrigger>
     <PopoverPortal>
       <PopoverContent
@@ -43,7 +43,11 @@ function handleUpdateValue(value: CalendarDate | null) {
         <KitCalendar
           :model-value="model"
           @update:model-value="handleUpdateValue"
-        />
+        >
+          <template #footer>
+            <slot name="footer" />
+          </template>
+        </KitCalendar>
       </PopoverContent>
     </PopoverPortal>
   </PopoverRoot>

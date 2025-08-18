@@ -28,6 +28,7 @@ export function setupCssVariablesUpdater() {
 
       applyPalette(htmlElement, themeStore.customThemePalette)
       applyPalette(htmlElement, themeStore.customThemeRadius)
+      applyPalette(htmlElement, themeStore.customThemeShadows)
     }
     else {
       htmlElement.setAttribute('data-theme', themeStore.activeThemeName)

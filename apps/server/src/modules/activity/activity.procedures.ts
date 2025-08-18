@@ -1,4 +1,4 @@
-import { publicProcedure } from '~/lib/trpc'
+import { protectedProcedure, publicProcedure } from '~/lib/trpc'
 import {
   CreateActivityInputSchema,
   DeleteActivityInputSchema,
@@ -7,19 +7,19 @@ import {
 import { activityService } from './activity.service'
 
 export const activityProcedures = {
-  create: publicProcedure
+  create: protectedProcedure
     .input(CreateActivityInputSchema)
     .mutation(async ({ input }) => {
       return activityService.create(input)
     }),
 
-  update: publicProcedure
+  update: protectedProcedure
     .input(UpdateActivityInputSchema)
     .mutation(async ({ input }) => {
       return activityService.update(input)
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(DeleteActivityInputSchema)
     .mutation(async ({ input }) => {
       return activityService.delete(input.id)

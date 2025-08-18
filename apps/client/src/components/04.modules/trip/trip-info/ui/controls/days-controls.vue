@@ -76,14 +76,16 @@ const selectedCalendarDate = computed<CalendarDate | null>({
         <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
       </div>
       <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
-        <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
-          <h3 v-if="getSelectedDay">
-            {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
-          </h3>
-          <span v-if="getSelectedDay">
-            {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
-          </span>
-        </div>
+        <template #trigger>
+          <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
+            <h3 v-if="getSelectedDay">
+              {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
+            </h3>
+            <span v-if="getSelectedDay">
+              {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
+            </span>
+          </div>
+        </template>
       </CalendarPopover>
     </div>
     <div class="spacer" />

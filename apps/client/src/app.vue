@@ -1,4 +1,5 @@
 <script setup>
+import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { ToastContainer } from '~/components/01.kit/kit-toast'
 import { ReloadPrompt } from '~/components/02.shared/reload-prompt'
 import { DefaultLayout } from '~/components/05.layouts/default'
@@ -36,4 +37,5 @@ const layouts = {
 
   <ToastContainer />
   <ReloadPrompt />
+  <KitConfirmDialog />
 </template>

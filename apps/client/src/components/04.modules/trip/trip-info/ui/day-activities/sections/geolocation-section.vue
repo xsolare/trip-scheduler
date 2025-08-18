@@ -351,14 +351,12 @@ onMounted(() => {
   }
 }
 
-// Стили для OpenLayers popup
 :deep(.ol-popup) {
   background: white;
-  border: 1px solid #ccc;
   border-radius: var(--r-2xs);
   padding: 8px;
   font-size: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--s-m);
   max-width: 200px;
   word-wrap: break-word;
 

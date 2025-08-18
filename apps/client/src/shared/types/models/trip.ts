@@ -14,24 +14,30 @@ export interface TripImage {
   placement: TripImagePlacement
   createdAt: string // ISO string
 
-  latitude: number | null
-  longitude: number | null
-  takenAt: string | null // ISO string or null
+  // --- Ключевые, часто запрашиваемые данные ---
+  takenAt?: string | null // ISO string
+  latitude?: number | null
+  longitude?: number | null
 
-  width: number | null
-  height: number | null
-  orientation: number | null
-  thumbnailUrl: string | null
+  // --- Основные данные для отображения ---
+  width?: number | null
+  height?: number | null
+  thumbnailUrl?: string | null
 
-  cameraMake: string | null
-  cameraModel: string | null
-  fNumber: number | null
-  exposureTime: number | null
-  iso: number | null
-  focalLength: number | null
-  apertureValue: number | null
-
-  extendedMetadata: Record<string, any> | null
+  // --- Все остальные метаданные в одном поле JSONB ---
+  metadata?: {
+    orientation?: number
+    timezoneOffset?: number
+    cameraMake?: string
+    cameraModel?: string
+    fNumber?: number
+    exposureTime?: number
+    iso?: number
+    focalLength?: number
+    apertureValue?: number
+    // Позволяет хранить любые другие расширенные данные
+    [key: string]: any
+  } | null
 }
 
 export enum TripStatus {

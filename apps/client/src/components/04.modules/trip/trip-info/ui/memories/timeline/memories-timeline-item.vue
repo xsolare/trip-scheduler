@@ -4,9 +4,10 @@ import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
-import { KitEditable } from '~/components/01.kit/kit-editable'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog/composables/use-confirm'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
+import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
@@ -15,21 +16,26 @@ interface Props {
   galleryImages?: ImageViewerImage[]
   isUnsorted?: boolean
   isViewMode?: boolean
+  timelineGroups?: any[]
 }
 const props = withDefaults(defineProps<Props>(), {
   galleryImages: () => [],
   isUnsorted: false,
   isViewMode: false,
+  timelineGroups: () => [],
 })
 
 const store = useModuleStore(['memories', 'data'])
-const { updateMemory, deleteMemory } = store.memories
+const confirm = useConfirm()
+
+const { updateMemory, deleteMemory, removeTimestamp } = store.memories
 const { getSelectedDay } = storeToRefs(store.data)
 
 const memoryComment = ref(props.memory.comment || '')
-function saveComment(value: string) {
-  if (value !== props.memory.comment) {
-    updateMemory({ id: props.memory.id, comment: value })
+
+function saveComment() {
+  if (memoryComment.value !== props.memory.comment) {
+    updateMemory({ id: props.memory.id, comment: memoryComment.value })
   }
 }
 
@@ -43,7 +49,7 @@ function handleTimeClick() {
   isTimeEditing.value = true
   if (props.memory.timestamp) {
     const d = new Date(props.memory.timestamp)
-    editingTime.value = new Time(d.getHours(), d.getMinutes())
+    editingTime.value = new Time(d.getUTCHours(), d.getUTCMinutes())
   }
   else {
     editingTime.value = new Time()
@@ -56,29 +62,74 @@ function saveTime() {
 
   const datePart = getSelectedDay.value.date.split('T')[0]
   const timePart = `${editingTime.value.hour.toString().padStart(2, '0')}:${editingTime.value.minute.toString().padStart(2, '0')}:00`
-  const localDateTimeString = `${datePart}T${timePart}`
-  const newTimestamp = new Date(localDateTimeString).toISOString()
+
+  const newTimestamp = `${datePart}T${timePart}.000Z`
 
   updateMemory({ id: props.memory.id, timestamp: newTimestamp })
   isTimeEditing.value = false
 }
 
 const displayTime = computed(() => {
-  if (!props.memory.timestamp)
+  if (!props.memory.timestamp) {
     return ''
-  return new Date(props.memory.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const d = new Date(props.memory.timestamp)
+
+  const hours = d.getUTCHours().toString().padStart(2, '0')
+  const minutes = d.getUTCMinutes().toString().padStart(2, '0')
+
+  const formattedTime = `${hours}:${minutes}`
+
+  if (formattedTime === '00:00') {
+    return ''
+  }
+
+  return formattedTime
 })
 
-function handleDelete() {
-  // eslint-disable-next-line no-alert
-  if (confirm('Вы уверены, что хотите удалить это воспоминание?')) {
-    deleteMemory(props.memory.id)
+async function handleDelete() {
+  const isConfirmed = await confirm({
+    title: 'Удалить воспоминание?',
+    description: 'Это действие нельзя будет отменить. Воспоминание будет удалено навсегда.',
+  })
+
+  if (isConfirmed) {
+    await deleteMemory(props.memory.id)
+  }
+}
+
+async function handleRemoveTimestamp() {
+  const isConfirmed = await confirm({
+    title: 'Убрать временную метку?',
+    description: 'Воспоминание будет перемещено в блок "Фотографии для обработки".',
+  })
+
+  if (isConfirmed) {
+    removeTimestamp(props.memory.id)
   }
 }
 
 const imageViewer = useImageViewer()
 const activeViewerComment = ref('')
+const activeViewerActivityTitle = ref('')
 const activeViewerTime = shallowRef<Time | null>(null)
+
+const formattedActiveViewerTime = computed(() => {
+  if (!activeViewerTime.value) {
+    return ''
+  }
+
+  const hours = String(activeViewerTime.value.hour).padStart(2, '0')
+  const minutes = String(activeViewerTime.value.minute).padStart(2, '0')
+  const formattedTime = `${hours}:${minutes}`
+
+  if (formattedTime === '00:00') {
+    return ''
+  }
+
+  return formattedTime
+})
 
 watch(imageViewer.currentImage, (newImage) => {
   if (newImage?.meta?.memory) {
@@ -86,11 +137,14 @@ watch(imageViewer.currentImage, (newImage) => {
     activeViewerComment.value = mem.comment || ''
     if (mem.timestamp) {
       const d = new Date(mem.timestamp)
-      activeViewerTime.value = new Time(d.getHours(), d.getMinutes())
+      activeViewerTime.value = new Time(d.getUTCHours(), d.getUTCMinutes())
     }
     else {
       activeViewerTime.value = null
     }
+    const memoryId = mem.id
+    const group = props.timelineGroups?.find(g => g.memories.some((m: Memory) => m.id === memoryId))
+    activeViewerActivityTitle.value = group ? group.title : ''
   }
 }, { deep: true })
 
@@ -109,10 +163,10 @@ function openImageViewer() {
   }
 }
 
-function saveViewerComment(value: string) {
+function saveViewerComment() {
   const memory = imageViewer.currentImage.value?.meta?.memory
-  if (memory && value !== (memory.comment || '')) {
-    updateMemory({ id: memory.id, comment: value })
+  if (memory && activeViewerComment.value !== (memory.comment || '')) {
+    updateMemory({ id: memory.id, comment: activeViewerComment.value })
   }
 }
 
@@ -122,14 +176,10 @@ function saveViewerTime() {
   if (!memory || !activeViewerTime.value || !day)
     return
 
-  const dayDate = new Date(day.date)
-  const newTimestamp = new Date(
-    dayDate.getFullYear(),
-    dayDate.getMonth(),
-    dayDate.getDate(),
-    activeViewerTime.value.hour,
-    activeViewerTime.value.minute,
-  ).toISOString()
+  const datePart = day.date.split('T')[0]
+  const timePart = `${activeViewerTime.value.hour.toString().padStart(2, '0')}:${activeViewerTime.value.minute.toString().padStart(2, '0')}:00`
+
+  const newTimestamp = `${datePart}T${timePart}.000Z`
 
   if (newTimestamp !== memory.timestamp) {
     updateMemory({ id: memory.id, timestamp: newTimestamp })
@@ -144,14 +194,17 @@ onClickOutside(timeEditorRef, saveTime)
     class="memory-item"
     :class="{ 'is-photo': memory.imageId, 'is-note': !memory.imageId, 'is-unsorted': isUnsorted }"
   >
-    <template v-if="memory.imageId && memory.imageUrl">
+    <template v-if="memory.imageId && memory?.image?.url">
       <div class="photo-wrapper" @click="openImageViewer">
-        <KitImage :src="memory.imageUrl" object-fit="cover" />
+        <KitImage :src="memory!.image?.thumbnailUrl ?? memory!.image!.url" object-fit="cover" />
         <div class="photo-overlay">
           <div v-if="memoryComment" class="memory-comment-overlay">
             <p>{{ memoryComment }}</p>
           </div>
-          <div v-if="!isUnsorted && displayTime" class="memory-meta-badge">
+          <div
+            v-if="!isUnsorted && displayTime"
+            class="memory-meta-badge"
+          >
             <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor-inline">
               <KitTimeField v-if="editingTime" v-model="editingTime" />
               <button class="save-time-btn-inline" @click.stop="saveTime">
@@ -161,6 +214,9 @@ onClickOutside(timeEditorRef, saveTime)
             <span v-else @click.stop="handleTimeClick">{{ displayTime }}</span>
           </div>
           <div class="memory-actions">
+            <button v-if="!isViewMode && memory.timestamp" title="Убрать временную метку" @click.stop="handleRemoveTimestamp">
+              <Icon icon="mdi:calendar-remove-outline" />
+            </button>
             <button v-if="!isViewMode" title="Удалить" @click.stop="handleDelete">
               <Icon icon="mdi:trash-can-outline" />
             </button>
@@ -184,20 +240,36 @@ onClickOutside(timeEditorRef, saveTime)
     <template v-if="!memory.imageId">
       <div class="memory-content">
         <div class="memory-comment">
-          <KitEditable
+          <KitInlineMdEditorWrapper
             v-model="memoryComment"
             :readonly="isViewMode"
+            :features="{
+              'block-edit': false,
+              'image-block': false,
+              'list-item': false,
+              'link-tooltip': false,
+              'toolbar': false,
+            }"
             placeholder="Заметка..."
             class="comment-editor"
-            @submit="saveComment"
+            @blur="saveComment"
           />
         </div>
       </div>
       <div class="note-footer" :class="{ isEditing: !isViewMode }">
         <div v-if="!isUnsorted && displayTime" class="memory-meta">
-          <span>{{ displayTime }}</span>
+          <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor-inline">
+            <KitTimeField v-if="editingTime" v-model="editingTime" />
+            <button class="save-time-btn-inline" @click.stop="saveTime">
+              <Icon icon="mdi:check" />
+            </button>
+          </div>
+          <span v-else @click.stop="handleTimeClick">{{ displayTime }}</span>
         </div>
         <div v-if="!isViewMode" class="memory-actions is-note-actions">
+          <button v-if="memory.timestamp" title="Убрать временную метку" @click="handleRemoveTimestamp">
+            <Icon icon="mdi:calendar-remove-outline" />
+          </button>
           <button title="Удалить" @click="handleDelete">
             <Icon icon="mdi:trash-can-outline" />
           </button>
@@ -218,22 +290,44 @@ onClickOutside(timeEditorRef, saveTime)
           :class="{ 'is-readonly': isViewMode }"
         >
           <div class="viewer-comment-section">
-            <KitEditable
+            <KitInlineMdEditorWrapper
+              v-if="!isViewMode"
               v-model="activeViewerComment"
               :readonly="isViewMode"
+              :features="{
+                'block-edit': false,
+                'image-block': false,
+                'list-item': false,
+                'link-tooltip': false,
+                'toolbar': false,
+              }"
               placeholder="Комментарий..."
               class="viewer-comment-editor"
-              @submit="saveViewerComment"
+              @blur="saveViewerComment"
             />
+            <div v-else>
+              <span class="activity-title">
+                {{ activeViewerActivityTitle }}
+              </span>
+              <hr v-if="activeViewerComment && activeViewerActivityTitle">
+              <span class="activity-comment">
+                {{ activeViewerComment }}
+              </span>
+            </div>
           </div>
+
           <div class="viewer-time-section">
-            <div class="viewer-time-display">
+            <div v-if="!isViewMode || formattedActiveViewerTime" class="viewer-time-display">
               <KitTimeField
+                v-if="!isViewMode"
                 v-model="activeViewerTime"
                 :readonly="isViewMode"
                 @blur="saveViewerTime"
               />
-              <Icon height="18" width="18" icon="mdi:clock-outline" class="time-icon" />
+              <template v-else>
+                <span>{{ formattedActiveViewerTime }}</span>
+                <Icon height="19" width="19" icon="mdi:clock-outline" class="time-icon" />
+              </template>
             </div>
           </div>
         </div>
@@ -296,9 +390,10 @@ onClickOutside(timeEditorRef, saveTime)
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
+
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--s-m);
     }
   }
 
@@ -380,7 +475,7 @@ onClickOutside(timeEditorRef, saveTime)
 
 .memory-meta-badge {
   position: absolute;
-  bottom: 8px;
+  top: 8px;
   right: 8px;
   display: flex;
   align-items: center;
@@ -394,6 +489,7 @@ onClickOutside(timeEditorRef, saveTime)
   border-radius: var(--r-full);
   z-index: 3;
   transition: background-color 0.2s ease;
+  height: 28px;
 
   :deep(.kit-time-field) {
     background-color: transparent;
@@ -415,28 +511,43 @@ onClickOutside(timeEditorRef, saveTime)
 .memory-meta {
   color: var(--fg-secondary-color);
   font-size: 0.75rem;
+  > span {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--r-2xs);
+    transition: background-color 0.2s ease;
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
+  }
+
+  .time-editor-inline {
+    :deep(.kit-time-field) {
+      background-color: var(--bg-tertiary-color);
+    }
+  }
 }
 
 .memory-comment {
   width: 100%;
+
   .comment-editor {
-    :deep(.kit-editable-area) {
+    :deep(.milkdown .editor) {
       padding: 4px;
       font-size: 0.9rem;
       color: var(--fg-primary-color);
       white-space: pre-wrap;
+      line-height: 1.5;
+      min-height: 28px;
+      p {
+        margin: 0;
+      }
       &:hover {
         background-color: var(--bg-hover-color);
       }
     }
-    :deep(.kit-editable-root[data-editing='false'] .kit-editable-area:hover) {
+    :deep(.prosemirror-editor-wrapper[readonly]) .editor:hover {
       background-color: transparent;
-    }
-    :deep(.kit-editable-input) {
-      padding: 0;
-    }
-    :deep(.kit-editable-controls) {
-      display: none;
     }
   }
 }
@@ -448,6 +559,8 @@ onClickOutside(timeEditorRef, saveTime)
   z-index: 3;
   opacity: 0;
   transition: opacity 0.2s ease;
+  display: flex;
+  gap: 4px;
 
   .photo-wrapper:hover & {
     opacity: 1;
@@ -467,8 +580,7 @@ onClickOutside(timeEditorRef, saveTime)
   }
 
   button {
-    background: rgba(var(--bg-primary-color-rgb), 0.7);
-    backdrop-filter: blur(4px);
+    background: var(--bg-primary-color);
     border: 1px solid var(--border-secondary-color);
     border-radius: var(--r-full);
     width: 28px;
@@ -477,12 +589,23 @@ onClickOutside(timeEditorRef, saveTime)
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--fg-secondary-color);
+    color: var(--fg-inverted-color);
+    transition: all 0.2s;
 
     &:hover {
-      color: var(--fg-error-color);
-      border-color: var(--fg-error-color);
+      color: var(--fg-primary-color);
+      border-color: var(--border-primary-color);
     }
+  }
+
+  button[title='Удалить'] {
+    color: var(--fg-error-color);
+    border-color: var(--fg-error-color);
+  }
+
+  button[title='Убрать временную метку'] {
+    color: var(--fg-accent-color);
+    border-color: var(--fg-accent-color);
   }
 }
 
@@ -557,7 +680,7 @@ onClickOutside(timeEditorRef, saveTime)
 
   &.is-readonly {
     gap: 8px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.2);
     padding: 12px 16px;
     text-align: center;
   }
@@ -566,10 +689,24 @@ onClickOutside(timeEditorRef, saveTime)
 .viewer-comment-section {
   flex-grow: 1;
   color: white;
+  opacity: 0.8;
 
-  :deep(.kit-editable-area) {
-    display: flex;
-    align-items: center;
+  .activity-comment {
+    font-size: 0.9rem;
+  }
+  .activity-title {
+    font-size: 1rem;
+  }
+
+  hr {
+    border: 1px solid white;
+    opacity: 0.1;
+    width: 90%;
+    margin: 8px auto;
+  }
+
+  &:hover {
+    opacity: 1;
   }
 }
 
@@ -578,27 +715,28 @@ onClickOutside(timeEditorRef, saveTime)
 }
 
 .viewer-comment-editor {
-  :deep(.kit-editable-area) {
-    padding: 8px;
-    border-radius: var(--r-s);
-    min-height: 48px;
-    transition: background-color 0.2s ease;
-  }
-  :deep(.kit-editable-root[data-editing='true'] .kit-editable-area) {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  :deep(.kit-editable-root[data-editing='false'] .kit-editable-area:hover) {
-    background-color: rgba(255, 255, 255, 0.1);
+  :deep(.milkdown) {
+    .editor {
+      padding: 8px;
+      border-radius: var(--r-s);
+      min-height: 48px;
+      transition: background-color 0.2s ease;
+      color: white;
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+    }
+    &:not([readonly]) .editor:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
   }
 
-  .is-readonly & {
+  &.is-readonly {
     font-size: 1rem;
     pointer-events: none;
-
-    :deep(.kit-editable-controls) {
-      display: none;
-    }
-    :deep(.kit-editable-area) {
+    :deep(.milkdown .editor) {
       padding: 0;
     }
   }

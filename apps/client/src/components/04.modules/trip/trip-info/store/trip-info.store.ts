@@ -2,7 +2,7 @@
 import type { IActivity, IDay } from '../models/types'
 import { defineStore } from 'pinia'
 import { useToast } from '~/components/01.kit/kit-toast'
-import { useRequest, useRequestError, useRequestStatus, useRequestStore } from '~/plugins/request'
+import { useRequest, useRequestError, useRequestStatus, useRequestStatusByPrefix, useRequestStore } from '~/plugins/request'
 import { getActivityDuration, minutesToTime, timeToMinutes } from '../lib/helpers'
 
 export enum ETripInfoKeys {
@@ -16,29 +16,29 @@ export enum ETripInfoKeys {
   REMOVE_ACTIVITY = 'trip:remove-activity',
 }
 
+export interface ITripInfoState {
+  days: IDay[]
+  currentTripId: string | null
+  currentDayId: string | null
+}
+
 /**
  * Стор для управления ДАННЫМИ о конкретном путешествии,
  * включая его дни и активности.
  */
 export const useTripInfoStore = defineStore('tripInfo', {
-  // --- STATE ---
-  state: (): {
-    days: IDay[]
-    currentTripId: string | null
-    currentDayId: string | null
-  } => ({
+  state: (): ITripInfoState => ({
     days: [],
     currentTripId: null,
     currentDayId: null,
   }),
 
-  // --- GETTERS ---
   getters: {
     isLoading: () => useRequestStatus(ETripInfoKeys.FETCH_DAYS).value,
     fetchError: () => useRequestError(ETripInfoKeys.FETCH_DAYS).value,
     isLoadingUpdateDay: () => useRequestStatus(ETripInfoKeys.UPDATE_DAY).value,
     isLoadingNewDay: () => useRequestStatus(ETripInfoKeys.ADD_DAY).value,
-    isLoadingUpdateActivity: () => useRequestStatus(ETripInfoKeys.UPDATE_ACTIVITY).value,
+    isLoadingUpdateActivity: () => useRequestStatusByPrefix(ETripInfoKeys.UPDATE_ACTIVITY).value,
 
     getAllDays(state): IDay[] {
       return state.days
@@ -76,7 +76,6 @@ export const useTripInfoStore = defineStore('tripInfo', {
     },
   },
 
-  // --- ACTIONS ---
   actions: {
     setCurrentDay(dayId: string): void {
       this.currentDayId = dayId
@@ -97,6 +96,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
 
       useRequest({
         key: ETripInfoKeys.FETCH_DAYS,
+        abortOnUnmount: true,
         fn: db => db.days.getByTripId(tripId),
         onSuccess: (result) => {
           const sortedDays = result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -249,7 +249,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
 
       // 2. Отправляем запрос на сервер
       useRequest({
-        key: ETripInfoKeys.UPDATE_ACTIVITY,
+        key: `${ETripInfoKeys.UPDATE_ACTIVITY}:${updatedActivity.id}`,
         fn: db => db.activities.update(updatedActivity),
         onSuccess: (activityFromServer) => {
           const finalIndex = day.activities.findIndex(a => a.id === activityFromServer.id)

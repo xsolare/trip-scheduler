@@ -1,9 +1,8 @@
-<!-- /ui/memories/memories-timeline-group.vue -->
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Activity } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { EActivityStatus } from '~/shared/types/models/activity'
 import MemoriesItem from './memories-timeline-item.vue'
@@ -14,16 +13,20 @@ interface TimelineGroup {
   memories: any[]
   activity?: Activity
 }
+type TimelineGroups = TimelineGroup[]
 
 const props = defineProps<{
   group: TimelineGroup
   isViewMode: boolean
   galleryImages: ImageViewerImage[]
+  timelineGroups: TimelineGroups
 }>()
 
 const emit = defineEmits<{
   (e: 'updateActivity', payload: { activity: Activity, data: Partial<Activity> }): void
 }>()
+
+const isCollapsed = ref(false)
 
 const statusOptions: { value: EActivityStatus, label: string, icon: string }[] = [
   { value: EActivityStatus.COMPLETED, label: 'Пройден', icon: 'mdi:check-circle-outline' },
@@ -46,11 +49,14 @@ function handleUpdateActivity(data: Partial<Activity>) {
 </script>
 
 <template>
-  <div class="activity-timeline-node">
+  <div class="activity-timeline-node" :class="{ 'is-collapsed': isCollapsed }">
     <div class="activity-header">
       <div class="activity-time">
         <span>{{ group.activity ? group.activity.startTime : '...' }}</span>
       </div>
+      <button class="collapse-toggle-btn" @click="isCollapsed = !isCollapsed">
+        <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
+      </button>
       <div class="header-spacer" />
       <div v-if="group.type === 'activity' && group.activity" class="activity-header-controls">
         <template v-if="!isViewMode">
@@ -143,18 +149,21 @@ function handleUpdateActivity(data: Partial<Activity>) {
       </div>
     </div>
 
-    <h5 class="activity-title">
-      {{ group.title }}
-    </h5>
+    <div v-show="!isCollapsed" class="collapsible-content">
+      <h5 class="activity-title">
+        {{ group.title }}
+      </h5>
 
-    <div v-if="group.memories.length > 0" class="memories-for-activity">
-      <MemoriesItem
-        v-for="memory in group.memories"
-        :key="memory.id"
-        :memory="memory"
-        :is-view-mode="isViewMode"
-        :gallery-images="galleryImages"
-      />
+      <div v-if="group.memories.length > 0" class="memories-for-activity">
+        <MemoriesItem
+          v-for="memory in group.memories"
+          :key="memory.id"
+          :memory="memory"
+          :is-view-mode="isViewMode"
+          :gallery-images="galleryImages"
+          :timeline-groups="timelineGroups"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -166,6 +175,15 @@ function handleUpdateActivity(data: Partial<Activity>) {
   border-left: 2px solid var(--border-secondary-color);
   padding-bottom: 24px;
   padding-top: 24px;
+  transition: padding-bottom 0.3s ease;
+
+  &.is-collapsed {
+    padding-bottom: 0;
+
+    &:not(:last-child) {
+      border-left-style: dashed;
+    }
+  }
 
   &::before {
     content: '';
@@ -198,10 +216,60 @@ function handleUpdateActivity(data: Partial<Activity>) {
   width: 100%;
   border-radius: var(--r-xs) var(--r-l) var(--r-l) var(--r-xs);
   min-height: 40px;
+
+  .activity-time {
+    background-color: var(--bg-secondary-color);
+    padding: 4px 10px;
+    border: 1px solid var(--border-secondary-color);
+    border-radius: var(--r-s);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--fg-secondary-color);
+    white-space: nowrap;
+  }
+
+  .collapse-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--fg-secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    opacity: 0;
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+      color: var(--fg-primary-color);
+    }
+  }
+
+  .header-spacer {
+    flex-grow: 1;
+  }
+
+  &:hover {
+    .collapse-toggle-btn {
+      opacity: 1;
+    }
+  }
+  @include media-down(sm) {
+    .collapse-toggle-btn {
+      opacity: 1;
+    }
+  }
 }
 
-.header-spacer {
-  flex-grow: 1;
+.activity-title {
+  margin: 8px 0 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .activity-header-controls {
@@ -218,12 +286,13 @@ function handleUpdateActivity(data: Partial<Activity>) {
   gap: 4px;
   padding: 0 10px;
   border-radius: var(--r-full);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid transparent;
-  height: 32px;
+  height: 28px;
+  font-family: 'Sansation';
 
   .status-icon {
     font-size: 1.1rem;
@@ -231,25 +300,23 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   .status-text {
     display: none;
+
     @include media-up(sm) {
       display: inline;
       white-space: nowrap;
       font-family: 'Sansation';
-      font-weight: 600;
       font-size: 0.8rem;
     }
-  }
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px var(--bg-hover-color);
   }
 
   &.status-completed {
     background-color: var(--bg-success-color);
     color: var(--fg-success-color);
-    border-color: var(--border-success-color);
+
     .status-text {
+      color: var(--fg-success-color);
+    }
+    .status-icon {
       color: var(--fg-success-color);
     }
   }
@@ -257,8 +324,11 @@ function handleUpdateActivity(data: Partial<Activity>) {
   &.status-skipped {
     background-color: var(--bg-error-color);
     color: var(--fg-error-color);
-    border-color: var(--border-error-color);
+
     .status-text {
+      color: var(--fg-error-color);
+    }
+    .status-icon {
       color: var(--fg-error-color);
     }
   }
@@ -266,8 +336,11 @@ function handleUpdateActivity(data: Partial<Activity>) {
   &.status-none {
     background: var(--bg-secondary-color);
     color: var(--fg-primary-color);
-    border-color: var(--border-secondary-color);
+
     .status-text {
+      color: var(--fg-secondary-color);
+    }
+    .status-icon {
       color: var(--fg-secondary-color);
     }
   }
@@ -276,59 +349,63 @@ function handleUpdateActivity(data: Partial<Activity>) {
 .rating-control {
   display: flex;
   align-items: center;
-  padding: 0 10px;
+  gap: 4px;
+  padding: 0 8px;
   background: var(--bg-secondary-color);
-  border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-full);
   cursor: pointer;
-  transition: all 0.2s ease;
-  height: 32px;
+  transition: all 0.25s ease;
+  height: 28px;
+  min-width: 80px;
 
   &:hover {
     border-color: #f1c40f;
+
+    .rating-placeholder {
+      color: #f1c40f;
+    }
   }
 
   &.has-rating {
     border-color: #f1c40f;
+    background: linear-gradient(90deg, rgba(241, 196, 15, 0.15), rgba(241, 196, 15, 0.05));
+
+    .star.filled {
+      color: #f1c40f;
+      filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6));
+    }
   }
 
   .rating-stars {
     display: flex;
+    align-items: center;
     gap: 2px;
+
     .star {
       color: var(--fg-tertiary-color);
+      font-size: 15px;
+      transition:
+        transform 0.15s ease,
+        color 0.2s ease;
+
       &.filled {
-        color: #f1bc0f;
+        color: #f1c40f;
+      }
+
+      &:hover {
+        transform: scale(1.15);
       }
     }
   }
 
   .rating-placeholder {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--fg-secondary-color);
-    font-weight: 600;
+    font-weight: 500;
     font-family: 'Sansation';
+    transition: color 0.2s ease;
+    white-space: nowrap;
   }
-}
-
-.activity-time {
-  background-color: var(--bg-secondary-color);
-  padding: 4px 10px;
-  border: 1px solid var(--border-secondary-color);
-  border-radius: var(--r-s);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--fg-secondary-color);
-  white-space: nowrap;
-}
-
-.activity-title {
-  margin: 8px 0 20px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 :deep(.kit-dropdown-content) {

@@ -121,7 +121,7 @@ const draggableActivities = computed({
 }
 
 .chosen-activity {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--s-l);
   transform: scale(1.02);
   z-index: 10;
 }

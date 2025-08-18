@@ -274,9 +274,7 @@ useEventListener('keydown', (e) => {
   background: var(--bg-primary-color);
   border: 1px solid var(--border-primary-color);
   border-radius: var(--r-m);
-  box-shadow:
-    0 10px 25px -5px rgb(0 0 0 / 0.1),
-    0 4px 6px -2px rgb(0 0 0 / 0.05);
+  box-shadow: var(--s-l);
   z-index: 50;
 
   &[data-side='top'] {

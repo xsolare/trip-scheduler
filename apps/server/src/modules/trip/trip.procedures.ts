@@ -29,13 +29,13 @@ export const tripProcedures = {
       return tripService.create(input, ctx.user.id)
     }),
 
-  update: publicProcedure
+  update: protectedProcedure
     .input(UpdateTripInputSchema)
     .mutation(async ({ input }) => {
       return tripService.update(input.id, input.details)
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(GetTripByIdInputSchema)
     .mutation(async ({ input }) => {
       return tripService.delete(input.tripId)

@@ -1,4 +1,5 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
+import type { SignInPayload, TokenPair, User } from '~/shared/types/models/auth'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 
@@ -26,8 +27,14 @@ export interface IActivityRepository {
 
 export interface IFileRepository {
   uploadFile: (file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null) => Promise<TripImage>
-  listImageByTrip: (tripId: string) => Promise<TripImage[]>
-  addImage: (tripId: string, imageUrl: string, placement: TripImagePlacement) => Promise<TripImage>
+  listImageByTrip: (tripId: string, placement: TripImagePlacement) => Promise<TripImage[]>
+}
+
+export interface IAuthRepository {
+  signIn: (payload: SignInPayload) => Promise<{ user: User, token: TokenPair }>
+  signOut: () => Promise<void>
+  refresh: (refreshToken: string) => Promise<{ token: TokenPair }>
+  me: () => Promise<User>
 }
 
 // Интерфейс для всей базы данных
@@ -37,6 +44,7 @@ export interface IDatabaseClient {
   files: IFileRepository
   activities: IActivityRepository
   memories: IMemoryRepository
+  auth: IAuthRepository
 
   initDb: () => Promise<this>
 

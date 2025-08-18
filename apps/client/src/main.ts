@@ -7,17 +7,27 @@ import { initializePwaUpdater } from '~/shared/services/pwa/pwa.service'
 // @ts-expect-error бред какой то
 import application from './app.vue'
 import { requestPlugin } from './plugins/request'
+import { restoreSession } from './plugins/session-restore'
 import { themePlugin } from './plugins/theme'
 import databaseServicePromise from './shared/services/database'
 
-const pinia = createPinia()
-const app = createApp(application)
+/**
+ * Асинхронная функция для инициализации приложения.
+ */
+async function initializeApp() {
+  const app = createApp(application)
+  const pinia = createPinia()
 
-app.use(router)
-app.use(pinia)
-app.use(requestPlugin, { databaseService: databaseServicePromise })
-app.use(themePlugin)
+  app.use(pinia)
+  app.use(requestPlugin, { databaseService: databaseServicePromise })
+  app.use(router)
+  app.use(themePlugin)
 
-app.mount('#app')
+  await restoreSession(pinia)
 
-initializePwaUpdater()
+  app.mount('#app')
+
+  initializePwaUpdater()
+}
+
+initializeApp()

@@ -57,10 +57,10 @@ const swipeStyle = computed(() => {
 <style lang="scss">
 .kit-toast-item {
   margin-left: auto;
-  padding: var(--p-m, 16px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  box-shadow: var(--s-m);
   pointer-events: all;
-  border-radius: var(--r-m, 12px);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -85,6 +85,7 @@ const swipeStyle = computed(() => {
 
   &-detail {
     flex-grow: 1;
+    text-align: left;
   }
 
   &-close-btn {

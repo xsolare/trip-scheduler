@@ -45,6 +45,7 @@ const model = defineModel<CalendarDate | null>({ required: true })
         />
       </CalendarNext>
     </CalendarHeader>
+
     <div class="calendarWrapper">
       <CalendarGrid
         v-for="month in grid"
@@ -89,6 +90,8 @@ const model = defineModel<CalendarDate | null>({ required: true })
         </CalendarGridBody>
       </CalendarGrid>
     </div>
+
+    <slot name="footer" />
   </CalendarRoot>
 </template>
 
@@ -101,9 +104,7 @@ const model = defineModel<CalendarDate | null>({ required: true })
 .calendar {
   border: 1px solid var(--border-primary-color);
   background-color: var(--bg-secondary-color);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--s-m);
   padding: 16px;
   border-radius: 8px;
   width: 300px;

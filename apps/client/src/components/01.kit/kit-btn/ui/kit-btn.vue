@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 
 interface Props {
   icon?: string
-  variant?: 'solid' | 'outlined'
+  variant?: 'solid' | 'outlined' | 'text'
   color?: 'primary' | 'secondary'
   disabled?: boolean
 }
@@ -49,20 +49,18 @@ const componentClasses = computed(() => [
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--s-s);
 
   & * {
     pointer-events: none;
   }
 
-  &:not(:disabled):hover {
+  &:not(.kit-btn--text):not(:disabled):hover {
     transform: translateY(-2px);
-    box-shadow:
-      0 7px 14px rgba(50, 50, 93, 0.1),
-      0 3px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-l);
   }
 
-  &:not(:disabled):active {
+  &:not(.kit-btn--text):not(:disabled):active {
     transform: translateY(0px);
   }
 
@@ -70,7 +68,7 @@ const componentClasses = computed(() => [
     cursor: not-allowed;
     opacity: 0.6;
     transform: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-s);
   }
 
   &--solid {
@@ -113,6 +111,28 @@ const componentClasses = computed(() => [
         background-color: var(--bg-hover-color);
         color: var(--fg-primary-color);
         border-color: var(--border-hover-color);
+      }
+    }
+  }
+
+  &--text {
+    background-color: transparent;
+    box-shadow: none;
+    border-color: transparent;
+
+    &.kit-btn--color-primary {
+      color: var(--fg-accent-color);
+
+      &:not(:disabled):hover {
+        background-color: var(--bg-disabled-color);
+      }
+    }
+    &.kit-btn--color-secondary {
+      color: var(--fg-secondary-color);
+
+      &:not(:disabled):hover {
+        background-color: var(--bg-hover-color);
+        color: var(--fg-primary-color);
       }
     }
   }

@@ -1,5 +1,5 @@
 import type { tripImagePlacementEnum } from '../../db/schema'
-import { eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { tripImages } from '../../db/schema'
 
@@ -9,22 +9,24 @@ type Placement = (typeof tripImagePlacementEnum.enumValues)[number]
  * Определяет структуру метаданных, извлекаемых из изображения.
  */
 export interface ImageMetadata {
-  gps: { latitude: number, longitude: number } | null
   takenAt: Date | null
+  latitude: number | null
+  longitude: number | null
   width: number | null
   height: number | null
-  orientation: number | null
   thumbnailUrl: string | null
   metadata: {
-    cameraMake: string | null
-    cameraModel: string | null
-    fNumber: number | null
-    exposureTime: number | null
-    iso: number | null
-    focalLength: number | null
-    apertureValue: number | null
+    orientation?: number
+    timezoneOffset?: number
+    cameraMake?: string
+    cameraModel?: string
+    fNumber?: number
+    exposureTime?: number
+    iso?: number
+    focalLength?: number
+    apertureValue?: number
+    [key: string]: any // Для всех остальных расширенных метаданных
   } | null
-  extendedMetadata: Record<string, any> | null
 }
 
 export const imageRepository = {
@@ -44,19 +46,12 @@ export const imageRepository = {
         url,
         placement,
         takenAt: metadata.takenAt,
-        gps: metadata.gps,
+        latitude: metadata.latitude,
+        longitude: metadata.longitude,
         width: metadata.width,
         height: metadata.height,
-        orientation: metadata.orientation,
         thumbnailUrl: metadata.thumbnailUrl,
-        cameraMake: metadata.metadata?.cameraMake,
-        cameraModel: metadata.metadata?.cameraModel,
-        fNumber: metadata.metadata?.fNumber,
-        exposureTime: metadata.metadata?.exposureTime,
-        iso: metadata.metadata?.iso,
-        focalLength: metadata.metadata?.focalLength,
-        apertureValue: metadata.metadata?.apertureValue,
-        extendedMetadata: metadata.extendedMetadata,
+        metadata: metadata.metadata,
       })
       .returning()
 
@@ -65,13 +60,50 @@ export const imageRepository = {
 
   /**
    * Получает все изображения для конкретного путешествия.
+   * Для 'route' возвращает урезанный набор полей для оптимизации.
    * @param tripId - ID путешествия.
+   * @param placement - Опциональный фильтр по типу размещения.
    * @returns Массив изображений.
    */
-  async getByTripId(tripId: string) {
+  async getByTripId(tripId: string, placement?: Placement) {
+    const conditions = [eq(tripImages.tripId, tripId)]
+    if (placement) {
+      conditions.push(eq(tripImages.placement, placement))
+    }
+
+    // Если запрашиваются изображения для маршрута, возвращаем только необходимые поля
+    if (placement === 'route') {
+      return await db
+        .select({
+          id: tripImages.id,
+          tripId: tripImages.tripId,
+          url: tripImages.url,
+          placement: tripImages.placement,
+          createdAt: tripImages.createdAt,
+        })
+        .from(tripImages)
+        .where(and(...conditions))
+        .orderBy(desc(tripImages.createdAt))
+    }
+
+    // В остальных случаях (например, для 'memories') возвращаем все поля
     return await db.query.tripImages.findMany({
-      where: eq(tripImages.tripId, tripId),
+      where: and(...conditions),
       orderBy: (images, { desc }) => [desc(images.createdAt)],
     })
+  },
+
+  /**
+   * Удаляет изображение по его ID.
+   * @param id - ID изображения для удаления.
+   * @returns Объект удаленного изображения или null, если не найден.
+   */
+  async delete(id: string) {
+    const [deletedImage] = await db
+      .delete(tripImages)
+      .where(eq(tripImages.id, id))
+      .returning()
+
+    return deletedImage || null
   },
 }

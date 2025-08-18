@@ -10,6 +10,7 @@ async function createDump() {
   try {
     const allTrips = await db.query.trips.findMany({
       with: {
+        user: true,
         days: {
           orderBy: (days, { asc }) => [asc(days.date)],
           with: {
@@ -45,7 +46,7 @@ async function createDump() {
 
     const dumpDir = path.join(__dirname, 'dump')
     await fs.mkdir(dumpDir, { recursive: true })
-    const dumpFile = path.join(dumpDir, 'latest.dump.json')
+    const dumpFile = path.join(dumpDir, `${new Date().toISOString()}.json`)
 
     await fs.writeFile(dumpFile, JSON.stringify(serializableData, null, 2))
 

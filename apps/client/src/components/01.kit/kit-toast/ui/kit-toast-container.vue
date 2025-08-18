@@ -35,6 +35,7 @@ const { remove } = toastStore
   flex-direction: column;
   gap: 0.75rem;
   pointer-events: none;
+  width: 350px;
 }
 
 .kit-toast-fade-move,

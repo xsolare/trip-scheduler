@@ -15,8 +15,4 @@ export class FileRepository implements IFileRepository {
   async listImageByTrip(_tripId: string): Promise<TripImage[]> {
     return Promise.resolve([])
   }
-
-  async addImage(_tripId: string, _imageUrl: string): Promise<TripImage> {
-    return Promise.resolve({} as TripImage)
-  }
 }

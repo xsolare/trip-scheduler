@@ -1,5 +1,5 @@
 import z from 'zod'
-import { publicProcedure } from '~/lib/trpc'
+import { protectedProcedure, publicProcedure } from '~/lib/trpc'
 import { memoryRepository } from '~/repositories/memory.repository'
 import {
   CreateMemoryInputSchema,
@@ -15,32 +15,32 @@ export const memoryProcedures = {
       return memoryService.getByTripId(input.tripId)
     }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(CreateMemoryInputSchema)
     .mutation(async ({ input }) => {
       return memoryService.create(input)
     }),
 
-  update: publicProcedure
+  update: protectedProcedure
     .input(UpdateMemoryInputSchema)
     .mutation(async ({ input }) => {
       return memoryService.update(input)
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(DeleteMemoryInputSchema)
     .mutation(async ({ input }) => {
       return memoryService.delete(input.id)
     }),
 
   // TODO service
-  applyTakenAt: publicProcedure
+  applyTakenAt: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input }) => {
       return await memoryRepository.applyTakenAtTimestamp(input.id)
     }),
 
-  unassignDate: publicProcedure
+  unassignDate: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input }) => {
       return await memoryRepository.unassignTimestamp(input.id)

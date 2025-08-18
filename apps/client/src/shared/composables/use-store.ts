@@ -1,11 +1,15 @@
 import { createStoreHook } from '~/shared/lib/create-store-hook'
 
-import { useSyncStore } from '~/shared/store/sync.store'
 import { useThemeStore } from '~/shared/store/theme.store'
+import { useAuthStore } from '../store/auth.store'
+import { useConfirmDialogStore } from '../store/confirm-dialog.store'
+import { useToastStore } from '../store/toast.store'
 
 const appStores = {
-  sync: useSyncStore,
   theme: useThemeStore,
+  auth: useAuthStore,
+  toast: useToastStore,
+  confirmDialog: useConfirmDialogStore,
 }
 
 export const useAppStore = createStoreHook(appStores)

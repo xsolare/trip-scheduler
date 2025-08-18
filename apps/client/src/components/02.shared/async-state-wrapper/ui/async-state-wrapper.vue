@@ -21,10 +21,13 @@ const emit = defineEmits<{
 const currentState = computed<AsyncState>(() => {
   if (props.loading)
     return 'loading'
+
   if (props.error)
     return 'error'
+
   if (props.data)
     return 'success'
+
   return 'empty'
 })
 
@@ -35,9 +38,8 @@ watch(currentState, (_newState, oldState) => {
 })
 
 const transitionName = computed(() => {
-  if (previousState.value === 'loading' && currentState.value === 'success') {
+  if (previousState.value === 'loading' && currentState.value === 'success')
     return 'no-transition'
-  }
 
   return props.transition ?? 'faded'
 })

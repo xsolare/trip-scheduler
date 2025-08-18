@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
-import { SyncIndicator } from '~/components/02.shared/sync-indicator'
+import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { useDisplay } from '~/shared/composables/use-display'
 import { AppRoutePaths } from '~/shared/constants/routes'
-import { useThemeStore } from '~/shared/store/theme.store'
 import Burger from './burger.vue'
 
 const headerEl = ref<HTMLElement>()
 const isBurgerOpen = ref<boolean>(false)
 const router = useRouter()
-const themeStore = useThemeStore()
+const store = useAppStore(['auth', 'theme'])
 const { smAndUp } = useDisplay()
 
 function handleBurger() {
@@ -23,7 +22,6 @@ function handleBurger() {
     class="header glass"
   >
     <div class="header-content">
-      <!-- Навигационная часть с логотипом -->
       <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
           <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 24px;" />
@@ -31,20 +29,25 @@ function handleBurger() {
         </div>
       </div>
 
-      <!-- Центральный заполнитель -->
       <div class="header-center" />
 
-      <!-- Утилиты: синхронизация и профиль -->
       <div v-if="smAndUp" class="header-utils">
-        <button class="util-btn" title="Настроить тему" @click="themeStore.openCreator()">
+        <button class="util-btn" title="Настроить тему" @click="store.theme.openCreator()">
           <Icon icon="mdi:palette-outline" />
         </button>
 
-        <SyncIndicator />
         <div class="vr" />
 
         <div class="profile">
-          <div class="profile-img">
+          <KitAvatar
+            v-if="store.auth.isAuthenticated"
+            :src="`${store.auth.user?.avatarUrl}`"
+          />
+          <div
+            v-else
+            class="profile-img"
+            @click="router.push(AppRoutePaths.Auth.SignIn)"
+          >
             <Icon
               icon="mdi:face-man-profile"
               style="font-size: 32px;"

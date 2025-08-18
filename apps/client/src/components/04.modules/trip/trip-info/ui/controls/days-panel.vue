@@ -120,7 +120,7 @@ function getShortWeekday(date: string): string {
   &.open {
     opacity: 1;
     transform: translateX(0);
-    box-shadow: 4px 0px 15px var(--color-background-content);
+    box-shadow: var(--s-xl);
   }
 
   &.pinned {

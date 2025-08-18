@@ -1,131 +1,228 @@
 <script setup lang="ts">
+import type { CalendarDate } from '@internationalized/date'
 import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
-import { Time } from '@internationalized/date'
-import { computed, ref, shallowRef } from 'vue'
+import { getLocalTimeZone, parseDate, Time } from '@internationalized/date'
+import { KitBtn } from '~/components/01.kit/kit-btn'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog/composables/use-confirm'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
+import { useToast } from '~/components/01.kit/kit-toast'
+import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { useRequestStatus } from '~/plugins/request'
+import { getLocalDate } from '../../../lib/helpers'
+import { ETripMemoriesKeys } from '../../../store/trip-info-memories.store'
 
 const props = defineProps<{ memory: Memory }>()
 
 const { memories: memoriesStore, data: tripDataStore } = useModuleStore(['memories', 'data'])
-const { getSelectedDay } = storeToRefs(tripDataStore)
+const { getSelectedDay, getAllDays } = storeToRefs(tripDataStore)
+const toast = useToast()
+const confirm = useConfirm()
 
-const isSaving = ref(false)
 const comment = ref(props.memory.comment || '')
-// Время по умолчанию 00:00. Пользователь должен его изменить.
-const editingTime = shallowRef<Time>(new Time(0, 0))
 
-/**
- * Проверяет, есть ли у фотографии оригинальная временная метка (из EXIF).
- */
-const hasOriginalDate = computed(() => !!props.memory.timestamp)
+function initializeDateTime() {
+  // Приоритет 1: Использовать `takenAt` из EXIF изображения
+  if (props.memory.image?.takenAt) {
+    const takenAtDate = getLocalDate(
+      props.memory.image.takenAt,
+      props.memory.image.metadata?.timezoneOffset ?? 0,
+    )
+    return {
+      date: parseDate(takenAtDate.toISOString().split('T')[0]),
+      time: new Time(takenAtDate.getHours(), takenAtDate.getMinutes()),
+    }
+  }
 
-/**
- * Форматирует оригинальную дату для отображения.
- */
-const originalDateFormatted = computed(() => {
-  if (!props.memory.timestamp)
-    return ''
+  // Приоритет 2: Использовать существующий `timestamp` воспоминания
+  if (props.memory.timestamp) {
+    const tsDate = new Date(props.memory.timestamp)
+    return {
+      date: parseDate(tsDate.toISOString().split('T')[0]),
+      time: new Time(tsDate.getHours(), tsDate.getMinutes()),
+    }
+  }
 
-  return new Date(props.memory.timestamp).toLocaleDateString('ru-RU', {
-    minute: '2-digit',
-    hour: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  // Фоллбэк: Использовать дату выбранного дня и время 00:00
+  return {
+    date: parseDate(getSelectedDay.value!.date.split('T')[0]),
+    time: new Time(0, 0),
+  }
+}
+
+const initialValues = initializeDateTime()
+const selectedDate = shallowRef<CalendarDate>(initialValues.date)
+const selectedTime = shallowRef<Time>(initialValues.time)
+
+const isUpdatingMemory = computed(() =>
+  useRequestStatus(`${ETripMemoriesKeys.UPDATE}:${props.memory.id}`).value,
+)
+
+const isDeletingMemory = computed(() =>
+  useRequestStatus(`${ETripMemoriesKeys.DELETE}:${props.memory.id}`).value,
+)
+
+const validTripDates = computed(() => {
+  if (!getAllDays.value)
+    return new Set<string>()
+
+  const dates = getAllDays.value.map(day => day.date.split('T')[0])
+
+  return new Set(dates)
 })
 
-/**
- * Привязывает фотографию к текущему выбранному дню с указанным временем и комментарием.
- */
-async function assignToCurrentDay() {
-  const day = getSelectedDay.value
-  if (!day)
+watch(getSelectedDay, (newDay) => {
+  if (newDay && !props.memory.timestamp)
+    selectedDate.value = parseDate(newDay.date.split('T')[0])
+})
+
+const selectedDateFormatted = computed(() => {
+  const date = selectedDate.value.toDate(getLocalTimeZone())
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}.${month}.${day}`
+})
+
+async function handleApply() {
+  if (!selectedDate.value || !selectedTime.value)
     return
 
-  isSaving.value = true
-  try {
-    const datePart = day.date.split('T')[0]
-    const timePart = `${editingTime.value.hour.toString().padStart(2, '0')}:${editingTime.value.minute.toString().padStart(2, '0')}:00`
-    const newTimestamp = new Date(`${datePart}T${timePart}`).toISOString()
-
-    await memoriesStore.updateMemory({
-      id: props.memory.id,
-      timestamp: newTimestamp,
-      comment: comment.value,
-    })
+  const selectedDateStr = selectedDate.value.toString()
+  if (!validTripDates.value.has(selectedDateStr)) {
+    toast.error('Выбранная дата не существует в рамках этого путешествия.')
+    return
   }
-  finally {
-    isSaving.value = false
+
+  const datePart = selectedDate.value.toString()
+  const timePart = `${selectedTime.value.hour.toString().padStart(2, '0')}:${selectedTime.value.minute.toString().padStart(2, '0')}:00`
+  const newTimestamp = `${datePart}T${timePart}.000Z`
+
+  await memoriesStore.updateMemory({
+    id: props.memory.id,
+    timestamp: newTimestamp,
+    comment: comment.value,
+  })
+}
+
+async function handleDelete() {
+  const isConfirmed = await confirm({
+    title: 'Удалить воспоминание?',
+    description: 'Это действие нельзя будет отменить. Фотография будет удалена навсегда.',
+  })
+
+  if (isConfirmed)
+    await memoriesStore.deleteMemory(props.memory.id)
+}
+
+function handleResetDateInPopover() {
+  if (getSelectedDay.value)
+    selectedDate.value = parseDate(getSelectedDay.value.date.split('T')[0])
+}
+
+function handleResetDateTime() {
+  if (getSelectedDay.value) {
+    selectedDate.value = parseDate(getSelectedDay.value.date.split('T')[0])
+    selectedTime.value = new Time(0, 0)
   }
 }
 
-/**
- * Принимает оригинальную дату съемки (из EXIF) как основную.
- */
-function applyOriginalDate() {
-  memoriesStore.applyOriginalTimestamp(props.memory.id)
-}
-
-/**
- * Удаляет временную метку, делая фотографию полностью "неотсортированной".
- */
-function removeDate() {
-  memoriesStore.removeTimestamp(props.memory.id)
-}
-
-/**
- * Обновляет комментарий при потере фокуса редактором.
- */
 function saveComment() {
-  if (comment.value !== props.memory.comment) {
+  if (comment.value !== props.memory.comment)
     memoriesStore.updateMemory({ id: props.memory.id, comment: comment.value })
-  }
 }
 </script>
 
 <template>
   <div class="processing-card">
     <div class="image-container">
-      <KitImage :src="`${memory.imageUrl}`" class="card-image" :alt="comment || 'Фото для сортировки'" />
+      <KitImage :src="memory.image?.thumbnailUrl ?? memory.image?.url" class="card-image" :alt="comment || 'Фото для сортировки'" />
     </div>
 
     <div class="card-content">
-      <!-- Блок появляется, если у фото есть дата, но она из другого дня -->
-      <div v-if="hasOriginalDate" class="original-date-info">
-        <Icon icon="mdi:calendar-alert" class="info-icon" />
-        <span class="info-text">Снято: <strong>{{ originalDateFormatted }}</strong></span>
-        <div class="info-actions">
-          <button class="action-btn-text" @click="applyOriginalDate">
-            Принять дату
-          </button>
-          <button class="action-btn-text secondary" @click="removeDate">
-            Убрать дату
-          </button>
-        </div>
-      </div>
-
       <div class="comment-editor-wrapper">
         <KitInlineMdEditorWrapper
           v-model="comment"
           placeholder="Добавьте комментарий..."
-          :features="{ 'block-edit': false }"
+          :features="{
+            'block-edit': false,
+            'image-block': false,
+            'list-item': false,
+            'link-tooltip': false,
+            'toolbar': false,
+          }"
           class="comment-editor"
           @blur="saveComment"
         />
       </div>
 
-      <div class="time-assignment">
-        <Icon icon="mdi:clock-plus-outline" />
-        <KitTimeField v-model="editingTime" />
-        <button class="assign-btn" :disabled="isSaving" @click="assignToCurrentDay">
-          <Icon v-if="isSaving" icon="mdi:loading" class="spin" />
-          <span v-else>Привязать</span>
-        </button>
+      <div class="assignment-controls">
+        <div class="date-time-selectors">
+          <CalendarPopover v-model="selectedDate">
+            <template #trigger>
+              <KitBtn
+                variant="outlined"
+                color="secondary"
+                icon="mdi:calendar-blank-outline"
+                class="date-selector"
+              >
+                {{ selectedDateFormatted }}
+              </KitBtn>
+            </template>
+            <template #footer>
+              <KitBtn
+                variant="solid"
+                color="secondary"
+                class="reset-date-in-popover"
+                icon="mdi:calendar-refresh-outline"
+                @click="handleResetDateInPopover"
+              >
+                Сбросить на текущий день
+              </KitBtn>
+            </template>
+          </CalendarPopover>
+
+          <!-- Выбор времени -->
+          <div class="time-selector">
+            <Icon icon="mdi:clock-outline" />
+            <KitTimeField v-model="selectedTime" />
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <KitBtn
+            variant="outlined"
+            color="secondary"
+            title="Сбросить дату и время"
+            class="reset-btn"
+            @click="handleResetDateTime"
+          >
+            <Icon icon="mdi:restore" />
+          </KitBtn>
+          <KitBtn
+            variant="outlined"
+            color="secondary"
+            :disabled="isDeletingMemory"
+            title="Удалить"
+            class="delete-btn"
+            @click="handleDelete"
+          >
+            <Icon v-if="isDeletingMemory" icon="mdi:loading" class="spin" />
+            <Icon v-else icon="mdi:trash-can-outline" />
+          </KitBtn>
+          <KitBtn
+            color="primary"
+            :disabled="isUpdatingMemory"
+            class="apply-btn"
+            @click="handleApply"
+          >
+            <Icon v-if="isUpdatingMemory" icon="mdi:loading" class="spin" />
+            <span v-else>Применить</span>
+          </KitBtn>
+        </div>
       </div>
     </div>
   </div>
@@ -142,7 +239,7 @@ function saveComment() {
   transition: box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--s-m);
   }
 }
 
@@ -151,6 +248,7 @@ function saveComment() {
   width: 100%;
   background-color: var(--bg-tertiary-color);
 }
+
 .card-image {
   height: 100%;
   width: 100%;
@@ -161,96 +259,93 @@ function saveComment() {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
   flex-grow: 1;
-}
-
-.original-date-info {
-  background-color: var(--bg-highlight-color);
-  border: 1px solid var(--border-primary-color);
-  border-radius: var(--r-s);
-  padding: 10px;
-  font-size: 0.85rem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    'icon text'
-    'actions actions';
-  gap: 4px 8px;
-  align-items: center;
-
-  .info-icon {
-    grid-area: icon;
-    color: var(--fg-accent-color);
-    font-size: 1.1rem;
-  }
-  .info-text {
-    grid-area: text;
-    color: var(--fg-primary-color);
-  }
-  .info-actions {
-    grid-area: actions;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-secondary-color);
-  }
-}
-
-.action-btn-text {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--fg-accent-color);
-  font-weight: 500;
-  cursor: pointer;
-  font-size: 0.8rem;
-  &:hover {
-    text-decoration: underline;
-  }
-  &.secondary {
-    color: var(--fg-secondary-color);
-  }
 }
 
 .comment-editor-wrapper {
   flex-grow: 1;
+  border-bottom: 1px solid var(--border-secondary-color);
 }
+
 .comment-editor :deep(.milkdown) .editor {
   padding: 4px;
   min-height: 24px;
 }
 
-.time-assignment {
+.assignment-controls {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--fg-secondary-color);
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
 }
 
-.assign-btn {
-  margin-left: auto;
-  padding: 6px 12px;
-  border-radius: var(--r-s);
-  background-color: var(--fg-accent-color);
-  color: var(--fg-inverted-color);
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+.date-time-selectors {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.date-selector,
+.time-selector {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--r-s);
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--fg-secondary-color);
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: 34px;
+  box-sizing: border-box;
+  border: none;
+}
 
-  &:hover:not(:disabled) {
-    background-color: var(--fg-accent-color-hover);
+.date-selector {
+  color: var(--fg-primary-color);
+  font-weight: 400;
+  padding: 6px 8px !important;
+}
+
+.time-selector {
+  flex-grow: 1;
+
+  :deep(.kit-time-field) {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: var(--fg-primary-color);
   }
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.reset-btn,
+.delete-btn {
+  min-width: 38px;
+  padding: 0.625rem !important;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background-color: var(--bg-error-color) !important;
+  color: var(--fg-error-color) !important;
+  border-color: var(--border-error-color) !important;
+}
+
+.apply-btn {
+  flex-grow: 1;
+}
+
+.reset-date-in-popover {
+  width: 100%;
 }
 
 .spin {

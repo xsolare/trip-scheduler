@@ -1,19 +1,61 @@
-import { protectedProcedure } from '~/lib/trpc'
-import { UpdateUserInputSchema, UserSchema } from './user.schemas'
+import { protectedProcedure, publicProcedure } from '~/lib/trpc'
+import {
+  AuthOutputSchema,
+  RefreshOutputSchema,
+  RefreshTokenInputSchema,
+  SignInInputSchema,
+  SignUpInputSchema,
+  UpdateUserInputSchema,
+  UserSchema,
+} from './user.schemas'
 import { userService } from './user.service'
 
 export const userProcedures = {
   /**
-   * Процедура для получения данных текущего аутентифицированного пользователя.
+   * Процедура регистрации.
+   */
+  signUp: publicProcedure
+    .input(SignUpInputSchema)
+    .output(AuthOutputSchema)
+    .mutation(async ({ input }) => {
+      return userService.signUp(input)
+    }),
+
+  /**
+   * Процедура входа в систему.
+   */
+  signIn: publicProcedure
+    .input(SignInInputSchema)
+    .output(AuthOutputSchema)
+    .mutation(async ({ input }) => {
+      return userService.signIn(input)
+    }),
+
+  /**
+   * Процедура выхода из системы.
+   */
+  signOut: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      return userService.signOut(ctx.user.id)
+    }),
+
+  /**
+   * Процедура обновления токенов.
+   */
+  refresh: publicProcedure
+    .input(RefreshTokenInputSchema)
+    .output(RefreshOutputSchema)
+    .mutation(async ({ input }) => {
+      return userService.refresh(input.refreshToken)
+    }),
+
+  /**
+   * Процедура для получения данных текущего пользователя.
    */
   me: protectedProcedure
     .output(UserSchema)
     .query(async ({ ctx }) => {
-      // ID пользователя берется из контекста, который создается в `isAuthed` middleware.
-      // Это гарантирует, что пользователь может запросить только свои данные.
-      const user = await userService.getById(ctx.user.id)
-
-      return user
+      return userService.getById(ctx.user.id)
     }),
 
   /**
@@ -23,8 +65,6 @@ export const userProcedures = {
     .input(UpdateUserInputSchema)
     .output(UserSchema)
     .mutation(async ({ ctx, input }) => {
-      const updatedUser = await userService.update(ctx.user.id, input)
-
-      return updatedUser
+      return userService.update(ctx.user.id, input)
     }),
 }

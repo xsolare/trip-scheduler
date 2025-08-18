@@ -46,7 +46,6 @@ async function loadAllMockData() {
   for (const file of mockFiles) {
     const filePath = path.join(mockDir, file)
     const module = await import(url.pathToFileURL(filePath).href)
-    // Разделяем данные по типу, чтобы вставлять их в правильном порядке
     if (module.MOCK_USER_DATA)
       allUsers.push(...module.MOCK_USER_DATA)
     if (module.MOCK_DATA)

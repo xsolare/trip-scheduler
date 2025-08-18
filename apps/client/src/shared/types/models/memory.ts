@@ -1,12 +1,13 @@
 import type { RouterInput } from '../trpc'
+import type { TripImage } from './trip'
 
 export interface Memory {
   id: string
   tripId: string
-  timestamp: string | null // ISO-8601, null if unsorted
+  timestamp: string | null
   comment: string | null
   imageId: string | null
-  imageUrl?: string
+  image: TripImage | null
   createdAt: string
   updatedAt: string
 }

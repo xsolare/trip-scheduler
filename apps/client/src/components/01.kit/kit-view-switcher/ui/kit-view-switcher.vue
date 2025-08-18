@@ -126,6 +126,7 @@ function handleItemClick(itemId: T) {
   border: 1px solid var(--border-secondary-color);
   user-select: none;
   transition: opacity 0.2s ease-out;
+  height: 46px;
 
   &.is-disabled {
     opacity: 0.6;
@@ -145,7 +146,7 @@ function handleItemClick(itemId: T) {
   height: calc(100% - 8px);
   background-color: var(--bg-primary-color);
   border-radius: var(--r-xs);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--s-s);
   z-index: 1;
   opacity: 0;
 }
@@ -213,6 +214,12 @@ function handleItemClick(itemId: T) {
     &:not(.is-full-width .kit-view-switcher-button) {
       flex: 1;
       justify-content: center;
+    }
+
+    padding: 8px 12px;
+
+    .kit-view-switcher-label {
+      display: none;
     }
   }
 }

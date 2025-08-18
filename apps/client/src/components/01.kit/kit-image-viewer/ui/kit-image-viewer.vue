@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
+import type { TripImage } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
@@ -60,11 +61,11 @@ const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const currentImageMetadata = computed(() => {
-  const imageMeta = props.images[props.currentIndex]?.meta
-  return imageMeta?.memory?.image || imageMeta?.image || null
-})
+const currentImageMetadata = computed((): TripImage | null => {
+  const meta = props.images[props.currentIndex]?.meta
 
+  return meta || null
+})
 const imageStyle = computed(() => ({
   transform: `scale(${transform.scale}) translate(${transform.x}px, ${transform.y}px)`,
   transition: (isAnimating.value && !isDragging.value && !wheeling.value)
@@ -436,20 +437,18 @@ onUnmounted(() => {
           <!-- Header with controls -->
           <div class="viewer-header">
             <!-- Элементы, которые скрываются -->
-            <Transition name="viewer-fade">
-              <div v-if="isUiVisible" class="header-content-wrapper">
-                <div class="header-left">
-                  <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
-                    {{ currentIndex + 1 }} / {{ images.length }}
-                  </div>
-                </div>
-                <div class="header-center">
-                  <div v-if="transform.scale > minZoom" class="scale-indicator">
-                    {{ Math.round(transform.scale * 100) }}%
-                  </div>
+            <div v-if="isUiVisible" class="header-content-wrapper">
+              <div class="header-left">
+                <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
+                  {{ currentIndex + 1 }} / {{ images.length }}
                 </div>
               </div>
-            </Transition>
+              <div class="header-center">
+                <div v-if="transform.scale > minZoom" class="scale-indicator">
+                  {{ Math.round(transform.scale * 100) }}%
+                </div>
+              </div>
+            </div>
 
             <!-- Элементы, которые видны всегда -->
             <div class="header-right">
@@ -464,42 +463,40 @@ onUnmounted(() => {
                 </button>
 
                 <!-- 3. Группа кнопок, которая будет скрываться -->
-                <Transition name="viewer-fade-fast">
-                  <div v-if="isUiVisible" class="control-buttons-group">
-                    <button
-                      v-if="currentImageMetadata"
-                      class="control-btn"
-                      title="Информация о снимке"
-                      @click="isMetadataPanelVisible = true"
-                    >
-                      <Icon icon="mdi:information-outline" />
-                    </button>
-                    <button
-                      class="control-btn"
-                      title="Zoom out"
-                      :disabled="!canZoomOut"
-                      @click="zoomOut(0, 0)"
-                    >
-                      <Icon icon="mdi:minus" />
-                    </button>
-                    <button
-                      class="control-btn"
-                      title="Zoom in"
-                      :disabled="!canZoomIn"
-                      @click="zoomIn(0, 0)"
-                    >
-                      <Icon icon="mdi:plus" />
-                    </button>
-                    <button
-                      class="control-btn"
-                      title="Reset zoom"
-                      :disabled="transform.scale <= minZoom"
-                      @click="resetTransform"
-                    >
-                      <Icon icon="mdi:backup-restore" />
-                    </button>
-                  </div>
-                </Transition>
+                <div v-if="isUiVisible" class="control-buttons-group">
+                  <button
+                    v-if="currentImageMetadata"
+                    class="control-btn"
+                    title="Информация о снимке"
+                    @click="isMetadataPanelVisible = true"
+                  >
+                    <Icon icon="mdi:information-outline" />
+                  </button>
+                  <button
+                    class="control-btn"
+                    title="Zoom out"
+                    :disabled="!canZoomOut"
+                    @click="zoomOut(0, 0)"
+                  >
+                    <Icon icon="mdi:minus" />
+                  </button>
+                  <button
+                    class="control-btn"
+                    title="Zoom in"
+                    :disabled="!canZoomIn"
+                    @click="zoomIn(0, 0)"
+                  >
+                    <Icon icon="mdi:plus" />
+                  </button>
+                  <button
+                    class="control-btn"
+                    title="Reset zoom"
+                    :disabled="transform.scale <= minZoom"
+                    @click="resetTransform"
+                  >
+                    <Icon icon="mdi:backup-restore" />
+                  </button>
+                </div>
 
                 <!-- 4. Кнопка "Закрыть" всегда видима -->
                 <button class="close-btn" title="Close" @click="close">
@@ -512,16 +509,14 @@ onUnmounted(() => {
           <!-- Main content area -->
           <div class="viewer-content">
             <!-- Previous button (скрываемый) -->
-            <Transition name="viewer-fade">
-              <button
-                v-if="hasMultipleImages && isUiVisible"
-                class="nav-btn prev-btn"
-                title="Previous image"
-                @click="prev"
-              >
-                <Icon icon="mdi:chevron-left" />
-              </button>
-            </Transition>
+            <button
+              v-if="hasMultipleImages && isUiVisible"
+              class="nav-btn prev-btn"
+              title="Previous image"
+              @click="prev"
+            >
+              <Icon icon="mdi:chevron-left" />
+            </button>
 
             <!-- Image container -->
             <div ref="containerRef" class="image-container">
@@ -554,48 +549,42 @@ onUnmounted(() => {
             </div>
 
             <!-- Next button (скрываемый) -->
-            <Transition name="viewer-fade">
-              <button
-                v-if="hasMultipleImages && isUiVisible"
-                class="nav-btn next-btn"
-                title="Next image"
-                @click="next"
-              >
-                <Icon icon="mdi:chevron-right" />
-              </button>
-            </Transition>
+            <button
+              v-if="hasMultipleImages && isUiVisible"
+              class="nav-btn next-btn"
+              title="Next image"
+              @click="next"
+            >
+              <Icon icon="mdi:chevron-right" />
+            </button>
           </div>
 
           <!-- Footer slot (скрываемый) -->
-          <Transition name="viewer-fade">
-            <div v-if="$slots.footer && isUiVisible" class="viewer-footer">
-              <slot
-                name="footer"
-                :image="currentImage"
-                :index="currentIndex"
-                :transform="transform"
-              />
-            </div>
-          </Transition>
+          <div v-if="$slots.footer && isUiVisible" class="viewer-footer">
+            <slot
+              name="footer"
+              :image="currentImage"
+              :index="currentIndex"
+              :transform="transform"
+            />
+          </div>
 
           <!-- Thumbnails (скрываемые) -->
-          <Transition name="viewer-fade">
-            <div v-if="enableThumbnails && hasMultipleImages && isUiVisible" class="thumbnails-container">
-              <div class="thumbnails-wrapper">
-                <button
-                  v-for="(image, index) in images"
-                  :key="`thumb-${index}`"
-                  class="thumbnail"
-                  :class="{ active: index === currentIndex }"
-                  :title="`Go to image ${index + 1}`"
-                  @click="goToIndex(index)"
-                >
-                  <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
-                  <div v-if="index === currentIndex" class="thumbnail-indicator" />
-                </button>
-              </div>
+          <div v-if="enableThumbnails && hasMultipleImages && isUiVisible" class="thumbnails-container">
+            <div class="thumbnails-wrapper">
+              <button
+                v-for="(image, index) in images"
+                :key="`thumb-${index}`"
+                class="thumbnail"
+                :class="{ active: index === currentIndex }"
+                :title="`Go to image ${index + 1}`"
+                @click="goToIndex(index)"
+              >
+                <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+                <div v-if="index === currentIndex" class="thumbnail-indicator" />
+              </button>
             </div>
-          </Transition>
+          </div>
         </div>
 
         <ImageMetadataPanel
@@ -817,6 +806,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: 5%;
 }
 
 .image-placeholder,
@@ -938,7 +928,7 @@ onUnmounted(() => {
 // Transitions
 .viewer-fade-enter-active,
 .viewer-fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 .viewer-fade-enter-from,
 .viewer-fade-leave-to {
