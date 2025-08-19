@@ -402,6 +402,7 @@ onClickOutside(timeEditorRef, saveTime)
     flex-direction: column;
     height: 300px;
     cursor: pointer;
+
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
@@ -409,6 +410,10 @@ onClickOutside(timeEditorRef, saveTime)
     &:hover {
       transform: translateY(-2px);
       box-shadow: var(--s-m);
+    }
+
+    @include media-down(sm) {
+      height: 180px;
     }
   }
 
@@ -504,7 +509,7 @@ onClickOutside(timeEditorRef, saveTime)
   border-radius: var(--r-full);
   z-index: 3;
   transition: background-color 0.2s ease;
-  height: 28px;
+  line-height: 20px;
 
   :deep(.kit-time-field) {
     background-color: transparent;
@@ -512,6 +517,14 @@ onClickOutside(timeEditorRef, saveTime)
 
   &:hover {
     background: rgba(0, 0, 0, 0.7);
+  }
+
+  @include media-down(sm) {
+    font-size: 0.7rem;
+    top: 4px;
+    right: 4px;
+    line-height: 16px;
+    padding: 2px 6px;
   }
 }
 

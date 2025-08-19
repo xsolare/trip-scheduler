@@ -128,7 +128,11 @@ export interface Trip {
   status: TripStatus
   budget: number | null
   currency: string | null
-  participants: string[]
+  participants: {
+    id: string
+    name: string
+    avatarUrl: string
+  }[]
   tags: string[]
   visibility: TripVisibility
   createdAt: string

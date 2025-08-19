@@ -2,6 +2,7 @@
 import type { IImageViewerImageMeta } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
+import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 
 interface Props {
   visible: boolean
@@ -37,7 +38,7 @@ const mapProviders = [
 ]
 
 onClickOutside(panelRef, () => {
-  if (props.visible) {
+  if (props.visible && !isMapChoiceVisible.value) {
     emit('close')
   }
 })
@@ -388,7 +389,7 @@ const extendedInfo = computed(() => {
 .metadata-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 11;
   display: flex;
   justify-content: flex-end;
 }
@@ -419,13 +420,13 @@ const extendedInfo = computed(() => {
   flex-shrink: 0;
 }
 
-/* [НОВОЕ] Стили для заголовка с иконкой */
 .panel-title {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 1.25rem;
   color: var(--fg-secondary-color);
+
   h3 {
     margin: 0;
     font-size: 1.1rem;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ITrip } from '../../../models/types'
 import { Icon } from '@iconify/vue'
+import { KitAnimatedTooltip } from '~/components/01.kit/kit-animated-tooltip'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitImage } from '~/components/01.kit/kit-image'
 
@@ -99,7 +100,12 @@ const visibilityIcon = computed(() => {
         </h3>
 
         <span class="card-visibility" :title="visibilityIcon.title">
-          <Icon :icon="visibilityIcon.icon" />
+          <KitAnimatedTooltip
+            :name="visibilityIcon.title"
+            :offset="18"
+          >
+            <Icon :icon="visibilityIcon.icon" />
+          </KitAnimatedTooltip>
         </span>
 
         <div class="card-actions">
@@ -134,12 +140,16 @@ const visibilityIcon = computed(() => {
 
         <div class="card-footer">
           <div v-if="participants.length" class="card-participants">
-            <KitAvatar
-              v-for="participant in participants.slice(0, 3)"
-              :key="participant"
-              :name="participant"
-              class="participant-avatar"
-            />
+            <KitAnimatedTooltip
+              v-for="participant in participants"
+              :key="participant.id"
+              :name="participant.name"
+              :offset="10"
+              class="participant-wrapper"
+            >
+              <KitAvatar :name="participant.name" :src="participant.avatarUrl" />
+            </KitAnimatedTooltip>
+
             <KitAvatar
               v-if="participants.length > 3"
               class="participant-avatar"
@@ -178,7 +188,6 @@ const visibilityIcon = computed(() => {
   border-radius: var(--r-l);
   box-shadow: var(--s-m);
   cursor: pointer;
-  overflow: hidden;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
@@ -199,6 +208,7 @@ const visibilityIcon = computed(() => {
   justify-content: space-between;
   padding: 12px 16px;
   box-sizing: border-box;
+  border-radius: var(--r-l);
 
   .card-image {
     position: absolute;
@@ -207,13 +217,11 @@ const visibilityIcon = computed(() => {
     height: 100%;
   }
 
-  // Применяем transition к внутреннему изображению компонента KitImage
   .card-image :deep(.image) {
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-// Применяем transform к внутреннему изображению компонента KitImage при наведении
 .travel-card-wrapper:hover .card-image :deep(.image) {
   transform: scale(1.05);
 }
@@ -355,7 +363,6 @@ const visibilityIcon = computed(() => {
   gap: 16px;
   flex-grow: 1;
   position: relative;
-  overflow: hidden;
 }
 
 .card-description {
@@ -394,7 +401,22 @@ const visibilityIcon = computed(() => {
 
 .card-participants {
   display: flex;
-  align-items: center;
+  margin-left: 16px;
+
+  .participants-container {
+    display: flex;
+    padding-left: 16px;
+  }
+
+  .participant-wrapper {
+    margin-left: -16px;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      z-index: 10;
+    }
+  }
 
   .participant-avatar {
     margin-left: -8px;

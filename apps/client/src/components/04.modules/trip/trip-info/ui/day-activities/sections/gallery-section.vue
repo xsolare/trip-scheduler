@@ -170,9 +170,8 @@ const visibleImages = computed(() =>
           :alt="`Image ${index + 1}`"
           object-fit="cover"
         />
-        <div class="image-overlay">
+        <div v-if="!isViewMode" class="image-overlay">
           <button
-            v-if="!isViewMode"
             class="delete-btn"
             title="Удалить изображение"
             @click.stop="deleteImage(index)"

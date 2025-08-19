@@ -83,6 +83,7 @@ const sizeStyle = computed(() => {
 @use '~/assets/scss/mixins/_avatar.scss' as mixins-avatar;
 
 .kit-avatar {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;

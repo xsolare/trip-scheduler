@@ -33,9 +33,12 @@ const currentDisplayMode = computed({
   set: (mode: TDisplayMode) => tripsHub.setDisplayMode(mode),
 })
 
-watch(tripsHub.fetchError, (newError) => {
-  emit('update:hasError', !!newError)
-})
+watch(
+  () => tripsHub.fetchError.value,
+  (newError) => {
+    emit('update:hasError', !!newError)
+  },
+)
 
 onMounted(() => {
   tripsHub.fetchTrips()
@@ -46,7 +49,10 @@ provide(TripsHubKey, tripsHub)
 </script>
 
 <template>
-  <div class="trips-hub-container">
+  <div
+    class="trips-hub-container"
+    :class="{ 'has-error': !!tripsHub.fetchError.value }"
+  >
     <div class="hub-header">
       <div class="header-info">
         <h1>Путешествия</h1>
@@ -89,8 +95,19 @@ provide(TripsHubKey, tripsHub)
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
   gap: 24px;
+
+  &.has-error {
+    justify-content: center;
+
+    .hub-header,
+    .hub-controls {
+      display: none;
+    }
+  }
 }
+
 .hub-header {
   display: flex;
   justify-content: space-between;

@@ -598,7 +598,7 @@ onUnmounted(() => {
   inset: 0;
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(4px);
-  z-index: 9999;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   touch-action: none;
