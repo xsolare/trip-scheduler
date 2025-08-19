@@ -2,7 +2,6 @@
 import type { IImageViewerImageMeta } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
-import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 
 interface Props {
   visible: boolean
