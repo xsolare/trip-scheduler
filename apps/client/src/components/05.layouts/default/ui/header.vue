@@ -1,92 +1,87 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
-import { useThrottleFn } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
-import { useDisplay } from '~/shared/composables/use-display'
 import { AppRoutePaths } from '~/shared/constants/routes'
-import Burger from './burger.vue'
 
 const headerEl = ref<HTMLElement>()
-const isBurgerOpen = ref<boolean>(false)
 const router = useRouter()
 const store = useAppStore(['auth', 'theme'])
-const { smAndUp } = useDisplay()
 
-const isHeaderHidden = ref(false)
-let lastScrollY = 0
-let headerHeight = 0
+const isScrolled = ref(false)
+const isHeaderVisible = ref(true)
+const lastScrollY = ref(0)
+const isSmallScreen = ref(false)
 
-function handleBurger() {
-  isBurgerOpen.value = !isBurgerOpen.value
+function checkScreenSize() {
+  isSmallScreen.value = window.innerWidth < 1400
 }
 
-const handleScroll = useThrottleFn(() => {
-  if (smAndUp.value) {
-    isHeaderHidden.value = false
-    lastScrollY = window.scrollY
-    return
-  }
-
-  const currentScrollY = window.scrollY
-
-  if (!headerEl.value?.clientHeight) {
-    return
-  }
-
-  if (headerHeight === 0) {
-    headerHeight = headerEl.value.clientHeight
-  }
-
-  if (currentScrollY < lastScrollY || currentScrollY < headerHeight / 2) {
-    isHeaderHidden.value = false
-  }
-  else if (currentScrollY > lastScrollY && currentScrollY > headerHeight) {
-    isHeaderHidden.value = true
-  }
-
-  lastScrollY = currentScrollY
-}, 100)
-
-watch(smAndUp, () => {
-  isHeaderHidden.value = false
-  lastScrollY = window.scrollY
-  if (headerEl.value) {
-    headerHeight = headerEl.value.clientHeight
-  }
-}, { immediate: true })
-
 onMounted(() => {
-  nextTick(() => {
-    if (headerEl.value) {
-      headerHeight = headerEl.value.clientHeight
+  let ticking = false
+
+  const handleScroll = () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY
+
+        if (currentScrollY > lastScrollY.value && currentScrollY > 100) {
+          isHeaderVisible.value = false
+        }
+        else {
+          isHeaderVisible.value = true
+        }
+
+        isScrolled.value = currentScrollY > 10
+
+        lastScrollY.value = currentScrollY
+        ticking = false
+      })
+      ticking = true
     }
+  }
+
+  window.addEventListener('scroll', handleScroll, { passive: true })
+
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll)
   })
-  window.addEventListener('scroll', handleScroll)
 })
 
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+onMounted(() => {
+  checkScreenSize()
+  window.addEventListener('resize', checkScreenSize)
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', checkScreenSize)
+  })
 })
 </script>
 
 <template>
   <header
     ref="headerEl"
-    class="header glass"
-    :class="{ 'header--hidden': isHeaderHidden && !smAndUp }"
-    :style="{ top: isHeaderHidden && !smAndUp ? `-${headerHeight}px` : '0' }"
+    class="header"
+    :class="{
+      'header--scrolled': isScrolled,
+      'header--hidden': !isHeaderVisible,
+      'header--small-screen': isSmallScreen,
+    }"
   >
     <div class="header-content">
-      <div class="header-nav" @click="router.push(AppRoutePaths.Root)">
+      <div class="header-left" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
           <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 24px;" />
-          <span v-if="smAndUp" class="logo-text">Trip Scheduler</span>
+          <span class="logo-text">Trip Scheduler</span>
         </div>
       </div>
 
-      <div class="header-center" />
+      <div class="header-center">
+        <div v-if="router.currentRoute.value.name === 'trip-info'" class="title">
+          Путешествие по Китаю
+        </div>
+      </div>
 
-      <div v-if="smAndUp" class="header-utils">
+      <div class="header-right">
         <button class="util-btn" title="Настроить тему" @click="store.theme.openCreator()">
           <Icon icon="mdi:palette-outline" />
         </button>
@@ -110,110 +105,160 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      <div v-else class="header-burger">
-        <Icon class="header-burger-icon" icon="mdi:hamburger-menu" width="36" height="36" @click="handleBurger" />
-      </div>
     </div>
+
+    <div class="header-border" />
   </header>
-  <Burger v-model:is-burger-open="isBurgerOpen" />
 </template>
 
 <style lang="scss" scoped>
-.glass {
-  --filter-glass3d: blur(12px) brightness(1) saturate(1.5);
-  --color-glass3d: hsla(180, 6%, 87%, 0.3);
-  --noise-glass3d: url('../../../../assets/images/egg-shell.png');
-
-  position: relative;
-  z-index: 4;
-}
-
-.glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  overflow: hidden;
-  z-index: 3;
-  -webkit-backdrop-filter: var(--filter-glass3d);
-  backdrop-filter: var(--filter-glass3d);
-}
-
-.glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  overflow: hidden;
-  z-index: 5;
-}
-
-.glass > * {
-  position: relative;
-  z-index: 6;
-}
-
 .header {
   position: sticky;
   top: 0;
   display: flex;
   flex-direction: row;
-  padding: 10px 0px;
-  min-height: 56px;
   width: 100%;
   z-index: 7;
   transition:
-    top 0.3s ease-out,
-    backdrop-filter 0.3s ease;
+    top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    backdrop-filter 0.3s ease,
+    background-color 0.3s ease,
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+
+  &--scrolled {
+    backdrop-filter: blur(20px);
+    background-color: var(--bg-primary-color-rgb);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+    .header-border {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  &--hidden {
+    transform: translateY(-100%);
+  }
+
+  &--small-screen {
+    .header-content {
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+    }
+
+    .header-center {
+      display: none;
+    }
+
+    .header-left {
+      justify-self: start;
+    }
+
+    .header-right {
+      justify-self: end;
+    }
+  }
 
   &-content {
-    max-width: 1200px;
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
     margin: 0 auto;
     font-family: 'Rubik';
     padding: 0 12px;
+    align-items: center;
+
+    display: grid;
+    grid-template-columns: 1fr minmax(auto, 1040px) 1fr;
+    transition: grid-template-columns 0.3s ease;
   }
 
-  &-nav {
+  &-left {
+    justify-self: end;
     display: flex;
     align-items: center;
     cursor: pointer;
+    margin: 8px;
+    padding: 0 16px;
+    background-color: var(--bg-secondary-color);
+    border-radius: 20px;
+    transition:
+      border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    height: 40px;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+      border-radius: 10px;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+      .logo-icon {
+        transform: rotate(10deg) scale(1.1);
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
 
     .logo {
       display: inline-flex;
       align-items: center;
       gap: 6px;
 
+      &-icon {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
       &-text {
+        font-family: 'Sansation';
         font-size: 1rem;
-        font-weight: 500;
-        line-height: 1;
+        font-weight: 600;
+        position: relative;
       }
     }
   }
 
   &-center {
-    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+
+    .title {
+      color: var(--fg-secondary-color);
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+    }
   }
 
-  &-utils {
+  &-right {
+    justify-self: start;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 5px;
+    padding: 0 4px;
+    margin: 8px;
     background-color: var(--bg-secondary-color);
     border-radius: 20px;
-    transition: border-radius 0.5s ease;
+    transition:
+      border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    height: 40px;
 
     &:hover {
       border-radius: 10px;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
 
     .util-btn {
@@ -226,38 +271,69 @@ onUnmounted(() => {
       border: none;
       color: var(--fg-secondary-color);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition:
+        all 0.2s ease,
+        transform 0.1s ease;
       font-size: 1.2rem;
       overflow: hidden;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background-color: var(--fg-accent-color);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        transform: translate(-50%, -50%);
+        opacity: 0.1;
+        z-index: -1;
+      }
 
       &:hover {
         color: var(--fg-accent-color);
+        transform: scale(1.1);
+
+        &::before {
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+      &:active {
+        transform: scale(0.95);
       }
     }
-  }
 
-  &-burger {
-    &-icon {
-      cursor: pointer;
-    }
-  }
-
-  .profile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &-img {
-      border-radius: var(--r-full);
-      border: 1px solid var(--border-primary-color);
-      overflow: hidden;
-      cursor: pointer;
-      width: 32px;
-      height: 32px;
+    .profile {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color 0.2s ease-in-out;
+
+      &-img {
+        border-radius: var(--r-full);
+        border: 1px solid var(--border-primary-color);
+        overflow: hidden;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          border-color 0.2s ease-in-out,
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+
+        &:hover {
+          border-color: var(--border-accent-color);
+          transform: scale(1.05);
+          box-shadow: 0 2px 8px var(--border-accent-color);
+        }
+      }
     }
   }
 
@@ -265,6 +341,65 @@ onUnmounted(() => {
     margin: 0;
     height: 20px;
     width: 1px;
+    background-color: var(--border-secondary-color);
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+
+  &-border {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-accent-color), transparent);
+    opacity: 0;
+    transform: scaleX(0);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+}
+
+// Анимации
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+// Дополнительные медиа-запросы для мобильных устройств
+@media (max-width: 768px) {
+  .header {
+    &-content {
+      padding: 0 8px;
+      grid-template-columns: auto 1fr auto;
+      gap: 4px;
+    }
+
+    &-center {
+      display: none;
+    }
+
+    &-left {
+      margin: 4px;
+      padding: 0 12px;
+
+      .logo-text {
+        display: none; // Скрываем текст на очень маленьких экранах
+      }
+    }
+
+    &-right {
+      margin: 4px;
+      gap: 4px;
+    }
   }
 }
 </style>
