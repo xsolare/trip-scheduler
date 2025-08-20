@@ -15,7 +15,10 @@ const hasFetchError = ref(false)
 <template>
   <section
     class="content-wrapper"
-    :class="[{ isPanelPinned: isDaysPanelPinned && !mdAndDown }, { 'has-error': hasFetchError }]"
+    :class="[
+      { isPanelPinned: isDaysPanelPinned && !mdAndDown },
+      { 'has-error': hasFetchError },
+    ]"
   >
     <NavigationBack />
     <TripInfo />

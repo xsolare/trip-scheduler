@@ -199,6 +199,7 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   &:first-child {
     padding-top: 16px;
+
     &::before {
       top: 30px;
     }
@@ -206,6 +207,22 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   &:last-child {
     margin-bottom: 32px;
+  }
+
+  @include media-down(sm) {
+    padding-left: 12px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 38px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--bg-secondary-color);
+      border: 3px solid var(--fg-accent-color);
+    }
   }
 }
 
@@ -256,6 +273,7 @@ function handleUpdateActivity(data: Partial<Activity>) {
       opacity: 1;
     }
   }
+
   @include media-down(sm) {
     .collapse-toggle-btn {
       opacity: 1;
@@ -267,9 +285,6 @@ function handleUpdateActivity(data: Partial<Activity>) {
   margin: 8px 0 20px;
   font-size: 1rem;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .activity-header-controls {
@@ -470,6 +485,10 @@ function handleUpdateActivity(data: Partial<Activity>) {
 .memories-for-activity {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 8px;
+
+  @include media-down(sm) {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 </style>

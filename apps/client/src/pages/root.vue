@@ -3,13 +3,14 @@ import { WelcomeCard } from '~/components/04.modules/home/welcome-card'
 </script>
 
 <template>
-  <section class="content-wrapper">
+  <section class="root-wrapper">
     <WelcomeCard />
   </section>
 </template>
 
 <style lang="scss" scoped>
-.content-wrapper {
+.root-wrapper {
   background-color: transparent;
+  width: 100%;
 }
 </style>

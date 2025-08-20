@@ -90,6 +90,10 @@ export function useTripsHub() {
     const router = useRouter()
     const toast = useToast()
 
+    toast.warn(`В процессе разработки :)`)
+
+    return closeCreateModal()
+
     const newTrip = await useRequest({
       key: ETripHubKeys.CREATE,
       fn: db => db.trips.create(newTripData.value),
@@ -103,6 +107,7 @@ export function useTripsHub() {
         toast.error(`Ошибка при создании путешествия: ${error}`)
       },
     })
+
     return newTrip
   }
 

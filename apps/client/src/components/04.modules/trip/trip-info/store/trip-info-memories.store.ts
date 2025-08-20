@@ -147,7 +147,7 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
             if (!newImage.takenAt)
               return null
 
-            const imageDate = (newImage.metadata?.timezoneOffset !== undefined && newImage.metadata?.timezoneOffset !== null)
+            const imageDate = (newImage.metadata?.timezoneOffset)
               ? getLocalDate(newImage.takenAt, newImage.metadata?.timezoneOffset)
               : new Date(newImage.takenAt)
 

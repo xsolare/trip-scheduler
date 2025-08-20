@@ -1,6 +1,6 @@
 import type { Trip } from '~/shared/types/models/trip'
 import { TripStatus, TripVisibility } from '~/shared/types/models/trip'
-import { tripChinaId } from './constants'
+import { MOCK_USER_ID_1, MOCK_USER_ID_2, tripChinaId } from './constants'
 
 export const MOCK_CHINA_TRIP = {
   id: tripChinaId,
@@ -13,7 +13,15 @@ export const MOCK_CHINA_TRIP = {
   status: TripStatus.PLANNED,
   budget: 2000,
   currency: 'USD',
-  participants: ['Евгений'],
+  participants: [{
+    id: MOCK_USER_ID_1,
+    name: 'Иван',
+    avatarUrl: '/static/images/avatars/ghoul.gif',
+  }, {
+    id: MOCK_USER_ID_2,
+    name: 'Артем',
+    avatarUrl: '/static/images/avatars/magic-girl.png',
+  }],
   tags: ['Китай', 'Шанхай', 'Урумчи', 'культура', 'еда', 'приключения'],
   visibility: TripVisibility.PRIVATE,
 } as Omit<Trip, 'days'>

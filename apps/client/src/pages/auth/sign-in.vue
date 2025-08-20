@@ -61,9 +61,12 @@ async function submitSignIn() {
   }
 }
 
-async function handleOAuth(provider: OAuthProviders) {
-  const targetUrl = `${import.meta.env.VITE_APP_SERVER_URL}/v1/auth/${provider}`
-  await router.push(targetUrl)
+async function handleOAuth(_provider: OAuthProviders) {
+  toast.warn(`В процессе разработки :)`)
+  await router.push(AppRoutePaths.Trip.List)
+
+  // const targetUrl = `${import.meta.env.VITE_APP_SERVER_URL}/v1/auth/${provider}`
+  // await router.push(targetUrl)
 }
 
 const isLoading = computed(() => store.auth.isLoading)

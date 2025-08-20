@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { TripImage } from '~/shared/types/models/trip'
+import type { IImageViewerImageMeta } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
-import { computed, ref } from 'vue'
 
 interface Props {
   visible: boolean
-  image: TripImage
+  meta: IImageViewerImageMeta
 }
 const props = defineProps<Props>()
 
@@ -38,7 +37,7 @@ const mapProviders = [
 ]
 
 onClickOutside(panelRef, () => {
-  if (props.visible) {
+  if (props.visible && !isMapChoiceVisible.value) {
     emit('close')
   }
 })
@@ -47,37 +46,11 @@ onClickOutside(mapChoicePanelRef, () => {
   isMapChoiceVisible.value = false
 })
 
-// Приоритет отдается полям верхнего уровня `latitude` и `longitude`.
 const gpsCoordinates = computed(() => {
-  if (props.image.latitude != null && props.image.longitude != null) {
-    return { latitude: props.image.latitude, longitude: props.image.longitude }
+  if (props.meta.latitude != null && props.meta.longitude != null) {
+    return { latitude: props.meta.latitude, longitude: props.meta.longitude }
   }
-  // Fallback на парсинг из metadata, если поля верхнего уровня отсутствуют
-  const meta = props.image.metadata
-  if (!meta || !meta.GPSLatitude || !meta.GPSLongitude || !meta.GPSLatitudeRef || !meta.GPSLongitudeRef) {
-    return null
-  }
-
-  try {
-    const parseGpsValue = (dms: string | number[], ref: string): number => {
-      const parts: number[] = Array.isArray(dms) ? dms.map(Number) : String(dms).split(',').map(part => Number.parseFloat(part.trim()))
-      if (parts.length !== 3 || parts.some(Number.isNaN))
-        throw new Error('Invalid DMS format')
-      const [degrees, minutes, seconds] = parts
-      let decimal = degrees + minutes / 60 + seconds / 3600
-      if (ref === 'S' || ref === 'W') {
-        decimal = -decimal
-      }
-      return decimal
-    }
-    const latitude = parseGpsValue(meta.GPSLatitude, meta.GPSLatitudeRef)
-    const longitude = parseGpsValue(meta.GPSLongitude, meta.GPSLongitudeRef)
-    return { latitude, longitude }
-  }
-  catch (error) {
-    console.error('Error parsing GPS coordinates from metadata:', error)
-    return null
-  }
+  return null
 })
 
 function openMapChoice() {
@@ -111,29 +84,10 @@ function closeMap() {
   selectedMapUrl.value = null
 }
 
-const resolution = computed(() => {
-  if (!props.image.width || !props.image.height)
-    return ''
-  return `${props.image.width} x ${props.image.height}px`
-})
-
-const cameraName = computed(() => [props.image.metadata?.cameraMake, props.image.metadata?.cameraModel].filter(Boolean).join(' '))
-
-const formattedExposureTime = computed(() => {
-  const exposureTime = props.image.metadata?.exposureTime
-  if (exposureTime === undefined || exposureTime === null)
-    return ''
-  if (exposureTime < 1 && exposureTime > 0) {
-    const reciprocal = Math.round(1 / exposureTime)
-    return `1/${reciprocal}s`
-  }
-  return `${exposureTime}s`
-})
-
 const takenAtDate = computed(() => {
-  if (!props.image.takenAt)
-    return 'N/A'
-  return new Date(props.image.takenAt).toLocaleString('ru-RU', {
+  if (!props.meta.takenAt)
+    return ''
+  return new Date(props.meta.takenAt).toLocaleString('ru-RU', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -142,15 +96,82 @@ const takenAtDate = computed(() => {
   })
 })
 
-const basicInfo = computed(() => {
-  const meta = props.image.metadata
+function formatFlash(flashValue: number | boolean | undefined): string {
+  if (flashValue === null || typeof flashValue === 'undefined')
+    return ''
+
+  if (typeof flashValue === 'boolean')
+    return flashValue ? 'Сработала' : 'Не сработала'
+
+  const flashMap: Record<number, string> = {
+    0: 'Не сработала',
+    1: 'Сработала',
+    5: 'Сработала (без детекции света)',
+    7: 'Сработала (с детекцией света)',
+    9: 'Принудительно',
+    15: 'Принудительно (с детекцией)',
+    16: 'Не сработала (принудительно)',
+    24: 'Авто (не сработала)',
+    25: 'Авто (сработала)',
+    31: 'Авто (сработала, с детекцией)',
+  }
+
+  return flashMap[flashValue] ?? `Код ${flashValue}`
+}
+
+// --- Вычисляемые свойства для категорий ---
+
+const cameraInfo = computed(() => {
+  const meta = props.meta
+  const items = [
+    { label: 'Производитель', value: meta?.camera?.make, icon: 'mdi:factory' },
+    { label: 'Модель', value: meta?.camera?.model, icon: 'mdi:camera' },
+    { label: 'Объектив', value: meta?.camera?.lens, icon: 'mdi:lens' },
+  ]
+  return items.filter(item => item.value)
+})
+
+const settingsInfo = computed(() => {
+  const settings = props.meta?.settings
+  if (!settings)
+    return []
+
+  const shutterSpeed = settings.shutterSpeed
+    ? settings.shutterSpeed
+    : settings.exposureTime && settings.exposureTime < 1 && settings.exposureTime > 0
+      ? `1/${Math.round(1 / settings.exposureTime)}s`
+      : `${settings.exposureTime}s`
+
+  const flashDisplayValue = formatFlash(settings.flash)
+  const exposureModeValue = { 0: 'Авто' }[settings.exposureMode as number] ?? String(settings.exposureMode)
+  const meteringModeValue = { 2: 'По центру' }[settings.meteringMode as number] ?? String(settings.meteringMode)
+  const whiteBalanceValue = { 0: 'Авто' }[settings.whiteBalance as number] ?? String(settings.whiteBalance)
+
+  const items = [
+    { label: 'Диафрагма', value: settings.aperture ? `ƒ/${settings.aperture}` : '', icon: 'mdi:camera-iris' },
+    { label: 'Выдержка', value: shutterSpeed, icon: 'mdi:timer-outline' },
+    { label: 'ISO', value: settings.iso, icon: 'mdi:brightness-6' },
+    { label: 'Фокусное расстояние', value: settings.focalLength ? `${settings.focalLength}mm` : '', icon: 'mdi:image-filter-center-focus' },
+    { label: 'Вспышка', value: flashDisplayValue, icon: 'mdi:flash' },
+    { label: 'Режим экспозиции', value: exposureModeValue, icon: 'mdi:camera-control' },
+    { label: 'Режим замера', value: meteringModeValue, icon: 'mdi:camera-metering-center' },
+    { label: 'Баланс белого', value: whiteBalanceValue, icon: 'mdi:white-balance-auto' },
+  ]
+  return items.filter(item => item.value)
+})
+
+const technicalInfo = computed(() => {
+  const tech = props.meta?.technical
+  const items = [
+    { label: 'Разрешение', value: (props.meta.width && props.meta.height) ? `${props.meta.width} x ${props.meta.height}px` : '', icon: 'mdi:aspect-ratio' },
+    { label: 'Размер файла', value: tech?.fileSize ? `${(tech.fileSize / 1024 / 1024).toFixed(2)} МБ` : '', icon: 'mdi:file-chart-outline' },
+    { label: 'Формат', value: tech?.format, icon: 'mdi:file-outline' },
+  ]
+  return items.filter(item => item.value)
+})
+
+const generalInfo = computed(() => {
   const items: Array<{ label: string, value: any, icon: string, isMap?: boolean }> = [
-    { label: 'Камера', value: cameraName.value, icon: 'mdi:camera' },
-    { label: 'Разрешение', value: resolution.value, icon: 'mdi:aspect-ratio' },
-    { label: 'Диафрагма', value: meta?.fNumber ? `ƒ/${meta.fNumber}` : '', icon: 'mdi:camera-iris' },
-    { label: 'Выдержка', value: formattedExposureTime.value, icon: 'mdi:timer-outline' },
-    { label: 'ISO', value: meta?.iso, icon: 'mdi:brightness-6' },
-    { label: 'Фокусное расстояние', value: meta?.focalLength ? `${meta.focalLength}mm` : '', icon: 'mdi:image-filter-center-focus' },
     { label: 'Дата съемки', value: takenAtDate.value, icon: 'mdi:calendar-clock' },
   ]
   if (gpsCoordinates.value) {
@@ -159,32 +180,61 @@ const basicInfo = computed(() => {
   return items.filter(item => item.value)
 })
 
+/**
+ * Рекурсивно "уплощает" вложенный объект метаданных для удобного отображения.
+ */
+function flattenMetadata(obj: Record<string, any> | null | undefined, parentKey = ''): Record<string, any> {
+  if (!obj)
+    return {}
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    const newKey = parentKey ? `${parentKey}.${key}` : key
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      Object.assign(acc, flattenMetadata(value, newKey))
+    }
+    else {
+      acc[newKey] = value
+    }
+    return acc
+  }, {} as Record<string, any>)
+}
+
 const extendedInfo = computed(() => {
-  if (!props.image.metadata)
+  const metadata = props.meta
+  if (!metadata)
     return []
 
   const excludedKeys = new Set([
-    'orientation',
-    'timezoneOffset',
-    'cameraMake',
-    'cameraModel',
-    'fNumber',
-    'exposureTime',
-    'iso',
-    'focalLength',
-    'apertureValue',
-    'GPSLatitude',
-    'GPSLongitude',
-    'GPSLatitudeRef',
-    'GPSLongitudeRef',
+    'camera.make',
+    'camera.model',
+    'camera.lens',
+    'settings.aperture',
+    'settings.apertureValue',
+    'settings.shutterSpeed',
+    'settings.exposureTime',
+    'settings.iso',
+    'settings.focalLength',
+    'settings.flash',
+    'settings.exposureMode',
+    'settings.meteringMode',
+    'settings.whiteBalance',
+    'technical.orientation',
+    'technical.fileSize',
+    'technical.format',
+    'gps.bearing',
+    'gps.gpsDate',
+    'gps.altitude',
+    'software.modifyDate',
   ])
 
-  return Object.entries(props.image.metadata)
-    .filter(([key]) => !excludedKeys.has(key))
+  const flattened = flattenMetadata(metadata)
+
+  return Object.entries(flattened)
+    .filter(([key]) => !excludedKeys.has(key) && !key.startsWith('rawExif'))
     .map(([key, value]) => ({
       key,
       value: Array.isArray(value) ? value.join(', ') : (typeof value === 'object' ? JSON.stringify(value) : value),
     }))
+    .filter(item => item.value !== null && item.value !== undefined)
 })
 </script>
 
@@ -195,16 +245,19 @@ const extendedInfo = computed(() => {
       <div v-if="visible" class="metadata-overlay">
         <div ref="panelRef" class="metadata-panel">
           <header class="panel-header">
-            <h3>Информация о снимке</h3>
+            <div class="panel-title">
+              <Icon icon="mdi:image-text" />
+              <h3>Информация о снимке</h3>
+            </div>
             <button class="close-btn-panel" title="Закрыть" @click="$emit('close')">
               <Icon icon="mdi:close" />
             </button>
           </header>
           <div class="panel-content">
+            <!-- Общая информация -->
             <section class="info-section">
-              <h4>Основные параметры</h4>
               <dl class="info-list">
-                <div v-for="item in basicInfo" :key="item.label" class="info-item">
+                <div v-for="item in generalInfo" :key="item.label" class="info-item">
                   <dt>
                     <Icon :icon="item.icon" class="info-icon" />
                     <span>{{ item.label }}</span>
@@ -221,6 +274,50 @@ const extendedInfo = computed(() => {
                 </div>
               </dl>
             </section>
+
+            <!-- Камера и объектив -->
+            <section v-if="cameraInfo.length" class="info-section">
+              <h4>Камера и объектив</h4>
+              <dl class="info-list">
+                <div v-for="item in cameraInfo" :key="item.label" class="info-item">
+                  <dt>
+                    <Icon :icon="item.icon" class="info-icon" />
+                    <span>{{ item.label }}</span>
+                  </dt>
+                  <dd>{{ item.value }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- Параметры съёмки -->
+            <section v-if="settingsInfo.length" class="info-section">
+              <h4>Параметры съёмки</h4>
+              <dl class="info-list">
+                <div v-for="item in settingsInfo" :key="item.label" class="info-item">
+                  <dt>
+                    <Icon :icon="item.icon" class="info-icon" />
+                    <span>{{ item.label }}</span>
+                  </dt>
+                  <dd>{{ item.value }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- Техническая информация -->
+            <section v-if="technicalInfo.length" class="info-section">
+              <h4>Техническая информация</h4>
+              <dl class="info-list">
+                <div v-for="item in technicalInfo" :key="item.label" class="info-item">
+                  <dt>
+                    <Icon :icon="item.icon" class="info-icon" />
+                    <span>{{ item.label }}</span>
+                  </dt>
+                  <dd>{{ item.value }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- Расширенные данные -->
             <section v-if="extendedInfo.length" class="info-section">
               <h4 class="extended-header">
                 <span>Расширенные данные (EXIF)</span>
@@ -291,15 +388,14 @@ const extendedInfo = computed(() => {
 .metadata-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 11;
   display: flex;
   justify-content: flex-end;
-  backdrop-filter: blur(2px);
 }
 
 .metadata-panel {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   height: 100%;
   background: var(--bg-secondary-color);
   color: var(--fg-primary-color);
@@ -307,6 +403,11 @@ const extendedInfo = computed(() => {
   flex-direction: column;
   border-left: 1px solid var(--border-primary-color);
   box-shadow: var(--s-l);
+
+  @include media-down(sm) {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 .panel-header {
@@ -316,10 +417,20 @@ const extendedInfo = computed(() => {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-primary-color);
   flex-shrink: 0;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.25rem;
+  color: var(--fg-secondary-color);
+
   h3 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
+    color: var(--fg-primary-color);
   }
 }
 
@@ -351,14 +462,19 @@ const extendedInfo = computed(() => {
 
 .info-section {
   margin-bottom: 24px;
+  &:last-child {
+    margin-bottom: 0;
+  }
+
   h4 {
     font-size: 0.9rem;
     font-weight: 500;
     color: var(--fg-tertiary-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding-bottom: 12px;
-    margin: 0;
+    padding-bottom: 8px;
+    margin: 0 0 4px 0;
+    border-bottom: 1px solid var(--border-secondary-color);
   }
 }
 
@@ -366,7 +482,9 @@ const extendedInfo = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 8px;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid var(--border-secondary-color) !important;
+
   span {
     font-size: 0.9rem;
     font-weight: 500;
@@ -374,6 +492,7 @@ const extendedInfo = computed(() => {
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
   button {
     color: var(--fg-accent-color);
     cursor: pointer;
@@ -397,8 +516,8 @@ const extendedInfo = computed(() => {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-primary-color);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-secondary-color);
   &:last-child {
     border-bottom: none;
   }
@@ -406,7 +525,7 @@ const extendedInfo = computed(() => {
     color: var(--fg-secondary-color);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     white-space: nowrap;
   }
   dd {
@@ -414,6 +533,7 @@ const extendedInfo = computed(() => {
     color: var(--fg-primary-color);
     text-align: right;
     word-break: break-all;
+    font-weight: 500;
   }
 }
 
@@ -439,6 +559,9 @@ const extendedInfo = computed(() => {
 .info-icon {
   font-size: 18px;
   color: var(--fg-muted-color);
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
 }
 
 .extended-list {
@@ -446,8 +569,9 @@ const extendedInfo = computed(() => {
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-s);
   padding: 0 12px;
+
   .info-item {
-    border-color: var(--border-secondary-color);
+    border-color: var(--border-primary-color);
   }
   dt {
     font-family: monospace;
@@ -456,10 +580,10 @@ const extendedInfo = computed(() => {
   }
   dd {
     color: var(--fg-secondary-color);
+    font-weight: 400;
   }
 }
 
-/* Стили для модального окна выбора карты */
 .map-choice-overlay {
   position: fixed;
   inset: 0;
@@ -523,13 +647,12 @@ const extendedInfo = computed(() => {
   }
 }
 
-/* Стили для оверлея с картой */
 .map-overlay-iframe {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
-  z-index: 10002; /* Выше чем оверлей выбора */
+  z-index: 10002;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -539,8 +662,6 @@ const extendedInfo = computed(() => {
 .map-container {
   width: 100%;
   height: 100%;
-  max-width: 1200px;
-  max-height: 90vh;
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-m);
   border: 1px solid var(--border-primary-color);

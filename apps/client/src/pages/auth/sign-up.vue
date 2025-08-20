@@ -12,7 +12,7 @@ import { AppRoutePaths } from '~/shared/constants/routes'
       </router-link>
 
       <h2>Регистрация</h2>
-      <p>Регистрация временно недоступна. Пожалуйста, используйте OAuth.</p>
+      <p>Я запрещаю вам регистрироваться!</p>
       <router-link :to="AppRoutePaths.Auth.SignIn" class="back-link">
         Вернуться ко входу
       </router-link>

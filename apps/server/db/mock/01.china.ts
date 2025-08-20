@@ -1,3 +1,5 @@
+import { MOCK_USER_ID_1, MOCK_USER_ID_2 } from './00.user'
+
 const TRIP_CHINA_ID = '3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a'
 
 // eslint-disable-next-line unused-imports/no-unused-vars
@@ -42,8 +44,8 @@ const DAY_IDS = Array.from({ length: 14 }, () => crypto.randomUUID())
 
 // Вспомогательные функции для создания корректных путей к статическим файлам
 // eslint-disable-next-line unused-imports/no-unused-vars
-const getChinaMemoriesPath = (filename: string) => `/static/trip-china/memories/${filename}`
-const getChinaRoutePath = (filename: string) => `/static/trip-china/route/${filename}`
+const getChinaMemoriesPath = (filename: string) => `/static/images/trips/3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a/memories/${filename}`
+const getChinaRoutePath = (filename: string) => `/static/images/trips/3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a/route/${filename}`
 
 // === СОБИРАЕМ ВСЕ ИЗОБРАЖЕНИЯ ИЗ ПУТЕШЕСТВИЯ ===
 // Это необходимо, чтобы создать централизованный список изображений для таблицы `trip_images`.
@@ -195,18 +197,19 @@ export const MOCK_DATA = [
   {
     id: TRIP_CHINA_ID,
     title: 'Путешествие по Китаю',
-    userId: '1a97d95a-0158-4171-8258-52c7a917e3f0',
+    userId: MOCK_USER_ID_1,
     imageUrl: getChinaRoutePath('20250217213134.png'),
     description: 'Двухнедельное приключение, охватывающее футуристический Шанхай, классические сады Сучжоу и Ханчжоу, и заканчивающееся в сердце древнего Шелкового пути — Урумчи.',
     startDate: new Date('2025-05-10'),
     endDate: new Date('2025-05-23'),
     cities: ['Шанхай', 'Сучжоу', 'Ханчжоу', 'Урумчи'],
     status: 'completed' as const,
-    budget: 150000,
+    budget: 150_000,
     currency: 'RUB',
     participants: ['Евгений'],
     tags: ['Китай', 'Шанхай', 'Урумчи', 'культура', 'еда', 'приключения'],
     visibility: 'public' as const,
+    participantIds: [MOCK_USER_ID_1, MOCK_USER_ID_2],
     images: allImageObjects,
     memories: [], // Воспоминания не добавляем по запросу
     days: [

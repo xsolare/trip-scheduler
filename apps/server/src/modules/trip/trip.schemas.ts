@@ -1,5 +1,12 @@
 import { z } from 'zod'
 import { DaySchema } from '../day/day.schemas'
+import { UserSchema } from '../user/user.schemas'
+
+export const TripParticipantSchema = UserSchema.pick({
+  id: true,
+  name: true,
+  avatarUrl: true,
+})
 
 export const TripSchema = z.object({
   id: z.string().uuid(),
@@ -12,7 +19,7 @@ export const TripSchema = z.object({
   status: z.enum(['completed', 'planned', 'draft']),
   budget: z.number().nullable(),
   currency: z.string().nullable(),
-  participants: z.array(z.string()),
+  participants: z.array(TripParticipantSchema),
   tags: z.array(z.string()),
   visibility: z.enum(['public', 'private']),
   createdAt: z.date(),
@@ -38,10 +45,11 @@ export const UpdateTripInputSchema = z.object({
     status: true,
     budget: true,
     currency: true,
-    participants: true,
     tags: true,
     visibility: true,
-  }).partial(),
+  }).partial().extend({
+    participantIds: z.array(z.string().uuid()).optional(),
+  }),
 })
 
 export const CreateTripInputSchema = TripSchema.pick({

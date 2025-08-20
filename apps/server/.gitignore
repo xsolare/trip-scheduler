@@ -25,6 +25,5 @@ dist-ssr
 .env
 sqlite.db
 tsconfig.tsbuildinfo
-./static/**
-db/dump
+static
 drizzle

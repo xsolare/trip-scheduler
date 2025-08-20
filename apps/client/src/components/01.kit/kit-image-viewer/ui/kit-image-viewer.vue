@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
-import type { TripImage } from '~/shared/types/models/trip'
+import type { IImageViewerImageMeta, ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
@@ -61,8 +60,8 @@ const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const currentImageMetadata = computed((): TripImage | null => {
-  const meta = props.images[props.currentIndex]?.meta
+const currentImageMeta = computed((): IImageViewerImageMeta | null => {
+  const meta = toRaw(props.images[props.currentIndex]?.meta)
 
   return meta || null
 })
@@ -410,10 +409,6 @@ onClickOutside(viewerContentRef, () => {
   }
 })
 
-function handleContextMenu(event: MouseEvent) {
-  event.preventDefault()
-}
-
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
@@ -465,7 +460,7 @@ onUnmounted(() => {
                 <!-- 3. Группа кнопок, которая будет скрываться -->
                 <div v-if="isUiVisible" class="control-buttons-group">
                   <button
-                    v-if="currentImageMetadata"
+                    v-if="currentImageMeta"
                     class="control-btn"
                     title="Информация о снимке"
                     @click="isMetadataPanelVisible = true"
@@ -543,7 +538,6 @@ onUnmounted(() => {
                 @error="handleImageError"
                 @mousedown="handleMouseDown"
                 @dblclick="handleDoubleClick"
-                @contextmenu="handleContextMenu"
                 @dragstart.prevent
               >
             </div>
@@ -588,8 +582,8 @@ onUnmounted(() => {
         </div>
 
         <ImageMetadataPanel
-          v-if="currentImageMetadata"
-          :image="currentImageMetadata"
+          v-if="currentImageMeta"
+          :meta="currentImageMeta"
           :visible="isMetadataPanelVisible"
           @close="isMetadataPanelVisible = false"
         />
@@ -604,7 +598,7 @@ onUnmounted(() => {
   inset: 0;
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(4px);
-  z-index: 9999;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   touch-action: none;
@@ -617,6 +611,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   pointer-events: none;
+
   & > * {
     pointer-events: auto;
   }
@@ -693,7 +688,6 @@ onUnmounted(() => {
   align-items: center;
 }
 
-// Новая обертка для кнопок, которые скрываются
 .control-buttons-group {
   display: contents;
 }
@@ -836,6 +830,7 @@ onUnmounted(() => {
   transform-origin: center;
   transition: opacity 0.3s ease;
   opacity: 0;
+  border-radius: var(--r-2xs);
 
   &.loaded {
     opacity: 1;
@@ -860,11 +855,15 @@ onUnmounted(() => {
 
 .viewer-footer {
   bottom: 0;
-  padding: 20px 0;
+  padding: 8px 0;
   width: 100%;
   max-width: none;
   display: flex;
   justify-content: center;
+
+  @include media-down(sm) {
+    padding: 8px;
+  }
 }
 
 .thumbnails-container {
@@ -956,13 +955,18 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .viewer-header,
-  .header-left,
   .header-center,
   .header-right {
+    display: flex;
+    justify-content: flex-end;
     padding: 16px;
     top: 0;
-    left: 16px;
-    right: 16px;
+    left: 0px;
+    right: 0px;
+    padding: 16px 0;
+  }
+  .header-left {
+    justify-content: flex-start;
   }
   .viewer-content {
     padding: 16px;
@@ -1014,7 +1018,7 @@ onUnmounted(() => {
   }
   .header-left,
   .header-center {
-    justify-content: center;
+    justify-content: flex-start;
   }
   .header-center {
     left: 50%;
@@ -1022,14 +1026,6 @@ onUnmounted(() => {
   }
   .header-right {
     right: 16px;
-  }
-}
-
-// High DPI displays
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .viewer-image {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
   }
 }
 </style>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Activity } from '~/shared/types/models/activity'
-import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { useFileDialog } from '@vueuse/core'
@@ -10,6 +9,7 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { memoryToViewerImage } from '~/components/04.modules/trip/trip-info/lib/helpers'
 import ProcessingQueue from './processing/processing-queue.vue'
 import UploadingQueue from './processing/uploading-queue.vue'
 import MemoriesTimeline from './timeline/memories-timeline.vue'
@@ -28,16 +28,9 @@ const { open: openFileDialog, onChange, reset } = useFileDialog({
 const isProcessing = computed(() => getProcessingMemories.value.length > 0)
 
 const galleryImages = computed<ImageViewerImage[]>(() => {
-  const allMemories: Memory[] = [...memoriesForSelectedDay.value]
-
-  return allMemories
-    .filter(memory => memory.imageId && memory?.image?.url)
-    .sort((a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime())
-    .map(memory => ({
-      url: memory!.image!.url,
-      alt: memory.comment || 'Memory Image',
-      meta: { memory },
-    }))
+  return memoriesForSelectedDay.value
+    .map(memory => memoryToViewerImage(memory))
+    .filter((img): img is NonNullable<typeof img> => !!img)
 })
 
 const isAddNoteModalVisible = ref(false)

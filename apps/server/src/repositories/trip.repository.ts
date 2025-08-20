@@ -1,41 +1,66 @@
 import type { z } from 'zod'
 import type { CreateTripInputSchema, UpdateTripInputSchema } from '~/modules/trip/trip.schemas'
-import { eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../../db'
-import { activities, days, trips } from '../../db/schema'
+import { activities, days, tripParticipants, trips } from '../../db/schema'
+
+const withParticipants = {
+  participants: {
+    with: {
+      user: {
+        columns: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+    },
+  },
+}
+
+function mapTripParticipants<T extends { participants: Array<{ user: any }> }>(trip: T | null | undefined) {
+  if (!trip)
+    return null
+  return {
+    ...trip,
+    participants: trip.participants.map(p => p.user),
+  }
+}
 
 export const tripRepository = {
   /**
    * Получает все путешествия.
    */
   async getAll() {
-    return await db
-      .select()
-      .from(trips)
-      .orderBy(trips.createdAt)
+    const result = await db.query.trips.findMany({
+      orderBy: trips.createdAt,
+      with: withParticipants,
+    })
+
+    return result.map(mapTripParticipants)
   },
 
   /**
    * Получает путешествие по ID.
    */
   async getById(id: string) {
-    const result = await db
-      .select()
-      .from(trips)
-      .where(eq(trips.id, id))
-      .limit(1)
+    const result = await db.query.trips.findFirst({
+      where: eq(trips.id, id),
+      with: withParticipants,
+    })
 
-    return result[0] || null
+    return mapTripParticipants(result)
   },
 
   /**
    * Получает путешествие со всеми днями и активностями.
    */
   async getByIdWithDays(id: string) {
-    return await db.query.trips.findFirst({
+    const result = await db.query.trips.findFirst({
       where: eq(trips.id, id),
       with: {
+        ...withParticipants,
         days: {
           orderBy: days.date,
           with: {
@@ -46,6 +71,8 @@ export const tripRepository = {
         },
       },
     })
+
+    return mapTripParticipants(result)
   },
 
   /**
@@ -53,7 +80,7 @@ export const tripRepository = {
    * @returns Обновленный объект путешествия или null.
    */
   async update(id: string, details: z.infer<typeof UpdateTripInputSchema>['details']) {
-    const { startDate, endDate, ...restDetails } = details
+    const { startDate, endDate, participantIds, ...restDetails } = details
 
     const updatePayload = {
       ...restDetails,
@@ -66,13 +93,49 @@ export const tripRepository = {
       }),
     }
 
-    const [updatedTrip] = await db
-      .update(trips)
-      .set(updatePayload)
-      .where(eq(trips.id, id))
-      .returning()
+    const updatedTrip = await db.transaction(async (tx) => {
+      if (Object.keys(restDetails).length > 0 || startDate || endDate) {
+        await tx
+          .update(trips)
+          .set(updatePayload)
+          .where(eq(trips.id, id))
+      }
 
-    return updatedTrip || null
+      if (participantIds) {
+        const currentParticipants = await tx.query.tripParticipants.findMany({
+          where: eq(tripParticipants.tripId, id),
+          columns: { userId: true },
+        })
+        const currentParticipantIds = currentParticipants.map(p => p.userId)
+
+        const idsToAdd = participantIds.filter(pid => !currentParticipantIds.includes(pid))
+        const idsToRemove = currentParticipantIds.filter(pid => !participantIds.includes(pid))
+
+        if (idsToRemove.length > 0) {
+          await tx
+            .delete(tripParticipants)
+            .where(and(
+              eq(tripParticipants.tripId, id),
+              inArray(tripParticipants.userId, idsToRemove),
+            ))
+        }
+
+        if (idsToAdd.length > 0) {
+          await tx
+            .insert(tripParticipants)
+            .values(idsToAdd.map(userId => ({ tripId: id, userId })))
+        }
+      }
+
+      const result = await tx.query.trips.findFirst({
+        where: eq(trips.id, id),
+        with: withParticipants,
+      })
+
+      return result
+    })
+
+    return mapTripParticipants(updatedTrip)
   },
 
   /**
@@ -85,18 +148,32 @@ export const tripRepository = {
     const newStartDate = (startDate instanceof Date ? startDate : new Date()).toISOString().split('T')[0]
     const newEndDate = (endDate instanceof Date ? endDate : new Date(Date.now() + 86400000)).toISOString().split('T')[0]
 
-    const [newTrip] = await db
-      .insert(trips)
-      .values({
-        id: uuidv4(),
-        ...restData,
-        userId,
-        startDate: newStartDate,
-        endDate: newEndDate,
-      })
-      .returning()
+    const newTrip = await db.transaction(async (tx) => {
+      const [createdTrip] = await tx
+        .insert(trips)
+        .values({
+          id: uuidv4(),
+          ...restData,
+          userId,
+          startDate: newStartDate,
+          endDate: newEndDate,
+        })
+        .returning()
 
-    return newTrip
+      await tx.insert(tripParticipants).values({
+        tripId: createdTrip.id,
+        userId,
+      })
+
+      return createdTrip
+    })
+
+    const result = await db.query.trips.findFirst({
+      where: eq(trips.id, newTrip.id),
+      with: withParticipants,
+    })
+
+    return mapTripParticipants(result)
   },
 
   /**
@@ -105,6 +182,7 @@ export const tripRepository = {
    */
   async delete(id: string) {
     const [deletedTrip] = await db.delete(trips).where(eq(trips.id, id)).returning()
+
     return deletedTrip || null
   },
 }

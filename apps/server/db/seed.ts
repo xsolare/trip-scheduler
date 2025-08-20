@@ -4,7 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import url from 'node:url'
 import { db } from './index'
-import { activities, days, memories, tripImages, trips, users } from './schema'
+import { activities, days, memories, tripImages, tripParticipants, trips, users } from './schema'
 
 async function copyStaticFiles() {
   const sourceDir = path.join(__dirname, 'mock/static')
@@ -81,15 +81,26 @@ async function seed() {
   const activitiesToInsert: (typeof activities.$inferInsert)[] = []
   const imagesToInsert: (typeof tripImages.$inferInsert)[] = []
   const memoriesToInsert: (typeof memories.$inferInsert)[] = []
+  const participantsToInsert: (typeof tripParticipants.$inferInsert)[] = []
 
   for (const tripData of sourceTrips) {
-    const { days: mockDays, images: mockImages, memories: mockMemories, ...tripDetails } = tripData
+    const { days: mockDays, images: mockImages, memories: mockMemories, participantIds, ...tripDetails } = tripData
 
     tripsToInsert.push({
       ...tripDetails,
       startDate: new Date(tripDetails.startDate).toISOString().split('T')[0],
       endDate: new Date(tripDetails.endDate).toISOString().split('T')[0],
     })
+
+    const allParticipantIds = new Set(participantIds || [])
+    allParticipantIds.add(tripDetails.userId)
+
+    for (const userId of allParticipantIds) {
+      participantsToInsert.push({
+        tripId: tripDetails.id,
+        userId: userId as string,
+      })
+    }
 
     if (mockDays) {
       for (const mockDay of mockDays) {
@@ -123,6 +134,8 @@ async function seed() {
     await db.insert(users).values(usersToInsert)
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)
+  if (participantsToInsert.length > 0)
+    await db.insert(tripParticipants).values(participantsToInsert)
   if (daysToInsert.length > 0)
     await db.insert(days).values(daysToInsert)
   if (imagesToInsert.length > 0)

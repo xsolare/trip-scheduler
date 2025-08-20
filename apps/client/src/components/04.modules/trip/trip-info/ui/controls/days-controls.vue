@@ -120,7 +120,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 0;
+  padding: 16px 8px;
   min-height: 80px;
   margin-top: 16px;
 }

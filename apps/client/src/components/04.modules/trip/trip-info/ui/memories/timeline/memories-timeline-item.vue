@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
+import type { CustomImageViewerImageMeta } from '~/components/04.modules/trip/trip-info/lib/helpers'
 import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
@@ -132,31 +133,38 @@ const formattedActiveViewerTime = computed(() => {
 })
 
 watch(imageViewer.currentImage, (newImage) => {
-  if (newImage?.meta?.memory) {
-    const mem: Memory = newImage.meta.memory
-    activeViewerComment.value = mem.comment || ''
-    if (mem.timestamp) {
-      const d = new Date(mem.timestamp)
+  if (newImage?.meta) {
+    const meta = newImage.meta as CustomImageViewerImageMeta
+    activeViewerComment.value = newImage.caption || ''
+
+    if (meta.takenAt) {
+      const d = new Date(meta.takenAt)
       activeViewerTime.value = new Time(d.getUTCHours(), d.getUTCMinutes())
     }
     else {
       activeViewerTime.value = null
     }
-    const memoryId = mem.id
-    const group = props.timelineGroups?.find(g => g.memories.some((m: Memory) => m.id === memoryId))
-    activeViewerActivityTitle.value = group ? group.title : ''
+
+    const memoryId = meta.memoryId
+    if (memoryId) {
+      const group = props.timelineGroups?.find(g => g.memories.some((m: Memory) => m.id === memoryId))
+      activeViewerActivityTitle.value = group ? group.title : ''
+    }
+    else {
+      activeViewerActivityTitle.value = ''
+    }
   }
 }, { deep: true })
 
 function openImageViewer() {
-  if (isTimeEditing.value)
+  if (isTimeEditing.value || !props.memory.image)
     return
 
   const imageList = props.galleryImages ?? []
   if (imageList.length === 0)
     return
 
-  const startIndex = imageList.findIndex(img => img.meta?.memory?.id === props.memory.id)
+  const startIndex = imageList.findIndex(img => img.url === props.memory.image?.url)
 
   if (startIndex !== -1) {
     imageViewer.open(imageList, startIndex)
@@ -164,16 +172,23 @@ function openImageViewer() {
 }
 
 function saveViewerComment() {
-  const memory = imageViewer.currentImage.value?.meta?.memory
-  if (memory && activeViewerComment.value !== (memory.comment || '')) {
-    updateMemory({ id: memory.id, comment: activeViewerComment.value })
+  const meta = imageViewer.currentImage.value?.meta as CustomImageViewerImageMeta | undefined
+  if (meta?.memoryId) {
+    const originalMemory = store.memories.memories.find(m => m.id === meta.memoryId)
+    if (originalMemory && activeViewerComment.value !== (originalMemory.comment || '')) {
+      updateMemory({ id: meta.memoryId, comment: activeViewerComment.value })
+    }
   }
 }
 
 function saveViewerTime() {
-  const memory = imageViewer.currentImage.value?.meta?.memory
+  const meta = imageViewer.currentImage.value?.meta as CustomImageViewerImageMeta | undefined
   const day = getSelectedDay.value
-  if (!memory || !activeViewerTime.value || !day)
+  if (!meta?.memoryId || !activeViewerTime.value || !day)
+    return
+
+  const originalMemory = store.memories.memories.find(m => m.id === meta.memoryId)
+  if (!originalMemory)
     return
 
   const datePart = day.date.split('T')[0]
@@ -181,8 +196,8 @@ function saveViewerTime() {
 
   const newTimestamp = `${datePart}T${timePart}.000Z`
 
-  if (newTimestamp !== memory.timestamp) {
-    updateMemory({ id: memory.id, timestamp: newTimestamp })
+  if (newTimestamp !== originalMemory.timestamp) {
+    updateMemory({ id: meta.memoryId, timestamp: newTimestamp })
   }
 }
 
@@ -285,7 +300,7 @@ onClickOutside(timeEditorRef, saveTime)
     >
       <template #footer="{ image }">
         <div
-          v-if="image.meta?.memory"
+          v-if="image.meta"
           class="viewer-custom-footer"
           :class="{ 'is-readonly': isViewMode }"
         >
@@ -387,6 +402,7 @@ onClickOutside(timeEditorRef, saveTime)
     flex-direction: column;
     height: 300px;
     cursor: pointer;
+
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
@@ -394,6 +410,10 @@ onClickOutside(timeEditorRef, saveTime)
     &:hover {
       transform: translateY(-2px);
       box-shadow: var(--s-m);
+    }
+
+    @include media-down(sm) {
+      height: 180px;
     }
   }
 
@@ -489,7 +509,7 @@ onClickOutside(timeEditorRef, saveTime)
   border-radius: var(--r-full);
   z-index: 3;
   transition: background-color 0.2s ease;
-  height: 28px;
+  line-height: 20px;
 
   :deep(.kit-time-field) {
     background-color: transparent;
@@ -497,6 +517,14 @@ onClickOutside(timeEditorRef, saveTime)
 
   &:hover {
     background: rgba(0, 0, 0, 0.7);
+  }
+
+  @include media-down(sm) {
+    font-size: 0.7rem;
+    top: 4px;
+    right: 4px;
+    line-height: 16px;
+    padding: 2px 6px;
   }
 }
 
@@ -511,14 +539,12 @@ onClickOutside(timeEditorRef, saveTime)
 .memory-meta {
   color: var(--fg-secondary-color);
   font-size: 0.75rem;
+
   > span {
     cursor: pointer;
     padding: 2px 4px;
     border-radius: var(--r-2xs);
     transition: background-color 0.2s ease;
-    &:hover {
-      background-color: var(--bg-hover-color);
-    }
   }
 
   .time-editor-inline {
@@ -532,6 +558,9 @@ onClickOutside(timeEditorRef, saveTime)
   width: 100%;
 
   .comment-editor {
+    border-radius: 10px;
+    overflow: hidden;
+
     :deep(.milkdown .editor) {
       padding: 4px;
       font-size: 0.9rem;
@@ -726,6 +755,9 @@ onClickOutside(timeEditorRef, saveTime)
       p {
         margin: 0;
         font-size: 0.9rem;
+
+        border-radius: 10px;
+        overflow: hidden;
       }
     }
     &:not([readonly]) .editor:hover {

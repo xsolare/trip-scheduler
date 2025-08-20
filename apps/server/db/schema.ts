@@ -6,6 +6,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   real,
   serial,
   text,
@@ -88,7 +89,6 @@ export const trips = pgTable('trips', {
   status: statusEnum('status').notNull().default('draft'),
   budget: real('budget'),
   currency: text('currency').default('RUB'),
-  participants: jsonb('participants').$type<string[]>().notNull().default([]),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
   visibility: visibilityEnum('visibility').notNull().default('private'),
 
@@ -98,6 +98,13 @@ export const trips = pgTable('trips', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export const tripParticipants = pgTable('trip_participants', {
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+}, t => ({
+  pk: primaryKey({ columns: [t.tripId, t.userId] }),
+}))
+
 export const tripImages = pgTable('trip_images', {
   id: uuid('id').defaultRandom().primaryKey(),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
@@ -105,7 +112,7 @@ export const tripImages = pgTable('trip_images', {
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
-  takenAt: timestamp('taken_at'), // Для сортировки по времени
+  takenAt: timestamp('taken_at'),
   latitude: real('latitude'), // Для отображения на карте
   longitude: real('longitude'), // Для отображения на карте
 
@@ -161,6 +168,18 @@ export const tripsRelations = relations(trips, ({ one, many }) => ({
   days: many(days),
   images: many(tripImages),
   memories: many(memories),
+  participants: many(tripParticipants),
+}))
+
+export const tripParticipantsRelations = relations(tripParticipants, ({ one }) => ({
+  trip: one(trips, {
+    fields: [tripParticipants.tripId],
+    references: [trips.id],
+  }),
+  user: one(users, {
+    fields: [tripParticipants.userId],
+    references: [users.id],
+  }),
 }))
 
 export const daysRelations = relations(days, ({ one, many }) => ({
@@ -199,6 +218,7 @@ export const memoriesRelations = relations(memories, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   trips: many(trips),
   refreshTokens: many(refreshTokens),
+  tripParticipations: many(tripParticipants),
 }))
 
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
