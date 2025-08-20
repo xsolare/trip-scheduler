@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@hono/trpc-server": "^0.4.0",
-    "@trpc/server": "^11.4.4",
+    "@trpc/server": "^11.5.0",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.4",
     "drizzle-zod": "^0.8.3",
@@ -37,7 +37,7 @@
     "exifr": "^7.1.3",
     "exifreader": "^4.31.1",
     "exiftool-vendored": "^30.3.0",
-    "hono": "^4.9.1",
+    "hono": "^4.9.2",
     "pg": "^8.16.3",
     "sharp": "^0.34.3",
     "zod": "^4.0.17"

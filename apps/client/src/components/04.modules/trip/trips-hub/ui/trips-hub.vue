@@ -113,6 +113,8 @@ provide(TripsHubKey, tripsHub)
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  padding: 0 8px;
+
   h1 {
     font-size: 2rem;
     font-weight: 700;
@@ -129,6 +131,7 @@ provide(TripsHubKey, tripsHub)
   align-items: center;
   width: 100%;
   gap: 16px;
+  padding: 0 8px;
 }
 .spacer {
   flex-grow: 1;

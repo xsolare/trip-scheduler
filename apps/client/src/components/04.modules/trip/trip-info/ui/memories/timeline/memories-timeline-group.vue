@@ -199,6 +199,7 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   &:first-child {
     padding-top: 16px;
+
     &::before {
       top: 30px;
     }
@@ -210,6 +211,18 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   @include media-down(sm) {
     padding-left: 12px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 38px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--bg-secondary-color);
+      border: 3px solid var(--fg-accent-color);
+    }
   }
 }
 

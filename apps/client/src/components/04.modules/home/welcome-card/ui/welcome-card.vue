@@ -64,29 +64,6 @@ function onMouseMove() {
 </template>
 
 <style scoped lang="scss">
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
 .root-page {
   display: flex;
   justify-content: center;
@@ -130,6 +107,10 @@ function onMouseMove() {
   text-align: center;
   padding: 48px;
   user-select: none;
+
+  @include media-down(sm) {
+    padding: 32px 24px;
+  }
 }
 
 .logo-accent {
@@ -162,5 +143,28 @@ function onMouseMove() {
   max-width: 450px;
   line-height: 1.6;
   margin-bottom: 32px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 </style>

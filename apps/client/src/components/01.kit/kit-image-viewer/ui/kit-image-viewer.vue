@@ -611,6 +611,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   pointer-events: none;
+
   & > * {
     pointer-events: auto;
   }
@@ -1025,14 +1026,6 @@ onUnmounted(() => {
   }
   .header-right {
     right: 16px;
-  }
-}
-
-// High DPI displays
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .viewer-image {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
   }
 }
 </style>
