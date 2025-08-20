@@ -43,7 +43,6 @@ const displayData = computed(() => (props.trips.length > 0 ? props.trips : null)
     <template #empty>
       <TripListEmpty />
     </template>
-
   </AsyncStateWrapper>
 </template>
 

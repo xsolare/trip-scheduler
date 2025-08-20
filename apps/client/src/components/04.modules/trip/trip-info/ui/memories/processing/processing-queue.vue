@@ -33,7 +33,7 @@ const filters = reactive({
 const filteredMemories = computed(() => {
   if (!memoriesToProcess.value)
     return []
-  
+
   return memoriesToProcess.value.filter((memory) => {
     const hasTimestamp = !!memory.image?.takenAt
 

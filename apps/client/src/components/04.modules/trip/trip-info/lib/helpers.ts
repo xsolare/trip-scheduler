@@ -95,7 +95,7 @@ export function memoryToViewerImage(memory: Memory): ImageViewerImage | null {
 
   viewerImage.alt = memory.comment || viewerImage.alt
   viewerImage.caption = memory.comment || viewerImage.caption
-  
+
   if (viewerImage.meta) {
     (viewerImage.meta as CustomImageViewerImageMeta).memoryId = memory.id
   }

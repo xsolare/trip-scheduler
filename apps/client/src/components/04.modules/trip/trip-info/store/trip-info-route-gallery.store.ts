@@ -67,7 +67,6 @@ export const useTripInfoGalleryStore = defineStore('tripInfoRouteGallery', {
     /**
      * Загружает новое изображение в галерею путешествия.
      * @param file - Загружаемый файл
-     * @param placement - Место размещения изображения
      * @returns Promise с загруженным изображением или null в случае ошибки.
      */
     async uploadImage(file: File): Promise<TripImage | null> {
