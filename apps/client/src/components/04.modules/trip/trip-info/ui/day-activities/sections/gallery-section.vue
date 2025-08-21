@@ -426,7 +426,7 @@ const visibleImages = computed(() =>
     grid-template-columns: repeat(5, 1fr);
   }
 
-  @media (max-width: 768px) {
+  @include media-down(sm) {
     &.gallery-large {
       grid-template-columns: repeat(3, 1fr);
     }

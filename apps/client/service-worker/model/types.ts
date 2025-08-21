@@ -72,6 +72,30 @@ const API_CACHE_RULES: ApiCacheRule[] = [
     maxAgeSeconds: 24 * 60 * 60, // Кэшировать на 1 день
     maxEntries: 50,
   },
+  {
+    // Правило для данных конкретного путешествия по ID
+    path: '/api/trip.getById',
+    cacheName: 'trip-scheduler-api-trip-details',
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 дней
+    maxEntries: 20,
+  },
+  {
+    // Правило для воспоминаний путешествия
+    path: '/api/memory.getByTripId',
+    cacheName: 'trip-scheduler-api-memories',
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 дней
+    maxEntries: 50,
+  },
+  {
+    // Правило для изображений галереи маршрута
+    path: '/api/image.listByTrip',
+    cacheName: 'trip-scheduler-api-route-images',
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 дней
+    maxEntries: 50,
+  },
 ]
 
 interface MessageHandlers {

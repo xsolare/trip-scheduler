@@ -70,7 +70,7 @@ onMounted(() => {
     <div class="header-content">
       <div class="header-left" @click="router.push(AppRoutePaths.Root)">
         <div class="logo">
-          <Icon class="logo-icon" icon="mdi:map-marker-path" style="font-size: 24px;" />
+          <Icon width="20" height="20" class="logo-icon" icon="mdi:map-marker-path" />
           <span class="logo-text">Trip Scheduler</span>
         </div>
       </div>
@@ -127,9 +127,9 @@ onMounted(() => {
     box-shadow 0.3s ease;
 
   &--scrolled {
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     background-color: var(--bg-primary-color-rgb);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--s-s);
 
     .header-border {
       opacity: 1;
@@ -193,7 +193,7 @@ onMounted(() => {
     &:hover {
       border-radius: 10px;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--s-l);
 
       .logo-icon {
         transform: rotate(10deg) scale(1.1);
@@ -254,7 +254,7 @@ onMounted(() => {
     &:hover {
       border-radius: 10px;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--s-l);
     }
 
     &:active {
@@ -361,21 +361,7 @@ onMounted(() => {
   }
 }
 
-// Анимации
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-// Дополнительные медиа-запросы для мобильных устройств
-@media (max-width: 768px) {
+@include media-down(sm) {
   .header {
     &-content {
       padding: 0 8px;
@@ -388,11 +374,15 @@ onMounted(() => {
     }
 
     &-left {
-      margin: 4px;
-      padding: 0 12px;
+      margin: 6px;
+      width: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
       .logo-text {
-        display: none; // Скрываем текст на очень маленьких экранах
+        display: none;
       }
     }
 

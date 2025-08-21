@@ -953,7 +953,7 @@ onUnmounted(() => {
   }
 }
 
-@media (max-width: 768px) {
+@include media-down(md) {
   .viewer-header,
   .header-center,
   .header-right {
@@ -1012,7 +1012,7 @@ onUnmounted(() => {
   }
 }
 
-@media (max-width: 640px) {
+@include media-down(sm) {
   .viewer-header {
     display: block;
   }
