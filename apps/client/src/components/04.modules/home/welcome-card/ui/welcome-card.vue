@@ -54,7 +54,7 @@ function onMouseMove() {
           Ваш умный помощник для создания идеальных маршрутов, организации
           планов и незабываемых впечатлений.
         </p>
-        <KitBtn @click="goToTrips">
+        <KitBtn class="btn" @click="goToTrips">
           <Icon icon="mdi:compass-rose" />
           <span>К моим путешествиям</span>
         </KitBtn>
@@ -108,6 +108,31 @@ function onMouseMove() {
   padding: 48px;
   user-select: none;
 
+  .title {
+    font-size: 2.75rem;
+    font-weight: 700;
+    color: var(--fg-primary-color);
+    margin: 0 0 16px 0;
+    line-height: 48px;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, var(--fg-accent-color), #5e72e4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: var(--fg-secondary-color);
+    max-width: 450px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .btn {
+    border-radius: var(--r-2xl);
+  }
+
   @include media-down(sm) {
     padding: 32px 24px;
   }
@@ -122,27 +147,6 @@ function onMouseMove() {
   margin-bottom: 24px;
   animation: float 4s ease-in-out infinite;
   text-shadow: 0 0 20px var(--fg-accent-color);
-}
-
-.title {
-  font-size: 2.75rem;
-  font-weight: 700;
-  color: var(--fg-primary-color);
-  margin: 0 0 16px 0;
-  line-height: 48px;
-  letter-spacing: -1px;
-  background: linear-gradient(90deg, var(--fg-accent-color), #5e72e4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  font-size: 1.1rem;
-  color: var(--fg-secondary-color);
-  max-width: 450px;
-  line-height: 1.6;
-  margin-bottom: 32px;
 }
 
 @keyframes fadeIn {

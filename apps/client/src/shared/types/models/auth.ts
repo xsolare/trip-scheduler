@@ -17,11 +17,3 @@ export type TokenPair = RouterOutput['user']['signIn']['token']
  * @example RouterInput['user']['signIn']
  */
 export type SignInPayload = RouterInput['user']['signIn']
-
-/**
- * Состояние аутентификации для хранилища Pinia.
- */
-export interface IAuthState {
-  user: User | null
-  tokenPair: TokenPair | null
-}

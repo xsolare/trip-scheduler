@@ -1,7 +1,6 @@
 import type { Preview } from '@storybook/vue3-vite'
 import { setup } from '@storybook/vue3-vite'
 import { createPinia } from 'pinia'
-import { createRouter, createWebHistory } from 'vue-router'
 
 import { withTheme } from './with-theme.decorator'
 
@@ -12,14 +11,9 @@ import '../src/assets/scss/atomic.scss'
 
 import '../src/assets/scss/animation.scss'
 import '@milkdown/crepe/theme/common/style.css'
-
 import '@milkdown/crepe/theme/frame.css'
 
 const pinia = createPinia()
-const router = createRouter({
-  history: createWebHistory(),
-  routes: [],
-})
 
 setup((app) => {
   app.use(pinia)

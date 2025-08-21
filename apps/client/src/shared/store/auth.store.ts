@@ -1,4 +1,4 @@
-import type { IAuthState, SignInPayload, TokenPair, User } from '../types/models/auth'
+import type { SignInPayload, TokenPair, User } from '../types/models/auth'
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestStatus } from '~/plugins/request'
@@ -13,6 +13,12 @@ export enum EAuthRequestKeys {
   SIGN_OUT = 'auth:sign-out',
 }
 
+export interface IAuthState {
+  user: User | null
+  tokenPair: TokenPair | null
+  isInitialized: boolean
+}
+
 // --- Хранилище ---
 
 export const useAuthStore = defineStore('auth', {
@@ -21,6 +27,7 @@ export const useAuthStore = defineStore('auth', {
     const refreshToken = useStorage<string | null>(REFRESH_TOKEN_KEY, null)
 
     return {
+      isInitialized: false,
       user: null,
       tokenPair:
         accessToken.value && refreshToken.value
