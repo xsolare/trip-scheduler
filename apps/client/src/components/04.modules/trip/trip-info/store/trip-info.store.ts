@@ -253,6 +253,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
         fn: db => db.activities.update(updatedActivity),
         onSuccess: (activityFromServer) => {
           const finalIndex = day.activities.findIndex(a => a.id === activityFromServer.id)
+
           if (finalIndex !== -1)
             day.activities[finalIndex] = activityFromServer
         },

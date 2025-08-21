@@ -64,12 +64,13 @@ export function useTripsHub() {
   })
 
   async function fetchTrips(force = false) {
-    if (isInitialized.value) {
+    if (isInitialized.value && !force) {
       return
     }
 
     await useRequest({
       force,
+      cache: true,
       key: ETripHubKeys.FETCH_ALL,
       fn: db => db.trips.getAll(),
       cancelPrevious: true,

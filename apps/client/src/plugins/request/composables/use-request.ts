@@ -24,7 +24,8 @@ export async function useRequest<T>(
     onSuccess,
     onError = (error: unknown) => defaultErrorHandler({ error: error as IError }),
     onAbort,
-    force = false,
+    force = true,
+    cache = false,
     cancelPrevious = true,
     abortOnUnmount = false,
   } = options
@@ -41,7 +42,7 @@ export async function useRequest<T>(
   if (!force && pendingPromises.has(key))
     return pendingPromises.get(key)!
 
-  if (!force && store.statuses.get(key) === 'success' && store.cache.has(key)) {
+  if (cache && !force && store.statuses.get(key) === 'success' && store.cache.has(key)) {
     await onSuccess?.(toRaw(store.cache.get(key)))
 
     return toRaw(store.cache.get(key))

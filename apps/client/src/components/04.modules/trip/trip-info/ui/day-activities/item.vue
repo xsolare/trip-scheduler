@@ -90,6 +90,7 @@ function saveTimeChanges() {
 
   const newStartTime = `${editingStartTime.value?.hour.toString().padStart(2, '0')}:${editingStartTime.value?.minute.toString().padStart(2, '0')}`
   const newEndTime = `${editingEndTime.value?.hour.toString().padStart(2, '0')}:${editingEndTime.value?.minute.toString().padStart(2, '0')}`
+
   updateActivity({ startTime: newStartTime, endTime: newEndTime })
   isTimeEditing.value = false
 }
@@ -204,9 +205,9 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       <div class="activity-time-wrapper">
         <div class="activity-time">
           <div v-if="isTimeEditing" ref="timeEditorRef" class="time-editor" @keydown.esc.prevent="cancelTimeEditing">
-            <KitTimeField v-if="editingStartTime" v-model="editingStartTime" />
+            <KitTimeField v-model="editingStartTime" />
             <span class="time-separator">-</span>
-            <KitTimeField v-if="editingEndTime" v-model="editingEndTime" />
+            <KitTimeField v-model="editingEndTime" />
           </div>
           <div v-else class="time-display" @click="editTime">
             <div class="time-display-preview">
@@ -426,10 +427,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           > span {
             margin: 0 5px;
           }
-        }
-
-        &:hover {
-          background-color: var(--bg-hover-color);
         }
       }
       .time-editor {

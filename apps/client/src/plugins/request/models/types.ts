@@ -16,6 +16,7 @@ export interface UseRequestOptions<T> {
   fn: DatabaseFn<T>
   initialData?: T | null
   force?: boolean
+  cache?: boolean
   abortOnUnmount?: boolean
   cancelPrevious?: boolean
   onSuccess?: (result: T) => void | Promise<void>

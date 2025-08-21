@@ -209,6 +209,7 @@ const visibilityIcon = computed(() => {
   padding: 12px 16px;
   box-sizing: border-box;
   border-radius: var(--r-l);
+  overflow: hidden;
 
   .card-image {
     position: absolute;
