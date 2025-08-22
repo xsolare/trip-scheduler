@@ -174,8 +174,8 @@ defineExpose({
       <img
         v-if="src"
         ref="imageRef"
+        v-resolve-src="src"
         class="image"
-        :src="src"
         :alt="alt"
         :loading="loading"
         :style="imageStyle"

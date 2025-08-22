@@ -24,34 +24,31 @@ export function generateFilePaths(
   originalFilename: string,
 ) {
   const staticRoot = process.env.STATIC_PATH
-  const baseURL = process.env.API_URL
 
-  if (!staticRoot || !baseURL) {
-    throw new Error('Переменные окружения STATIC_PATH и API_URL должны быть установлены.')
+  if (!staticRoot) {
+    throw new Error('Переменная окружения STATIC_PATH должна быть установлена.')
   }
 
   const { base, ext } = createUniqueFilename(originalFilename)
   const filename = `${base}${ext}`
-
-  // Стандартизируем формат thumbnail для консистентности
   const thumbFilename = `${base}-thumb.webp`
 
-  // Относительный путь от корня статики
+  // Относительный путь от корня статики (e.g. trips/trip-id/placement)
   const relativeDir = join(path)
 
-  // Абсолютные пути в файловой системе для сохранения
-  const fullPath = join(staticRoot, relativeDir, filename)
-  const thumbFullPath = join(staticRoot, relativeDir, thumbFilename)
+  // Путь для сохранения в БД (e.g. trips/trip-id/placement/filename.jpg)
+  const dbPath = join(relativeDir, filename)
+  const thumbDbPath = join(relativeDir, thumbFilename)
 
-  // Публичные URL-адреса, используя URL конструктор для надежности
-  const url = new URL(join(staticRoot, relativeDir, filename), baseURL).toString()
-  const thumbnailUrl = new URL(join(staticRoot, relativeDir, thumbFilename), baseURL).toString()
+  // Полный путь для записи на диск (e.g. static/images/trips/trip-id/placement/filename.jpg)
+  const diskPath = join(staticRoot, dbPath)
+  const thumbDiskPath = join(staticRoot, thumbDbPath)
 
   return {
-    fullPath, // e.g., /var/www/static/images/trips/trip-uuid/memories/12345.jpg
-    thumbFullPath, // e.g., /var/www/static/images/trips/trip-uuid/memories/12345-thumb.webp
-    url, // e.g., http://api.example.com/static/images/trips/trip-uuid/memories/12345.jpg
-    thumbnailUrl, // e.g., http://api.example.com/static/images/trips/trip-uuid/memories/12345-thumb.webp
+    diskPath,
+    thumbDiskPath,
+    dbPath,
+    thumbDbPath,
   }
 }
 

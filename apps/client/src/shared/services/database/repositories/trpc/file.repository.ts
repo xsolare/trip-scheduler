@@ -24,7 +24,7 @@ export class FileRepository implements IFileRepository {
     if (comment)
       formData.append('comment', comment)
 
-    const response = await fetch(`/api/upload`, {
+    const response = await fetch(`${import.meta.env.VITE_APP_SERVER_URL}/api/upload`, {
       method: 'POST',
       body: formData,
     })

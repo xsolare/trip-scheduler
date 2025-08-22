@@ -147,7 +147,10 @@ const visibilityIcon = computed(() => {
               :offset="10"
               class="participant-wrapper"
             >
-              <KitAvatar :name="participant.name" :src="participant.avatarUrl" />
+              <KitAvatar
+                :name="participant.name"
+                :src="participant.avatarUrl"
+              />
             </KitAnimatedTooltip>
 
             <KitAvatar

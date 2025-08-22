@@ -9,6 +9,7 @@ import application from './app.vue'
 import { requestPlugin } from './plugins/request'
 import { restoreSession } from './plugins/session-restore'
 import { themePlugin } from './plugins/theme'
+import { resolveSrc } from './shared/directives/resolve-src'
 import databaseServicePromise from './shared/services/database'
 
 /**
@@ -17,6 +18,8 @@ import databaseServicePromise from './shared/services/database'
 async function initializeApp() {
   const app = createApp(application)
   const pinia = createPinia()
+
+  app.directive('resolve-src', resolveSrc)
 
   app.use(pinia)
   app.use(requestPlugin, { databaseService: databaseServicePromise })

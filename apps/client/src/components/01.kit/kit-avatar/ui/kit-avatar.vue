@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
+import { resolveApiUrl } from '~/shared/lib/url'
 
 interface Props {
   name?: string
@@ -14,6 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
   size: 32,
   isMore: false,
 })
+
+const resolvedSrc = computed(() => resolveApiUrl(props.src))
 
 /**
  * Вычисляет инициалы из полного имени.
@@ -66,9 +69,9 @@ const sizeStyle = computed(() => {
 <template>
   <AvatarRoot class="kit-avatar" :class="[colorClass]" :style="sizeStyle">
     <AvatarImage
-      v-if="src"
+      v-if="resolvedSrc"
       class="kit-avatar-image"
-      :src="src"
+      :src="resolvedSrc"
       :alt="name"
     />
     <AvatarFallback class="kit-avatar-fallback" :delay-ms="300">

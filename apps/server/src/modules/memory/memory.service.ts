@@ -32,16 +32,13 @@ export const memoryService = {
         await imageRepository.delete(deletedMemory.imageId)
 
         const getFilePathFromUrl = (url: string) => {
-          try {
-            const urlObject = new URL(url)
-            // pathname это /static/tripId/placement/filename.jpg
-            // process.cwd() - это корень проекта, где находится папка static
-            return path.join(process.cwd(), urlObject.pathname.slice(1))
-          }
-          catch {
-            console.error('Невалидный URL для удаления файла:', url)
+          const staticRoot = process.env.STATIC_PATH
+          if (!staticRoot) {
+            console.error('Невозможно удалить файл: переменная окружения STATIC_PATH не установлена.')
             return null
           }
+          // url из БД теперь 'trips/trip-id/memories/image.jpg'
+          return path.join(process.cwd(), staticRoot, url)
         }
 
         // Удаляем основной файл

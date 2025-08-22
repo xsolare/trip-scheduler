@@ -248,9 +248,10 @@ docker run -d \
   --name trip-scheduler-api \
   -p 8080:8080 \
   -e DATABASE_URL="postgresql://trip-scheduler:trip-scheduler@host.docker.internal:5432/trip_scheduler_dev" \
-  -e API_URL="http://localhost:8080" \
+  --env-file .env \
   -v "$(pwd)/static-data:/app/static" \
-  trip-scheduler-api:latest```
+  trip-scheduler-api:latest
+```
 
 Теперь все файлы, загруженные через API, будут сохраняться в папке `static-data` в корне вашего проекта на хост-машине и останутся там даже после остановки или удаления контейнера.
 ````

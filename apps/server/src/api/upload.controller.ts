@@ -26,33 +26,33 @@ export async function uploadFileController(c: Context) {
   try {
     // 2. Подготовка данных
     const fileBuffer = Buffer.from(await file.arrayBuffer())
-    const paths = generateFilePaths(`/trips/${tripId}/${placement}`, file.name)
+    const paths = generateFilePaths(`trips/${tripId}/${placement}`, file.name)
 
     // 3. Извлечение метаданных (делегировано сервису)
     const { metadata } = await extractAndStructureMetadata(fileBuffer)
 
     // 4. Обработка Thumbnail (оркестрация)
-    let finalThumbnailUrl: string | null = null
+    let finalThumbnailDbPath: string | null = null
     try {
       const thumbnailBuffer = await generateThumbnail(fileBuffer)
-      await saveFile(paths.thumbFullPath, thumbnailBuffer)
-      finalThumbnailUrl = paths.thumbFullPath
+      await saveFile(paths.thumbDiskPath, thumbnailBuffer)
+      finalThumbnailDbPath = paths.thumbDbPath
     }
     catch (thumbError) {
       console.error('Не удалось создать или сохранить thumbnail:', thumbError)
     }
 
     // 5. Сохранение основного файла (делегировано сервису)
-    await saveFile(paths.fullPath, fileBuffer)
+    await saveFile(paths.diskPath, fileBuffer)
 
     // 6. Сохранение записи в БД
     const newImageRecord = await imageRepository.create(
       tripId,
-      `/${paths.fullPath}`,
+      paths.dbPath,
       placement,
       {
         ...metadata,
-        thumbnailUrl: `/${finalThumbnailUrl}`,
+        thumbnailUrl: finalThumbnailDbPath,
       } as ImageMetadata,
     )
 
