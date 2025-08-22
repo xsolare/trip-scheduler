@@ -14,7 +14,7 @@ ARG VITE_APP_REQUEST_THROTTLE
 WORKDIR /app
 
 # Копируем только файлы манифестов для кеширования зависимостей
-COPY package.json bun.lockb ./
+COPY package.json  ./
 COPY apps/client/package.json ./apps/client/
 COPY apps/server/package.json ./apps/server/
 

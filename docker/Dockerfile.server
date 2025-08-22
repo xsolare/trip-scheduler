@@ -9,7 +9,7 @@ WORKDIR /app
 # Копируем только файлы, необходимые для установки зависимостей.
 # Это позволяет Docker кешировать этот слой и не переустанавливать
 # зависимости при каждом изменении исходного кода.
-COPY package.json bun.lockb ./
+COPY package.json ./
 COPY apps/server/package.json ./apps/server/
 # Если есть другие приложения, их package.json тоже нужно скопировать
 # COPY apps/client/package.json ./apps/client/
