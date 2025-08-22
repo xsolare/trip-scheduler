@@ -12,6 +12,7 @@ const { data, ui } = useModuleStore(['data', 'ui'])
 const { getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(data)
 const { reorderActivities, updateActivity, removeActivity } = data
 const { isViewMode } = storeToRefs(ui)
+const { collapsedActivities } = storeToRefs(ui)
 
 function onUpdateActivity(updatedActivity: IActivity) {
   updateActivity(getSelectedDay.value!.id, updatedActivity)
@@ -61,10 +62,12 @@ const draggableActivities = computed({
             :activity="activity"
             :is-first="index === 0"
             :is-last="index === draggableActivities.length - 1"
+            :is-collapsed="collapsedActivities.has(activity.id)"
             @update="onUpdateActivity"
             @delete="onDeleteActivity"
             @move-up="onMoveActivity(activity, 'up')"
             @move-down="onMoveActivity(activity, 'down')"
+            @toggle-collapse="ui.toggleActivityCollapsed(activity.id)"
           />
         </template>
       </draggable>

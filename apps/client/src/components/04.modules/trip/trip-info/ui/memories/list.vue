@@ -163,6 +163,8 @@ onChange((files) => {
   background-color: var(--bg-secondary-color);
   border-radius: var(--r-l);
   border: 1px solid var(--border-secondary-color);
+  margin-top: 16px;
+
   @include media-up(sm) {
     flex-direction: row;
   }

@@ -21,7 +21,6 @@ function handleViewChange(viewId: string) {
   <KitViewSwitcher
     v-model="activeView"
     :items="views"
-    full-width
     @change="handleViewChange"
   />
 </template>

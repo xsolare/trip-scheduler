@@ -40,7 +40,7 @@ export const useTripInfoMemoriesStore = defineStore('tripInfoMemories', {
 
   getters: {
     isLoadingMemories: () => useRequestStatus(ETripMemoriesKeys.FETCH).value,
-    isCreateMemory: () => useRequestStatus(ETripMemoriesKeys.CREATE).value,
+    isCreatingMemory: () => useRequestStatus(ETripMemoriesKeys.CREATE).value,
 
     /**
      * Геттер для получения списка загружаемых в данный момент воспоминаний.

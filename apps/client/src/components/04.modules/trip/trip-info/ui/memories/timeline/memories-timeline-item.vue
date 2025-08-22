@@ -43,6 +43,7 @@ function saveComment() {
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
 const editingTime = shallowRef<Time | null>(null)
+const commentEditorRef = ref(null)
 
 function handleTimeClick() {
   if (props.isViewMode)
@@ -202,6 +203,7 @@ function saveViewerTime() {
 }
 
 onClickOutside(timeEditorRef, saveTime)
+onClickOutside(commentEditorRef, saveViewerComment)
 </script>
 
 <template>
@@ -305,21 +307,21 @@ onClickOutside(timeEditorRef, saveTime)
           :class="{ 'is-readonly': isViewMode }"
         >
           <div class="viewer-comment-section">
-            <KitInlineMdEditorWrapper
-              v-if="!isViewMode"
-              v-model="activeViewerComment"
-              :readonly="isViewMode"
-              :features="{
-                'block-edit': false,
-                'image-block': false,
-                'list-item': false,
-                'link-tooltip': false,
-                'toolbar': false,
-              }"
-              placeholder="Комментарий..."
-              class="viewer-comment-editor"
-              @blur="saveViewerComment"
-            />
+            <div v-if="!isViewMode" ref="commentEditorRef">
+              <KitInlineMdEditorWrapper
+                v-model="activeViewerComment"
+                :readonly="isViewMode"
+                :features="{
+                  'block-edit': false,
+                  'image-block': false,
+                  'list-item': false,
+                  'link-tooltip': false,
+                  'toolbar': false,
+                }"
+                placeholder="Комментарий..."
+                class="viewer-comment-editor"
+              />
+            </div>
             <div v-else>
               <span class="activity-title">
                 {{ activeViewerActivityTitle }}
@@ -745,21 +747,22 @@ onClickOutside(timeEditorRef, saveTime)
 
 .viewer-comment-editor {
   :deep(.milkdown) {
+    --crepe-color-on-background: white;
+
     .editor {
       padding: 8px;
       border-radius: var(--r-s);
       min-height: 48px;
       transition: background-color 0.2s ease;
-      color: white;
 
       p {
         margin: 0;
         font-size: 0.9rem;
-
         border-radius: 10px;
         overflow: hidden;
       }
     }
+
     &:not([readonly]) .editor:hover {
       background-color: rgba(255, 255, 255, 0.1);
     }

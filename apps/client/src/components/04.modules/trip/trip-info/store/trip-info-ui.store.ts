@@ -1,12 +1,15 @@
 import type { RemovableRef } from '@vueuse/core'
 import type { ActiveView, InteractionMode } from '../models/types'
 import { useStorage } from '@vueuse/core'
+import { useAppStore } from '../../../../../shared/composables/use-store'
 
 export interface ITripInfoUiState {
   isDaysPanelOpen: boolean
   isDaysPanelPinned: boolean
   activeView: RemovableRef<ActiveView>
   interactionMode: RemovableRef<InteractionMode>
+  collapsedActivities: Set<string>
+  collapsedMemoryGroups: Set<string>
 }
 
 /**
@@ -18,6 +21,8 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
     isDaysPanelPinned: false,
     activeView: useStorage<ActiveView>('trip-active-view', 'plan'),
     interactionMode: useStorage<InteractionMode>('tripinfo-interaction-mode', 'view'),
+    collapsedActivities: new Set<string>(),
+    collapsedMemoryGroups: new Set<string>(),
   }),
 
   getters: {
@@ -26,6 +31,23 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
      * @param state - Текущее состояние стора.
      */
     isViewMode: state => state.interactionMode === 'view',
+    isEditModeAllow: () => {
+      const store = useAppStore(['auth'])
+
+      // TODO доделать позже
+      if (store.auth.user?.role === 'admin')
+        return true
+    },
+    areAllActivitiesCollapsed: state => (allIds: string[]) => {
+      if (allIds.length === 0)
+        return false
+      return state.collapsedActivities.size === allIds.length
+    },
+    areAllMemoryGroupsCollapsed: state => (allGroupKeys: string[]) => {
+      if (allGroupKeys.length === 0)
+        return false
+      return state.collapsedMemoryGroups.size === allGroupKeys.length
+    },
   },
 
   actions: {
@@ -49,11 +71,47 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
       this.activeView = view
     },
 
+    toggleActivityCollapsed(id: string) {
+      if (this.collapsedActivities.has(id))
+        this.collapsedActivities.delete(id)
+      else
+        this.collapsedActivities.add(id)
+    },
+
+    toggleAllActivities(allIds: string[]) {
+      const allCollapsed = allIds.length > 0 && this.collapsedActivities.size === allIds.length
+      if (allCollapsed)
+        this.collapsedActivities.clear()
+      else
+        this.collapsedActivities = new Set(allIds)
+    },
+
+    toggleMemoryGroupCollapsed(key: string) {
+      if (this.collapsedMemoryGroups.has(key))
+        this.collapsedMemoryGroups.delete(key)
+      else
+        this.collapsedMemoryGroups.add(key)
+    },
+
+    toggleAllMemoryGroups(allGroupKeys: string[]) {
+      const allCollapsed = allGroupKeys.length > 0 && this.collapsedMemoryGroups.size === allGroupKeys.length
+      if (allCollapsed)
+        this.collapsedMemoryGroups.clear()
+      else
+        this.collapsedMemoryGroups = new Set(allGroupKeys)
+    },
+
+    clearCollapsedState() {
+      this.collapsedActivities.clear()
+      this.collapsedMemoryGroups.clear()
+    },
+
     reset() {
       this.isDaysPanelOpen = false
       this.isDaysPanelPinned = false
       this.activeView = 'plan'
       this.interactionMode = 'view'
+      this.clearCollapsedState()
     },
   },
 })

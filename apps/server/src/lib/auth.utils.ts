@@ -10,8 +10,8 @@ interface AccessTokenPayload {
 }
 
 // Время жизни токенов в секундах
-const ACCESS_TOKEN_EXPIRY = 60 * 15 // 15 минут
-const REFRESH_TOKEN_EXPIRY = 60 * 60 * 24 * 7 // 7 дней
+const ACCESS_TOKEN_EXPIRY = 60 * 15 * 24 * 1 // 1 день
+const REFRESH_TOKEN_EXPIRY = 60 * 60 * 24 * 14 // 14 дней
 
 const JWT_SECRET = process.env.JWT_SECRET!
 if (!JWT_SECRET) {

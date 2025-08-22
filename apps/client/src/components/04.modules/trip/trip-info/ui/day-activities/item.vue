@@ -4,7 +4,6 @@ import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
-import { ref, watch } from 'vue'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
@@ -16,21 +15,14 @@ interface ActivityItemProps {
   activity: Activity
   isFirst: boolean
   isLast: boolean
+  isCollapsed: boolean // Добавлено
 }
 
 const props = defineProps<ActivityItemProps>()
-const emit = defineEmits(['update', 'delete', 'moveUp', 'moveDown'])
+const emit = defineEmits(['update', 'delete', 'moveUp', 'moveDown', 'toggleCollapse'])
 
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)
-
-const isCollapsed = ref(false)
-
-watch(isViewMode, (isView) => {
-  // Разворачиваем блок при переходе в режим редактирования
-  if (!isView)
-    isCollapsed.value = false
-})
 
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
@@ -219,7 +211,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         </div>
       </div>
 
-      <button v-if="isViewMode" class="collapse-toggle-btn" @click="isCollapsed = !isCollapsed">
+      <button v-if="isViewMode" class="collapse-toggle-btn" @click="$emit('toggleCollapse')">
         <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
       </button>
 

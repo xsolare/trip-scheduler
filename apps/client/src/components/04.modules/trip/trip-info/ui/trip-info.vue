@@ -10,7 +10,6 @@ import { minutesToTime, timeToMinutes } from '../lib/helpers'
 import { EActivityTag } from '../models/types'
 import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
-import ViewSwitcher from './controls/view-switcher.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
 import MemoriesList from './memories/list.vue'
@@ -22,7 +21,7 @@ const router = useRouter()
 
 const store = useModuleStore(['data', 'ui', 'routeGallery', 'memories'])
 const { days, isLoading, fetchError, getActivitiesForSelectedDay, getSelectedDay } = storeToRefs(store.data)
-const { activeView, isViewMode } = storeToRefs(store.ui)
+const { activeView, isViewMode, areAllActivitiesCollapsed, areAllMemoryGroupsCollapsed } = storeToRefs(store.ui)
 
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
@@ -61,6 +60,61 @@ function handleAddNewActivity() {
   store.data.addActivity(getSelectedDay.value.id, newActivity)
 }
 
+// --- Логика для сворачивания ---
+
+// Маршрут
+const allActivityIds = computed(() => getActivitiesForSelectedDay.value.map(a => a.id))
+const allRouteBlocksCollapsed = computed(() => areAllActivitiesCollapsed.value(allActivityIds.value))
+const collapseRouteIcon = computed(() =>
+  allRouteBlocksCollapsed.value ? 'mdi:chevron-double-down' : 'mdi:chevron-double-up',
+)
+function handleToggleAllActivities() {
+  store.ui.toggleAllActivities(allActivityIds.value)
+}
+
+// Воспоминания
+const timelineGroups = computed(() => {
+  const activities = getActivitiesForSelectedDay.value
+  const memories = store.memories.memoriesForSelectedDay
+  const groups: any[] = []
+  if (memories.length === 0 && activities.length === 0)
+    return []
+  const unlinkedMemories = memories.filter(m => !m.timestamp || (new Date(m.timestamp).getUTCHours() === 0 && new Date(m.timestamp).getUTCMinutes() === 0))
+  const timedMemories = memories.filter(m => !unlinkedMemories.includes(m))
+  const START_OF_DAY_MINUTES = 6 * 60
+  const nightMemories = timedMemories.filter(m => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) < START_OF_DAY_MINUTES)
+  if (nightMemories.length > 0)
+    groups.push({ type: 'night', title: 'Ночь', memories: nightMemories })
+  const firstActivityStart = activities.length > 0 ? timeToMinutes(activities[0].startTime) : Infinity
+  const dayStartMemories = timedMemories.filter(m => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) >= START_OF_DAY_MINUTES && (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) < firstActivityStart)
+  if (dayStartMemories.length > 0)
+    groups.push({ type: 'start', title: 'Начало дня', memories: dayStartMemories })
+  activities.forEach((activity, index) => {
+    const start = timeToMinutes(activity.startTime)
+    const end = activities[index + 1] ? timeToMinutes(activities[index + 1].startTime) : timeToMinutes(activity.endTime)
+    const activityMemories = timedMemories.filter(m => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) >= start && (index === activities.length - 1 ? (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) <= end : (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) < end))
+    groups.push({ type: 'activity', activity, title: activity.title, memories: activityMemories })
+  })
+  const lastActivityEnd = activities.length > 0 ? timeToMinutes(activities[activities.length - 1].endTime) : -1
+  const dayEndMemories = timedMemories.filter(m => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) > lastActivityEnd && (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) >= START_OF_DAY_MINUTES)
+  if (dayEndMemories.length > 0)
+    groups.push({ type: 'end', title: 'Завершение дня', memories: dayEndMemories })
+  if (unlinkedMemories.length > 0)
+    groups.push({ type: 'unlinked', title: 'Прочие воспоминания за этот день', memories: unlinkedMemories })
+  return groups
+})
+
+const allMemoryGroupKeys = computed(() => timelineGroups.value.map(g => g.type + (g.activity?.id || g.title)))
+const allMemoryBlocksCollapsed = computed(() => areAllMemoryGroupsCollapsed.value(allMemoryGroupKeys.value))
+const collapseMemoriesIcon = computed(() =>
+  allMemoryBlocksCollapsed.value ? 'mdi:chevron-double-down' : 'mdi:chevron-double-up',
+)
+function handleToggleAllMemories() {
+  store.ui.toggleAllMemoryGroups(allMemoryGroupKeys.value)
+}
+
+// --- Жизненный цикл ---
+
 if (tripId.value) {
   store.data.fetchDaysForTrip(tripId.value, dayId.value)
   store.routeGallery.setTripId(tripId.value)
@@ -74,7 +128,10 @@ watch(fetchError, (newError) => {
 
 watch(
   () => store.data.currentDayId,
-  (newDayId) => {
+  (newDayId, oldDayId) => {
+    if (newDayId && newDayId !== oldDayId)
+      store.ui.clearCollapsedState()
+
     if (newDayId && newDayId !== route.query.day)
       router.replace({ query: { ...route.query, day: newDayId } })
   },
@@ -89,7 +146,6 @@ onBeforeUnmount(() => {
 
 <template>
   <template v-if="!fetchError">
-    <ViewSwitcher />
     <DaysControls />
   </template>
 
@@ -113,13 +169,44 @@ onBeforeUnmount(() => {
         </Divider>
         <DayHeader />
 
-        <template v-if="activeView === 'plan'">
-          <Divider :is-loading="store.data.isLoadingUpdateActivity">
-            маршрут
-          </Divider>
-          <DayActivitiesList @add="handleAddNewActivity" />
-        </template>
-        <MemoriesList v-else-if="activeView === 'memories'" />
+        <div class="view-content" :class="`view-mode-${activeView}`">
+          <div v-if="activeView === 'plan' || activeView === 'split'" class="plan-view">
+            <div class="divider-with-action">
+              <Divider :is-loading="store.data.isLoadingUpdateActivity">
+                маршрут
+              </Divider>
+              <button
+                v-if="isViewMode && allActivityIds.length > 0"
+                class="collapse-all-btn"
+                title="Свернуть/развернуть все активности"
+                @click="handleToggleAllActivities"
+              >
+                <Icon :icon="collapseRouteIcon" />
+              </button>
+            </div>
+            <DayActivitiesList @add="handleAddNewActivity" />
+          </div>
+
+          <div v-if="activeView === 'memories' || activeView === 'split'" class="memories-view">
+            <div class="divider-with-action">
+              <Divider
+                :is-loading="store.memories.isLoadingMemories || store.memories.isCreatingMemory"
+              >
+                воспоминания дня
+              </Divider>
+              <button
+                v-if="allMemoryGroupKeys.length > 0"
+                class="collapse-all-btn"
+                title="Свернуть/развернуть все группы"
+                @click="handleToggleAllMemories"
+              >
+                <Icon :icon="collapseMemoriesIcon" />
+              </button>
+            </div>
+
+            <MemoriesList />
+          </div>
+        </div>
 
         <DayNavigation v-if="!isLoading && days.length > 1" />
       </div>
@@ -149,12 +236,69 @@ onBeforeUnmount(() => {
   flex-direction: column;
   height: 100%;
 
+  .view-content.view-mode-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .plan-view {
+    position: relative;
+  }
+
+  .view-mode-split .plan-view::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -16px;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--border-secondary-color);
+  }
+
   &-wrapper {
     height: 100%;
     position: relative;
 
     @include media-down(sm) {
       padding: 0 4px;
+    }
+  }
+}
+
+.divider-with-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .kit-divider {
+    flex-grow: 1;
+  }
+
+  .collapse-all-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-secondary-color);
+    border: 1px solid var(--border-secondary-color);
+    border-radius: var(--r-s);
+    color: var(--fg-secondary-color);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    z-index: 1;
+
+    &:hover {
+      color: var(--fg-accent-color);
+      border-color: var(--fg-accent-color);
+      background-color: var(--bg-hover-color);
     }
   }
 }

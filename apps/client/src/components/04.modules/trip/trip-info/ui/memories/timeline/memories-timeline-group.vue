@@ -2,7 +2,6 @@
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Activity } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { computed, ref } from 'vue'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { EActivityStatus } from '~/shared/types/models/activity'
 import MemoriesItem from './memories-timeline-item.vue'
@@ -13,20 +12,23 @@ interface TimelineGroup {
   memories: any[]
   activity?: Activity
 }
+
 type TimelineGroups = TimelineGroup[]
 
-const props = defineProps<{
+interface Props {
   group: TimelineGroup
   isViewMode: boolean
   galleryImages: ImageViewerImage[]
   timelineGroups: TimelineGroups
-}>()
+  isCollapsed: boolean
+}
+
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'updateActivity', payload: { activity: Activity, data: Partial<Activity> }): void
+  (e: 'toggleCollapse'): void
 }>()
-
-const isCollapsed = ref(false)
 
 const statusOptions: { value: EActivityStatus, label: string, icon: string }[] = [
   { value: EActivityStatus.COMPLETED, label: 'Пройден', icon: 'mdi:check-circle-outline' },
@@ -54,7 +56,7 @@ function handleUpdateActivity(data: Partial<Activity>) {
       <div class="activity-time">
         <span>{{ group.activity ? group.activity.startTime : '...' }}</span>
       </div>
-      <button class="collapse-toggle-btn" @click="isCollapsed = !isCollapsed">
+      <button class="collapse-toggle-btn" @click="$emit('toggleCollapse')">
         <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
       </button>
       <div class="header-spacer" />

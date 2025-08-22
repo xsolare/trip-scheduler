@@ -3,8 +3,7 @@ import { Icon } from '@iconify/vue'
 import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 
 const { ui } = useModuleStore(['ui'])
-const { auth, toast } = useAppStore(['auth', 'toast'])
-const { isViewMode } = storeToRefs(ui)
+const { isViewMode, isEditModeAllow } = storeToRefs(ui)
 
 const buttonConfig = computed(() => {
   if (isViewMode.value) {
@@ -20,17 +19,21 @@ const buttonConfig = computed(() => {
 })
 
 function toggleMode() {
-  if (isViewMode.value && !auth.isAuthenticated) {
-    toast.info('Для редактирования необходимо авторизоваться')
-    return
-  }
+  const newMode = isViewMode.value ? 'edit' : 'view'
+  if (newMode === 'edit')
+    ui.clearCollapsedState()
 
-  ui.setInteractionMode(isViewMode.value ? 'edit' : 'view')
+  ui.setInteractionMode(newMode)
 }
 </script>
 
 <template>
-  <button class="mode-button" :title="buttonConfig.title" @click="toggleMode">
+  <button
+    v-if="isEditModeAllow"
+    class="mode-button"
+    :title="buttonConfig.title"
+    @click="toggleMode"
+  >
     <Icon :icon="buttonConfig.icon" />
   </button>
 </template>

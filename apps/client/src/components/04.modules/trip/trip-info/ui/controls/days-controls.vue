@@ -4,12 +4,13 @@ import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
-import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { useModuleStore } from '../../composables/use-module'
 import DaysPanel from './days-panel.vue'
 import ModeSwitcher from './mode-switcher.vue'
+import ViewSwitcher from './view-switcher.vue'
 
 const store = useModuleStore(['ui', 'data'])
-const { isDaysPanelPinned, isDaysPanelOpen, isViewMode } = storeToRefs(store.ui)
+const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView, isEditModeAllow } = storeToRefs(store.ui)
 const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.data)
 const { setCurrentDay, updateDayDetails } = store.data
 
@@ -102,6 +103,19 @@ const selectedCalendarDate = computed<CalendarDate | null>({
         </button>
         <ModeSwitcher key="mode" />
       </TransitionGroup>
+
+      <div class="view-controls">
+        <ViewSwitcher />
+        <button
+          v-if="isEditModeAllow"
+          class="split-view-btn"
+          title="Отобразить План и Воспоминания"
+          :class="{ 'is-active': activeView === 'split' }"
+          @click="store.ui.setActiveView('split')"
+        >
+          <Icon icon="mdi:view-split-vertical" />
+        </button>
+      </div>
     </div>
 
     <DaysPanel
@@ -120,7 +134,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 8px;
+  padding: 16px 0;
   min-height: 80px;
   margin-top: 16px;
 }
@@ -132,7 +146,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
 .right-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 }
 .spacer {
   flex-grow: 1;
@@ -198,6 +212,42 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   &.readonly {
     cursor: default;
     pointer-events: none;
+  }
+}
+
+.view-controls {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-s);
+  overflow: hidden;
+
+  :deep(.kit-view-switcher) {
+    border: none;
+    border-radius: 0;
+  }
+}
+
+.split-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary-color);
+  padding: 14px 8px;
+  cursor: pointer;
+  color: var(--fg-secondary-color);
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  border-left: 1px solid var(--border-secondary-color);
+
+  &:hover {
+    color: var(--fg-accent-color);
+    background-color: var(--bg-hover-color);
+  }
+
+  &.is-active {
+    background-color: var(--bg-accent-color-translucent);
+    color: var(--fg-accent-color);
   }
 }
 </style>

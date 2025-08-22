@@ -43,7 +43,7 @@ const description = `
 const DAY_IDS = Array.from({ length: 14 }, () => crypto.randomUUID())
 
 // Вспомогательные функции для создания корректных путей к статическим файлам
-// eslint-disable-next-line unused-imports/no-unused-vars
+
 const getChinaMemoriesPath = (filename: string) => `/static/images/trips/3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a/memories/${filename}`
 const getChinaRoutePath = (filename: string) => `/static/images/trips/3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a/route/${filename}`
 
@@ -198,7 +198,7 @@ export const MOCK_DATA = [
     id: TRIP_CHINA_ID,
     title: 'Путешествие по Китаю',
     userId: MOCK_USER_ID_1,
-    imageUrl: getChinaRoutePath('20250217213134.png'),
+    imageUrl: getChinaMemoriesPath('1755811044832-fc2608c3-b996-45b8-9f52-303c1c17b7ad.jpg'),
     description: 'Двухнедельное приключение, охватывающее футуристический Шанхай, классические сады Сучжоу и Ханчжоу, и заканчивающееся в сердце древнего Шелкового пути — Урумчи.',
     startDate: new Date('2025-05-10'),
     endDate: new Date('2025-05-23'),

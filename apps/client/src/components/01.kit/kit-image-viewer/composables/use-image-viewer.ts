@@ -69,13 +69,20 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
     if (!isOpen.value || !enableKeyboard)
       return
 
+    const target = e.target as HTMLElement
+    const isEditing = target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+
     switch (e.key) {
       case 'ArrowRight':
-      case ' ': // Space for next
+      case ' ':
+        if (isEditing)
+          return
         e.preventDefault()
         next()
         break
       case 'ArrowLeft':
+        if (isEditing)
+          return
         e.preventDefault()
         prev()
         break
@@ -84,10 +91,14 @@ export function useImageViewer(options: ImageViewerOptions = {}) {
         close()
         break
       case 'Home':
+        if (isEditing)
+          return
         e.preventDefault()
         goToIndex(0)
         break
       case 'End':
+        if (isEditing)
+          return
         e.preventDefault()
         goToIndex(images.value.length - 1)
         break
