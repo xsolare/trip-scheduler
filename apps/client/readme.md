@@ -146,7 +146,8 @@ bun install
 docker build -t trip-scheduler-client . \
   --build-arg VITE_APP_SERVER_URL=https://api.yourdomain.com \
   --build-arg VITE_APP_TRPC_MODE=true \
-  --build-arg VITE_APP_MOCK_MODE=false```
+  --build-arg VITE_APP_MOCK_MODE=false
+```
 
 ### Запуск контейнера
 
