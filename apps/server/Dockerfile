@@ -26,7 +26,7 @@ RUN chown -R bun:bun /usr/src/app
 
 USER bun
 
-COPY --chown=bun:bun --from=builder /usr/src/app/server/dist ./dist
+COPY --chown=bun:bun --from=builder /usr/src/app/dist ./dist
 
 EXPOSE 8080
 
