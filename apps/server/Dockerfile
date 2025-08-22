@@ -10,7 +10,7 @@ RUN bun install --ignore-scripts
 
 COPY . .
 
-RUN bun --cwd ./apps/server run build:web
+RUN bun run build:web
 
 
 # =================================================================
@@ -26,7 +26,7 @@ RUN chown -R bun:bun /usr/src/app
 
 USER bun
 
-COPY --chown=bun:bun --from=builder /usr/src/app/apps/server/dist ./dist
+COPY --chown=bun:bun --from=builder /usr/src/app/server/dist ./dist
 
 EXPOSE 8080
 
