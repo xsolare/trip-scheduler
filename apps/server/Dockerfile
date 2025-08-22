@@ -22,11 +22,8 @@ ENV NODE_ENV=production
 ENV PORT=8080
 
 WORKDIR /usr/src/app
-RUN chown -R bun:bun /usr/src/app
 
-USER bun
-
-COPY --chown=bun:bun --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/dist ./dist
 
 EXPOSE 8080
 
