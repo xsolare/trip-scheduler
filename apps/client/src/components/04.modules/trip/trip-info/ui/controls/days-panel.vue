@@ -100,7 +100,7 @@ function getShortWeekday(date: string): string {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 98;
+  z-index: 10;
 }
 
 .panel {
@@ -110,7 +110,7 @@ function getShortWeekday(date: string): string {
   width: 400px;
   height: 100%;
   background-color: var(--bg-primary-color);
-  z-index: 99;
+  z-index: 11;
   transform: translateX(-100%);
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   display: flex;
@@ -126,8 +126,8 @@ function getShortWeekday(date: string): string {
   &.pinned {
     position: fixed;
     transform: none;
-    top: 44px;
-    height: calc(100% - 44px - 47px);
+    top: 56px;
+    height: calc(100% - 56px - 47px);
     opacity: 1;
     box-shadow: none;
     border-right: 1px solid var(--border-secondary-color);
