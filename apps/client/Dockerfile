@@ -11,21 +11,21 @@ ARG VITE_APP_TRPC_MODE
 ARG VITE_APP_MOCK_MODE
 ARG VITE_APP_REQUEST_THROTTLE
 
-COPY package.json bun.lock ./
+COPY package.json ./
 RUN bun install --ignore-scripts
 
 COPY . .
 
-RUN bun --cwd ./apps/client run build:web
+RUN bun run build:web
 
 # =================================================================
 # Этап 2: "release" - Создание финального образа с Nginx
 # =================================================================
 FROM nginx:stable-alpine
 
-COPY --from=builder /usr/src/app/apps/client/dist-web /usr/share/nginx/html
+COPY --from=builder /usr/src/app/dist-web /usr/share/nginx/html
 
-COPY deployment/client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 1420
 
