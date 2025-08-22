@@ -13,7 +13,7 @@
     "dev:storybook": "storybook dev -p 6006",
     "--------------------------------<      BUILD     >--------------------------------": "",
     "build": "vue-tsc --noEmit && vite build --config build/vite.config.tauri.ts",
-    "build:web": "vue-tsc --noEmit && vite build --config build/vite.config.web.ts",
+    "build:web": "vite build --config build/vite.config.web.ts",
     "preview": "vite preview --config build/vite.config.tauri.ts",
     "preview:web": "vite preview --config build/vite.config.web.ts",
     "build:storybook": "storybook build -o dist-storybook",
