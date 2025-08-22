@@ -114,6 +114,7 @@
     "refDefault": true,
     "refThrottled": true,
     "refWithControl": true,
+    "resolveApiUrl": true,
     "resolveComponent": true,
     "resolveRef": true,
     "resolveUnref": true,

@@ -3,54 +3,34 @@
 # =================================================================
 FROM oven/bun:1 AS builder
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Копируем только файлы, необходимые для установки зависимостей.
-# Это позволяет Docker кешировать этот слой и не переустанавливать
-# зависимости при каждом изменении исходного кода.
-COPY package.json ./
-COPY apps/server/package.json ./apps/server/
-# Если есть другие приложения, их package.json тоже нужно скопировать
-# COPY apps/client/package.json ./apps/client/
+COPY package.json bun.lock ./
+RUN bun install --ignore-scripts
 
-# Устанавливаем ВСЕ зависимости, необходимые для сборки
-RUN bun install --frozen-lockfile --ignore-scripts
-
-# Копируем остальные исходные коды проекта
 COPY . .
 
-# Собираем production-версию серверного приложения
-# Убедитесь, что в package.json есть скрипт "build"
-RUN bun run build
+RUN bun --cwd=apps/server run build
+
 
 # =================================================================
 # Этап 2: "release" - Создание финального образа для production
 # =================================================================
 FROM oven/bun:1-slim AS release
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
-
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Копируем файлы для установки ТОЛЬКО production-зависимостей
-COPY package.json bun.lockb ./
-COPY apps/server/package.json ./apps/server/
-# Если есть другие приложения, их package.json тоже нужно скопировать
-# COPY apps/client/package.json ./apps/client/
+WORKDIR /usr/src/app
+RUN chown -R bun:bun /usr/src/app
 
-# Устанавливаем только production-зависимости для уменьшения размера образа
-RUN bun install --production --frozen-lockfile --ignore-scripts
+USER bun
 
-# Копируем собранный код из этапа "builder"
-COPY --from=builder /app/dist ./dist
+COPY --chown=bun:bun --from=builder /usr/src/app/apps/server/dist ./dist
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/ || exit 1
 
-# Запускаем собранное приложение напрямую через bun
-CMD ["bun", "dist/index.js"]
+CMD ["bun", "run", "dist/index.js"]
