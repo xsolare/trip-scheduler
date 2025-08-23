@@ -31,7 +31,6 @@ const CACHE_CONFIG = {
   durations: {
     images: 365 * 24 * 60 * 60,
     fonts: 365 * 24 * 60 * 60,
-    // --- Добавлено ---
     icons: 30 * 24 * 60 * 60,
     static: {
       hashed: 365 * 24 * 60 * 60,
@@ -42,7 +41,7 @@ const CACHE_CONFIG = {
   },
   limits: {
     fonts: 30,
-    images: 500,
+    images: 1000,
     icons: 500,
     hashedAssets: 200,
     vendorAssets: 100,

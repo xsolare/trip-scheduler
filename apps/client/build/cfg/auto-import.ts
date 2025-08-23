@@ -29,6 +29,7 @@ export const autoImportOptionsCfg: AutoImportOptions = {
     IconsResolver({
       prefix: 'Icon',
       customCollections: ['custom'],
+      enabledCollections: ['mdi'],
     }),
   ],
   dts: './src/shared/types/dts/auto-imports.d.ts',

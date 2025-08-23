@@ -40,7 +40,22 @@ if (import.meta.env.PROD) {
 
   // IMAGE
   registerRoute(
-    ({ request }) => request.destination === 'image',
+    ({ request, url }) => {
+      if (request.destination !== 'image')
+        return false
+
+      const isMemoryImage = url.pathname.includes('/memories/')
+      // Если это не изображение из "воспоминаний", кешируем его по умолчанию
+      if (!isMemoryImage)
+        return true
+
+      // Если это изображение из "воспоминаний", мы кешируем его только если
+      // в названии есть суффикс размера. Это предотвращает кеширование
+      // оригинальных, больших изображений.
+      const hasSizeSuffix = /-medium|-large|-small/.test(url.pathname)
+
+      return hasSizeSuffix
+    },
     CacheStrategyFactory.createStaleWhileRevalidate(
       CACHE_CONFIG.names.images,
       {
@@ -188,16 +203,6 @@ self.addEventListener('message', async (event) => {
       type: 'ERROR',
       payload: { message: `Неизвестный тип сообщения: ${type}` },
     })
-  }
-})
-
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-trip-updates') {
-    console.log('🔄 Фоновая синхронизация запущена...')
-
-    // TODO
-    // Здесь будет логика отправки сохраненных запросов на сервер
-    // event.waitUntil(syncData()); // 'syncData' - функция, которую нужно реализовать
   }
 })
 
