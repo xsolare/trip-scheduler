@@ -531,13 +531,14 @@ onUnmounted(() => {
             <div ref="containerRef" class="image-container">
               <div v-if="!imageLoaded && !imageError" class="image-placeholder">
                 <div class="loading-spinner">
-                  <Icon icon="mdi:loading" class="spinning" />
+                  <Icon width="64" height="64" icon="mdi:loading" class="spinning" />
                 </div>
-                <span>Loading...</span>
+                <span>Загрузка изображения...</span>
               </div>
+
               <div v-else-if="imageError" class="image-error">
-                <Icon icon="mdi:image-broken-variant" />
-                <span>Failed to load image</span>
+                <Icon width="64" height="64" icon="mdi:image-broken-variant" />
+                <span>Не удалось загрузить изображение</span>
               </div>
               <img
                 v-if="currentImage"
@@ -588,7 +589,7 @@ onUnmounted(() => {
                 :title="`Go to image ${index + 1}`"
                 @click="goToIndex(index)"
               >
-                <img :src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+                <img v-resolve-src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
                 <div v-if="index === currentIndex" class="thumbnail-indicator" />
               </button>
             </div>
@@ -826,6 +827,7 @@ onUnmounted(() => {
   gap: 16px;
   color: rgba(255, 255, 255, 0.7);
   font-size: 16px;
+  width: 100%;
 
   .icon {
     font-size: 48px;

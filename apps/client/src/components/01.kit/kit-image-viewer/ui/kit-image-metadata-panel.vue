@@ -658,6 +658,10 @@ const extendedInfo = computed(() => {
   align-items: center;
   justify-content: center;
   padding: 2rem;
+
+  @include media-down(sm) {
+    padding: 12px;
+  }
 }
 
 .map-container {
