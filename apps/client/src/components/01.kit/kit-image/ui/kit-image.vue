@@ -2,17 +2,35 @@
 import { AspectRatio } from 'reka-ui'
 import { computed, nextTick, onBeforeUnmount, readonly, ref, watch } from 'vue'
 import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
+import { resolveApiUrl } from '~/shared/lib/url'
 
 interface Props {
+  /**
+   * Объект с путями к различным версиям изображения.
+   * @example { small: 'path/to/img-sm.webp', medium: 'path/to/img-md.webp' }
+   */
+  variants?: {
+    small?: string
+    medium?: string
+    large?: string
+  } | null
+  /**
+   * URL оригинального изображения (используется как фоллбэк).
+   */
   src?: string
   alt?: string
   aspectRatio?: number
   objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
   loading?: 'lazy' | 'eager'
+  /**
+   * Таймаут в миллисекундах, после которого загрузка считается неудачной.
+   */
   loadTimeout?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  variants: undefined,
+  src: '',
   alt: '',
   aspectRatio: undefined,
   objectFit: 'cover',
@@ -25,6 +43,17 @@ const hasError = ref(false)
 const imageRef = ref<HTMLImageElement | null>(null)
 const loadTimeoutId = ref<NodeJS.Timeout | undefined>()
 const imageObserver = ref<IntersectionObserver | undefined>()
+
+const resolvedVariants = computed(() => {
+  if (!props.variants)
+    return {}
+  return {
+    small: resolveApiUrl(props.variants.small),
+    medium: resolveApiUrl(props.variants.medium),
+    large: resolveApiUrl(props.variants.large),
+  }
+})
+const resolvedSrc = computed(() => resolveApiUrl(props.src))
 
 const imageStyle = computed(() => ({
   objectFit: props.objectFit,
@@ -45,12 +74,10 @@ function handleError() {
 
 function checkImageState(imgElement: HTMLImageElement) {
   if (imgElement.complete) {
-    if (imgElement.naturalWidth > 0) {
+    if (imgElement.naturalWidth > 0)
       handleLoad()
-    }
-    else {
+    else
       handleError()
-    }
   }
 }
 
@@ -65,17 +92,15 @@ function setLoadTimeout() {
   clearLoadTimeout()
   if (props.loadTimeout > 0) {
     loadTimeoutId.value = setTimeout(() => {
-      if (isLoading.value) {
+      if (isLoading.value)
         handleError()
-      }
     }, props.loadTimeout)
   }
 }
 
 function setupIntersectionObserver() {
-  if (typeof window === 'undefined' || !imageRef.value || props.loading !== 'lazy') {
+  if (typeof window === 'undefined' || !imageRef.value || props.loading !== 'lazy')
     return
-  }
 
   cleanupObserver()
 
@@ -115,12 +140,10 @@ watch(
 
     nextTick(() => {
       if (imageRef.value) {
-        if (props.loading === 'eager') {
+        if (props.loading === 'eager')
           checkImageState(imageRef.value)
-        }
-        else {
+        else
           setupIntersectionObserver()
-        }
       }
     })
   },
@@ -152,9 +175,7 @@ defineExpose({
       <transition name="faded">
         <div v-if="isLoading" class="placeholder-wrapper">
           <slot name="loader">
-            <KitSkeleton
-              class="skeleton-placeholder"
-            />
+            <KitSkeleton class="skeleton-placeholder" />
           </slot>
         </div>
       </transition>
@@ -170,18 +191,34 @@ defineExpose({
         </div>
       </transition>
 
-      <!-- Само изображение. Оно всегда в DOM (если есть src), но его видимостью управляет opacity -->
-      <img
-        v-if="src"
-        ref="imageRef"
-        v-resolve-src="src"
-        class="image"
-        :alt="alt"
-        :loading="loading"
-        :style="imageStyle"
-        @load="handleLoad"
-        @error="handleError"
-      >
+      <!-- Адаптивное изображение с помощью <picture> -->
+      <picture v-if="src">
+        <!-- Источники для разных размеров экрана. Браузер выберет первый подходящий. -->
+        <source
+          v-if="resolvedVariants.large"
+          :srcset="resolvedVariants.large"
+          media="(min-width: 1200px)"
+          type="image/webp"
+        >
+        <source
+          v-if="resolvedVariants.medium"
+          :srcset="resolvedVariants.medium"
+          media="(min-width: 600px)"
+          type="image/webp"
+        >
+
+        <!-- Фоллбэк: оригинальное изображение для старых браузеров или если вариантов нет -->
+        <img
+          ref="imageRef"
+          :src="resolvedSrc"
+          class="image"
+          :alt="alt"
+          :loading="loading"
+          :style="imageStyle"
+          @load="handleLoad"
+          @error="handleError"
+        >
+      </picture>
     </div>
   </component>
 </template>
@@ -201,7 +238,9 @@ defineExpose({
   border-radius: inherit;
 
   .placeholder-wrapper,
-  .image {
+  .image,
+  picture {
+    /* Добавляем picture сюда */
     position: absolute;
     inset: 0;
     width: 100%;

@@ -76,6 +76,7 @@ export function tripImageToViewerImage(image: TripImage): ImageViewerImage {
 
   return {
     url: image.url,
+    variants: image.variants,
     alt: image.metadata?.iptc?.headline || 'Trip Image',
     caption: image.metadata?.iptc?.caption,
     meta,

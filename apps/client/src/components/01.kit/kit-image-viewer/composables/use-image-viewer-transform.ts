@@ -1,5 +1,5 @@
-import type { MaybeRefOrGetter } from 'vue'
-import type { ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
+import type { MaybeRefOrGetter, Ref } from 'vue'
+import type { TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
 
 interface UseImageViewerTransformOptions {
   imageRef: Ref<HTMLImageElement | null>

@@ -70,7 +70,7 @@ function handleSelect(item: KitDropdownItem<T>) {
   border: 1px solid var(--border-primary-color);
   border-radius: var(--r-s);
   box-shadow: var(--shadow-m);
-  z-index: 10;
+  z-index: 14;
   min-width: 200px;
 }
 

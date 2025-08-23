@@ -1,13 +1,15 @@
+// src/api/upload.controller.ts
+
 import type { Context } from 'hono'
 import type { ImageMetadata } from '~/repositories/image.repository'
 import { tripImagePlacementEnum } from 'db/schema'
 import { HTTPException } from 'hono/http-exception'
 import { imageRepository } from '~/repositories/image.repository'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
-import { extractAndStructureMetadata, generateThumbnail } from '~/services/image-metadata.service'
+import { extractAndStructureMetadata, generateImageVariants } from '~/services/image-metadata.service'
 
 export async function uploadFileController(c: Context) {
-  // 1. Валидация HTTP-запроса
+  // 1. Валидация HTTP-запроса (без изменений)
   const formData = await c.req.formData()
   const file = formData.get('file')
   const tripId = formData.get('tripId')
@@ -28,31 +30,33 @@ export async function uploadFileController(c: Context) {
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const paths = generateFilePaths(`trips/${tripId}/${placement}`, file.name)
 
-    // 3. Извлечение метаданных (делегировано сервису)
+    // 3. Извлечение метаданных
     const { metadata } = await extractAndStructureMetadata(fileBuffer)
 
-    // 4. Обработка Thumbnail (оркестрация)
-    let finalThumbnailDbPath: string | null = null
-    try {
-      const thumbnailBuffer = await generateThumbnail(fileBuffer)
-      await saveFile(paths.thumbDiskPath, thumbnailBuffer)
-      finalThumbnailDbPath = paths.thumbDbPath
-    }
-    catch (thumbError) {
-      console.error('Не удалось создать или сохранить thumbnail:', thumbError)
-    }
+    // 4. Генерация и сохранение вариантов
+    const imageVariants = await generateImageVariants(fileBuffer)
+    const variantUrls: Record<string, string> = {}
 
-    // 5. Сохранение основного файла (делегировано сервису)
-    await saveFile(paths.diskPath, fileBuffer)
+    // Используем Promise.all для параллельного сохранения
+    await Promise.all(
+      Object.entries(imageVariants).map(async ([name, buffer]) => {
+        const variantPaths = paths.getVariantPaths(name)
+        await saveFile(variantPaths.diskPath, buffer)
+        variantUrls[name] = variantPaths.dbPath
+      }),
+    )
+
+    // 5. Сохранение основного файла
+    await saveFile(paths.original.diskPath, fileBuffer)
 
     // 6. Сохранение записи в БД
     const newImageRecord = await imageRepository.create(
       tripId,
-      paths.dbPath,
+      paths.original.dbPath, // URL оригинала
       placement,
       {
         ...metadata,
-        thumbnailUrl: finalThumbnailDbPath,
+        variants: variantUrls, // Объект с URL вариантов
       } as ImageMetadata,
     )
 

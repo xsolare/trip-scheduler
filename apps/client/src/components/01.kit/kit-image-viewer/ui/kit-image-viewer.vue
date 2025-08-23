@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import type { IImageViewerImageMeta, ImageViewerImage } from '../models/types'
+import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
 import { Icon } from '@iconify/vue'
 import { onClickOutside, toRef } from '@vueuse/core'
 import { useImageViewerTransform } from '../composables'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
+import KitViewerDropdown from './kit-viewer-dropdown.vue'
+
+type ImageQuality = 'medium' | 'large' | 'original'
 
 interface Props {
   visible: boolean
@@ -40,7 +44,12 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-// --- Состояние компонента ---
+const qualityOptions: KitDropdownItem<ImageQuality>[] = [
+  { value: 'medium', label: 'Среднее', icon: 'mdi:quality-medium' },
+  { value: 'large', label: 'Высокое', icon: 'mdi:quality-high' },
+  { value: 'original', label: 'Оригинал', icon: 'mdi:raw' },
+]
+
 const viewerContentRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
@@ -49,6 +58,29 @@ const imageError = ref(false)
 const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
+
+const preferredQuality = useStorage<ImageQuality>('viewer-quality-preference', 'large')
+const qualityIcon = computed(() => qualityOptions.find(q => q.value === preferredQuality.value)?.icon || 'mdi:image-outline')
+
+const currentImage = computed(() => props.images[props.currentIndex])
+const hasMultipleImages = computed(() => props.images.length > 1)
+
+const currentImageSrc = computed(() => {
+  const image = currentImage.value
+  if (!image)
+    return ''
+
+  switch (preferredQuality.value) {
+    case 'medium':
+      return image.variants?.medium || image.variants?.large || image.url
+    case 'large':
+      return image.variants?.large || image.url
+    case 'original':
+      return image.url
+    default:
+      return image.variants?.large || image.url
+  }
+})
 
 const {
   transform,
@@ -76,7 +108,6 @@ const {
   animationDuration: toRef(props, 'animationDuration'),
 })
 
-// --- Остальная логика ---
 const currentImageMeta = computed((): IImageViewerImageMeta | null => {
   return toRaw(props.images[props.currentIndex]?.meta) || null
 })
@@ -117,9 +148,6 @@ function handleImageError(event: Event) {
   imageError.value = true
   emit('imageError', event)
 }
-
-const currentImage = computed(() => props.images[props.currentIndex])
-const hasMultipleImages = computed(() => props.images.length > 1)
 
 function close() {
   emit('update:visible', false)
@@ -168,9 +196,7 @@ onUnmounted(() => {
         @touchcancel="handleTouchEnd"
       >
         <div ref="viewerContentRef" class="viewer-wrapper">
-          <!-- Header with controls -->
           <div class="viewer-header">
-            <!-- Элементы, которые скрываются -->
             <div v-if="isUiVisible" class="header-content-wrapper">
               <div class="header-left">
                 <div v-if="showCounter && hasMultipleImages" class="viewer-counter">
@@ -183,11 +209,8 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-
-            <!-- Элементы, которые видны всегда -->
             <div class="header-right">
               <div class="control-buttons">
-                <!-- 2. Новая кнопка для скрытия/показа UI -->
                 <button
                   class="control-btn"
                   :title="isUiVisible ? 'Скрыть интерфейс' : 'Показать интерфейс'"
@@ -195,9 +218,18 @@ onUnmounted(() => {
                 >
                   <Icon :icon="isUiVisible ? 'mdi:eye-off-outline' : 'mdi:eye-outline'" />
                 </button>
-
-                <!-- 3. Группа кнопок, которая будет скрываться -->
                 <div v-if="isUiVisible" class="control-buttons-group">
+                  <KitViewerDropdown
+                    v-model="preferredQuality"
+                    :items="qualityOptions"
+                    align="end"
+                  >
+                    <template #trigger>
+                      <button class="control-btn" title="Выбрать качество">
+                        <Icon :icon="qualityIcon" />
+                      </button>
+                    </template>
+                  </KitViewerDropdown>
                   <button
                     v-if="currentImageMeta"
                     class="control-btn"
@@ -231,18 +263,13 @@ onUnmounted(() => {
                     <Icon icon="mdi:backup-restore" />
                   </button>
                 </div>
-
-                <!-- 4. Кнопка "Закрыть" всегда видима -->
                 <button class="close-btn" title="Close" @click="close">
                   <Icon icon="mdi:close" />
                 </button>
               </div>
             </div>
           </div>
-
-          <!-- Main content area -->
           <div class="viewer-content">
-            <!-- Previous button (скрываемый) -->
             <button
               v-if="hasMultipleImages && isUiVisible"
               class="nav-btn prev-btn"
@@ -251,8 +278,6 @@ onUnmounted(() => {
             >
               <Icon icon="mdi:chevron-left" />
             </button>
-
-            <!-- Image container -->
             <div ref="containerRef" class="image-container">
               <Transition name="loader-fade">
                 <div v-if="!imageLoaded || imageError" class="placeholder-wrapper">
@@ -268,12 +293,11 @@ onUnmounted(() => {
                   </div>
                 </div>
               </Transition>
-
               <img
                 v-if="currentImage"
-                :key="currentImage.url"
+                :key="currentImageSrc"
                 ref="imageRef"
-                v-resolve-src="currentImage.url"
+                v-resolve-src="currentImageSrc"
                 :alt="currentImage.alt || `Image ${currentIndex + 1}`"
                 class="viewer-image"
                 :class="{ loaded: imageLoaded }"
@@ -285,8 +309,6 @@ onUnmounted(() => {
                 @dragstart.prevent
               >
             </div>
-
-            <!-- Next button (скрываемый) -->
             <button
               v-if="hasMultipleImages && isUiVisible"
               class="nav-btn next-btn"
@@ -296,8 +318,6 @@ onUnmounted(() => {
               <Icon icon="mdi:chevron-right" />
             </button>
           </div>
-
-          <!-- Footer slot (скрываемый) -->
           <div v-if="$slots.footer && isUiVisible" class="viewer-footer">
             <slot
               name="footer"
@@ -306,8 +326,6 @@ onUnmounted(() => {
               :transform="transform"
             />
           </div>
-
-          <!-- Thumbnails (скрываемые) -->
           <div v-if="enableThumbnails && hasMultipleImages && isUiVisible" class="thumbnails-container">
             <div class="thumbnails-wrapper">
               <button
@@ -318,13 +336,12 @@ onUnmounted(() => {
                 :title="`Go to image ${index + 1}`"
                 @click="goToIndex(index)"
               >
-                <img v-resolve-src="image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
+                <img v-resolve-src="image.variants?.small || image.url" :alt="image.alt || `Thumbnail ${index + 1}`">
                 <div v-if="index === currentIndex" class="thumbnail-indicator" />
               </button>
             </div>
           </div>
         </div>
-
         <ImageMetadataPanel
           v-if="currentImageMeta"
           :meta="currentImageMeta"
@@ -337,12 +354,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
-// ... Стили остаются без изменений ...
 .image-viewer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 13;
   display: flex;
   flex-direction: column;
@@ -409,14 +424,13 @@ onUnmounted(() => {
 
 .viewer-counter,
 .scale-indicator {
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
+  background: var(--bg-tertiary-color);
+  color: var(--fg-primary-color);
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: var(--r-full);
   font-size: 14px;
   font-weight: 500;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-primary-color);
   white-space: nowrap;
 }
 
@@ -438,10 +452,10 @@ onUnmounted(() => {
 }
 
 .control-btn {
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: var(--bg-tertiary-color);
+  color: var(--fg-primary-color);
+  border: 1px solid var(--border-primary-color);
+  border-radius: var(--r-m);
   width: 40px;
   height: 40px;
   cursor: pointer;
@@ -450,10 +464,10 @@ onUnmounted(() => {
   justify-content: center;
   font-size: 18px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
 
   &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-hover-color);
+    border-color: var(--border-secondary-color);
     transform: scale(1.05);
   }
 
@@ -468,10 +482,10 @@ onUnmounted(() => {
 }
 
 .close-btn {
-  background: rgba(220, 38, 38, 0.8);
-  color: white;
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  border-radius: 12px;
+  background: var(--bg-error-color);
+  color: var(--fg-error-color);
+  border: 1px solid var(--border-error-color);
+  border-radius: var(--r-m);
   width: 40px;
   height: 40px;
   cursor: pointer;
@@ -480,10 +494,10 @@ onUnmounted(() => {
   justify-content: center;
   font-size: 20px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
 
   &:hover {
-    background: rgba(220, 38, 38, 1);
+    background: var(--border-error-color);
+    color: var(--fg-primary-color);
     transform: scale(1.05);
   }
   &:active {
@@ -504,10 +518,10 @@ onUnmounted(() => {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  background: var(--bg-tertiary-color);
+  color: var(--fg-primary-color);
+  border: 1px solid var(--border-primary-color);
+  border-radius: var(--r-full);
   width: 48px;
   height: 48px;
   cursor: pointer;
@@ -516,11 +530,11 @@ onUnmounted(() => {
   justify-content: center;
   font-size: 24px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
   z-index: 5;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-hover-color);
+    border-color: var(--border-secondary-color);
     transform: translateY(-50%) scale(1.1);
   }
 
@@ -566,7 +580,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--fg-secondary-color);
   font-size: 16px;
   width: 100%;
 
@@ -631,10 +645,9 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-tertiary-color);
+  border-radius: var(--r-l);
+  border: 1px solid var(--border-primary-color);
   overflow-x: auto;
   scrollbar-width: none;
 
@@ -648,7 +661,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   width: 60px;
   height: 60px;
-  border-radius: 8px;
+  border-radius: var(--r-s);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -659,7 +672,7 @@ onUnmounted(() => {
   }
 
   &.active {
-    border-color: #3b82f6;
+    border-color: var(--border-focus-color);
     transform: scale(1.1);
   }
 
@@ -677,11 +690,10 @@ onUnmounted(() => {
   transform: translateX(-50%);
   width: 6px;
   height: 6px;
-  background: #3b82f6;
-  border-radius: 50%;
+  background: var(--fg-accent-color);
+  border-radius: var(--r-full);
 }
 
-// Transitions
 .viewer-fade-enter-active,
 .viewer-fade-leave-active {
   transition: opacity 0.2s ease;
@@ -690,7 +702,6 @@ onUnmounted(() => {
 .viewer-fade-leave-to {
   opacity: 0;
 }
-
 .loader-fade-enter-active {
   transition: opacity 0.2s ease-in;
   transition-delay: 150ms;
@@ -702,8 +713,6 @@ onUnmounted(() => {
 .loader-fade-leave-to {
   opacity: 0;
 }
-
-// Animations
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -771,7 +780,6 @@ onUnmounted(() => {
     gap: 6px;
   }
 }
-
 @include media-down(sm) {
   .viewer-header {
     display: block;

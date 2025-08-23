@@ -1,7 +1,7 @@
 import type { RemovableRef } from '@vueuse/core'
-import type { ActiveView, InteractionMode } from '../models/types'
+import type { ActiveView, ImageQuality, InteractionMode } from '../models/types'
 import { useStorage } from '@vueuse/core'
-import { useAppStore } from '../../../../../shared/composables/use-store'
+import { useAppStore } from '~/shared/composables/use-store'
 
 export interface ITripInfoUiState {
   isDaysPanelOpen: boolean
@@ -10,6 +10,7 @@ export interface ITripInfoUiState {
   interactionMode: RemovableRef<InteractionMode>
   collapsedActivities: Set<string>
   collapsedMemoryGroups: Set<string>
+  preferredQuality: RemovableRef<ImageQuality>
 }
 
 /**
@@ -23,6 +24,7 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
     interactionMode: useStorage<InteractionMode>('tripinfo-interaction-mode', 'view'),
     collapsedActivities: new Set<string>(),
     collapsedMemoryGroups: new Set<string>(),
+    preferredQuality: useStorage<ImageQuality>('viewer-quality-preference', 'large'),
   }),
 
   getters: {
@@ -51,6 +53,10 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
   },
 
   actions: {
+    setPreferredQuality(quality: ImageQuality) {
+      this.preferredQuality = quality
+    },
+
     openDaysPanel() {
       this.isDaysPanelOpen = true
     },

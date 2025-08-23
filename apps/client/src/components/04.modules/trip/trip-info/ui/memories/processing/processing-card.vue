@@ -139,7 +139,12 @@ function saveComment() {
 <template>
   <div class="processing-card">
     <div class="image-container">
-      <KitImage :src="memory.image?.thumbnailUrl ?? memory.image?.url" class="card-image" :alt="comment || 'Фото для сортировки'" />
+      <KitImage
+        :src="memory.image?.url"
+        :variants="memory.image?.variants"
+        class="card-image"
+        :alt="comment || 'Фото для сортировки'"
+      />
     </div>
 
     <div class="card-content">

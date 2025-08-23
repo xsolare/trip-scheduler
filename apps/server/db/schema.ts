@@ -118,7 +118,8 @@ export const tripImages = pgTable('trip_images', {
 
   width: integer('width'),
   height: integer('height'),
-  thumbnailUrl: text('thumbnail_url'),
+
+  variants: jsonb('variants').$type<Record<string, string>>(), // { small: '...', medium: '...', large: '...' }
 
   // --- Все остальные метаданные в одном поле JSONB ---
   metadata: jsonb('metadata'),

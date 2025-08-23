@@ -100,7 +100,12 @@ export interface TripImage {
   // --- Основные данные для отображения ---
   width?: number | null
   height?: number | null
-  thumbnailUrl?: string | null
+
+  variants?: {
+    small?: string
+    medium?: string
+    large?: string
+  } | null
 
   // --- Все остальные метаданные в одном поле JSONB ---
   metadata?: ImageMetadata | null

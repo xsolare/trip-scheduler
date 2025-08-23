@@ -6,7 +6,6 @@ export interface IImageViewerImageMeta extends ImageMetadata {
   takenAt?: string | null // ISO string
   width?: number | null
   height?: number | null
-
 }
 
 export interface ImageViewerImage {
@@ -14,6 +13,11 @@ export interface ImageViewerImage {
   alt?: string
   caption?: string
   meta?: IImageViewerImageMeta
+  variants?: {
+    small?: string
+    medium?: string
+    large?: string
+  } | null
 }
 
 export interface ImageViewerOptions {

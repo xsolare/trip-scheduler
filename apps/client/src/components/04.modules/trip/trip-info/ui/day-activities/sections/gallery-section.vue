@@ -27,18 +27,16 @@ const selectedImagesFromTrip = ref<string[]>([])
 
 const imageUrls = computed(() => props.section.imageUrls || [])
 
-// НАЙТИ ПОЛНЫЕ ОБЪЕКТЫ ИЗОБРАЖЕНИЙ ПО URL
 const fullImagesData = computed(() => {
-  return imageUrls.value
+  return (props.section.imageUrls || [])
     .map(url => tripImages.value.find(tripImg => tripImg.url === url))
-    .filter((img): img is NonNullable<typeof img> => !!img)
+    .filter((img): img is TripImage => !!img)
 })
 
 const imageViewer = useImageViewer({
   enableKeyboard: true,
 })
 
-// ПРЕОБРАЗОВАТЬ ПОЛНЫЕ ОБЪЕКТЫ В ФОРМАТ VIEWER'А
 const viewerImages = computed<ImageViewerImage[]>(() =>
   fullImagesData.value.map(tripImage => tripImageToViewerImage(tripImage)),
 )
@@ -116,13 +114,16 @@ const galleryClass = computed(() => {
     return 'gallery-medium'
   return 'gallery-large'
 })
+
 const maxVisibleImages = computed(() => {
-  const count = imageUrls.value.length
+  const count = fullImagesData.value.length
   return count <= 4 ? count : 4
 })
+
 const remainingImagesCount = computed(() =>
-  Math.max(0, imageUrls.value.length - maxVisibleImages.value),
+  Math.max(0, fullImagesData.value.length - maxVisibleImages.value),
 )
+
 const visibleImages = computed(() =>
   imageUrls.value.slice(0, maxVisibleImages.value),
 )
@@ -170,6 +171,7 @@ const visibleImages = computed(() =>
           :alt="`Image ${index + 1}`"
           object-fit="cover"
         />
+
         <div v-if="!isViewMode" class="image-overlay">
           <button
             class="delete-btn"

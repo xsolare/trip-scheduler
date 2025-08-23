@@ -207,7 +207,6 @@ onMounted(() => {
   width: 100%;
   max-width: 420px;
   margin: 16px;
-  background-color: rgba(var(--bg-header-color), 0.2);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-secondary-color);
   box-shadow: var(--s-l);
@@ -226,7 +225,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(var(--bg-secondary-color-rgb, 255, 255, 255), 0.7);
+  background-color: var(--bg-tertiary-color);
   z-index: 20;
 
   .spinner {

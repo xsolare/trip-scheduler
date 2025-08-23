@@ -20,13 +20,15 @@ export const memoryService = {
   },
 
   async delete(id: string) {
+    // Этот метод возвращает полный объект `memory` с вложенным `image`
     const deletedMemory = await memoryRepository.delete(id)
     if (!deletedMemory) {
       throw createTRPCError('NOT_FOUND', `Воспоминание с ID ${id} не найдено.`)
     }
 
-    // Если у воспоминания было изображение, удаляем его файлы и запись в БД
-    if (deletedMemory.imageId && deletedMemory.image?.url) {
+    // Если у воспоминания было изображение, удаляем его файлы
+    const imageToDelete = deletedMemory.image
+    if (deletedMemory.imageId && imageToDelete) {
       try {
         // Сначала удаляем запись из таблицы trip_images
         await imageRepository.delete(deletedMemory.imageId)
@@ -34,29 +36,41 @@ export const memoryService = {
         const getFilePathFromUrl = (url: string) => {
           const staticRoot = process.env.STATIC_PATH
           if (!staticRoot) {
-            console.error('Невозможно удалить файл: переменная окружения STATIC_PATH не установлена.')
+            console.error('Переменная окружения STATIC_PATH не установлена.')
             return null
           }
-          // url из БД теперь 'trips/trip-id/memories/image.jpg'
           return path.join(process.cwd(), staticRoot, url)
         }
 
-        // Удаляем основной файл
-        const mainImagePath = getFilePathFromUrl(deletedMemory.image.url)
-        if (mainImagePath) {
-          await fs.unlink(mainImagePath).catch(err => console.error(`Не удалось удалить основной файл изображения: ${mainImagePath}`, err))
+        const filesToDelete: string[] = []
+
+        // 1. Добавляем оригинал в список на удаление
+        if (imageToDelete.url) {
+          const mainImagePath = getFilePathFromUrl(imageToDelete.url)
+          if (mainImagePath)
+            filesToDelete.push(mainImagePath)
         }
 
-        // Удаляем превью (thumbnail)
-        if (deletedMemory.image.thumbnailUrl) {
-          const thumbPath = getFilePathFromUrl(deletedMemory.image.thumbnailUrl)
-          if (thumbPath) {
-            await fs.unlink(thumbPath).catch(err => console.error(`Не удалось удалить превью изображения: ${thumbPath}`, err))
+        // 2. Добавляем все варианты в список на удаление
+        if (imageToDelete.variants) {
+          for (const variantPath of Object.values(imageToDelete.variants)) {
+            const fullVariantPath = getFilePathFromUrl(variantPath)
+            if (fullVariantPath)
+              filesToDelete.push(fullVariantPath)
           }
         }
+
+        // 3. Параллельно удаляем все найденные файлы
+        await Promise.all(
+          filesToDelete.map(filePath =>
+            fs.unlink(filePath).catch(err =>
+              console.error(`Не удалось удалить файл: ${filePath}`, err),
+            ),
+          ),
+        )
       }
       catch (error) {
-        console.error(`Ошибка при удалении файла/записи изображения для воспоминания ${id}:`, error)
+        console.error(`Ошибка при удалении файлов изображения для воспоминания ${id}:`, error)
       }
     }
 

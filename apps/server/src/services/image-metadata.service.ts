@@ -2,13 +2,22 @@ import type { TripImage } from '~/models/image'
 import exifr from 'exifr'
 import sharp from 'sharp'
 
-type ExtractedImageData = Omit<TripImage, 'id' | 'tripId' | 'url' | 'placement' | 'createdAt'>
+type ExtractedImageData = Omit<TripImage, 'id' | 'tripId' | 'url' | 'placement' | 'createdAt' | 'variants'>
 
 interface Params {
   metadata: Partial<ExtractedImageData>
   embeddedThumbnailBuffer: Buffer | null
 }
 
+const IMAGE_VARIANTS_CONFIG = {
+  small: { width: 400, quality: 80 },
+  medium: { width: 800, quality: 85 },
+  large: { width: 1920, quality: 90 },
+}
+
+/**
+ * Парсит строку смещения временной зоны (например, "+03:00") в минуты.
+ */
 function parseTimezoneOffset(offsetString: string | undefined): number | undefined {
   if (!offsetString) {
     return undefined
@@ -26,13 +35,33 @@ function parseTimezoneOffset(offsetString: string | undefined): number | undefin
   return sign * (hours * 60 + minutes)
 }
 
-export async function generateThumbnail(fileBuffer: Buffer): Promise<Buffer> {
-  return sharp(fileBuffer)
-    .resize({ width: 800 })
-    .webp({ quality: 70, preset: 'photo' })
-    .toBuffer()
+/**
+ * Генерирует несколько оптимизированных версий изображения в формате WebP.
+ * @param fileBuffer - Буфер исходного изображения.
+ * @returns Объект, где ключ - название варианта (small, medium), а значение - буфер.
+ */
+export async function generateImageVariants(fileBuffer: Buffer): Promise<Record<string, Buffer>> {
+  const variants: Record<string, Buffer> = {}
+  const image = sharp(fileBuffer)
+  const metadata = await image.metadata()
+
+  for (const [name, config] of Object.entries(IMAGE_VARIANTS_CONFIG)) {
+    // Не создаем вариант, если он будет больше или равен по ширине оригиналу
+    if (metadata.width && metadata.width > config.width) {
+      variants[name] = await image
+        .clone() // Важно клонировать, чтобы операции не влияли друг на друга
+        .resize({ width: config.width })
+        .webp({ quality: config.quality })
+        .toBuffer()
+    }
+  }
+
+  return variants
 }
 
+/**
+ * Извлекает и структурирует EXIF и другие метаданные из буфера изображения.
+ */
 export async function extractAndStructureMetadata(fileBuffer: Buffer): Promise<Params> {
   try {
     const exifrOptions = {

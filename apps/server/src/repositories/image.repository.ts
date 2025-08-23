@@ -14,7 +14,7 @@ export interface ImageMetadata {
   longitude: number | null
   width: number | null
   height: number | null
-  thumbnailUrl: string | null
+  variants: Record<string, string> | null
   metadata: {
     orientation?: number
     timezoneOffset?: number
@@ -30,14 +30,6 @@ export interface ImageMetadata {
 }
 
 export const imageRepository = {
-  /**
-   * Добавляет новое изображение и его метаданные для путешествия.
-   * @param tripId - ID путешествия.
-   * @param url - URL загруженного изображения.
-   * @param placement - Тип размещения изображения.
-   * @param metadata - Объект с извлеченными метаданными изображения.
-   * @returns Созданная запись об изображении.
-   */
   async create(tripId: string, url: string, placement: Placement, metadata: ImageMetadata) {
     const [newImage] = await db
       .insert(tripImages)
@@ -51,7 +43,7 @@ export const imageRepository = {
         longitude: metadata.longitude,
         width: metadata.width,
         height: metadata.height,
-        thumbnailUrl: metadata.thumbnailUrl,
+        variants: metadata.variants,
 
         metadata: metadata.metadata,
       })

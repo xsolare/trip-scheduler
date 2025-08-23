@@ -46,7 +46,10 @@ function getShortWeekday(date: string): string {
 
   <aside class="panel" :class="{ open: isOpen, pinned: !mdAndDown && isDaysPanelPinned }">
     <header class="panel-header">
-      <h2>Дни путешествия</h2>
+      <div class="header-title">
+        <Icon icon="mdi:calendar-month-outline" />
+        <h2>Дни путешествия</h2>
+      </div>
       <div class="header-buttons">
         <button
           v-if="!mdAndDown"
@@ -159,11 +162,23 @@ function getShortWeekday(date: string): string {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-secondary-color);
   flex-shrink: 0;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
 
   h2 {
-    font-size: 1.2rem;
+    font-size: inherit;
     font-weight: 600;
     margin: 0;
+  }
+
+  .iconify {
+    font-size: 1.4rem;
+    color: var(--fg-secondary-color);
   }
 }
 

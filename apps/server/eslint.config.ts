@@ -6,4 +6,5 @@ export default antfu({
     'node/prefer-global/process': 'off',
     'node/prefer-global/buffer': 'off',
   },
+  ignores: ['**/dump/**'],
 })

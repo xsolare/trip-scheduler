@@ -230,7 +230,11 @@ onClickOutside(commentEditorRef, saveViewerComment)
   >
     <template v-if="memory.imageId && memory?.image?.url">
       <div class="photo-wrapper" @click="openImageViewer">
-        <KitImage :src="memory!.image?.thumbnailUrl ?? memory!.image!.url" object-fit="cover" />
+        <KitImage
+          :src="memory.image.url"
+          :variants="memory.image.variants"
+          object-fit="cover"
+        />
         <div class="photo-overlay">
           <div v-if="memoryComment" class="memory-comment-overlay">
             <p>{{ memoryComment }}</p>
@@ -717,10 +721,11 @@ onClickOutside(commentEditorRef, saveViewerComment)
   gap: 12px;
   min-width: 210px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-tertiary-color);
   backdrop-filter: blur(5px);
   border-radius: var(--r-m);
-  color: white;
+  border: 1px solid var(--border-primary-color);
+  color: var(--fg-primary-color);
   max-width: 600px;
   margin: 20px auto 0;
   transition: all 0.2s ease;
@@ -728,7 +733,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
 
   &.is-readonly {
     gap: 8px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-tertiary-color);
     padding: 12px 16px;
     text-align: center;
   }
@@ -736,25 +741,25 @@ onClickOutside(commentEditorRef, saveViewerComment)
 
 .viewer-comment-section {
   flex-grow: 1;
-  color: white;
-  opacity: 0.8;
+  color: var(--fg-secondary-color);
+  transition: color 0.2s ease;
 
   .activity-comment {
     font-size: 0.9rem;
   }
   .activity-title {
     font-size: 1rem;
+    color: var(--fg-primary-color);
   }
 
   hr {
-    border: 1px solid white;
-    opacity: 0.1;
+    border: 1px solid var(--border-secondary-color);
     width: 90%;
     margin: 8px auto;
   }
 
   &:hover {
-    opacity: 1;
+    color: var(--fg-primary-color);
   }
 }
 
@@ -764,7 +769,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
 
 .viewer-comment-editor {
   :deep(.milkdown) {
-    --crepe-color-on-background: white;
+    --crepe-color-on-background: var(--fg-primary-color);
 
     .editor {
       padding: 8px;
@@ -781,7 +786,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
     }
 
     &:not([readonly]) .editor:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--bg-hover-color);
     }
   }
 
