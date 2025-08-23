@@ -146,13 +146,14 @@ bun install
 docker build -t trip-scheduler-client . \
   --build-arg VITE_APP_SERVER_URL=https://api.yourdomain.com \
   --build-arg VITE_APP_TRPC_MODE=true \
+  --build-arg VITE_APP_SERVER_STATIC_PATH=static/images \
   --build-arg VITE_APP_MOCK_MODE=false
 ```
 
 ### Запуск контейнера
 
 ```bash
-docker run -d -p 1420:1420 --name trip-scheduler-web trip-scheduler-client
+docker run -d -p 1420:1420 --name trip-scheduler-web --restart always trip-scheduler-client:latest
 ````
 
 Приложение будет доступно по адресу `http://localhost:1420`.

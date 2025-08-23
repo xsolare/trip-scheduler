@@ -247,9 +247,9 @@ mkdir -p static-data
 docker run -d \
   --name trip-scheduler-api \
   -p 8080:8080 \
-  -e DATABASE_URL="postgresql://trip-scheduler:trip-scheduler@host.docker.internal:5432/trip_scheduler_dev" \
   --env-file .env \
   -v "$(pwd)/static-data:/app/static" \
+  --restart always \
   trip-scheduler-api:latest
 ```
 
