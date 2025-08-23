@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type { IImageViewerImageMeta, ImageViewerImage } from '../models/types'
-import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
+import type { IImageViewerImageMeta, ImageQuality, ImageViewerImage } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { onClickOutside, toRef } from '@vueuse/core'
-import { useImageViewerTransform } from '../composables'
+import { resolveApiUrl } from '~/shared/lib/url'
+import { useImageViewerTransform, useSwipeNavigation } from '../composables'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
-import KitViewerDropdown from './kit-viewer-dropdown.vue'
-
-type ImageQuality = 'medium' | 'large' | 'original'
+import KitViewerControls from './kit-viewer-controls.vue'
 
 interface Props {
   visible: boolean
@@ -44,27 +42,18 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const qualityOptions: KitDropdownItem<ImageQuality>[] = [
-  { value: 'medium', label: 'Среднее', icon: 'mdi:quality-medium' },
-  { value: 'large', label: 'Высокое', icon: 'mdi:quality-high' },
-  { value: 'original', label: 'Оригинал', icon: 'mdi:raw' },
-]
+const preferredQuality = useStorage<ImageQuality>('viewer-quality-preference', 'large')
 
 const viewerContentRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
-const imageLoaded = ref(false)
-const imageError = ref(false)
 const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const preferredQuality = useStorage<ImageQuality>('viewer-quality-preference', 'large')
-const qualityIcon = computed(() => qualityOptions.find(q => q.value === preferredQuality.value)?.icon || 'mdi:image-outline')
+const imageLoadStatus = reactive<Record<string, 'loading' | 'loaded' | 'error'>>({})
 
 const currentImage = computed(() => props.images[props.currentIndex])
-const hasMultipleImages = computed(() => props.images.length > 1)
-
 const currentImageSrc = computed(() => {
   const image = currentImage.value
   if (!image)
@@ -81,6 +70,9 @@ const currentImageSrc = computed(() => {
       return image.variants?.large || image.url
   }
 })
+const isCurrentImageLoaded = computed(() => imageLoadStatus[currentImageSrc.value] === 'loaded')
+const isCurrentImageInError = computed(() => imageLoadStatus[currentImageSrc.value] === 'error')
+const hasMultipleImages = computed(() => props.images.length > 1)
 
 const {
   transform,
@@ -94,8 +86,6 @@ const {
   handleTouchStart,
   handleTouchMove,
   handleTouchEnd,
-  zoomIn,
-  zoomOut,
   resetTransform,
 } = useImageViewerTransform({
   imageRef,
@@ -108,13 +98,92 @@ const {
   animationDuration: toRef(props, 'animationDuration'),
 })
 
+const isZoomed = computed(() => transform.scale > props.minZoom)
+
+const {
+  prevImageSrc,
+  nextImageSrc,
+  containerStyle,
+  currentImageStyle,
+  adjacentImageStyle,
+  handleTouchStart: handleSwipeTouchStart,
+  handleTouchMove: handleSwipeTouchMove,
+  handleTouchEnd: handleSwipeTouchEnd,
+} = useSwipeNavigation({
+  onNext: next,
+  onPrev: prev,
+  images: toRef(props, 'images'),
+  currentIndex: toRef(props, 'currentIndex'),
+  isZoomed,
+  preferredQuality,
+  threshold: 80,
+  velocity: 0.3,
+})
+
+// --- Combined touch handlers ---
+function handleTouchStartCombined(event: TouchEvent) {
+  handleSwipeTouchStart(event)
+  handleTouchStart(event)
+}
+
+function handleTouchMoveCombined(event: TouchEvent) {
+  handleSwipeTouchMove(event)
+  handleTouchMove(event)
+}
+
+function handleTouchEndCombined(event: TouchEvent) {
+  handleSwipeTouchEnd()
+  handleTouchEnd(event)
+}
+
 const currentImageMeta = computed((): IImageViewerImageMeta | null => {
   return toRaw(props.images[props.currentIndex]?.meta) || null
 })
 
+// --- Image Preloading ---
+function preloadImage(url: string | undefined) {
+  if (!url || imageLoadStatus[url])
+    return
+
+  imageLoadStatus[url] = 'loading'
+  const img = new Image()
+
+  img.src = url
+  img.onload = () => {
+    imageLoadStatus[url] = 'loaded'
+  }
+  img.onerror = () => {
+    imageLoadStatus[url] = 'error'
+  }
+}
+
+watch([
+  () => props.currentIndex,
+  () => props.images,
+  () => props.visible,
+], ([index, imageList, visible]) => {
+  if (!visible || !imageList || imageList.length === 0)
+    return
+
+  const indicesToLoad = [index]
+  if (imageList.length > 1) {
+    indicesToLoad.push((index + 1) % imageList.length)
+    indicesToLoad.push((index - 1 + imageList.length) % imageList.length)
+  }
+
+  const uniqueIndices = [...new Set(indicesToLoad)]
+
+  uniqueIndices.forEach((i) => {
+    const image = imageList[i]
+    if (image) {
+      const src = image.variants?.medium || image.variants?.large || image.url
+
+      preloadImage(resolveApiUrl(src))
+    }
+  })
+}, { immediate: true, deep: true })
+
 watch(() => props.currentIndex, () => {
-  imageLoaded.value = false
-  imageError.value = false
   resetTransform()
   isMetadataPanelVisible.value = false
 })
@@ -123,8 +192,6 @@ watch(() => props.visible, (isVisible) => {
   if (isVisible) {
     document.body.style.overflow = 'hidden'
     isUiVisible.value = true
-    imageLoaded.value = false
-    imageError.value = false
   }
   else {
     document.body.style.overflow = ''
@@ -134,8 +201,11 @@ watch(() => props.visible, (isVisible) => {
 })
 
 function handleImageLoad() {
-  imageLoaded.value = true
-  imageError.value = false
+  if (!currentImageSrc.value)
+    return
+
+  imageLoadStatus[currentImageSrc.value] = 'loaded'
+
   if (imageRef.value) {
     naturalSize.width = imageRef.value.naturalWidth
     naturalSize.height = imageRef.value.naturalHeight
@@ -144,8 +214,8 @@ function handleImageLoad() {
 }
 
 function handleImageError(event: Event) {
-  imageLoaded.value = false
-  imageError.value = true
+  if (currentImageSrc.value)
+    imageLoadStatus[currentImageSrc.value] = 'error'
   emit('imageError', event)
 }
 
@@ -190,10 +260,10 @@ onUnmounted(() => {
         v-if="visible"
         class="image-viewer-overlay"
         @wheel="handleWheel"
-        @touchstart="handleTouchStart"
-        @touchmove="handleTouchMove"
-        @touchend="handleTouchEnd"
-        @touchcancel="handleTouchEnd"
+        @touchstart="handleTouchStartCombined"
+        @touchmove="handleTouchMoveCombined"
+        @touchend="handleTouchEndCombined"
+        @touchcancel="handleTouchEndCombined"
       >
         <div ref="viewerContentRef" class="viewer-wrapper">
           <div class="viewer-header">
@@ -210,113 +280,78 @@ onUnmounted(() => {
               </div>
             </div>
             <div class="header-right">
-              <div class="control-buttons">
-                <button
-                  class="control-btn"
-                  :title="isUiVisible ? 'Скрыть интерфейс' : 'Показать интерфейс'"
-                  @click="isUiVisible = !isUiVisible"
-                >
-                  <Icon :icon="isUiVisible ? 'mdi:eye-off-outline' : 'mdi:eye-outline'" />
-                </button>
-                <div v-if="isUiVisible" class="control-buttons-group">
-                  <KitViewerDropdown
-                    v-model="preferredQuality"
-                    :items="qualityOptions"
-                    align="end"
-                  >
-                    <template #trigger>
-                      <button class="control-btn" title="Выбрать качество">
-                        <Icon :icon="qualityIcon" />
-                      </button>
-                    </template>
-                  </KitViewerDropdown>
-                  <button
-                    v-if="currentImageMeta"
-                    class="control-btn"
-                    title="Информация о снимке"
-                    @click="isMetadataPanelVisible = true"
-                  >
-                    <Icon icon="mdi:information-outline" />
-                  </button>
-                  <button
-                    class="control-btn"
-                    title="Zoom out"
-                    :disabled="!canZoomOut"
-                    @click="zoomOut(0, 0)"
-                  >
-                    <Icon icon="mdi:minus" />
-                  </button>
-                  <button
-                    class="control-btn"
-                    title="Zoom in"
-                    :disabled="!canZoomIn"
-                    @click="zoomIn(0, 0)"
-                  >
-                    <Icon icon="mdi:plus" />
-                  </button>
-                  <button
-                    class="control-btn"
-                    title="Reset zoom"
-                    :disabled="transform.scale <= minZoom"
-                    @click="resetTransform"
-                  >
-                    <Icon icon="mdi:backup-restore" />
-                  </button>
-                </div>
-                <button class="close-btn" title="Close" @click="close">
-                  <Icon icon="mdi:close" />
-                </button>
-              </div>
+              <KitViewerControls
+                v-model:is-ui-visible="isUiVisible"
+                v-model:quality="preferredQuality"
+                :can-zoom-in="canZoomIn"
+                :can-zoom-out="canZoomOut"
+                :is-zoomed="isZoomed"
+                :has-metadata="!!currentImageMeta"
+                @reset-transform="resetTransform"
+                @show-metadata="isMetadataPanelVisible = true"
+                @close="close"
+              />
             </div>
           </div>
           <div class="viewer-content">
-            <button
-              v-if="hasMultipleImages && isUiVisible"
-              class="nav-btn prev-btn"
-              title="Previous image"
-              @click="prev"
-            >
-              <Icon icon="mdi:chevron-left" />
-            </button>
             <div ref="containerRef" class="image-container">
-              <Transition name="loader-fade">
-                <div v-if="!imageLoaded || imageError" class="placeholder-wrapper">
-                  <div v-if="!imageLoaded && !imageError" class="image-placeholder">
-                    <div class="loading-spinner">
-                      <Icon width="64" height="64" icon="mdi:loading" class="spinning" />
-                    </div>
-                    <span>Загрузка изображения...</span>
-                  </div>
-                  <div v-else-if="imageError" class="image-error">
-                    <Icon width="64" height="64" icon="mdi:image-broken-variant" />
-                    <span>Не удалось загрузить изображение</span>
-                  </div>
+              <div class="swipe-container" :style="containerStyle">
+                <!-- Preview Предыдущего -->
+                <div class="preview-image prev-preview">
+                  <img v-if="prevImageSrc" v-resolve-src="prevImageSrc" class="preview-img" :style="adjacentImageStyle">
                 </div>
-              </Transition>
-              <img
-                v-if="currentImage"
-                :key="currentImageSrc"
-                ref="imageRef"
-                v-resolve-src="currentImageSrc"
-                :alt="currentImage.alt || `Image ${currentIndex + 1}`"
-                class="viewer-image"
-                :class="{ loaded: imageLoaded }"
-                :style="imageStyle"
-                @load="handleImageLoad"
-                @error="handleImageError"
-                @mousedown="handleMouseDown"
-                @dblclick="handleDoubleClick"
-                @dragstart.prevent
-              >
+
+                <!-- Текущее изображение -->
+                <div class="current-image-wrapper">
+                  <Transition name="loader-fade">
+                    <div v-if="!isCurrentImageLoaded" class="placeholder-wrapper">
+                      <div v-if="isCurrentImageInError" class="image-error">
+                        <Icon width="64" height="64" icon="mdi:image-broken-variant" />
+                        <span>Не удалось загрузить изображение</span>
+                      </div>
+                      <div v-else class="image-placeholder">
+                        <div class="loading-spinner">
+                          <Icon width="64" height="64" icon="mdi:loading" class="spinning" />
+                        </div>
+                        <span>Загрузка изображения...</span>
+                      </div>
+                    </div>
+                  </Transition>
+
+                  <img
+                    v-if="currentImage"
+                    :key="currentImageSrc"
+                    ref="imageRef"
+                    v-resolve-src="currentImageSrc"
+                    :alt="currentImage.alt || `Image ${currentIndex + 1}`"
+                    class="viewer-image"
+                    :class="{ loaded: isCurrentImageLoaded }"
+                    :style="[imageStyle, currentImageStyle]"
+                    @load="handleImageLoad"
+                    @error="handleImageError"
+                    @mousedown="handleMouseDown"
+                    @dblclick="handleDoubleClick"
+                    @dragstart.prevent
+                  >
+                </div>
+
+                <!-- Preview Следующего -->
+                <div class="preview-image next-preview">
+                  <img v-if="nextImageSrc" v-resolve-src="nextImageSrc" class="preview-img" :style="adjacentImageStyle">
+                </div>
+              </div>
+              <!-- Невидимые навигационные зоны для десктопа -->
+              <div
+                v-if="hasMultipleImages && transform.scale <= minZoom"
+                class="nav-zone prev-zone"
+                @click="prev"
+              />
+              <div
+                v-if="hasMultipleImages && transform.scale <= minZoom"
+                class="nav-zone next-zone"
+                @click="next"
+              />
             </div>
-            <button
-              v-if="hasMultipleImages && isUiVisible"
-              class="nav-btn next-btn"
-              title="Next image"
-              @click="next"
-            >
-              <Icon icon="mdi:chevron-right" />
-            </button>
           </div>
           <div v-if="$slots.footer && isUiVisible" class="viewer-footer">
             <slot
@@ -388,6 +423,7 @@ onUnmounted(() => {
   padding: 20px;
   z-index: 10;
   pointer-events: none;
+
   & > * {
     pointer-events: auto;
   }
@@ -441,70 +477,6 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.control-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.control-buttons-group {
-  display: contents;
-}
-
-.control-btn {
-  background: var(--bg-tertiary-color);
-  color: var(--fg-primary-color);
-  border: 1px solid var(--border-primary-color);
-  border-radius: var(--r-m);
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    background: var(--bg-hover-color);
-    border-color: var(--border-secondary-color);
-    transform: scale(1.05);
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.95);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.close-btn {
-  background: var(--bg-error-color);
-  color: var(--fg-error-color);
-  border: 1px solid var(--border-error-color);
-  border-radius: var(--r-m);
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--border-error-color);
-    color: var(--fg-primary-color);
-    transform: scale(1.05);
-  }
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
 .viewer-content {
   flex: 1;
   display: flex;
@@ -512,45 +484,6 @@ onUnmounted(() => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-}
-
-.nav-btn {
-  position: absolute;
-  top: 50%;
-  opacity: 0.7;
-  transform: translateY(-50%);
-  background: var(--bg-tertiary-color);
-  color: var(--fg-primary-color);
-  border: 1px solid var(--border-primary-color);
-  border-radius: var(--r-full);
-  width: 48px;
-  height: 48px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  transition: all 0.2s ease;
-  z-index: 5;
-
-  &:hover {
-    background: var(--bg-hover-color);
-    border-color: var(--border-secondary-color);
-    transform: translateY(-50%) scale(1.1);
-    opacity: 1;
-  }
-
-  &:active {
-    transform: translateY(-50%) scale(0.95);
-  }
-
-  &.prev-btn {
-    left: 20px;
-  }
-
-  &.next-btn {
-    right: 20px;
-  }
 }
 
 .image-container {
@@ -561,7 +494,6 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 5%;
 }
 
 .placeholder-wrapper {
@@ -612,6 +544,21 @@ onUnmounted(() => {
   &:active {
     cursor: grabbing;
   }
+}
+
+.nav-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 25%;
+  z-index: 2;
+  cursor: pointer;
+}
+.prev-zone {
+  left: 0;
+}
+.next-zone {
+  right: 0;
 }
 
 .viewer-footer,
@@ -696,6 +643,44 @@ onUnmounted(() => {
   border-radius: var(--r-full);
 }
 
+// --- Swipe Styles ---
+.swipe-container {
+  display: flex;
+  position: absolute;
+  height: 100%;
+  width: 300%;
+  left: -100%;
+  will-change: transform;
+}
+
+.current-image-wrapper {
+  flex: 1 0 33.3333%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+  padding: 70px 0;
+}
+
+.preview-image {
+  flex: 1 0 33.3333%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 70px 40px;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--r-2xs);
+  filter: brightness(0.8);
+  opacity: 0;
+}
+
 .viewer-fade-enter-active,
 .viewer-fade-leave-active {
   transition: opacity 0.2s ease;
@@ -730,27 +715,23 @@ onUnmounted(() => {
   .header-right {
     display: flex;
     justify-content: flex-end;
-    padding: 16px;
     top: 0;
     left: 0px;
     right: 0px;
     padding: 16px 0;
+    right: 8px;
   }
   .header-left {
     justify-content: flex-start;
   }
   .viewer-content {
-    padding: 16px;
+    padding: 0;
   }
-  .control-btn,
-  .close-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+  .current-image-wrapper,
+  .preview-image {
+    padding: 4px;
   }
-  .close-btn {
-    font-size: 18px;
-  }
+
   .nav-btn {
     width: 40px;
     height: 40px;
@@ -778,9 +759,6 @@ onUnmounted(() => {
     width: 48px;
     height: 48px;
   }
-  .control-buttons {
-    gap: 6px;
-  }
 }
 @include media-down(sm) {
   .viewer-header {
@@ -794,8 +772,8 @@ onUnmounted(() => {
     left: 50%;
     transform: translateX(-50%);
   }
-  .header-right {
-    right: 16px;
+  .preview-image {
+    padding: 8px 16px;
   }
 }
 </style>

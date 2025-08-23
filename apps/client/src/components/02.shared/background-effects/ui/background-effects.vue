@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { Icon } from '@iconify/vue'
+import { Icon, loadIcons } from '@iconify/vue'
+import { onMounted } from 'vue'
 
 const travelIcons = [
   'mdi:airplane',
@@ -35,6 +36,10 @@ const symbols = Array.from({ length: 40 }, () => ({
   duration: 10 + Math.random() * 15,
   size: 1 + Math.random() * 0.8,
 }))
+
+onMounted(() => {
+  loadIcons(travelIcons)
+})
 </script>
 
 <template>
@@ -75,6 +80,7 @@ const symbols = Array.from({ length: 40 }, () => ({
     animation: floatEffect linear infinite;
     user-select: none;
     opacity: 0;
+    will-change: transform, opacity;
   }
 }
 
