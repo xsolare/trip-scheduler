@@ -26,6 +26,7 @@ app.use(
       'http://localhost:1420',
       'tauri://localhost',
       'http://trip-scheduler.ru',
+      'https://trip-scheduler.ru'
     ],
     credentials: true,
   }),
