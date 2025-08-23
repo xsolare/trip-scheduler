@@ -138,15 +138,32 @@ watch(imageViewer.currentImage, (newImage) => {
     const meta = newImage.meta as CustomImageViewerImageMeta
     activeViewerComment.value = newImage.caption || ''
 
-    if (meta.takenAt) {
-      const d = new Date(meta.takenAt)
-      activeViewerTime.value = new Time(d.getUTCHours(), d.getUTCMinutes())
+    const memoryId = meta.memoryId
+    const correspondingMemory = memoryId ? store.memories.memories.find(m => m.id === memoryId) : undefined
+
+    let dateToUse: Date | null = null
+
+    if (correspondingMemory?.timestamp) {
+      dateToUse = new Date(correspondingMemory.timestamp)
+    }
+    else if (meta.takenAt) {
+      const baseDate = new Date(meta.takenAt)
+      if (meta.timezoneOffset) {
+        const localTimeMs = baseDate.getTime() + meta.timezoneOffset * 60 * 1000
+        dateToUse = new Date(localTimeMs)
+      }
+      else {
+        dateToUse = baseDate
+      }
+    }
+
+    if (dateToUse) {
+      activeViewerTime.value = new Time(dateToUse.getUTCHours(), dateToUse.getUTCMinutes())
     }
     else {
       activeViewerTime.value = null
     }
 
-    const memoryId = meta.memoryId
     if (memoryId) {
       const group = props.timelineGroups?.find(g => g.memories.some((m: Memory) => m.id === memoryId))
       activeViewerActivityTitle.value = group ? group.title : ''

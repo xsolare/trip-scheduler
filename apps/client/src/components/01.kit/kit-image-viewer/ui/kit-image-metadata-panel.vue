@@ -87,12 +87,13 @@ function closeMap() {
 const takenAtDate = computed(() => {
   if (!props.meta.takenAt)
     return ''
+
   return new Date(props.meta.takenAt).toLocaleString('ru-RU', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    // hour: '2-digit',
+    // minute: '2-digit',
   })
 })
 
