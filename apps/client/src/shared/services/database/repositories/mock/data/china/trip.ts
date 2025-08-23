@@ -16,11 +16,11 @@ export const MOCK_CHINA_TRIP = {
   participants: [{
     id: MOCK_USER_ID_1,
     name: 'Иван',
-    avatarUrl: '/static/images/avatars/ghoul.gif',
+    avatarUrl: 'avatars/ghoul.gif',
   }, {
     id: MOCK_USER_ID_2,
     name: 'Артем',
-    avatarUrl: '/static/images/avatars/magic-girl.png',
+    avatarUrl: 'avatars/magic-girl.png',
   }],
   tags: ['Китай', 'Шанхай', 'Урумчи', 'культура', 'еда', 'приключения'],
   visibility: TripVisibility.PRIVATE,

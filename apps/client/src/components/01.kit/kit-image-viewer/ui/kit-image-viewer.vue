@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { IImageViewerImageMeta, ImageViewerImage, TouchPoint, ViewerBounds, ViewerTransform } from '../models/types'
+import type { IImageViewerImageMeta, ImageViewerImage } from '../models/types'
 import { Icon } from '@iconify/vue'
-import { onClickOutside } from '@vueuse/core'
+import { onClickOutside, toRef } from '@vueuse/core'
+import { useImageViewerTransform } from '../composables'
 import ImageMetadataPanel from './kit-image-metadata-panel.vue'
 
 interface Props {
@@ -43,48 +44,46 @@ const emit = defineEmits<Emits>()
 const viewerContentRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
-const transform = reactive<ViewerTransform>({ scale: 1, x: 0, y: 0 })
-const isDragging = ref(false)
-const isAnimating = ref(false)
-const wheeling = ref(false)
-let wheelTimeoutId: number | undefined
-const dragStart = reactive<TouchPoint>({ x: 0, y: 0 })
-const transformStart = reactive<ViewerTransform>({ scale: 1, x: 0, y: 0 })
-const touches = ref<TouchPoint[]>([])
-const initialDistance = ref(0)
-const initialScale = ref(1)
 const imageLoaded = ref(false)
 const imageError = ref(false)
 const naturalSize = reactive({ width: 0, height: 0 })
-
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const currentImageMeta = computed((): IImageViewerImageMeta | null => {
-  const meta = toRaw(props.images[props.currentIndex]?.meta)
-
-  return meta || null
+const {
+  transform,
+  isDragging,
+  imageStyle,
+  canZoomIn,
+  canZoomOut,
+  handleDoubleClick,
+  handleWheel,
+  handleMouseDown,
+  handleTouchStart,
+  handleTouchMove,
+  handleTouchEnd,
+  zoomIn,
+  zoomOut,
+  resetTransform,
+} = useImageViewerTransform({
+  imageRef,
+  containerRef,
+  naturalSize,
+  minZoom: toRef(props, 'minZoom'),
+  maxZoom: toRef(props, 'maxZoom'),
+  zoomStep: toRef(props, 'zoomStep'),
+  enableTouch: toRef(props, 'enableTouch'),
+  animationDuration: toRef(props, 'animationDuration'),
 })
-const imageStyle = computed(() => ({
-  transform: `scale(${transform.scale}) translate(${transform.x}px, ${transform.y}px)`,
-  transition: (isAnimating.value && !isDragging.value && !wheeling.value)
-    ? `transform ${props.animationDuration}ms cubic-bezier(0.4, 0.0, 0.2, 1)`
-    : 'none',
-  cursor: getCursor(),
-}))
 
-const canZoomIn = computed(() => transform.scale < props.maxZoom)
-const canZoomOut = computed(() => transform.scale > props.minZoom)
-
-function getCursor(): string {
-  if (isDragging.value)
-    return 'grabbing'
-  if (transform.scale > props.minZoom)
-    return 'grab'
-  return 'zoom-in'
-}
+// --- Остальная логика ---
+const currentImageMeta = computed((): IImageViewerImageMeta | null => {
+  return toRaw(props.images[props.currentIndex]?.meta) || null
+})
 
 watch(() => props.currentIndex, () => {
+  imageLoaded.value = false
+  imageError.value = false
   resetTransform()
   isMetadataPanelVisible.value = false
 })
@@ -93,6 +92,8 @@ watch(() => props.visible, (isVisible) => {
   if (isVisible) {
     document.body.style.overflow = 'hidden'
     isUiVisible.value = true
+    imageLoaded.value = false
+    imageError.value = false
   }
   else {
     document.body.style.overflow = ''
@@ -100,281 +101,6 @@ watch(() => props.visible, (isVisible) => {
     isMetadataPanelVisible.value = false
   }
 })
-
-function resetTransform() {
-  isAnimating.value = true
-  transform.scale = props.minZoom
-  transform.x = 0
-  transform.y = 0
-  setTimeout(() => {
-    isAnimating.value = false
-  }, props.animationDuration)
-}
-
-function calculateBounds(): ViewerBounds {
-  if (!imageRef.value || !containerRef.value)
-    return { minX: 0, maxX: 0, minY: 0, maxY: 0 }
-
-  const containerRect = containerRef.value.getBoundingClientRect()
-  const scaledWidth = naturalSize.width * transform.scale
-  const scaledHeight = naturalSize.height * transform.scale
-  const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2 / transform.scale)
-  const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2 / transform.scale)
-
-  return { minX: -maxX, maxX, minY: -maxY, maxY }
-}
-
-function constrainTransform() {
-  const bounds = calculateBounds()
-  transform.x = Math.max(bounds.minX, Math.min(bounds.maxX, transform.x))
-  transform.y = Math.max(bounds.minY, Math.min(bounds.maxY, transform.y))
-}
-
-function zoomTo(newScale: number, centerX = 0, centerY = 0) {
-  const clampedScale = Math.max(props.minZoom, Math.min(props.maxZoom, newScale))
-
-  if (clampedScale === props.minZoom) {
-    resetTransform()
-    return
-  }
-
-  const scaleRatio = clampedScale / transform.scale
-  isAnimating.value = true
-  transform.x = centerX - (centerX - transform.x) * scaleRatio
-  transform.y = centerY - (centerY - transform.y) * scaleRatio
-  transform.scale = clampedScale
-
-  nextTick(() => {
-    constrainTransform()
-    setTimeout(() => {
-      isAnimating.value = false
-    }, props.animationDuration)
-  })
-}
-
-function zoomIn(centerX = 0, centerY = 0) {
-  const newScale = Math.min(transform.scale + props.zoomStep, props.maxZoom)
-  zoomTo(newScale, centerX, centerY)
-}
-
-function zoomOut(centerX = 0, centerY = 0) {
-  const newScale = Math.max(transform.scale - props.zoomStep, props.minZoom)
-  zoomTo(newScale, centerX, centerY)
-}
-
-function handleDoubleClick(event: MouseEvent) {
-  event.preventDefault()
-  if (!imageRef.value)
-    return
-
-  const rect = imageRef.value.getBoundingClientRect()
-  const centerX = (event.clientX - rect.left - rect.width / 2) / transform.scale
-  const centerY = (event.clientY - rect.top - rect.height / 2) / transform.scale
-
-  if (transform.scale > props.minZoom) {
-    resetTransform()
-  }
-  else {
-    zoomTo(2, centerX, centerY)
-  }
-}
-
-function handleWheel(event: WheelEvent) {
-  event.preventDefault()
-
-  if (!imageRef.value)
-    return
-  if (wheelTimeoutId)
-    clearTimeout(wheelTimeoutId)
-
-  wheeling.value = true
-  isAnimating.value = false
-  const oldScale = transform.scale
-  const zoomFactor = 1.15
-  const newScale = event.deltaY < 0 ? oldScale * zoomFactor : oldScale / zoomFactor
-  const clampedScale = Math.max(props.minZoom, Math.min(props.maxZoom, newScale))
-
-  if (clampedScale === oldScale) {
-    wheeling.value = false
-
-    return
-  }
-  if (clampedScale <= props.minZoom) {
-    resetTransform()
-    wheeling.value = false
-
-    return
-  }
-
-  const rect = imageRef.value.getBoundingClientRect()
-  const centerX = (event.clientX - rect.left - rect.width / 2) / oldScale
-  const centerY = (event.clientY - rect.top - rect.height / 2) / oldScale
-  const scaleRatio = clampedScale / oldScale
-  transform.x = centerX - (centerX - transform.x) * scaleRatio
-  transform.y = centerY - (centerY - transform.y) * scaleRatio
-  transform.scale = clampedScale
-
-  constrainTransform()
-
-  wheelTimeoutId = window.setTimeout(() => {
-    wheeling.value = false
-    isAnimating.value = true
-    constrainTransform()
-  }, 150)
-}
-
-function handleMouseDown(event: MouseEvent) {
-  if (transform.scale <= props.minZoom)
-    return
-
-  event.preventDefault()
-  isDragging.value = true
-  isAnimating.value = false
-  dragStart.x = event.clientX
-  dragStart.y = event.clientY
-  transformStart.x = transform.x
-  transformStart.y = transform.y
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp, { once: true })
-}
-
-function handleMouseMove(event: MouseEvent) {
-  if (!isDragging.value)
-    return
-
-  const deltaX = (event.clientX - dragStart.x) / transform.scale
-  const deltaY = (event.clientY - dragStart.y) / transform.scale
-  transform.x = transformStart.x + deltaX
-  transform.y = transformStart.y + deltaY
-}
-
-function handleMouseUp() {
-  isDragging.value = false
-
-  document.removeEventListener('mousemove', handleMouseMove)
-  if (!wheeling.value) {
-    isAnimating.value = true
-  }
-
-  constrainTransform()
-}
-
-function getTouchPoints(event: TouchEvent): TouchPoint[] {
-  return Array.from(event.touches).map(touch => ({ x: touch.clientX, y: touch.clientY }))
-}
-
-function getDistance(point1: TouchPoint, point2: TouchPoint): number {
-  const dx = point1.x - point2.x
-  const dy = point1.y - point2.y
-
-  return Math.sqrt(dx * dx + dy * dy)
-}
-
-function getCenter(point1: TouchPoint, point2: TouchPoint): TouchPoint {
-  return { x: (point1.x + point2.x) / 2, y: (point1.y + point2.y) / 2 }
-}
-
-function handleTouchStart(event: TouchEvent) {
-  if (!props.enableTouch)
-    return
-
-  const target = event.target as HTMLElement
-  if (target.closest('button')) {
-    return
-  }
-
-  event.preventDefault()
-
-  isAnimating.value = false
-  touches.value = getTouchPoints(event)
-
-  if (touches.value.length === 1) {
-    if (transform.scale > props.minZoom) {
-      isDragging.value = true
-      dragStart.x = touches.value[0].x
-      dragStart.y = touches.value[0].y
-      transformStart.x = transform.x
-      transformStart.y = transform.y
-    }
-  }
-  else if (touches.value.length === 2) {
-    isDragging.value = false
-    initialDistance.value = getDistance(touches.value[0], touches.value[1])
-    initialScale.value = transform.scale
-  }
-}
-
-function handleTouchMove(event: TouchEvent) {
-  if (!props.enableTouch)
-    return
-
-  if (!isDragging.value && touches.value.length < 2) {
-    return
-  }
-  event.preventDefault()
-
-  const currentTouches = getTouchPoints(event)
-
-  if (isDragging.value && currentTouches.length === 1 && touches.value.length === 1) {
-    if (transform.scale > props.minZoom) {
-      const deltaX = (currentTouches[0].x - dragStart.x) / transform.scale
-      const deltaY = (currentTouches[0].y - dragStart.y) / transform.scale
-      transform.x = transformStart.x + deltaX
-      transform.y = transformStart.y + deltaY
-    }
-  }
-  else if (currentTouches.length === 2 && touches.value.length >= 2) {
-    if (!imageRef.value)
-      return
-
-    const currentDistance = getDistance(currentTouches[0], currentTouches[1])
-    const scaleRatio = currentDistance / initialDistance.value
-    const newScale = Math.max(props.minZoom, Math.min(props.maxZoom, initialScale.value * scaleRatio))
-    const rect = imageRef.value.getBoundingClientRect()
-    const center = getCenter(currentTouches[0], currentTouches[1])
-    const centerX = (center.x - rect.left - rect.width / 2) / transform.scale
-    const centerY = (center.y - rect.top - rect.height / 2) / transform.scale
-    const currentScaleRatio = newScale / transform.scale
-    transform.x = centerX - (centerX - transform.x) * currentScaleRatio
-    transform.y = centerY - (centerY - transform.y) * currentScaleRatio
-    transform.scale = newScale
-    initialDistance.value = currentDistance
-    initialScale.value = newScale
-  }
-}
-
-function handleTouchEnd(event: TouchEvent) {
-  if (!props.enableTouch)
-    return
-
-  if (!isDragging.value && touches.value.length === 0) {
-    return
-  }
-  event.preventDefault()
-
-  isAnimating.value = true
-  constrainTransform()
-  const remainingTouches = event.touches.length
-
-  if (remainingTouches === 0) {
-    isDragging.value = false
-    touches.value = []
-  }
-  else if (remainingTouches === 1 && touches.value.length > 1) {
-    isDragging.value = true
-    dragStart.x = event.touches[0].clientX
-    dragStart.y = event.touches[0].clientY
-    transformStart.x = transform.x
-    transformStart.y = transform.y
-    touches.value = getTouchPoints(event)
-  }
-  else {
-    touches.value = getTouchPoints(event)
-  }
-}
-
-const currentImage = computed(() => props.images[props.currentIndex])
-const hasMultipleImages = computed(() => props.images.length > 1)
 
 function handleImageLoad() {
   imageLoaded.value = true
@@ -391,6 +117,9 @@ function handleImageError(event: Event) {
   imageError.value = true
   emit('imageError', event)
 }
+
+const currentImage = computed(() => props.images[props.currentIndex])
+const hasMultipleImages = computed(() => props.images.length > 1)
 
 function close() {
   emit('update:visible', false)
@@ -412,20 +141,16 @@ function prev() {
 }
 
 function goToIndex(index: number) {
-  if (index >= 0 && index < props.images.length) {
+  if (index >= 0 && index < props.images.length)
     emit('update:currentIndex', index)
-  }
 }
 
 onClickOutside(viewerContentRef, () => {
-  if (props.closeOnOverlayClick && props.visible && !isDragging.value && transform.scale <= props.minZoom && !isMetadataPanelVisible.value) {
+  if (props.closeOnOverlayClick && props.visible && !isDragging.value && transform.scale <= props.minZoom && !isMetadataPanelVisible.value)
     close()
-  }
 })
 
 onUnmounted(() => {
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
   document.body.style.overflow = ''
 })
 </script>
@@ -529,17 +254,21 @@ onUnmounted(() => {
 
             <!-- Image container -->
             <div ref="containerRef" class="image-container">
-              <div v-if="!imageLoaded && !imageError" class="image-placeholder">
-                <div class="loading-spinner">
-                  <Icon width="64" height="64" icon="mdi:loading" class="spinning" />
+              <Transition name="loader-fade">
+                <div v-if="!imageLoaded || imageError" class="placeholder-wrapper">
+                  <div v-if="!imageLoaded && !imageError" class="image-placeholder">
+                    <div class="loading-spinner">
+                      <Icon width="64" height="64" icon="mdi:loading" class="spinning" />
+                    </div>
+                    <span>Загрузка изображения...</span>
+                  </div>
+                  <div v-else-if="imageError" class="image-error">
+                    <Icon width="64" height="64" icon="mdi:image-broken-variant" />
+                    <span>Не удалось загрузить изображение</span>
+                  </div>
                 </div>
-                <span>Загрузка изображения...</span>
-              </div>
+              </Transition>
 
-              <div v-else-if="imageError" class="image-error">
-                <Icon width="64" height="64" icon="mdi:image-broken-variant" />
-                <span>Не удалось загрузить изображение</span>
-              </div>
               <img
                 v-if="currentImage"
                 :key="currentImage.url"
@@ -608,6 +337,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+// ... Стили остаются без изменений ...
 .image-viewer-overlay {
   position: fixed;
   inset: 0;
@@ -818,6 +548,17 @@ onUnmounted(() => {
   padding: 5%;
 }
 
+.placeholder-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
 .image-placeholder,
 .image-error {
   display: flex;
@@ -950,12 +691,15 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.viewer-fade-fast-enter-active,
-.viewer-fade-fast-leave-active {
-  transition: opacity 0.15s ease;
+.loader-fade-enter-active {
+  transition: opacity 0.2s ease-in;
+  transition-delay: 150ms;
 }
-.viewer-fade-fast-enter-from,
-.viewer-fade-fast-leave-to {
+.loader-fade-leave-active {
+  transition: opacity 0s;
+}
+.loader-fade-enter-from,
+.loader-fade-leave-to {
   opacity: 0;
 }
 
