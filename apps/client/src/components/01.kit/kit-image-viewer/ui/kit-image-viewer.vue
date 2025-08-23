@@ -278,7 +278,13 @@ function handleTouchStart(event: TouchEvent) {
   if (!props.enableTouch)
     return
 
+  const target = event.target as HTMLElement
+  if (target.closest('button')) {
+    return
+  }
+
   event.preventDefault()
+
   isAnimating.value = false
   touches.value = getTouchPoints(event)
 
@@ -302,7 +308,11 @@ function handleTouchMove(event: TouchEvent) {
   if (!props.enableTouch)
     return
 
+  if (!isDragging.value && touches.value.length < 2) {
+    return
+  }
   event.preventDefault()
+
   const currentTouches = getTouchPoints(event)
 
   if (isDragging.value && currentTouches.length === 1 && touches.value.length === 1) {
@@ -337,7 +347,11 @@ function handleTouchEnd(event: TouchEvent) {
   if (!props.enableTouch)
     return
 
+  if (!isDragging.value && touches.value.length === 0) {
+    return
+  }
   event.preventDefault()
+
   isAnimating.value = true
   constrainTransform()
   const remainingTouches = event.touches.length
@@ -423,10 +437,10 @@ onUnmounted(() => {
         v-if="visible"
         class="image-viewer-overlay"
         @wheel="handleWheel"
-        @touchstart.prevent="handleTouchStart"
-        @touchmove.prevent="handleTouchMove"
-        @touchend.prevent="handleTouchEnd"
-        @touchcancel.prevent="handleTouchEnd"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+        @touchcancel="handleTouchEnd"
       >
         <div ref="viewerContentRef" class="viewer-wrapper">
           <!-- Header with controls -->

@@ -23,6 +23,7 @@ const CACHE_CONFIG = {
     webmanifest: 'trip-scheduler-pwa-webmanifest',
     fonts: 'trip-scheduler-fonts',
     images: 'trip-scheduler-images',
+    icons: 'trip-scheduler-icons',
     hashedAssets: 'trip-scheduler-hashed-assets',
     vendorAssets: 'trip-scheduler-vendor-assets',
     regularAssets: 'trip-scheduler-regular-assets',
@@ -30,6 +31,8 @@ const CACHE_CONFIG = {
   durations: {
     images: 365 * 24 * 60 * 60,
     fonts: 365 * 24 * 60 * 60,
+    // --- Добавлено ---
+    icons: 30 * 24 * 60 * 60,
     static: {
       hashed: 365 * 24 * 60 * 60,
       vendor: 30 * 24 * 60 * 60,
@@ -40,6 +43,7 @@ const CACHE_CONFIG = {
   limits: {
     fonts: 30,
     images: 500,
+    icons: 500,
     hashedAssets: 200,
     vendorAssets: 100,
     regularAssets: 50,
@@ -57,43 +61,38 @@ interface ApiCacheRule {
 
 const API_CACHE_RULES: ApiCacheRule[] = [
   {
-    // Правило для списка всех путешествий
-    path: '/api/trip/list',
+    path: 'trip.list',
     cacheName: 'trip-scheduler-api-trips',
-    strategy: 'NetworkFirst',
-    maxAgeSeconds: 24 * 60 * 60, // Кэшировать на 1 день
+    strategy: 'StaleWhileRevalidate',
+    maxAgeSeconds: 1 * 60 * 60, // 1 час
     maxEntries: 10,
   },
   {
-    // Правило для данных конкретного путешествия (включая дни и активности)
-    path: '/api/day/by-trip-id/.*',
+    path: 'day.getByTripId',
     cacheName: 'trip-scheduler-api-days',
-    strategy: 'NetworkFirst',
-    maxAgeSeconds: 24 * 60 * 60, // Кэшировать на 1 день
+    strategy: 'StaleWhileRevalidate',
+    maxAgeSeconds: 1 * 60 * 60, // 1 час
     maxEntries: 50,
   },
   {
-    // Правило для данных конкретного путешествия по ID
-    path: '/api/trip.getById',
+    path: 'trip.getById',
     cacheName: 'trip-scheduler-api-trip-details',
-    strategy: 'NetworkFirst',
-    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 дней
+    strategy: 'StaleWhileRevalidate',
+    maxAgeSeconds: 1 * 60 * 60, // 1 час
     maxEntries: 20,
   },
   {
-    // Правило для воспоминаний путешествия
-    path: '/api/memory.getByTripId',
+    path: 'memory.getByTripId',
     cacheName: 'trip-scheduler-api-memories',
-    strategy: 'NetworkFirst',
-    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 дней
+    strategy: 'StaleWhileRevalidate',
+    maxAgeSeconds: 1 * 60 * 60, // 1 час
     maxEntries: 50,
   },
   {
-    // Правило для изображений галереи маршрута
-    path: '/api/image.listByTrip',
+    path: 'image.listByTrip',
     cacheName: 'trip-scheduler-api-route-images',
-    strategy: 'NetworkFirst',
-    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 дней
+    strategy: 'StaleWhileRevalidate',
+    maxAgeSeconds: 1 * 60 * 60, // 1 час
     maxEntries: 50,
   },
 ]

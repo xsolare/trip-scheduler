@@ -147,7 +147,7 @@ bun run dev```
   Убедитесь, что ваш Docker-контейнер `trip-scheduler-db` запущен.
 
   ```bash
-  docker exec -t trip-scheduler-db pg_dump --username=trip-scheduler --inserts --data-only trip_scheduler_dev > backup_data.sql
+  docker exec -t trip-scheduler-db pg_dump --username=trip-scheduler --inserts --data-only trip_scheduler_prod > backup_data.sql
   ```
 
   Эта команда создаст файл `backup_data.sql` в текущей директории.

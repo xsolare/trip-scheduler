@@ -51,6 +51,17 @@ if (import.meta.env.PROD) {
   )
 }
 
+registerRoute(
+  ({ url }) => url.hostname === 'api.iconify.design',
+  CacheStrategyFactory.createStaleWhileRevalidate(
+    CACHE_CONFIG.names.icons,
+    {
+      maxEntries: CACHE_CONFIG.limits.icons,
+      maxAgeSeconds: CACHE_CONFIG.durations.icons,
+    },
+  ),
+)
+
 const hashedAssetsStrategy = CacheStrategyFactory.createCacheFirst(
   CACHE_CONFIG.names.hashedAssets,
   {
@@ -125,7 +136,7 @@ API_CACHE_RULES.forEach((rule) => {
   registerRoute(
     ({ request, url }) =>
       request.method === 'GET'
-      && url.pathname === rule.path,
+      && url.pathname.includes(rule.path),
     strategy,
   )
 })
