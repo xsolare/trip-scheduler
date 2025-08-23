@@ -231,8 +231,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
     <template v-if="memory.imageId && memory?.image?.url">
       <div class="photo-wrapper" @click="openImageViewer">
         <KitImage
-          :src="memory.image.url"
-          :variants="memory.image.variants"
+          :src="memory.image.variants?.small || memory.image.url"
           object-fit="cover"
         />
         <div class="photo-overlay">
@@ -730,12 +729,17 @@ onClickOutside(commentEditorRef, saveViewerComment)
   margin: 20px auto 0;
   transition: all 0.2s ease;
   width: 100%;
+  opacity: 0.7;
 
   &.is-readonly {
     gap: 8px;
     background: var(--bg-tertiary-color);
     padding: 12px 16px;
     text-align: center;
+  }
+
+  &:hover {
+    opacity: 1;
   }
 }
 

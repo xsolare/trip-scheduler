@@ -357,7 +357,7 @@ onUnmounted(() => {
 .image-viewer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.9);
   z-index: 13;
   display: flex;
   flex-direction: column;
@@ -517,6 +517,7 @@ onUnmounted(() => {
 .nav-btn {
   position: absolute;
   top: 50%;
+  opacity: 0.7;
   transform: translateY(-50%);
   background: var(--bg-tertiary-color);
   color: var(--fg-primary-color);
@@ -536,6 +537,7 @@ onUnmounted(() => {
     background: var(--bg-hover-color);
     border-color: var(--border-secondary-color);
     transform: translateY(-50%) scale(1.1);
+    opacity: 1;
   }
 
   &:active {
