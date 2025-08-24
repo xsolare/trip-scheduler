@@ -140,10 +140,17 @@ watch(
 
     nextTick(() => {
       if (imageRef.value) {
-        if (props.loading === 'eager')
+        if (imageRef.value.complete) {
           checkImageState(imageRef.value)
-        else
+          return
+        }
+
+        if (props.loading === 'eager') {
+          // Для eager загрузки слушатели @load/@error сделают свою работу
+        }
+        else {
           setupIntersectionObserver()
+        }
       }
     })
   },
