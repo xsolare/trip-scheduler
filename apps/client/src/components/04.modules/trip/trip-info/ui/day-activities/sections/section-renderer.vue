@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import type { ActivitySection, ActivitySectionGallery, ActivitySectionGeolocation, ActivitySectionText } from '~/shared/types/models/activity'
+import type {
+  ActivitySection,
+  ActivitySectionGallery,
+  ActivitySectionGeolocation,
+  ActivitySectionText,
+} from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { KitInput } from '~/components/01.kit/kit-input'
+import { IconPicker } from '~/components/02.shared/icon-picker'
 import { EActivitySectionType } from '~/shared/types/models/activity'
+import { useModuleStore } from '../../../composables/use-module'
 import DescriptionSection from './description-section.vue'
 import GallerySection from './gallery-section.vue'
 import GeolocationSection from './geolocation-section.vue'
@@ -16,17 +23,64 @@ const emit = defineEmits(['updateSection', 'deleteSection'])
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)
 
+const editableTitle = ref(props.section.title || '')
+const editableIcon = ref(props.section.icon || 'mdi:map-marker')
+
 function onUpdate(data: ActivitySection) {
   emit('updateSection', data)
 }
 
 function toggleAttached() {
-  emit('updateSection', { ...props.section, isAttached: !props.section.isAttached })
+  const newSectionData = {
+    ...props.section,
+    isAttached: !props.section.isAttached,
+  }
+  if (!newSectionData.isAttached) {
+    delete newSectionData.title
+    delete newSectionData.icon
+  }
+  emit('updateSection', newSectionData)
 }
+
+function updatePinSettings() {
+  if (editableTitle.value !== (props.section.title || '')
+    || editableIcon.value !== (props.section.icon || 'mdi:map-marker')
+  ) {
+    emit('updateSection', {
+      ...props.section,
+      title: editableTitle.value,
+      icon: editableIcon.value,
+    })
+  }
+}
+
+watch(editableIcon, () => {
+  updatePinSettings()
+})
+
+watch(() => props.section, (newSection) => {
+  editableTitle.value = newSection.title || ''
+  editableIcon.value = newSection.icon || 'mdi:map-marker'
+}, { deep: true, immediate: true })
 </script>
 
 <template>
   <div class="activity-section-renderer" :class="{ 'is-attached': section.isAttached }">
+    <div v-if="section.isAttached && !isViewMode" class="pin-settings">
+      <KitInput
+        v-model="editableTitle"
+        placeholder="Заголовок пина (необязательно)"
+        class="pin-input"
+        size="sm"
+        @blur="updatePinSettings"
+        @keydown.enter="($event.target as HTMLInputElement).blur()"
+      />
+      <IconPicker
+        v-model="editableIcon"
+        size="sm"
+      />
+    </div>
+
     <DescriptionSection
       v-if="section.type === EActivitySectionType.DESCRIPTION"
       :section="section as ActivitySectionText"
@@ -69,6 +123,25 @@ function toggleAttached() {
   &.is-attached {
     padding-left: 8px;
     border-left: 2px dashed var(--border-secondary-color);
+  }
+}
+
+.pin-settings {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  margin-bottom: 8px;
+  background-color: var(--bg-tertiary-color);
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-s);
+
+  .pin-input {
+    flex-grow: 1;
+
+    :deep(input) {
+      height: 38px;
+      font-size: 0.9rem;
+    }
   }
 }
 

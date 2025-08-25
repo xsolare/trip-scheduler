@@ -6,13 +6,33 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { useModuleStore } from '../../composables/use-module'
 import DaysPanel from './days-panel.vue'
-import ModeSwitcher from './mode-switcher.vue'
 import ViewSwitcher from './view-switcher.vue'
 
 const store = useModuleStore(['ui', 'data'])
 const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView, isEditModeAllow } = storeToRefs(store.ui)
 const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.data)
 const { setCurrentDay, updateDayDetails } = store.data
+
+const buttonConfig = computed(() => {
+  if (isViewMode.value) {
+    return {
+      icon: 'mdi:pencil-outline',
+      title: 'Перейти в режим редактирования',
+    }
+  }
+  return {
+    icon: 'mdi:eye-outline',
+    title: 'Перейти в режим просмотра',
+  }
+})
+
+function toggleMode() {
+  const newMode = isViewMode.value ? 'edit' : 'view'
+  if (newMode === 'edit')
+    store.ui.clearCollapsedState()
+
+  store.ui.setInteractionMode(newMode)
+}
 
 function handleAddNewDay() {
   store.data.addNewDay()
@@ -101,7 +121,15 @@ const selectedCalendarDate = computed<CalendarDate | null>({
         >
           <Icon icon="mdi:trash-can-outline" />
         </button>
-        <ModeSwitcher key="mode" />
+        <button
+          v-if="isEditModeAllow"
+          key="mode"
+          class="mode-button"
+          :title="buttonConfig.title"
+          @click="toggleMode"
+        >
+          <Icon :icon="buttonConfig.icon" />
+        </button>
       </TransitionGroup>
 
       <div class="view-controls">
@@ -190,6 +218,29 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     border-color: var(--border-error-color);
   }
 }
+
+/* --- Стили из mode-switcher --- */
+.mode-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-s);
+  padding: 8px;
+  cursor: pointer;
+  color: var(--fg-secondary-color);
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--fg-accent-color);
+    border-color: var(--fg-accent-color);
+    background-color: var(--bg-hover-color);
+  }
+}
+/* --- Конец стилей из mode-switcher --- */
+
 .current-day-info-skeleton {
   display: flex;
   flex-direction: column;

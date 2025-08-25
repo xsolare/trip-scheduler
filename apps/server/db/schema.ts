@@ -17,6 +17,8 @@ import {
 interface ActivitySectionBase {
   id: string
   isAttached?: boolean
+  title?: string
+  icon?: string
 }
 
 interface ActivitySectionText extends ActivitySectionBase {

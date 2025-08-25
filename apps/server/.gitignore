@@ -26,4 +26,3 @@ dist-ssr
 sqlite.db
 tsconfig.tsbuildinfo
 static
-drizzle

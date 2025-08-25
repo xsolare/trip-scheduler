@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 
-interface Props {
-  label?: string
-  icon?: string
-  type?: 'text' | 'email' | 'password' | 'number'
-  name?: string
-  placeholder?: string
-  disabled?: boolean
-  required?: boolean
-  error?: string | null
-}
+defineOptions({
+  inheritAttrs: false,
+})
 
 withDefaults(defineProps<Props>(), {
   label: '',
@@ -21,7 +14,20 @@ withDefaults(defineProps<Props>(), {
   disabled: false,
   required: false,
   error: null,
+  size: 'md',
 })
+
+interface Props {
+  label?: string
+  icon?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  name?: string
+  placeholder?: string
+  disabled?: boolean
+  required?: boolean
+  error?: string | null
+  size?: 'sm' | 'md' | 'lg'
+}
 
 const model = defineModel<string | number>()
 
@@ -41,7 +47,11 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
-        :class="{ 'has-prefix-icon': !!icon, 'has-append-icon': $slots.append }"
+        :class="[
+          `kit-input-${size}`,
+          { 'has-prefix-icon': !!icon, 'has-append-icon': $slots.append },
+        ]"
+        v-bind="$attrs"
       >
       <div v-if="$slots.append" class="input-icon-append">
         <slot name="append" />
@@ -82,14 +92,11 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
 
   input {
     width: 100%;
-    padding: 12px;
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-primary-color);
     border-radius: var(--r-s);
     color: var(--fg-primary-color);
-    font-size: 1rem;
     transition: border-color 0.2s;
-    height: 46px;
 
     &.has-prefix-icon {
       padding-left: 40px;
@@ -108,6 +115,24 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
       cursor: not-allowed;
       opacity: 0.7;
     }
+  }
+
+  .kit-input-sm {
+    height: 38px;
+    padding: 10px;
+    font-size: 0.875rem;
+  }
+
+  .kit-input-md {
+    height: 46px;
+    padding: 12px;
+    font-size: 1rem;
+  }
+
+  .kit-input-lg {
+    height: 54px;
+    padding: 14px;
+    font-size: 1.125rem;
   }
 
   .input-icon-append {

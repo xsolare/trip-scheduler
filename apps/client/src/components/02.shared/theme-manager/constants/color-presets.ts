@@ -55,7 +55,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#33302e',
       'border-accent-color': '#f07178',
       'border-disabled-color': '#33302e',
-      'border-button-secondary-color': '#ffb86c33',
+      'border-button-secondary-color': '#4b3b2b', // Рассчитано из #ffb86c33
       'border-focus-color': '#f07178',
       'border-pressed-color': '#f07178',
 
@@ -116,7 +116,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#e5e9f0',
       'border-accent-color': '#81a1c1',
       'border-disabled-color': '#e5e9f0',
-      'border-button-secondary-color': '#5e81ac33',
+      'border-button-secondary-color': '#cfd9e5', // Рассчитано из #5e81ac33
       'border-focus-color': '#5e81ac',
       'border-pressed-color': '#5e81ac',
 
@@ -172,11 +172,11 @@ export const themePresets: ThemePreset[] = [
       'fg-info-color': '#1677ff',
 
       // Border
-      'border-primary-color': '#00000028',
-      'border-secondary-color': '#00000020',
+      'border-primary-color': '#cbcac4', // Рассчитано из #00000028
+      'border-secondary-color': '#d2d2cb', // Рассчитано из #00000020
       'border-accent-color': '#86bda5',
-      'border-disabled-color': '#00000020',
-      'border-button-secondary-color': '#00b96b33',
+      'border-disabled-color': '#d2d2cb', // Рассчитано из #00000020
+      'border-button-secondary-color': '#c0e5cf', // Рассчитано из #00b96b33
       'border-focus-color': '#1c6b48',
       'border-pressed-color': '#1c6b48',
 
@@ -236,7 +236,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#191a21',
       'border-accent-color': '#ff92d4',
       'border-disabled-color': '#191a21',
-      'border-button-secondary-color': '#ff79c633',
+      'border-button-secondary-color': '#533952', // Рассчитано из #ff79c633
       'border-focus-color': '#ff79c6',
       'border-pressed-color': '#ff79c6',
 
@@ -296,7 +296,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#212d27',
       'border-accent-color': '#e8c47f',
       'border-disabled-color': '#212d27',
-      'border-button-secondary-color': '#d4ac5b33',
+      'border-button-secondary-color': '#3f3f2b', // Рассчитано из #d4ac5b33
       'border-focus-color': '#d4ac5b',
       'border-pressed-color': '#d4ac5b',
 
@@ -356,7 +356,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#e0dad9',
       'border-accent-color': '#f37a51',
       'border-disabled-color': '#e0dad9',
-      'border-button-secondary-color': '#e1603233',
+      'border-button-secondary-color': '#f5d6cb', // Рассчитано из #e1603233
       'border-focus-color': '#e16032',
       'border-pressed-color': '#e16032',
 
@@ -416,7 +416,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#f2ebeb',
       'border-accent-color': '#eb9fb0',
       'border-disabled-color': '#f2ebeb',
-      'border-button-secondary-color': '#e68c9c4d',
+      'border-button-secondary-color': '#f6d7dc', // Рассчитано из #e68c9c4d
       'border-focus-color': '#e68c9c',
       'border-pressed-color': '#d96d7f',
 
@@ -476,7 +476,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#21262d',
       'border-accent-color': '#db90f5',
       'border-disabled-color': '#21262d',
-      'border-button-secondary-color': '#c975de33',
+      'border-button-secondary-color': '#32253e', // Рассчитано из #c975de33
       'border-focus-color': '#c975de',
       'border-pressed-color': '#c975de',
 
@@ -536,7 +536,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#dccbbc',
       'border-accent-color': '#e07f5f',
       'border-disabled-color': '#dccbbc',
-      'border-button-secondary-color': '#d96c474d',
+      'border-button-secondary-color': '#ecc7b6', // Рассчитано из #d96c474d
       'border-focus-color': '#d96c47',
       'border-pressed-color': '#bf5b3b',
 
@@ -596,7 +596,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#213848',
       'border-accent-color': '#59ebd3',
       'border-disabled-color': '#213848',
-      'border-button-secondary-color': '#33e1c933',
+      'border-button-secondary-color': '#164549', // Рассчитано из #33e1c933
       'border-focus-color': '#33e1c9',
       'border-pressed-color': '#33e1c9',
 
@@ -656,7 +656,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#d9d1c7',
       'border-accent-color': '#5a9c7b',
       'border-disabled-color': '#d9d1c7',
-      'border-button-secondary-color': '#4b82664d',
+      'border-button-secondary-color': '#c0cec1', // Рассчитано из #4b82664d
       'border-focus-color': '#4b8266',
       'border-pressed-color': '#4b8266',
 
@@ -716,7 +716,7 @@ export const themePresets: ThemePreset[] = [
       'border-secondary-color': '#2a2736',
       'border-accent-color': '#f062ff',
       'border-disabled-color': '#2a2736',
-      'border-button-secondary-color': '#e838ff33',
+      'border-button-secondary-color': '#3c1748', // Рассчитано из #e838ff33
       'border-focus-color': '#e838ff',
       'border-pressed-color': '#e838ff',
 
@@ -727,5 +727,4 @@ export const themePresets: ThemePreset[] = [
       'border-info-color': '#4dcfff',
     },
   },
-
 ]

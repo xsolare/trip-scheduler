@@ -20,7 +20,7 @@
     "db:seed": "bun run db/seed.ts",
     "db:seed-json": "bun run db/seed-json.ts",
     "db:studio": "bunx drizzle-kit studio",
-    "db:reset": "bunx drizzle-kit drop && bun run db:generate",
+    "db:reset": "bunx drizzle-kit drop",
     "--------------------------------< LINT & FORMAT >---------------------------------": "",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

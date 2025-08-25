@@ -3,6 +3,8 @@ import { z } from 'zod'
 const ActivitySectionBaseSchema = z.object({
   id: z.string(),
   isAttached: z.boolean().optional(),
+  title: z.string().optional(),
+  icon: z.string().optional(),
 })
 
 const ActivitySectionTextSchema = ActivitySectionBaseSchema.extend({

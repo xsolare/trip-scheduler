@@ -6,8 +6,8 @@ import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
-import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
 import { EActivitySectionType } from '~/shared/types/models/activity'
+import { useModuleStore } from '../../composables/use-module'
 import AddSectionMenu from '../controls/add-section-menu.vue'
 import { ActivitySectionRenderer } from './sections'
 
@@ -15,7 +15,7 @@ interface ActivityItemProps {
   activity: Activity
   isFirst: boolean
   isLast: boolean
-  isCollapsed: boolean // Добавлено
+  isCollapsed: boolean
 }
 
 const props = defineProps<ActivityItemProps>()
@@ -40,6 +40,18 @@ const sectionTypeIcons: Record<EActivitySectionType, string> = {
   [EActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
 }
 
+function getGroupedChildren(children: ActivitySection[]) {
+  const withTitle: ActivitySection[] = []
+  const withoutTitle: ActivitySection[] = []
+  children.forEach((child) => {
+    if (child.title)
+      withTitle.push(child)
+    else
+      withoutTitle.push(child)
+  })
+  return { withTitle, withoutTitle }
+}
+
 function toggleSection(groupId: string, sectionId: string) {
   if (!expandedSections.value[groupId])
     expandedSections.value[groupId] = {}
@@ -49,7 +61,7 @@ function toggleSection(groupId: string, sectionId: string) {
 
 function toggleAllInSection(group: { parent: ActivitySection, children: ActivitySection[] }) {
   const groupId = group.parent.id
-  const shouldExpand = !isAnyChildExpanded(group)
+  const shouldExpand = group.children.some(child => !isSectionExpanded(groupId, child.id))
 
   if (!expandedSections.value[groupId])
     expandedSections.value[groupId] = {}
@@ -171,12 +183,9 @@ function isSectionExpanded(groupId: string, sectionId: string): boolean {
   return expandedSections.value[groupId]?.[sectionId] ?? false
 }
 
-function isAnyChildExpanded(group: { children: ActivitySection[] }): boolean {
-  if (!group.children.length)
-    return false
-
-  const groupId = sectionGroups.value.find(g => g.children === group.children)?.parent.id
-  if (!groupId)
+function isAnyChildExpanded(group: { parent: ActivitySection, children: ActivitySection[] }): boolean {
+  const groupId = group.parent.id
+  if (!group.children.length || !expandedSections.value[groupId])
     return false
 
   return group.children.some(child => isSectionExpanded(groupId, child.id))
@@ -270,35 +279,76 @@ onClickOutside(timeEditorRef, saveTimeChanges)
               @delete-section="deleteSection(group.parent.id)"
             />
 
-            <div v-if="group.children.length > 0" class="attached-pills-container">
-              <div class="attachment-line" />
-              <div class="attached-pills">
-                <button
-                  v-for="child in group.children"
-                  :key="child.id"
-                  class="attached-pill"
-                  :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
-                  @click="toggleSection(group.parent.id, child.id)"
-                >
-                  <Icon :icon="sectionTypeIcons[child.type]" class="pill-icon" />
-                </button>
-              </div>
-              <button class="expand-toggle-btn" @click="toggleAllInSection(group)">
-                <Icon :icon="isAnyChildExpanded(group) ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
-              </button>
-            </div>
-
-            <div v-if="group.children.length > 0" class="attached-children">
-              <template v-for="(child, childIndex) in group.children" :key="child.id">
-                <div v-if="isSectionExpanded(group.parent.id, child.id)">
+            <div v-if="group.children.length > 0" class="attached-items-container">
+              <!-- Сначала рендерим пины с заголовками, каждый на своей строке -->
+              <div
+                v-for="(child, index) in getGroupedChildren(group.children).withTitle"
+                :key="child.id"
+                class="titled-pin-block"
+              >
+                <div class="titled-pin-wrapper">
+                  <div class="attachment-line-start" />
+                  <button
+                    class="attached-pill titled-pin"
+                    :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
+                    @click="toggleSection(group.parent.id, child.id)"
+                  >
+                    <Icon width="20" height="20" :icon="child.icon || sectionTypeIcons[child.type]" class="pill-icon" />
+                    <span class="pill-title">{{ child.title }}</span>
+                    <Icon width="20" height="20" :icon="isSectionExpanded(group.parent.id, child.id) ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="pill-chevron" />
+                  </button>
+                  <div v-if="index < getGroupedChildren(group.children).withTitle.length - 1 || getGroupedChildren(group.children).withoutTitle.length > 0" class="attachment-line-end" />
+                </div>
+                <!-- Раскрытый контент рендерится сразу после своего пина -->
+                <div v-if="isSectionExpanded(group.parent.id, child.id)" class="expanded-pin-content">
                   <ActivitySectionRenderer
                     :section="child"
-                    :is-first-attached="childIndex === 0"
+                    :is-first-attached="true"
                     @update-section="newSectionData => updateSection(child.id, newSectionData)"
                     @delete-section="deleteSection(child.id)"
                   />
                 </div>
-              </template>
+              </div>
+
+              <!-- Затем рендерим пины без заголовков в одну строку -->
+              <div v-if="getGroupedChildren(group.children).withoutTitle.length > 0">
+                <div class="regular-pins-wrapper">
+                  <div class="attachment-line-start" />
+                  <div class="attached-pills">
+                    <button
+                      v-for="child in getGroupedChildren(group.children).withoutTitle"
+                      :key="child.id"
+                      class="attached-pill"
+                      :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
+                      @click="toggleSection(group.parent.id, child.id)"
+                    >
+                      <Icon
+                        width="20"
+                        height="20"
+                        :icon="child.icon || sectionTypeIcons[child.type]"
+                        class="pill-icon"
+                      />
+                    </button>
+                  </div>
+                  <button class="expand-toggle-btn" @click="toggleAllInSection(group)">
+                    <Icon :icon="isAnyChildExpanded(group) ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
+                  </button>
+                </div>
+                <!-- Раскрытый контент для обычных пинов рендерится после всей группы -->
+                <div
+                  v-for="child in getGroupedChildren(group.children).withoutTitle"
+                  :key="child.id"
+                >
+                  <div v-if="isSectionExpanded(group.parent.id, child.id)" class="expanded-pin-content">
+                    <ActivitySectionRenderer
+                      :section="child"
+                      :is-first-attached="true"
+                      @update-section="newSectionData => updateSection(child.id, newSectionData)"
+                      @delete-section="deleteSection(child.id)"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -432,7 +482,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       display: flex;
       align-items: center;
       gap: 4px;
-      opacity: 0; // Default state in edit mode
+      opacity: 0;
       transition: all 0.2s ease-in-out;
 
       .control-btn {
@@ -511,24 +561,40 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     position: relative;
   }
 
-  .attached-pills-container {
+  .attached-items-container {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
     margin-top: 8px;
     padding-left: 16px;
     position: relative;
+  }
 
-    .attachment-line {
-      position: absolute;
-      left: 6px;
-      top: -8px;
-      width: 10px;
-      height: 25px;
-      border-left: 2px solid var(--border-secondary-color);
-      border-bottom: 2px solid var(--border-secondary-color);
-      border-bottom-left-radius: 6px;
-    }
+  .titled-pin-wrapper,
+  .regular-pins-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+
+  .attachment-line-start {
+    position: absolute;
+    left: -10px;
+    top: -8px;
+    width: 10px;
+    height: 25px;
+    border-left: 2px solid var(--border-secondary-color);
+    border-bottom: 2px solid var(--border-secondary-color);
+    border-bottom-left-radius: 6px;
+  }
+  .attachment-line-end {
+    position: absolute;
+    left: -10px;
+    top: 12px;
+    width: 10px;
+    height: 100%;
+    border-left: 2px solid var(--border-secondary-color);
   }
 
   .attached-pills {
@@ -552,6 +618,8 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     color: var(--fg-secondary-color);
     cursor: pointer;
     transition: all 0.2s ease;
+    padding: 4px;
+
     &.active {
       background: var(--fg-accent-color);
       color: var(--fg-inverted-color);
@@ -560,8 +628,45 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       background: var(--bg-hover-color);
       color: var(--fg-accent-color);
     }
-    .pill-icon {
+  }
+
+  .expanded-pin-content {
+    margin-top: 12px;
+    position: relative;
+  }
+
+  .titled-pin {
+    width: auto;
+    height: auto;
+    padding: 6px 12px;
+    gap: 8px;
+    border-radius: var(--r-l);
+
+    .pill-title {
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .pill-chevron {
       font-size: 0.9rem;
+      margin-left: 4px;
+    }
+    &-block {
+      .expanded-pin-content {
+        &::before {
+          content: '';
+          position: absolute;
+          left: -10px;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background-color: var(--border-secondary-color);
+        }
+
+        .is-attached {
+          padding-left: 0px;
+          border-left: 0;
+        }
+      }
     }
   }
 
@@ -579,17 +684,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     transition: all 0.2s ease;
     &:hover {
       background: var(--bg-hover-color);
-    }
-  }
-
-  .attached-children {
-    padding-left: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    > div {
-      margin-top: 12px;
     }
   }
 
@@ -645,7 +739,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     .activity-sections {
       padding-left: 0;
     }
-    .attached-children {
+    .expanded-pin-content {
       padding-left: 0;
     }
     .activity-section-renderer {

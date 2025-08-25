@@ -16,6 +16,8 @@ export interface ActivitySection {
   id: string
   type: EActivitySectionType
   isAttached?: boolean
+  title?: string
+  icon?: string
 }
 
 export interface ActivitySectionText extends ActivitySection {
