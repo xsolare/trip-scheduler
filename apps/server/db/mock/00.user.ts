@@ -4,6 +4,7 @@
  */
 export const MOCK_USER_ID_1 = '1a97d95a-0158-4171-8258-52c7a917e3f0'
 export const MOCK_USER_ID_2 = '1a97d95a-0158-4171-8258-52c7a917e3f2'
+export const MOCK_USER_ID_3 = '1a97d95a-0158-4171-8258-52c7a917e3f3'
 
 /**
   Моковые данные для таблицы 'users'.
@@ -23,6 +24,14 @@ export const MOCK_USER_DATA = [
     email: 'dev2@dev.dev',
     name: 'Артем',
     avatarUrl: 'avatars/magic-girl.png',
+    password: '$argon2id$v=19$m=65536,t=2,p=1$5dk/3wyofRTLJmAMfC1LD5c92Ci4fGkqYkEUBOTfWy8$TBGnUdaGFaHKevxIvvIg8FgdPSl1F4h5b5Zo73rOn3M',
+  },
+  {
+    id: MOCK_USER_ID_3,
+    role: 'admin' as const,
+    email: 'dev3@dev.dev',
+    name: 'Максим',
+    avatarUrl: 'avatars/maxim.png',
     password: '$argon2id$v=19$m=65536,t=2,p=1$5dk/3wyofRTLJmAMfC1LD5c92Ci4fGkqYkEUBOTfWy8$TBGnUdaGFaHKevxIvvIg8FgdPSl1F4h5b5Zo73rOn3M',
   },
 ]

@@ -40,8 +40,6 @@ const statusInfo = computed(() => {
   switch (props.status) {
     case 'completed':
       return { text: 'Завершено', class: 'completed', icon: 'mdi:check-circle-outline' }
-    case 'draft':
-      return { text: 'В процессе', class: 'in-progress', icon: 'mdi:airplane-takeoff' }
     case 'planned':
       return { text: 'Запланировано', class: 'planned', icon: 'mdi:calendar-check-outline' }
     default:

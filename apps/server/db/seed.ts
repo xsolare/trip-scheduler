@@ -4,7 +4,15 @@ import path from 'node:path'
 import process from 'node:process'
 import url from 'node:url'
 import { db } from './index'
-import { activities, days, memories, tripImages, tripParticipants, trips, users } from './schema'
+import {
+  activities,
+  days,
+  memories,
+  tripImages,
+  tripParticipants,
+  trips,
+  users,
+} from './schema'
 
 async function copyStaticFiles() {
   const sourceDir = path.join(__dirname, 'mock/static')

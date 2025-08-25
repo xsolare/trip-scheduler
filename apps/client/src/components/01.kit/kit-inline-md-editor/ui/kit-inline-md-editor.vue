@@ -34,7 +34,6 @@ useEditor((root) => {
       [Crepe.Feature.Placeholder]: {
         text: props.placeholder || 'Начните вводить текст...',
       },
-
     },
     features: {
       ...props.features,
@@ -46,7 +45,7 @@ useEditor((root) => {
     .config((ctx) => {
       ctx.update(editorViewOptionsCtx, prev => ({
         ...prev,
-        editable: () => !props.disabled,
+        editable: () => !props.disabled && !props.readonly,
       }))
 
       const listenerValue = ctx.get(listenerCtx)
@@ -62,17 +61,14 @@ useEditor((root) => {
     // })
 
     crepeListener.updated(() => {
-      // console.log('Document updated')
       emit('updated')
     })
 
     crepeListener.focus(() => {
-      // console.log('Editor focused')
       emit('focus')
     })
 
     crepeListener.blur(() => {
-      // console.log('Editor blurred')
       emit('blur')
     })
   })
@@ -85,7 +81,6 @@ useEditor((root) => {
   <div
     :class="{
       'milkdown-disabled': disabled,
-      'milkdown-readonly': readonly,
       'has-content': !!markdown }"
   >
     <Milkdown />
@@ -95,10 +90,6 @@ useEditor((root) => {
 <style lang="scss" scoped>
 .milkdown-disabled {
   opacity: 0.7;
-  pointer-events: none;
-}
-
-.milkdown-readonly {
   pointer-events: none;
 }
 
@@ -158,9 +149,13 @@ useEditor((root) => {
     }
     .milkdown-code-block {
       padding: 0;
+
       .cm-line {
         color: var(--fg-secondary-color);
       }
+    }
+    .ProseMirror p:last-child > .ProseMirror-trailingBreak {
+      display: none;
     }
   }
   .milkdown-block-handle {

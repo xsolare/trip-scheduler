@@ -45,17 +45,42 @@ export const activityTagIcons: Record<EActivityTag, string> = {
 }
 
 export const activityTagColors: Record<EActivityTag, string> = {
-  [EActivityTag.TRANSPORT]: '#e3f2fd',
-  [EActivityTag.WALK]: '#e8f5e9',
-  [EActivityTag.FOOD]: '#fff8e1',
-  [EActivityTag.ATTRACTION]: '#f3e5f5',
-  [EActivityTag.RELAX]: '#e0f2f1',
+  [EActivityTag.TRANSPORT]: '#A2D2FF80',
+  [EActivityTag.WALK]: '#B9FBC080',
+  [EActivityTag.FOOD]: '#FFD6A580',
+  [EActivityTag.ATTRACTION]: '#E0BBE480',
+  [EActivityTag.RELAX]: '#A0E7E580',
+}
+
+export const activityTagLabels: Record<EActivityTag, string> = {
+  [EActivityTag.TRANSPORT]: 'Транспорт',
+  [EActivityTag.WALK]: 'Прогулка',
+  [EActivityTag.FOOD]: 'Еда',
+  [EActivityTag.ATTRACTION]: 'Достопримечательность',
+  [EActivityTag.RELAX]: 'Отдых',
 }
 
 // Расширенный тип метаданных для внутреннего использования, чтобы хранить ID для обратной связи
 export interface CustomImageViewerImageMeta extends IImageViewerImageMeta {
   memoryId?: string
   imageId: string
+}
+
+/**
+ * Возвращает полную информацию о теге (иконка, цвет, название).
+ * @param tag - Тег активности.
+ * @returns Объект с информацией о теге или null.
+ */
+export function getTagInfo(tag?: EActivityTag) {
+  if (!tag)
+    return null
+
+  return {
+    value: tag,
+    icon: activityTagIcons[tag],
+    color: activityTagColors[tag],
+    label: activityTagLabels[tag],
+  }
 }
 
 /**

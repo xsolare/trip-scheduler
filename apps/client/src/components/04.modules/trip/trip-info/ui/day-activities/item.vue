@@ -6,8 +6,9 @@ import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
-import { EActivitySectionType } from '~/shared/types/models/activity'
+import { EActivitySectionType, EActivityTag } from '~/shared/types/models/activity'
 import { useModuleStore } from '../../composables/use-module'
+import { activityTagIcons, activityTagLabels, getTagInfo } from '../../lib/helpers'
 import AddSectionMenu from '../controls/add-section-menu.vue'
 import { ActivitySectionRenderer } from './sections'
 
@@ -33,6 +34,18 @@ const editingStartTime = shallowRef<Time | null>(null)
 const editingEndTime = shallowRef<Time | null>(null)
 
 const expandedSections = ref<Record<string, Record<string, boolean>>>({})
+
+const tagInfo = computed(() => getTagInfo(props.activity.tag))
+
+const tagOptions = Object.values(EActivityTag).map(tag => ({
+  value: tag,
+  label: activityTagLabels[tag],
+  icon: activityTagIcons[tag],
+}))
+
+function handleTagUpdate(newTag: EActivityTag) {
+  updateActivity({ tag: newTag })
+}
 
 const sectionTypeIcons: Record<EActivitySectionType, string> = {
   [EActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
@@ -220,6 +233,27 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         </div>
       </div>
 
+      <div v-if="tagInfo || !isViewMode" class="activity-tag-wrapper">
+        <KitDropdown
+          v-if="!isViewMode"
+          :items="tagOptions"
+          :model-value="activity.tag"
+          @update:model-value="handleTagUpdate"
+        >
+          <template #trigger>
+            <button class="tag-chip" :style="{ backgroundColor: tagInfo?.color }">
+              <Icon v-if="tagInfo" :icon="tagInfo.icon" />
+              <span>{{ tagInfo ? tagInfo.label : 'Выбрать тег' }}</span>
+              <Icon icon="mdi:chevron-down" class="chevron" />
+            </button>
+          </template>
+        </KitDropdown>
+        <div v-else-if="tagInfo" class="tag-chip view-only" :style="{ backgroundColor: tagInfo.color }">
+          <Icon :icon="tagInfo.icon" />
+          <span>{{ tagInfo.label }}</span>
+        </div>
+      </div>
+
       <button v-if="isViewMode" class="collapse-toggle-btn" @click="$emit('toggleCollapse')">
         <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
       </button>
@@ -400,6 +434,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   .activity-header {
     display: flex;
     align-items: center;
+    gap: 4px;
     justify-content: space-between;
     transition: background-color 0.2s ease;
     border-radius: var(--r-xs);
@@ -425,7 +460,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       flex-shrink: 0;
       width: 28px;
       height: 28px;
-      opacity: 0;
+      opacity: 0.4;
 
       &:hover {
         background-color: var(--bg-hover-color);
@@ -514,6 +549,45 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         &:disabled {
           opacity: 0.4;
           cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .activity-tag-wrapper {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+
+    .tag-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0px 10px;
+      border-radius: var(--r-full);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid var(--border-secondary-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--fg-primary-color);
+
+      .chevron {
+        font-size: 1rem;
+        opacity: 0.6;
+        margin-left: 2px;
+      }
+
+      &:hover {
+        transform: scale(1.05);
+        border-color: var(--border-accent-color);
+      }
+
+      &.view-only {
+        cursor: default;
+        &:hover {
+          transform: none;
+          border-color: var(--border-secondary-color);
         }
       }
     }
