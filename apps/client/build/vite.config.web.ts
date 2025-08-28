@@ -1,26 +1,67 @@
+import { resolve } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig, mergeConfig } from 'vite'
+import Vue from '@vitejs/plugin-vue'
+import { visualizer } from 'rollup-plugin-visualizer'
+import AutoImport from 'unplugin-auto-import/vite'
+import Icons from 'unplugin-icons/vite'
+import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { autoImportOptionsCfg } from './cfg/auto-import'
+import { iconsCfg } from './cfg/icons'
 import { pwaCfg } from './cfg/pwa'
-import baseConfig from './vite.config.base'
+
+function visualizerPlugin(type: 'renderer' | 'main') {
+  return process.env[`VISUALIZER_${type.toUpperCase()}`] ? [visualizer({ open: true })] : []
+}
 
 // Конфигурация для Web и PWA
-export default defineConfig(mergeConfig(baseConfig, {
+export default defineConfig({
   base: '/',
+  root: resolve(__dirname, '../src/renderer'),
+  publicDir: resolve(__dirname, '../public'),
+
   plugins: [
+    Vue({}),
+    AutoImport(autoImportOptionsCfg),
+    Icons(iconsCfg),
     VitePWA(pwaCfg),
+    ...visualizerPlugin('renderer'),
   ],
-  server: {
-    port: 1420,
-  },
-  resolve: {
-    alias: {
-      '~': fileURLToPath(new URL('../src', import.meta.url)),
-      '@tauri-apps/plugin-sql': fileURLToPath(new URL('../stubs/tauri-sql-stub.ts', import.meta.url)),
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use '~/assets/scss/_setup.scss' as *;`,
+      },
     },
   },
-  build: {
-    outDir: 'dist-web',
-    emptyOutDir: true,
+  server: {
+    port: 1420,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/static': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
   },
-}))
+
+  resolve: {
+    alias: {
+      '~': fileURLToPath(new URL('../src/renderer', import.meta.url)),
+    },
+  },
+
+  build: {
+    outDir: resolve(__dirname, '../dist'),
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, '../src/renderer/index.html'),
+      },
+    },
+  },
+})

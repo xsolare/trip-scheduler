@@ -19,12 +19,10 @@ export default defineConfig({
     Vue(),
     AutoImport(autoImportOptionsCfg),
     Icons(iconsCfg),
-
   ],
   resolve: {
     alias: {
       '~': fileURLToPath(new URL('../src', import.meta.url)),
-      '@tauri-apps/plugin-sql': fileURLToPath(new URL('../stubs/tauri-sql-stub.ts', import.meta.url)),
     },
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
   },

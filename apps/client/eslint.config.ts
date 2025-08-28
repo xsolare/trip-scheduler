@@ -7,7 +7,6 @@ export default antfu({
   ignores: [
     '**/.vitestcache/**',
     '**/e2e-**/**',
-    '**/src-tauri/**',
     'auto-imports.d.ts',
     'bun.lock',
   ],

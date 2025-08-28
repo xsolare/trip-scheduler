@@ -9,21 +9,14 @@ export const autoImportOptionsCfg: AutoImportOptions = {
     '@vueuse/core',
   ],
   dirs: [
-    './components/01.kit/',
-    './components/02.domain/',
-    './components/03.shared/',
-    './components/04.modules/',
-    './components/05.layouts/',
-    //
-    './src/shared/lib/',
-    './src/shared/types/',
-    './src/shared/composables/',
-    './src/shared/constants/',
+    './shared/lib/',
+    './shared/types/',
+    './shared/composables/',
+    './shared/constants/',
   ],
   exclude: [
     '**/node_modules/**',
     '**/dist/**',
-    '**/src-tauri/**',
   ],
   resolvers: [
     IconsResolver({
@@ -32,7 +25,7 @@ export const autoImportOptionsCfg: AutoImportOptions = {
       enabledCollections: ['mdi'],
     }),
   ],
-  dts: './src/shared/types/dts/auto-imports.d.ts',
+  dts: './shared/types/dts/auto-imports.d.ts',
   vueTemplate: true,
   eslintrc: {
     enabled: true,

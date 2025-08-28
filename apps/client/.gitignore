@@ -24,7 +24,8 @@ dist-ssr
 *.sw?
 .env
 tsconfig.tsbuildinfo
-dist-web
 
 *storybook.log
 storybook-static
+out
+trip-scheduler.db

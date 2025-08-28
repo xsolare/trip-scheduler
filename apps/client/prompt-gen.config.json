@@ -1,8 +1,8 @@
 {
-  "extensions": "ts,vue,scss,json",
+  "extensions": "ts,vue,scss,json,yaml,yml",
   "directory": "./",
   "output": "project_prompt.md",
   "format": "structured",
   "maxSize": "35",
-  "excludePaths": "**/theme-manager/**,**/stories/**,**/configs/**,**/build/**,**/public/**,**/test/**,**/*.spec.ts,version.json,bun.lock,**/.vscode/**,**/data/**,**/constant/**,**/auto-imports.d.ts/**,**/mock/**,**/real/**,**/assets/**,**/.storybook/**,**/src-tauri/**,**/stubs/**"
+  "excludePaths": "pnpm-lock.yaml,**/theme-manager/**,**/stories/**,**/configs/**,**/public/**,**/test/**,**/*.spec.ts,version.json,bun.lock,**/.vscode/**,**/data/**,**/auto-imports.d.ts/**,**/mock/**,**/assets/**,**/.storybook/**"
 }

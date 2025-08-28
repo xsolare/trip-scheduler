@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "paths": {
       "~/*": [
-        "./src/*"
+        "./src/renderer/*"
       ],
       "@xsolare/trip-scheduler-server/*": [
         "../server/src/*"
