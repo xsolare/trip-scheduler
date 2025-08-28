@@ -4,6 +4,7 @@ import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { EActivitySectionType, EActivityTag } from '~/shared/types/models/activity'
@@ -27,16 +28,18 @@ const { isViewMode } = storeToRefs(store.ui)
 
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
-
 const activityTitle = ref(props.activity.title)
-
 const editingStartTime = shallowRef<Time | null>(null)
 const editingEndTime = shallowRef<Time | null>(null)
-
 const expandedSections = ref<Record<string, Record<string, boolean>>>({})
 
-const tagInfo = computed(() => getTagInfo(props.activity.tag))
+const sectionTypeIcons: Record<EActivitySectionType, string> = {
+  [EActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
+  [EActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
+  [EActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
+}
 
+const tagInfo = computed(() => getTagInfo(props.activity.tag))
 const tagOptions = Object.values(EActivityTag).map(tag => ({
   value: tag,
   label: activityTagLabels[tag],
@@ -45,12 +48,6 @@ const tagOptions = Object.values(EActivityTag).map(tag => ({
 
 function handleTagUpdate(newTag: EActivityTag) {
   updateActivity({ tag: newTag })
-}
-
-const sectionTypeIcons: Record<EActivitySectionType, string> = {
-  [EActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
-  [EActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
-  [EActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
 }
 
 function getGroupedChildren(children: ActivitySection[]) {
@@ -212,7 +209,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 </script>
 
 <template>
-  <div class="activity-item" :class="{ 'view-mode': isViewMode, 'is-collapsed': isCollapsed && isViewMode }">
+  <div class="activity-item" :class="{ 'view-mode': isViewMode, 'is-collapsed': isCollapsed }">
     <div v-if="!isViewMode" class="drag-handle" />
 
     <div class="activity-header">
@@ -232,7 +229,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           </div>
         </div>
       </div>
-
       <div v-if="tagInfo || !isViewMode" class="activity-tag-wrapper">
         <KitDropdown
           v-if="!isViewMode"
@@ -285,19 +281,19 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       </div>
     </div>
 
-    <div v-show="!isCollapsed || !isViewMode">
-      <div class="activity-title">
-        <Icon icon="mdi:chevron-right" />
-        <KitInlineMdEditorWrapper
-          v-model="activityTitle"
-          placeholder="Описание активности"
-          :readonly="isViewMode"
-          class="activity-title-editor"
-          :features="{ 'block-edit': false }"
-          @blur="handleInlineEditorBlur"
-        />
-      </div>
+    <div class="activity-title">
+      <Icon icon="mdi:chevron-right" />
+      <KitInlineMdEditorWrapper
+        v-model="activityTitle"
+        placeholder="Описание активности"
+        :readonly="isViewMode"
+        class="activity-title-editor"
+        :features="{ 'block-edit': false }"
+        @blur="handleInlineEditorBlur"
+      />
+    </div>
 
+    <div v-show="!isCollapsed || !isViewMode" class="collapsible-content">
       <div class="activity-sections">
         <div v-if="sectionGroups.length > 0" class="sections-list">
           <div
@@ -314,7 +310,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
             />
 
             <div v-if="group.children.length > 0" class="attached-items-container">
-              <!-- Сначала рендерим пины с заголовками, каждый на своей строке -->
               <div
                 v-for="(child, index) in getGroupedChildren(group.children).withTitle"
                 :key="child.id"
@@ -327,13 +322,12 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                     :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
                     @click="toggleSection(group.parent.id, child.id)"
                   >
-                    <Icon width="20" height="20" :icon="child.icon || sectionTypeIcons[child.type]" class="pill-icon" />
+                    <Icon width="18" height="18" :icon="child.icon || sectionTypeIcons[child.type]" class="pill-icon" />
                     <span class="pill-title">{{ child.title }}</span>
-                    <Icon width="20" height="20" :icon="isSectionExpanded(group.parent.id, child.id) ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="pill-chevron" />
+                    <Icon width="18" height="18" :icon="isSectionExpanded(group.parent.id, child.id) ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="pill-chevron" />
                   </button>
                   <div v-if="index < getGroupedChildren(group.children).withTitle.length - 1 || getGroupedChildren(group.children).withoutTitle.length > 0" class="attachment-line-end" />
                 </div>
-                <!-- Раскрытый контент рендерится сразу после своего пина -->
                 <div v-if="isSectionExpanded(group.parent.id, child.id)" class="expanded-pin-content">
                   <ActivitySectionRenderer
                     :section="child"
@@ -344,7 +338,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                 </div>
               </div>
 
-              <!-- Затем рендерим пины без заголовков в одну строку -->
               <div v-if="getGroupedChildren(group.children).withoutTitle.length > 0">
                 <div class="regular-pins-wrapper">
                   <div class="attachment-line-start" />
@@ -357,8 +350,8 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                       @click="toggleSection(group.parent.id, child.id)"
                     >
                       <Icon
-                        width="20"
-                        height="20"
+                        width="18"
+                        height="18"
                         :icon="child.icon || sectionTypeIcons[child.type]"
                         class="pill-icon"
                       />
@@ -368,7 +361,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                     <Icon :icon="isAnyChildExpanded(group) ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
                   </button>
                 </div>
-                <!-- Раскрытый контент для обычных пинов рендерится после всей группы -->
                 <div
                   v-for="child in getGroupedChildren(group.children).withoutTitle"
                   :key="child.id"
@@ -406,6 +398,16 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   &.is-collapsed {
     margin-bottom: 0;
 
+    .activity-title {
+      > .iconify {
+        display: none;
+      }
+      :deep(.milkdown) > div {
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+    }
+
     &::before {
       display: none;
     }
@@ -434,15 +436,15 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   .activity-header {
     display: flex;
     align-items: center;
-    gap: 4px;
     justify-content: space-between;
     transition: background-color 0.2s ease;
     border-radius: var(--r-xs);
+    gap: 4px;
 
     .activity-time-wrapper {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
 
     .collapse-toggle-btn {
@@ -460,7 +462,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       flex-shrink: 0;
       width: 28px;
       height: 28px;
-      opacity: 0.4;
+      opacity: 0.5;
 
       &:hover {
         background-color: var(--bg-hover-color);
@@ -554,54 +556,17 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     }
   }
 
-  .activity-tag-wrapper {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
-
-    .tag-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0px 10px;
-      border-radius: var(--r-full);
-      font-size: 0.8rem;
-      font-weight: 500;
-      border: 1px solid var(--border-secondary-color);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--fg-primary-color);
-
-      .chevron {
-        font-size: 1rem;
-        opacity: 0.6;
-        margin-left: 2px;
-      }
-
-      &:hover {
-        transform: scale(1.05);
-        border-color: var(--border-accent-color);
-      }
-
-      &.view-only {
-        cursor: default;
-        &:hover {
-          transform: none;
-          border-color: var(--border-secondary-color);
-        }
-      }
-    }
-  }
-
   .activity-title {
     display: flex;
     margin-top: 4px;
     gap: 4px;
+    transition: margin 0.3s ease;
 
     .iconify {
       height: 24px;
       opacity: 0.5;
       color: var(--fg-secondary-color);
+      transition: display 0.3s ease;
     }
 
     &-editor {
@@ -614,9 +579,14 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         > div {
           margin: 0;
           padding: 0;
+          transition: padding 0.3s ease;
         }
       }
     }
+  }
+
+  .collapsible-content {
+    transition: all 0.3s ease-in-out;
   }
 
   .activity-sections {
@@ -800,6 +770,50 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 
 .activity-item.view-mode:hover .activity-header .collapse-toggle-btn {
   opacity: 1;
+}
+
+.activity-tag-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+
+  .tag-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0px 10px;
+    border-radius: var(--r-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--border-secondary-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--fg-primary-color);
+    line-height: 24px;
+
+    .chevron {
+      font-size: 1rem;
+      opacity: 0.6;
+      margin-left: 2px;
+    }
+
+    &:hover {
+      border-color: var(--border-accent-color);
+    }
+
+    &.view-only {
+      cursor: default;
+
+      &:hover {
+        transform: none;
+        border-color: var(--border-secondary-color);
+      }
+    }
+  }
+}
+
+:deep(.kit-dropdown-content) {
+  min-width: 220px;
 }
 
 @include media-down(sm) {

@@ -9,6 +9,7 @@ export default antfu({
     '**/e2e-**/**',
     '**/src-tauri/**',
     'auto-imports.d.ts',
+    'bun.lock',
   ],
   plugins: [storybook],
 })

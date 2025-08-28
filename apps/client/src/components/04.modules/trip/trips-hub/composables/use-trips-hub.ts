@@ -1,5 +1,6 @@
 import type { InjectionKey } from 'vue'
 import type { ITrip } from '../models/types'
+import { useDebounce } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { useAbortRequest, useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
@@ -7,10 +8,20 @@ import { AppRoutePaths } from '~/shared/constants/routes'
 import { TripStatus, TripVisibility } from '~/shared/types/models/trip'
 
 export type TripsHubTab = 'my' | 'public'
-export type TDisplayMode = 'grid' | 'flex'
+export type TDisplayMode = 'column' | 'row'
+
+export interface TripFilters {
+  search: string
+  cities: string[]
+  users: string[]
+  tags: string[]
+  status: TripStatus[]
+}
 
 enum ETripHubKeys {
   FETCH_ALL = 'trips:fetch-all',
+  FETCH_CITIES = 'trips:fetch-cities',
+  FETCH_TAGS = 'trips:fetch-tags',
   CREATE = 'trips:create',
   DELETE = 'trips:delete',
 }
@@ -33,52 +44,90 @@ export function useTripsHub() {
   // State
   const trips = ref<ITrip[]>([])
   const isInitialized = ref(false)
+  const hasLoadedOnce = ref(false)
+  const isFiltersOpen = ref(false)
   const activeTab = ref<TripsHubTab>('my')
-  const searchQuery = ref('')
   const isCreateModalOpen = ref(false)
   const newTripData = ref(getDefaultTripData())
-  const displayMode = ref<TDisplayMode>('flex')
+  const displayMode = ref<TDisplayMode>('row')
+  const filters = ref<TripFilters>({
+    search: '',
+    cities: [],
+    users: [],
+    tags: [],
+    status: [],
+  })
+  const availableCities = ref<{ value: string, label: string }[]>([])
+
+  const availableTags = ref<{ value: string, label: string }[]>([])
+  const tagSearchQuery = ref('')
+  const debouncedTagSearchQuery = useDebounce(tagSearchQuery, 300)
+
+  const debouncedFilters = useDebounce(filters, 400)
 
   // Computed (getters)
   const isLoading = computed(() => useRequestStatus(ETripHubKeys.FETCH_ALL).value)
   const isCreating = computed(() => useRequestStatus(ETripHubKeys.CREATE).value)
   const fetchError = computed(() => useRequestError(ETripHubKeys.FETCH_ALL).value)
 
-  const filteredMyTrips = computed(() => {
-    if (!searchQuery.value) {
-      return trips.value
-    }
-    const lowerCaseQuery = searchQuery.value.toLowerCase()
-    return trips.value.filter(trip =>
-      trip.title.toLowerCase().includes(lowerCaseQuery)
-      || trip.cities.some(city => city.toLowerCase().includes(lowerCaseQuery)),
-    )
-  })
-
   const currentTrips = computed((): ITrip[] => {
-    if (activeTab.value === 'my') {
-      return filteredMyTrips.value
-    }
-
-    return []
+    return trips.value
   })
+
+  async function searchTags(query?: string) {
+    await useRequest({
+      key: `${ETripHubKeys.FETCH_TAGS}:${query || ''}`,
+      fn: db => db.trips.getUniqueTags({ query }),
+      onSuccess: (tags) => {
+        availableTags.value = tags.map(tag => ({ value: tag, label: tag }))
+      },
+      onError: (error) => {
+        useToast().error(`Не удалось загрузить список тегов: ${error}`)
+      },
+    })
+  }
+
+  async function fetchAvailableCities() {
+    if (availableCities.value.length > 0)
+      return
+
+    await useRequest({
+      key: ETripHubKeys.FETCH_CITIES,
+      fn: db => db.trips.getUniqueCities(),
+      onSuccess: (cities) => {
+        availableCities.value = cities.map(city => ({ value: city, label: city }))
+      },
+      onError: (error) => {
+        useToast().error(`Не удалось загрузить список городов: ${error}`)
+      },
+    })
+  }
 
   async function fetchTrips(force = false) {
     if (isInitialized.value && !force) {
       return
     }
 
+    const apiFilters = {
+      search: filters.value.search || undefined,
+      cities: filters.value.cities.length > 0 ? filters.value.cities : undefined,
+      tags: filters.value.tags.length > 0 ? filters.value.tags : undefined,
+      statuses: filters.value.status.length > 0 ? filters.value.status : undefined,
+      userIds: filters.value.users.length > 0 ? filters.value.users : undefined,
+    }
+
     await useRequest({
       force,
-      cache: true,
+      cache: !Object.values(apiFilters).some(v => v !== undefined),
       key: ETripHubKeys.FETCH_ALL,
-      fn: db => db.trips.getAll(),
+      fn: db => db.trips.getAll(apiFilters),
       cancelPrevious: true,
       onSuccess: (result) => {
         trips.value = result.sort(
           (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
         )
         isInitialized.value = true
+        hasLoadedOnce.value = true
       },
       onError: (error) => {
         trips.value = []
@@ -136,8 +185,6 @@ export function useTripsHub() {
       return
 
     activeTab.value = tab
-
-    // Перезапрашиваем данные при смене типа списка
     fetchTrips(true)
   }
 
@@ -156,6 +203,14 @@ export function useTripsHub() {
     }, 300)
   }
 
+  watch(debouncedFilters, () => {
+    fetchTrips(true)
+  }, { deep: true })
+
+  watch(debouncedTagSearchQuery, (newQuery) => {
+    searchTags(newQuery)
+  })
+
   onUnmounted(() => {
     abort(ETripHubKeys.FETCH_ALL)
   })
@@ -164,9 +219,14 @@ export function useTripsHub() {
     // State
     trips: readonly(trips),
     isInitialized: readonly(isInitialized),
+    hasLoadedOnce: readonly(hasLoadedOnce),
+    isFiltersOpen,
     activeTab,
-    searchQuery,
+    filters,
     isCreateModalOpen,
+    availableCities,
+    availableTags,
+    tagSearchQuery,
     newTripData,
     displayMode,
 
@@ -174,11 +234,12 @@ export function useTripsHub() {
     isLoading,
     isCreating,
     fetchError,
-    filteredMyTrips,
     currentTrips,
 
     // Actions
     fetchTrips,
+    fetchAvailableCities,
+    searchTags,
     createTrip,
     deleteTrip,
     setActiveTab,

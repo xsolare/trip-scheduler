@@ -1,15 +1,25 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
 import type { SignInPayload, TokenPair, User } from '~/shared/types/models/auth'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
-import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
+import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
+
+export interface TripListFilters {
+  search?: string
+  statuses?: TripStatus[]
+  tags?: string[]
+  cities?: string[]
+  userIds?: string[]
+}
 
 export interface ITripRepository {
-  getAll: () => Promise<Trip[]>
+  getAll: (filters?: TripListFilters) => Promise<Trip[]>
   getById: (id: string) => Promise<Trip | null>
   getByIdWithDays: (id: string) => Promise<TripWithDays | null>
   create: (data: CreateTripInput) => Promise<Trip>
   update: (id: string, details: UpdateTripInput) => Promise<Trip>
   delete: (id: string) => Promise<Trip>
+  getUniqueCities: () => Promise<string[]>
+  getUniqueTags: (params: { query?: string }) => Promise<string[]>
 }
 
 export interface IDayRepository {

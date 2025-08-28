@@ -9,6 +9,7 @@ interface Props {
   isLoading: boolean
   error: unknown | null
   trips: ITrip[]
+  hasLoadedOnce: boolean
 }
 
 const props = defineProps<Props>()
@@ -17,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const displayData = computed(() => (props.trips.length > 0 ? props.trips : null))
+const transitionName = computed(() => (props.hasLoadedOnce ? 'fade' : 'slide-up'))
 </script>
 
 <template>
@@ -25,7 +27,7 @@ const displayData = computed(() => (props.trips.length > 0 ? props.trips : null)
     :error="error"
     :data="displayData"
     :retry-handler="() => emit('retry')"
-    transition="slide-up"
+    :transition="transitionName"
     class="trip-list-wrapper"
   >
     <template #loading>

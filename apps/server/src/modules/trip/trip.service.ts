@@ -1,11 +1,19 @@
 import type { z } from 'zod'
-import type { CreateTripInputSchema, UpdateTripInputSchema } from './trip.schemas'
+import type { CreateTripInputSchema, ListTripsInputSchema, UpdateTripInputSchema } from './trip.schemas'
 import { createTRPCError } from '~/lib/trpc'
 import { tripRepository } from '~/repositories/trip.repository'
 
 export const tripService = {
-  async getAll() {
-    return await tripRepository.getAll()
+  async getAll(filters?: z.infer<typeof ListTripsInputSchema>, userId?: string) {
+    return await tripRepository.getAll(filters, userId)
+  },
+
+  async getUniqueCities() {
+    return await tripRepository.getUniqueCities()
+  },
+
+  async getUniqueTags(query?: string) {
+    return await tripRepository.getUniqueTags(query)
   },
 
   async getById(id: string) {

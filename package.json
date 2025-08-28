@@ -23,15 +23,11 @@
     "postinstall": "simple-git-hooks"
   },
   "devDependencies": {
-    "lint-staged": "^16.1.5",
     "simple-git-hooks": "^2.13.1"
   },
   "simple-git-hooks": {
-    "pre-commit": "lint-staged && bun run typecheck",
+    "pre-commit": "bun run lint && bun run typecheck",
     "post-commit": "git status",
     "post-merge": "bun i"
-  },
-  "lint-staged": {
-    "*": "bun run lint"
   }
 }

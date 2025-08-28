@@ -8,6 +8,26 @@ import { logOperation } from '../../lib/helpers'
 class TripRepository implements ITripRepository {
   constructor(private db: Database) { }
 
+  async getUniqueCities(): Promise<string[]> {
+    const results = await this.db.select<{ cities: string }[]>('SELECT cities FROM trips')
+    const allCities = results.flatMap(row => JSON.parse(row.cities || '[]'))
+    const uniqueCities = [...new Set(allCities)]
+    return uniqueCities
+  }
+
+  async getUniqueTags(params: { query?: string }): Promise<string[]> {
+    const results = await this.db.select<{ tags: string }[]>('SELECT tags FROM trips')
+    const allTags = results.flatMap(row => JSON.parse(row.tags || '[]'))
+    let uniqueTags = [...new Set(allTags)]
+
+    if (params.query) {
+      const queryLower = params.query.toLowerCase()
+      uniqueTags = uniqueTags.filter(tag => tag.toLowerCase().includes(queryLower))
+    }
+
+    return uniqueTags
+  }
+
   async getAll(): Promise<Trip[]> {
     const results = await this.db.select<any[]>('SELECT * FROM trips ORDER BY created_at DESC') // Сортируем по дате создания, как на сервере
 

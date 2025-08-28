@@ -107,10 +107,12 @@ function handleItemClick(itemId: T) {
     >
       <Icon
         v-if="item.icon"
+        width="18"
+        height="18"
         :icon="item.icon"
         class="kit-view-switcher-icon"
       />
-      <span class="kit-view-switcher-label">{{ item.label }}</span>
+      <span v-if="item.label" class="kit-view-switcher-label">{{ item.label }}</span>
     </button>
   </div>
 </template>

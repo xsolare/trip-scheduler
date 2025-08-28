@@ -1,6 +1,6 @@
 import type { z } from 'zod'
-import type { CreateTripInputSchema, UpdateTripInputSchema } from '~/modules/trip/trip.schemas'
-import { and, eq, inArray } from 'drizzle-orm'
+import type { CreateTripInputSchema, ListTripsInputSchema, UpdateTripInputSchema } from '~/modules/trip/trip.schemas'
+import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../../db'
 import { activities, days, tripParticipants, trips } from '../../db/schema'
@@ -30,15 +30,78 @@ function mapTripParticipants<T extends { participants: Array<{ user: any }> }>(t
 
 export const tripRepository = {
   /**
-   * Получает все путешествия.
+   * Получает все путешествия с применением фильтров.
    */
-  async getAll() {
+  async getAll(filters?: z.infer<typeof ListTripsInputSchema>, _userId?: string) {
+    const conditions = []
+
+    if (filters?.search) {
+      const searchPattern = `%${filters.search}%`
+      conditions.push(or(
+        ilike(trips.title, searchPattern),
+        ilike(trips.description, searchPattern),
+      ))
+    }
+    if (filters?.statuses && filters.statuses.length > 0) {
+      conditions.push(inArray(trips.status, filters.statuses))
+    }
+    if (filters?.tags && filters.tags.length > 0) {
+      const tagsArray = `{${filters.tags.join(',')}}`
+      conditions.push(sql`${trips.tags} ?| ${tagsArray}`)
+    }
+    if (filters?.cities && filters.cities.length > 0) {
+      const citiesArray = `{${filters.cities.join(',')}}`
+      conditions.push(sql`${trips.cities} ?| ${citiesArray}`)
+    }
+    if (filters?.userIds && filters.userIds.length > 0) {
+      const subquery = db
+        .selectDistinct({ tripId: tripParticipants.tripId })
+        .from(tripParticipants)
+        .where(inArray(tripParticipants.userId, filters.userIds))
+      conditions.push(inArray(trips.id, subquery))
+    }
+
     const result = await db.query.trips.findMany({
-      orderBy: trips.createdAt,
+      where: and(...conditions),
+      orderBy: (trips, { desc }) => [desc(trips.createdAt)],
       with: withParticipants,
     })
 
     return result.map(mapTripParticipants)
+  },
+
+  /**
+   * Получает список уникальных городов из всех путешествий.
+   */
+  async getUniqueCities() {
+    const cityExpression = sql<string>`jsonb_array_elements_text(${trips.cities})`
+
+    const result = await db
+      .selectDistinct({ city: cityExpression })
+      .from(trips)
+      .orderBy(cityExpression)
+
+    return result.map(row => row.city).filter(Boolean)
+  },
+
+  /**
+   * Получает список уникальных тегов, опционально фильтруя по поисковому запросу.
+   */
+  async getUniqueTags(query?: string) {
+    const tagExpression = sql<string>`jsonb_array_elements_text(${trips.tags})`
+
+    const baseQuery = db
+      .selectDistinct({ tag: tagExpression })
+      .from(trips)
+      .orderBy(tagExpression)
+      .limit(20)
+
+    if (query) {
+      baseQuery.where(ilike(tagExpression, `%${query}%`))
+    }
+
+    const result = await baseQuery
+    return result.map(row => row.tag).filter(Boolean)
   },
 
   /**

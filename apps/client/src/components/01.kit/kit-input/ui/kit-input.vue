@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 
+interface Props {
+  label?: string
+  icon?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  name?: string
+  placeholder?: string
+  disabled?: boolean
+  required?: boolean
+  error?: string | null
+  size?: 'sm' | 'md' | 'lg'
+}
+
 defineOptions({
   inheritAttrs: false,
 })
@@ -16,18 +28,6 @@ withDefaults(defineProps<Props>(), {
   error: null,
   size: 'md',
 })
-
-interface Props {
-  label?: string
-  icon?: string
-  type?: 'text' | 'email' | 'password' | 'number'
-  name?: string
-  placeholder?: string
-  disabled?: boolean
-  required?: boolean
-  error?: string | null
-  size?: 'sm' | 'md' | 'lg'
-}
 
 const model = defineModel<string | number>()
 

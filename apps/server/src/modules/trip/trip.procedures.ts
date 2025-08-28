@@ -1,15 +1,19 @@
+import z from 'zod'
 import { protectedProcedure, publicProcedure } from '~/lib/trpc'
 import {
   CreateTripInputSchema,
   GetTripByIdInputSchema,
+  ListTripsInputSchema,
   UpdateTripInputSchema,
 } from './trip.schemas'
 import { tripService } from './trip.service'
 
 export const tripProcedures = {
-  list: publicProcedure.query(async () => {
-    return tripService.getAll()
-  }),
+  list: publicProcedure
+    .input(ListTripsInputSchema)
+    .query(async ({ input, ctx }) => {
+      return tripService.getAll(input, ctx.user?.id)
+    }),
 
   getById: publicProcedure
     .input(GetTripByIdInputSchema)
@@ -39,5 +43,16 @@ export const tripProcedures = {
     .input(GetTripByIdInputSchema)
     .mutation(async ({ input }) => {
       return tripService.delete(input.tripId)
+    }),
+
+  getUniqueCities: publicProcedure
+    .query(async () => {
+      return tripService.getUniqueCities()
+    }),
+
+  getUniqueTags: publicProcedure
+    .input(z.object({ query: z.string().optional() }))
+    .query(async ({ input }) => {
+      return tripService.getUniqueTags(input.query)
     }),
 }

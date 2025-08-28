@@ -77,7 +77,7 @@ onMounted(() => {
 
       <div class="header-center">
         <div v-if="router.currentRoute.value.name === 'trip-info'" class="title">
-          Путешествие по Китаю
+          <!-- Путешествие по Китаю -->
         </div>
       </div>
 

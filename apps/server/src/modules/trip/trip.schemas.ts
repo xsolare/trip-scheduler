@@ -59,3 +59,11 @@ export const CreateTripInputSchema = TripSchema.pick({
   startDate: z.union([z.date(), z.string()]).optional(),
   endDate: z.union([z.date(), z.string()]).optional(),
 })
+
+export const ListTripsInputSchema = z.object({
+  search: z.string().optional(),
+  statuses: z.array(z.enum(['completed', 'planned', 'draft'])).optional(),
+  tags: z.array(z.string()).optional(),
+  cities: z.array(z.string()).optional(),
+  userIds: z.array(z.string().uuid()).optional(),
+}).optional()

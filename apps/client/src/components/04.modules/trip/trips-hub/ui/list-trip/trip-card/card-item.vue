@@ -87,10 +87,7 @@ const visibilityIcon = computed(() => {
         </div>
         <div class="image-overlay" />
         <div class="card-header">
-          <span class="card-status" :class="[statusInfo.class]">
-            <Icon :icon="statusInfo.icon" />
-            {{ statusInfo.text }}
-          </span>
+          <!-- Блок статуса удален отсюда -->
         </div>
 
         <h3 class="card-title">
@@ -122,6 +119,11 @@ const visibilityIcon = computed(() => {
         </div>
 
         <div class="card-meta">
+          <!-- Добавляем статус сюда -->
+          <div class="meta-item meta-item--status" :class="statusInfo.class">
+            <Icon :icon="statusInfo.icon" />
+            <span>{{ statusInfo.text }}</span>
+          </div>
           <div class="meta-item">
             <Icon icon="mdi:calendar-month-outline" />
             <span>{{ formattedDates }}</span>
@@ -252,39 +254,7 @@ const visibilityIcon = computed(() => {
   position: relative;
   display: flex;
   z-index: 2;
-}
-
-.card-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: var(--r-xl);
-  font-size: 0.75rem;
-  font-weight: 500;
-  backdrop-filter: blur(5px);
-  border: 1px solid;
-
-  &.completed {
-    background-color: var(--bg-success-color);
-    color: var(--fg-success-color);
-    border-color: var(--border-success-color);
-  }
-  &.in-progress {
-    background-color: var(--bg-info-color);
-    color: var(--fg-info-color);
-    border-color: var(--border-info-color);
-  }
-  &.planned {
-    background-color: var(--bg-warning-color);
-    color: var(--fg-warning-color);
-    border-color: var(--border-warning-color);
-  }
-  &.draft {
-    background-color: var(--bg-tertiary-color);
-    color: var(--fg-tertiary-color);
-    border-color: var(--border-secondary-color);
-  }
+  min-height: 20px; // Резервируем место
 }
 
 .card-visibility {
@@ -388,6 +358,31 @@ const visibilityIcon = computed(() => {
     .iconify {
       font-size: 1.25rem;
       color: var(--fg-tertiary-color);
+      transition: color 0.2s;
+    }
+
+    // Новые стили для статусов в мета-блоке
+    &--status {
+      font-weight: 500;
+
+      &.completed {
+        color: var(--fg-success-color);
+        .iconify {
+          color: var(--fg-success-color);
+        }
+      }
+      &.planned {
+        color: var(--fg-warning-color);
+        .iconify {
+          color: var(--fg-warning-color);
+        }
+      }
+      &.draft {
+        color: var(--fg-tertiary-color);
+        .iconify {
+          color: var(--fg-tertiary-color);
+        }
+      }
     }
   }
 }

@@ -7,10 +7,7 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
     <div class="travel-card">
       <div class="card-image-container">
         <!-- Скелетоны для элементов в шапке (статус и заголовок) -->
-        <div class="card-header-skeleton">
-          <!-- Эти скелетоны используют цвет по умолчанию -->
-          <KitSkeleton width="110px" height="34px" border-radius="20px" />
-        </div>
+        <div class="card-header-skeleton" />
 
         <div class="card-title-skeleton">
           <KitSkeleton width="55%" height="28px" />
@@ -25,6 +22,10 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
       <div class="card-content">
         <div class="card-meta">
           <!-- Скелетоны для мета-данных (даты, города, бюджет) -->
+          <div class="meta-item-skeleton">
+            <KitSkeleton width="24px" height="24px" border-radius="50%" color="var(--bg-tertiary-color)" />
+            <KitSkeleton width="20%" height="20px" color="var(--bg-tertiary-color)" />
+          </div>
           <div class="meta-item-skeleton">
             <KitSkeleton width="24px" height="24px" border-radius="50%" color="var(--bg-tertiary-color)" />
             <KitSkeleton width="60%" height="20px" color="var(--bg-tertiary-color)" />

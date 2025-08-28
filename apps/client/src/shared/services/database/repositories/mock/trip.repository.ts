@@ -1,4 +1,4 @@
-import type { ITripRepository } from '../../model/types'
+import type { ITripRepository, TripListFilters } from '../../model/types'
 import type { Day } from '~/shared/types/models/activity'
 import type { CreateTripInput, Trip, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 import { v4 as uuidv4 } from 'uuid'
@@ -7,11 +7,58 @@ import { throttle } from '../../lib/decorators'
 import { MOCK_DAYS, MOCK_TRIPS } from './data/trip.mock'
 
 class TripRepository implements ITripRepository {
-  @throttle(500)
-  async getAll(): Promise<Trip[]> {
-    return Promise.resolve(MOCK_TRIPS)
+  @throttle(400)
+  async getUniqueCities(): Promise<string[]> {
+    const allCities = MOCK_TRIPS.flatMap(trip => trip.cities || [])
+    const uniqueCities = [...new Set(allCities)]
+    return Promise.resolve(uniqueCities)
   }
 
+  @throttle(400)
+  async getUniqueTags(params: { query?: string }): Promise<string[]> {
+    const allTags = MOCK_TRIPS.flatMap(trip => trip.tags || [])
+    let uniqueTags = [...new Set(allTags)]
+
+    if (params.query) {
+      const queryLower = params.query.toLowerCase()
+      uniqueTags = uniqueTags.filter(tag => tag.toLowerCase().includes(queryLower))
+    }
+
+    return Promise.resolve(uniqueTags)
+  }
+
+  @throttle(500)
+  async getAll(filters?: TripListFilters): Promise<Trip[]> {
+    if (!filters || Object.values(filters).every(v => v === undefined || v === '' || (Array.isArray(v) && v.length === 0))) {
+      return Promise.resolve(MOCK_TRIPS)
+    }
+
+    let filtered = [...MOCK_TRIPS]
+
+    if (filters.search) {
+      const query = filters.search.toLowerCase()
+      filtered = filtered.filter(trip =>
+        trip.title.toLowerCase().includes(query)
+        || trip.description?.toLowerCase().includes(query),
+      )
+    }
+    if (filters.statuses && filters.statuses.length > 0) {
+      filtered = filtered.filter(trip => filters.statuses!.includes(trip.status))
+    }
+    if (filters.cities && filters.cities.length > 0) {
+      filtered = filtered.filter(trip => trip.cities.some(city => filters.cities!.includes(city)))
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      filtered = filtered.filter(trip => trip.tags?.some(tag => filters.tags!.includes(tag)))
+    }
+    if (filters.userIds && filters.userIds.length > 0) {
+      filtered = filtered.filter(trip => trip.participants.some(p => filters.userIds!.includes(p.id)))
+    }
+
+    return Promise.resolve(filtered)
+  }
+
+  // ... остальной код класса без изменений
   @throttle(300)
   async getById(id: string): Promise<Trip | null> {
     const trip = MOCK_TRIPS.find(t => t.id === id) || null
