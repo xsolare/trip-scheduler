@@ -27,10 +27,9 @@ async function initializeApp() {
   app.use(themePlugin)
 
   await restoreSession(pinia)
+  await initializePwaUpdater(pinia)
 
   app.mount('#app')
-
-  initializePwaUpdater()
 }
 
 initializeApp()

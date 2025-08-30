@@ -107,10 +107,11 @@ const componentClasses = computed(() => [
     &.kit-btn--color-secondary {
       border-color: var(--border-secondary-color);
       color: var(--fg-secondary-color);
+
       &:not(:disabled):hover {
         background-color: var(--bg-hover-color);
         color: var(--fg-primary-color);
-        border-color: var(--border-hover-color);
+        border-color: var(--border-primary-color);
       }
     }
   }

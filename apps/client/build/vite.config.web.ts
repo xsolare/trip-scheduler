@@ -20,7 +20,7 @@ export default defineConfig({
   base: '/',
   root: resolve(__dirname, '../src/renderer'),
   publicDir: resolve(__dirname, '../public'),
-
+  envDir: '../..',
   plugins: [
     Vue({}),
     AutoImport(autoImportOptionsCfg),

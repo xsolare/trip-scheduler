@@ -1,9 +1,13 @@
 /* eslint-disable no-console */
+import type { Pinia } from 'pinia'
+import { usePwaStore } from '~/shared/store/pwa.store'
+
 /**
  * Инициализирует периодическую проверку обновлений Service Worker.
+ * @param pinia - Экземпляр Pinia для доступа к стору.
  */
-export async function initializePwaUpdater(): Promise<void> {
-  const isStandaloneApp = !!(window as any)?.electronAPI || import.meta.env.VITE_IS_ELECTRON === 'true'
+export async function initializePwaUpdater(pinia: Pinia): Promise<void> {
+  const isStandaloneApp = !!(window as any)?.electronAPI || import.meta.env.VITE_IS_STANDALONE === 'true'
   const isDisabled = isStandaloneApp || import.meta.env.VITE_DISABLE_PWA
 
   if (isDisabled) {
@@ -25,9 +29,20 @@ export async function initializePwaUpdater(): Promise<void> {
     }
 
     const { registerSW } = pwaModule
+    const pwaStore = usePwaStore(pinia)
     const intervalMS = 60 * 1 * 1000 // 1 минута
 
-    registerSW({
+    const updateServiceWorker = registerSW({
+      // Когда SW готов к работе в оффлайне
+      onOfflineReady() {
+        console.log('App ready to work offline.')
+        pwaStore.setOfflineReady(true)
+      },
+      // Когда доступно обновление
+      onNeedRefresh() {
+        console.log('New content available, show refresh prompt.')
+        pwaStore.setNeedRefresh(true)
+      },
       // @ts-expect-error dynamic module
       onRegisteredSW(swUrl, r) {
         if (r) {
@@ -55,6 +70,8 @@ export async function initializePwaUpdater(): Promise<void> {
         console.error('Error during Service Worker registration:', error)
       },
     })
+
+    pwaStore.setUpdateFunction(updateServiceWorker)
   }
   catch (e) {
     console.error('Failed to initialize PWA updater:', e)

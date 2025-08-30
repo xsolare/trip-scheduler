@@ -1,23 +1,16 @@
 <script setup lang="ts">
-// import { Icon } from '@iconify/vue'
-// import { useRegisterSW } from 'virtual:pwa-register/vue'
-// import { KitBtn } from '~/components/01.kit/kit-btn'
+import { Icon } from '@iconify/vue'
+import { KitBtn } from '~/components/01.kit/kit-btn'
+import { usePwaStore } from '~/shared/store/pwa.store'
 
-// const {
-//   offlineReady,
-//   needRefresh,
-//   updateServiceWorker,
-// } = useRegisterSW()
+const pwaStore = usePwaStore()
 
-// async function close() {
-//   offlineReady.value = false
-//   needRefresh.value = false
-// }
+const { offlineReady, needRefresh } = storeToRefs(pwaStore)
 </script>
 
 <template>
   <Teleport to="body">
-    <!-- <Transition name="slide-up">
+    <Transition name="slide-up">
       <div
         v-if="offlineReady || needRefresh"
         class="reload-prompt"
@@ -46,25 +39,26 @@
               v-if="needRefresh"
               icon="mdi:refresh"
               color="primary"
-              @click="updateServiceWorker(true)"
+              @click="pwaStore.triggerUpdate()"
             >
               Обновить
             </KitBtn>
             <KitBtn
               variant="outlined"
               color="secondary"
-              @click="close"
+              @click="pwaStore.closePrompt()"
             >
               Закрыть
             </KitBtn>
           </div>
         </div>
       </div>
-    </Transition> -->
+    </Transition>
   </Teleport>
 </template>
 
 <style lang="scss" scoped>
+/* Стили остаются без изменений */
 .reload-prompt {
   position: fixed;
   right: var(--p-l, 20px);

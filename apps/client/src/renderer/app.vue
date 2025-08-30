@@ -17,7 +17,7 @@ const route = useRoute()
 const layout = computed(() => route.meta.layout || 'empty')
 const transition = computed(() => route.meta.transition)
 
-const isStandaloneApp = import.meta.env.VITE_IS_ELECTRON === 'true'
+const isStandaloneApp = import.meta.env.VITE_IS_STANDALONE === 'true'
 
 const ReloadPrompt = isStandaloneApp
   ? null

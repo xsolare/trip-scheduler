@@ -9,10 +9,10 @@ import { Icon } from '@iconify/vue'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { IconPicker } from '~/components/02.shared/icon-picker'
 import { EActivitySectionType } from '~/shared/types/models/activity'
+import GeolocationSection from '../../../../../../03.domain/trip/trip-info/geolocation-section/ui/geolocation-section.vue'
 import { useModuleStore } from '../../../composables/use-module'
 import DescriptionSection from './description-section.vue'
 import GallerySection from './gallery-section.vue'
-import GeolocationSection from './geolocation-section.vue'
 
 interface Props {
   section: ActivitySection
