@@ -1,3 +1,5 @@
+import type { ActivitySectionGeolocation } from '~/components/03.domain/trip/trip-info/geolocation-section/models/types'
+
 export enum EActivityTag {
   TRANSPORT = 'transport',
   WALK = 'walk',
@@ -28,13 +30,6 @@ export interface ActivitySectionText extends ActivitySection {
 export interface ActivitySectionGallery extends ActivitySection {
   type: EActivitySectionType.GALLERY
   imageUrls: string[]
-}
-
-export interface ActivitySectionGeolocation extends ActivitySection {
-  type: EActivitySectionType.GEOLOCATION
-  latitude: number
-  longitude: number
-  address: string
 }
 
 export type ActivitySections = (ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation)[]

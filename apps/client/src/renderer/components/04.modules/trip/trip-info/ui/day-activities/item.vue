@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Activity, ActivitySection, ActivitySectionGallery, ActivitySectionGeolocation, ActivitySections, ActivitySectionText } from '~/shared/types/models/activity'
+import type { ActivitySectionGeolocation } from '~/components/03.domain/trip/trip-info/geolocation-section/models/types'
+import type { Activity, ActivitySection, ActivitySectionGallery, ActivitySections, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
@@ -145,9 +146,8 @@ function addSection(type: EActivitySectionType) {
       newSection = {
         id: uuidv4(),
         type: EActivitySectionType.GEOLOCATION,
-        latitude: 0,
-        longitude: 0,
-        address: '',
+        points: [],
+        routes: [],
       } as ActivitySectionGeolocation
       break
     default:
@@ -472,7 +472,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     }
 
     &:hover {
-      background-color: var(--bg-hover-color);
+      background-color: var(--bg-secondary-color);
     }
 
     .activity-time {
@@ -519,7 +519,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       display: flex;
       align-items: center;
       gap: 4px;
-      opacity: 0;
       transition: all 0.2s ease-in-out;
 
       .control-btn {
@@ -764,14 +763,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
   }
 }
 
-.activity-item:not(.view-mode):hover .activity-header .activity-controls {
-  opacity: 1;
-}
-
-.activity-item.view-mode:hover .activity-header .collapse-toggle-btn {
-  opacity: 1;
-}
-
 .activity-tag-wrapper {
   display: flex;
   align-items: center;
@@ -817,12 +808,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 }
 
 @include media-down(sm) {
-  .activity-item .activity-header .activity-controls {
-    opacity: 1;
-  }
-  .activity-item.view-mode .activity-header .collapse-toggle-btn {
-    opacity: 1;
-  }
   .activity-item {
     .activity-sections {
       padding-left: 0;

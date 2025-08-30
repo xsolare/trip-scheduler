@@ -134,7 +134,7 @@ const model = defineModel<string>({ required: true })
     border-radius: var(--r-full);
     border: none;
     cursor: pointer;
-    color: var(--fg-inverted-color);
+    color: var(--fg-primary-color);
     background-color: transparent;
     transition:
       background-color 0.2s ease,

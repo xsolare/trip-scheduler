@@ -6,11 +6,11 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
 interface Props {
   mapInstance: Map | null
   centerCoordinates: [number, number]
+  isFullscreen: boolean
 }
 
 const props = defineProps<Props>()
-
-const isFullscreen = ref(false)
+const emit = defineEmits(['update:isFullscreen', 'togglePanel'])
 
 function zoomIn() {
   const view = props.mapInstance?.getView()
@@ -44,18 +44,28 @@ function toggleFullscreen() {
   if (!mapElement)
     return
 
-  if (document.fullscreenElement) {
-    document.exitFullscreen()
-    isFullscreen.value = false
+  if (!document.fullscreenElement) {
+    mapElement.requestFullscreen().catch((err) => {
+      console.error(`Ошибка при попытке включить полноэкранный режим: ${err.message} (${err.name})`)
+    })
   }
   else {
-    mapElement.requestFullscreen()
-    isFullscreen.value = true
+    document.exitFullscreen()
   }
 }
 
-document.addEventListener('fullscreenchange', () => {
-  isFullscreen.value = !!document.fullscreenElement
+function handleFullscreenChange() {
+  const mapElement = props.mapInstance?.getTargetElement()
+  const isCurrentlyFullscreen = document.fullscreenElement === mapElement
+  emit('update:isFullscreen', isCurrentlyFullscreen)
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 </script>
 
@@ -90,6 +100,14 @@ document.addEventListener('fullscreenchange', () => {
       :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'"
       aria-label="Во весь экран"
       @click="toggleFullscreen"
+    />
+    <KitBtn
+      v-if="isFullscreen"
+      variant="outlined"
+      color="secondary"
+      icon="mdi:view-list"
+      aria-label="Показать/скрыть панель"
+      @click="$emit('togglePanel')"
     />
   </div>
 </template>

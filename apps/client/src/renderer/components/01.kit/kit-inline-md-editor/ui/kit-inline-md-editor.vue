@@ -51,23 +51,18 @@ useEditor((root) => {
       const listenerValue = ctx.get(listenerCtx)
       listenerValue.markdownUpdated((_, md) => {
         markdown.value = md
+        emit('markdownUpdated', md)
       })
     })
     .use(listener)
 
   crepe.on((crepeListener) => {
-    // crepeListener.markdownUpdated((md) => {
-    //   console.log('Markdown updated:', md)
-    // })
-
     crepeListener.updated(() => {
       emit('updated')
     })
-
     crepeListener.focus(() => {
       emit('focus')
     })
-
     crepeListener.blur(() => {
       emit('blur')
     })
@@ -82,6 +77,7 @@ useEditor((root) => {
     :class="{
       'milkdown-disabled': disabled,
       'has-content': !!markdown }"
+    class="kit-inline-md-editor-minimal"
   >
     <Milkdown />
   </div>
@@ -97,82 +93,50 @@ useEditor((root) => {
   opacity: 0;
 }
 
-:deep() {
+// Глобальные стили для скрытия ненужных UI элементов Crepe
+.kit-inline-md-editor-minimal :deep() {
+  .milkdown-menu-wrapper,      // Всплывающее меню
+  .milkdown-slash-wrapper,     // Slash-команды
+  .milkdown-block-handle,      // Хэндлер для перетаскивания блоков
+  .milkdown-image-tooltip,     // Тултип для изображений
+  .milkdown-link-tooltip,      // Тултип для ссылок
+  .crepe-dropdown,             // Выпадающие списки
+  .crepe-table-control-bar,    // Управление таблицами
+  hr {
+    display: none !important;
+  }
+
+  // --- Стилизация самого редактора ---
   .milkdown {
     > div {
-      padding: 8px;
-    }
-    em {
-      color: var(--fg-highlight-color);
-    }
-    code {
-      color: var(--fg-secondary-color);
-      background: var(--bg-tertiary-color);
+      padding: 0;
     }
     p {
       margin: 0;
       padding: 0;
     }
+    em {
+      color: var(--fg-highlight-color);
+      font-style: italic;
+    }
     strong {
       color: var(--fg-highlight-color);
+      font-weight: bold;
     }
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    p,
-    em,
     code {
-      font-family: 'Rubik';
+      color: var(--fg-secondary-color);
+      background: var(--bg-tertiary-color);
+      padding: 2px 4px;
+      border-radius: var(--r-xs);
+      font-family: var(--font-mono);
     }
     blockquote {
-      padding-left: 16px;
+      padding-left: 0;
+      border-left: none;
     }
-    .list-item {
-      gap: 2px;
-    }
-    .label-wrapper {
-      height: auto !important;
-    }
-    .ordered,
-    .bullet {
-      padding: 0 !important;
-      height: auto !important;
-      font-weight: 500;
-      color: var(--fg-tertiary-color);
-
-      > svg {
-        fill: var(--fg-secondary-color) !important;
-      }
-    }
-    .milkdown-code-block {
-      padding: 0;
-
-      .cm-line {
-        color: var(--fg-secondary-color);
-      }
-    }
-    .ProseMirror p:last-child > .ProseMirror-trailingBreak {
-      display: none;
-    }
-  }
-  .milkdown-block-handle {
-    z-index: 100;
-    padding: 4px !important;
-
-    .operation-item {
-      background-color: var(--bg-secondary-color);
-      border: 1px solid var(--border-secondary-color);
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &:last-of-type {
-        display: none !important;
-      }
+    ul,
+    ol {
+      padding-top: 0.5em;
     }
   }
 }

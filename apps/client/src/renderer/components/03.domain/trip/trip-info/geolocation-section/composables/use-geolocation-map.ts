@@ -1,12 +1,12 @@
-// composables/use-geolocation-map.ts
-
-import type { Coordinate, GeolocationMapOptions, MapPoint, MapRoute, ReverseGeocodingResult } from '../models/types'
+import type { Coordinate, GeolocationMapOptions, MapPoint } from '../models/types'
 import { Feature, Map, Overlay, View } from 'ol'
-import { LineString, Point } from 'ol/geom'
+import { Point } from 'ol/geom'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
-import { fromLonLat, get, transform, transformExtent } from 'ol/proj'
+import { fromLonLat } from 'ol/proj'
 import { OSM, Vector as VectorSource } from 'ol/source'
-import { Circle as CircleStyle, Fill, Icon as OlIcon, Stroke, Style } from 'ol/style'
+import { Icon as OlIcon, Style } from 'ol/style'
+
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
 
 function useGeolocationMap() {
   const mapInstance: Ref<Map | null> = ref(null)
@@ -103,6 +103,7 @@ function useGeolocationMap() {
   const addOrUpdatePoint = (point: MapPoint) => {
     if (!mapInstance.value)
       return
+
     let feature = pointSource.getFeatureById(point.id)
     const coordinates = fromLonLat(point.coordinates)
 
@@ -110,14 +111,38 @@ function useGeolocationMap() {
       feature.setGeometry(new Point(coordinates))
     }
     else {
-      feature = new Feature({ geometry: new Point(coordinates) })
+      feature = new Feature({
+        geometry: new Point(coordinates),
+      })
       feature.setId(point.id)
       pointSource.addFeature(feature)
     }
     feature.setStyle(getPointStyle(point))
 
-    if (point.popupContent) {
-      showPopup(point.coordinates, point.popupContent)
+    // --- Управление оверлеем комментария ---
+    const overlay = mapInstance.value.getOverlayById(point.id)
+
+    if (point.comment && point.comment.trim() !== '') {
+      if (overlay) {
+        overlay.setPosition(coordinates)
+        overlay.getElement()!.innerHTML = point.comment
+      }
+      else {
+        const popupElement = document.createElement('div')
+        popupElement.className = 'ol-popup-comment'
+        popupElement.innerHTML = point.comment
+        const newOverlay = new Overlay({
+          element: popupElement,
+          position: coordinates,
+          positioning: 'bottom-center',
+          offset: [0, -42], // Расположить над маркером
+          id: point.id,
+        })
+        mapInstance.value.addOverlay(newOverlay)
+      }
+    }
+    else if (overlay) {
+      mapInstance.value.removeOverlay(overlay)
     }
   }
 
@@ -126,78 +151,29 @@ function useGeolocationMap() {
     if (feature) {
       pointSource.removeFeature(feature)
     }
+    // Также удаляем оверлей
+    const overlay = mapInstance.value?.getOverlayById(pointId)
+    if (overlay) {
+      mapInstance.value!.removeOverlay(overlay)
+    }
   }
 
   const clearPoints = () => {
     pointSource.clear()
-  }
-
-  // --- Управление маршрутами ---
-
-  const drawOrUpdateRoute = (route: MapRoute) => {
-    if (!mapInstance.value)
-      return
-    const routeStyle = new Style({
-      stroke: new Stroke({
-        color: route.style?.color || '#007bff',
-        width: route.style?.width || 5,
-      }),
-    })
-
-    let feature = routeSource.getFeatureById(route.id)
-    const geometry = new LineString(route.geometry.map(coord => fromLonLat(coord)))
-
-    if (feature) {
-      feature.setGeometry(geometry)
-    }
-    else {
-      feature = new Feature({ geometry })
-      feature.setId(route.id)
-      routeSource.addFeature(feature)
-    }
-    feature.setStyle(routeStyle)
-  }
-
-  const removeRoute = (routeId: string) => {
-    const feature = routeSource.getFeatureById(routeId)
-    if (feature) {
-      routeSource.removeFeature(feature)
-    }
+    // Также удаляем все оверлеи (включая комментарии)
+    mapInstance.value?.getOverlays().clear()
+    popups.value = []
   }
 
   // --- Взаимодействие с API ---
 
-  const fetchRoute = async (waypoints: MapPoint[]): Promise<MapRoute | null> => {
-    const coordsString = waypoints
-      .map(p => p.coordinates.join(','))
-      .join(';')
-    const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+  // Later
+  // const fetchRoute = async (waypoints: MapPoint[]): Promise<MapRoute | null> => {
+  // }
 
-    try {
-      const response = await fetch(url)
-      const data = await response.json()
-      if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-        console.error('OSRM error:', data.message)
-        return null
-      }
-      const routeData = data.routes[0]
-      return {
-        id: `route-${Date.now()}`,
-        waypoints,
-        geometry: routeData.geometry.coordinates, // OSRM с geojson возвращает [lon, lat]
-        distance: routeData.distance, // в метрах
-        duration: routeData.duration, // в секундах
-      }
-    }
-    catch (error) {
-      console.error('Failed to fetch route from OSRM:', error)
-      return null
-    }
-  }
-
-  const fetchAddress = async (coordinates: Coordinate): Promise<ReverseGeocodingResult | null> => {
+  const fetchAddress = async (coordinates: Coordinate) => {
     const [lon, lat] = coordinates
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lon=${lon}&lat=${lat}&accept-language=ru`
+    const url = `${NOMINATIM_URL}?format=json&lon=${lon}&lat=${lat}&accept-language=ru`
 
     try {
       const response = await fetch(url)
@@ -209,7 +185,6 @@ function useGeolocationMap() {
       return {
         coordinates,
         address: data.display_name || 'Адрес не найден',
-        raw: data,
       }
     }
     catch (error) {
@@ -256,28 +231,6 @@ function useGeolocationMap() {
     })
   }
 
-  function fitToExtent(coordinates: Coordinate[]) {
-    if (!mapInstance.value || coordinates.length === 0)
-      return
-
-    const extent = coordinates.reduce((ext, coord) => {
-      return [
-        Math.min(coord[0], ext[0]),
-        Math.min(coord[1], ext[1]),
-        Math.max(coord[0], ext[2]),
-        Math.max(coord[1], ext[3]),
-      ]
-    }, [Infinity, Infinity, -Infinity, -Infinity])
-
-    const transformedExtent = transformExtent(extent, 'EPSG:4326', mapInstance.value.getView().getProjection())
-
-    mapInstance.value.getView().fit(transformedExtent, {
-      duration: 1000,
-      padding: [50, 50, 50, 50], // отступы, чтобы маркеры не прилипали к краям
-      maxZoom: 16,
-    })
-  }
-
   onUnmounted(destroyMap)
 
   return {
@@ -287,14 +240,10 @@ function useGeolocationMap() {
     addOrUpdatePoint,
     removePoint,
     clearPoints,
-    drawOrUpdateRoute,
-    removeRoute,
-    fetchRoute,
     fetchAddress,
     flyToLocation,
     showPopup,
     clearPopups,
-    fitToExtent,
   }
 }
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import type { ActivitySectionGeolocation } from '~/components/03.domain/trip/trip-info/geolocation-section/models/types'
 import type {
   ActivitySection,
   ActivitySectionGallery,
-  ActivitySectionGeolocation,
   ActivitySectionText,
 } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
@@ -93,6 +93,7 @@ watch(() => props.section, (newSection) => {
     />
     <GeolocationSection
       v-else-if="section.type === EActivitySectionType.GEOLOCATION"
+      :readonly="isViewMode"
       :section="section as ActivitySectionGeolocation"
       @update-section="onUpdate"
     />

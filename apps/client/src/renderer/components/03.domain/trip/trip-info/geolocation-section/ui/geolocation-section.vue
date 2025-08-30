@@ -1,15 +1,15 @@
-<!-- ui/geolocation-section.vue -->
 <!-- eslint-disable no-console -->
 <script setup lang="ts">
-import type { Coordinate, MapPoint, MapRoute } from '../models/types'
+import type { ActivitySectionGeolocation, Coordinate, MapPoint } from '../models/types'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
-import type { ActivitySectionGeolocation } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import { toLonLat } from 'ol/proj'
 import { v4 as uuidv4 } from 'uuid'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitInput } from '~/components/01.kit/kit-input'
+import { useToast } from '~/components/01.kit/kit-toast'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
 import { useGeolocationMap } from '../composables/use-geolocation-map'
 import GeolocationContextMenu from './geolocation-context-menu.vue'
@@ -36,26 +36,70 @@ const {
   initMap,
   addOrUpdatePoint,
   removePoint,
-  drawOrUpdateRoute,
-  removeRoute,
-  fetchRoute,
   fetchAddress,
   flyToLocation,
-  fitToExtent,
 } = useGeolocationMap()
+
+// --- Цветовая палитра для маркеров ---
+const POI_COLORS = [
+  '#E6194B',
+  '#3CB44B',
+  '#FFE119',
+  '#4363D8',
+  '#F58231',
+  '#911EB4',
+  '#46F0F0',
+  '#F032E6',
+  '#BCF60C',
+  '#FABEBE',
+  '#008080',
+  '#E6BEFF',
+  '#9A6324',
+  '#FFFAC8',
+  '#800000',
+  '#AAFFC3',
+  '#808000',
+  '#FFD8B1',
+  '#000075',
+  '#808080',
+]
 
 // --- Глобальное состояние компонента ---
 const mapContainerRef = ref<HTMLElement>()
 const mode = ref<'pan' | 'add_point' | 'build_route' | 'move_point'>('pan')
 const isLoading = ref(false)
 const pointToMoveId = ref<string | null>(null)
-
 const points = ref<MapPoint[]>([])
-const routes = ref<MapRoute[]>([])
-const activeRouteId = ref<string | null>(null)
-
-const activeRoute = computed(() => routes.value.find(r => r.id === activeRouteId.value))
 const poiPoints = computed(() => points.value.filter(p => p.type === 'poi'))
+
+// Состояние для полноэкранного режима
+const isMapFullscreen = ref(false)
+const isPanelVisibleInFullscreen = ref(false)
+
+// Добавляем стиль (цвет) к каждой точке для отображения
+const poiPointsWithStyle = computed(() => {
+  return poiPoints.value.map((point, index) => {
+    const color = POI_COLORS[index % POI_COLORS.length]
+    // Обновляем маркер на карте, если цвет изменился
+    if (point.style?.color !== color) {
+      const updatedPoint = {
+        ...point,
+        style: { ...point.style, color },
+      }
+      addOrUpdatePoint(updatedPoint)
+      return updatedPoint
+    }
+    return point
+  })
+})
+
+// --- Вычисляемые свойства для безопасного доступа к данным ---
+const mapCenter = computed<Coordinate>(() => {
+  if (props.section.points?.length > 0) {
+    return props.section.points[0].coordinates
+  }
+  return [37.6176, 55.7558] // Значение по умолчанию (Москва), если нет точек
+})
 
 // --- Данные для контролов ---
 const newPointLat = ref('')
@@ -64,54 +108,26 @@ const newPointLon = ref('')
 const modeItems: ViewSwitcherItem[] = [
   { id: 'pan', icon: 'mdi:cursor-move', label: 'Панорама' },
   { id: 'add_point', icon: 'mdi:map-marker-plus', label: 'Точка' },
-  { id: 'build_route', icon: 'mdi:routes', label: 'Маршрут' },
 ]
 
 // --- Логика для контекстного меню ---
 const contextMenuRef = ref<HTMLElement | null>(null)
 const isContextMenuVisible = ref(false)
 const contextMenuPosition = reactive({ top: 0, left: 0 })
-let clickedCoordinates: Coordinate | null = null
-onClickOutside(contextMenuRef, () => { isContextMenuVisible.value = false })
-
-// --- Инициализация и обработчики карты ---
-onMounted(async () => {
-  if (!mapContainerRef.value)
-    return
-  await initMap({
-    container: mapContainerRef.value,
-    center: [props.section.longitude, props.section.latitude],
-    zoom: 14,
-    interactive: !props.readonly,
-  })
-
-  const initialPoint: MapPoint = {
-    id: `poi-${props.section.id}`,
-    coordinates: [props.section.longitude, props.section.latitude],
-    type: 'poi',
-    address: props.section.address,
-  }
-  points.value.push(initialPoint)
-  addOrUpdatePoint(initialPoint)
-
-  mapInstance.value?.on('click', (event) => {
-    handleMapClick(event.originalEvent as MouseEvent)
-  })
-})
 
 async function handleMapClick(event: MouseEvent) {
   if (props.readonly || !mapInstance.value)
     return
+
   const coords = toLonLat(mapInstance.value.getEventCoordinate(event)) as Coordinate
 
   if (mode.value === 'add_point') {
     await addPoiPoint(coords)
     mode.value = 'pan'
+    return
   }
-  else if (mode.value === 'build_route') {
-    await addWaypointToActiveRoute(coords)
-  }
-  else if (mode.value === 'move_point' && pointToMoveId.value) {
+
+  if (mode.value === 'move_point' && pointToMoveId.value) {
     await movePoint(pointToMoveId.value, coords)
     pointToMoveId.value = null
     mode.value = 'pan'
@@ -131,6 +147,7 @@ async function addPoiPoint(coords: Coordinate) {
     coordinates: coords,
     type: 'poi',
     address: addressInfo.address,
+    comment: '',
   }
   points.value.push(newPoint)
   addOrUpdatePoint(newPoint)
@@ -140,8 +157,8 @@ async function addPointFromInputs() {
   const lat = Number.parseFloat(newPointLat.value)
   const lon = Number.parseFloat(newPointLon.value)
 
-  if (isNaN(lat) || isNaN(lon)) {
-    alert('Неверный формат координат!')
+  if (Number.isNaN(lat) || Number.isNaN(lon)) {
+    useToast().error('Неверный формат координат!')
     return
   }
 
@@ -175,11 +192,11 @@ async function movePoint(pointId: string, newCoords: Coordinate) {
 }
 
 async function updatePointCoords(point: MapPoint) {
-  // Приводим строковые значения из инпутов к числам
   const lon = Number(point.coordinates[0])
   const lat = Number(point.coordinates[1])
-  if (isNaN(lat) || isNaN(lon)) {
-    alert('Неверный формат координат!')
+
+  if (Number.isNaN(lat) || Number.isNaN(lon)) {
+    useToast().error('Неверный формат координат!')
     return
   }
   point.coordinates = [lon, lat]
@@ -188,111 +205,22 @@ async function updatePointCoords(point: MapPoint) {
   flyToLocation(lon, lat, 16)
 }
 
-// --- Управление маршрутами ---
-function startNewRoute(startCoords?: Coordinate) {
-  const newRoute: MapRoute = { id: uuidv4(), waypoints: [], geometry: [], distance: 0, duration: 0 }
-  routes.value.push(newRoute)
-  activeRouteId.value = newRoute.id
-  mode.value = 'build_route'
-  if (startCoords) {
-    addWaypointToActiveRoute(startCoords)
+function focusOnPoint(point: MapPoint) {
+  if (props.readonly) {
+    flyToLocation(point.coordinates[0], point.coordinates[1], 16)
   }
 }
 
-function handleModeChange(newMode: string) {
-  if (newMode === 'build_route') {
-    // Чтобы избежать создания множества пустых маршрутов при повторном клике,
-    // создаем новый маршрут, только если текущий уже содержит точки.
-    if (!activeRoute.value || activeRoute.value.waypoints.length > 0)
-      startNewRoute()
+function handlePointUpdate(point: MapPoint) {
+  // Обновляем оверлей с комментарием на карте
+  addOrUpdatePoint(point)
+
+  // Находим индекс точки и заменяем ее в массиве, чтобы вызвать обновление UI
+  const index = points.value.findIndex(p => p.id === point.id)
+  if (index !== -1) {
+    // Замена элемента в массиве гарантирует срабатывание реактивности Vue
+    points.value.splice(index, 1, { ...point })
   }
-}
-
-async function addWaypointToActiveRoute(coords: Coordinate) {
-  if (!activeRoute.value)
-    return
-
-  isLoading.value = true
-  const addressInfo = await fetchAddress(coords)
-  isLoading.value = false
-  if (!addressInfo)
-    return
-
-  const newWaypoint: MapPoint = {
-    id: uuidv4(),
-    coordinates: coords,
-    type: 'via',
-    address: addressInfo.address,
-  }
-
-  activeRoute.value.waypoints.push(newWaypoint)
-  updateWaypointTypes(activeRoute.value)
-
-  addOrUpdatePoint(newWaypoint)
-  await rebuildActiveRoute()
-}
-
-async function removeWaypoint(pointId: string) {
-  if (!activeRoute.value)
-    return
-  const index = activeRoute.value.waypoints.findIndex(p => p.id === pointId)
-  if (index === -1)
-    return
-
-  removePoint(pointId)
-  activeRoute.value.waypoints.splice(index, 1)
-
-  if (activeRoute.value.waypoints.length === 0) {
-    if (activeRoute.value.id)
-      removeRoute(activeRoute.value.id)
-    routes.value = routes.value.filter(r => r.id !== activeRoute.value!.id)
-    activeRouteId.value = null
-    mode.value = 'pan'
-  }
-  else {
-    updateWaypointTypes(activeRoute.value)
-    activeRoute.value.waypoints.forEach(addOrUpdatePoint)
-    await rebuildActiveRoute()
-  }
-}
-
-async function rebuildActiveRoute() {
-  if (!activeRoute.value)
-    return
-
-  if (activeRoute.value.waypoints.length < 2) {
-    removeRoute(activeRoute.value.id)
-    return
-  }
-
-  isLoading.value = true
-  const routeData = await fetchRoute(activeRoute.value.waypoints)
-  isLoading.value = false
-
-  if (routeData) {
-    activeRoute.value.geometry = routeData.geometry
-    activeRoute.value.distance = routeData.distance
-    activeRoute.value.duration = routeData.duration
-    drawOrUpdateRoute({ ...activeRoute.value, id: activeRoute.value.id })
-    fitToExtent(activeRoute.value.waypoints.map(p => p.coordinates))
-  }
-}
-
-function updateWaypointTypes(route: MapRoute) {
-  route.waypoints.forEach((p, index) => {
-    if (route.waypoints.length === 1) {
-      p.type = 'start'
-    }
-    else if (index === 0) {
-      p.type = 'start'
-    }
-    else if (index === route.waypoints.length - 1) {
-      p.type = 'end'
-    }
-    else {
-      p.type = 'via'
-    }
-  })
 }
 
 // --- Контекстное меню ---
@@ -302,41 +230,54 @@ function openContextMenu(event: MouseEvent) {
 
   const mapContainer = mapInstance.value.getTargetElement() as HTMLElement
   const mapRect = mapContainer.getBoundingClientRect()
+
   contextMenuPosition.top = event.clientY - mapRect.top
   contextMenuPosition.left = event.clientX - mapRect.left
-  const mapCoords = mapInstance.value.getEventCoordinate(event)
 
-  if (mapCoords) {
-    clickedCoordinates = toLonLat(mapCoords) as Coordinate
-  }
   isContextMenuVisible.value = true
 }
 
-function handleContextMenuAction(actionId: string) {
+function handleContextMenuAction() {
   isContextMenuVisible.value = false
-  if (!clickedCoordinates)
+}
+
+// --- Инициализация и обработчики карты ---
+onClickOutside(contextMenuRef, () => { isContextMenuVisible.value = false })
+
+watch(points, (newPoints) => {
+  emit('update:section', {
+    ...props.section,
+    points: newPoints,
+  })
+}, { deep: true })
+
+onMounted(async () => {
+  if (!mapContainerRef.value)
     return
 
-  if (actionId === 'route-from') {
-    startNewRoute(clickedCoordinates)
-  }
-}
+  await initMap({
+    container: mapContainerRef.value,
+    center: mapCenter.value,
+    zoom: 14,
+    interactive: !props.readonly,
+  })
+
+  points.value = JSON.parse(JSON.stringify(props.section.points || []))
+  points.value.forEach(addOrUpdatePoint)
+
+  mapInstance.value?.on('click', (event) => {
+    handleMapClick(event.originalEvent as MouseEvent)
+  })
+})
 </script>
 
 <template>
   <div class="geolocation-section">
-    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
-    <div v-if="!readonly" class="geolocation-controls-panel">
-      <!-- Кнопки режимов -->
+    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ (ОБЫЧНЫЙ РЕЖИМ) -->
+    <div v-if="!readonly && !isMapFullscreen" class="geolocation-controls-panel">
       <div class="modes-group">
-        <KitViewSwitcher
-          v-model="mode"
-          :items="modeItems"
-          @change="handleModeChange"
-        />
+        <KitViewSwitcher v-model="mode" :items="modeItems" />
       </div>
-
-      <!-- Блок добавления точки по координатам -->
       <div v-if="mode !== 'pan'" class="add-by-coords-group">
         <KitInput v-model="newPointLat" type="text" placeholder="Широта" size="sm" />
         <KitInput v-model="newPointLon" type="text" placeholder="Долгота" size="sm" />
@@ -344,44 +285,77 @@ function handleContextMenuAction(actionId: string) {
       </div>
     </div>
 
-    <!-- СПИСОК ТОЧЕК ИНТЕРЕСА (POI) -->
-    <div v-if="poiPoints.length > 0 && !readonly" class="poi-list">
-      <div v-for="point in poiPoints" :key="point.id" class="poi-item">
+    <!-- СПИСОК ТОЧЕК ИНТЕРЕСА (POI) (ОБЫЧНЫЙ РЕЖИМ) -->
+    <div v-if="poiPointsWithStyle.length > 0 && !isMapFullscreen" class="poi-list">
+      <div
+        v-for="(point, index) in poiPointsWithStyle"
+        :key="point.id"
+        class="poi-item"
+        :class="{ 'is-readonly': readonly }"
+        @click="focusOnPoint(point)"
+      >
+        <div class="poi-marker-visual">
+          <span class="poi-number" :style="{ backgroundColor: point.style?.color }">
+            {{ index + 1 }}
+          </span>
+        </div>
+
         <div class="poi-info">
-          <span class="poi-address">{{ point.address }}</span>
-          <div class="poi-coords">
-            <KitInput v-model="point.coordinates[1]" size="sm" type="text" @keydown.enter="updatePointCoords(point)" />
-            <KitInput v-model="point.coordinates[0]" size="sm" type="text" @keydown.enter="updatePointCoords(point)" />
-            <KitBtn icon="mdi:check" variant="text" size="sm" @click="updatePointCoords(point)" />
+          <div class="poi-field">
+            <Icon icon="mdi:map-marker-outline" class="field-icon" />
+            <KitInlineMdEditorWrapper
+              v-if="!readonly"
+              v-model="point.address!"
+              class="poi-editor poi-address"
+              :features="{
+                'block-edit': false,
+                'code-mirror': false,
+                'cursor': false,
+                'image-block': false,
+                'latex': false,
+                'link-tooltip': false,
+                'table': false,
+                'toolbar': false,
+              }"
+              placeholder="Адрес не найден"
+              @blur="handlePointUpdate(point)"
+            />
+            <span v-else class="poi-text">{{ point.address || 'Адрес не найден' }}</span>
+          </div>
+          <div class="poi-field">
+            <Icon icon="mdi:comment-text-outline" class="field-icon" />
+            <KitInlineMdEditorWrapper
+              v-if="!readonly"
+              v-model="point.comment!"
+              class="poi-editor poi-comment"
+              :features="{
+                'block-edit': false,
+                'code-mirror': false,
+                'cursor': false,
+                'image-block': false,
+                'latex': false,
+                'link-tooltip': false,
+                'table': false,
+                'toolbar': false,
+              }"
+              placeholder="Добавить комментарий"
+              @blur="handlePointUpdate(point)"
+            />
+            <span v-else class="poi-text poi-text-comment">{{ point.comment || 'Нет комментария' }}</span>
+          </div>
+
+          <div v-if="!readonly" class="poi-controls">
+            <div class="poi-coords">
+              <KitInput v-model="point.coordinates[1]" size="sm" type="text" @keydown.enter="updatePointCoords(point)" @blur="updatePointCoords(point)" />
+              <KitInput v-model="point.coordinates[0]" size="sm" type="text" @keydown.enter="updatePointCoords(point)" @blur="updatePointCoords(point)" />
+            </div>
+            <div class="poi-actions">
+              <KitBtn icon="mdi:arrow-all" variant="outlined" size="sm" aria-label="Переместить точку" @click="startMovePoint(point.id)" />
+              <KitBtn icon="mdi:delete-outline" variant="solid" size="sm" aria-label="Удалить точку" @click="deletePoiPoint(point.id)" />
+            </div>
           </div>
         </div>
-        <div class="poi-actions">
-          <KitBtn icon="mdi:arrow-all" variant="text" size="sm" aria-label="Переместить точку" @click="startMovePoint(point.id)" />
-          <KitBtn icon="mdi:delete-outline" variant="text" size="sm" aria-label="Удалить точку" @click="deletePoiPoint(point.id)" />
-        </div>
       </div>
-    </div>
-
-    <!-- ИНФО О МАРШРУТЕ -->
-    <div v-if="!readonly && activeRoute" class="route-info-panel">
-      <div class="route-header">
-        <h4>Активный маршрут</h4>
-        <div v-if="activeRoute.distance > 0" class="route-meta">
-          {{ (activeRoute.distance / 1000).toFixed(1) }} км / {{ Math.round(activeRoute.duration / 60) }} мин
-        </div>
-      </div>
-      <ul class="waypoints-list">
-        <li v-for="point in activeRoute.waypoints" :key="point.id">
-          <Icon :icon="point.type === 'start' ? 'mdi:flag-checkered' : point.type === 'end' ? 'mdi:flag-variant' : 'mdi:map-marker'" />
-          <span class="waypoint-address">{{ point.address }}</span>
-          <KitBtn
-            icon="mdi:close"
-            size="sm"
-            variant="text"
-            @click="removeWaypoint(point.id)"
-          />
-        </li>
-      </ul>
     </div>
 
     <!-- КАРТА -->
@@ -395,20 +369,139 @@ function handleContextMenuAction(actionId: string) {
       <div v-if="!isMapLoaded || isLoading" class="loading-overlay">
         <span>{{ isLoading ? 'Загрузка...' : 'Инициализация карты...' }}</span>
       </div>
-      <GeolocationMapControls :map-instance="mapInstance" :center-coordinates="[section.longitude, section.latitude]" />
+      <GeolocationMapControls
+        :map-instance="mapInstance"
+        :center-coordinates="mapCenter"
+        :is-fullscreen="isMapFullscreen"
+        @update:is-fullscreen="isMapFullscreen = $event"
+        @toggle-panel="isPanelVisibleInFullscreen = !isPanelVisibleInFullscreen"
+      />
       <div ref="contextMenuRef">
         <GeolocationContextMenu :visible="isContextMenuVisible" :top="contextMenuPosition.top" :left="contextMenuPosition.left" @action="handleContextMenuAction" />
       </div>
+
+      <!-- ПАНЕЛЬ ДЛЯ ПОЛНОЭКРАННОГО РЕЖИМА -->
+      <Transition name="slide-fade">
+        <div v-if="isMapFullscreen && isPanelVisibleInFullscreen" class="fullscreen-side-panel">
+          <!-- ПАНЕЛЬ УПРАВЛЕНИЯ (ПОЛНОЭКРАННЫЙ РЕЖИМ) -->
+          <div v-if="!readonly" class="geolocation-controls-panel">
+            <div class="modes-group">
+              <KitViewSwitcher v-model="mode" :items="modeItems" />
+            </div>
+            <div v-if="mode !== 'pan'" class="add-by-coords-group">
+              <KitInput v-model="newPointLat" type="text" placeholder="Широта" size="sm" />
+              <KitInput v-model="newPointLon" type="text" placeholder="Долгота" size="sm" />
+              <KitBtn icon="mdi:plus" aria-label="Добавить точку по координатам" @click="addPointFromInputs" />
+            </div>
+          </div>
+          <!-- СПИСОК ТОЧЕК (ПОЛНОЭКРАННЫЙ РЕЖИМ) -->
+          <div v-if="poiPointsWithStyle.length > 0" class="poi-list">
+            <div
+              v-for="(point, index) in poiPointsWithStyle"
+              :key="point.id"
+              class="poi-item"
+              :class="{ 'is-readonly': readonly }"
+              @click="focusOnPoint(point)"
+            >
+              <div class="poi-marker-visual">
+                <span class="poi-number" :style="{ backgroundColor: point.style?.color }">
+                  {{ index + 1 }}
+                </span>
+              </div>
+              <div class="poi-info">
+                <div class="poi-field">
+                  <Icon icon="mdi:map-marker-outline" class="field-icon" />
+                  <KitInlineMdEditorWrapper
+                    v-if="!readonly"
+                    v-model="point.address!"
+                    class="poi-editor poi-address" placeholder="Адрес не найден"
+                    :features="{
+                      'block-edit': false,
+                      'code-mirror': false,
+                      'cursor': false,
+                      'image-block': false,
+                      'latex': false,
+                      'link-tooltip': false,
+                      'table': false,
+                      'toolbar': false,
+                    }"
+                    @blur="handlePointUpdate(point)"
+                  />
+                  <span v-else class="poi-text">{{ point.address || 'Адрес не найден' }}</span>
+                </div>
+                <div class="poi-field">
+                  <Icon icon="mdi:comment-text-outline" class="field-icon" />
+                  <KitInlineMdEditorWrapper
+                    v-if="!readonly"
+                    v-model="point.comment!"
+                    class="poi-editor poi-comment"
+                    placeholder="Добавить комментарий"
+                    :features="{
+                      'block-edit': false,
+                      'code-mirror': false,
+                      'cursor': false,
+                      'image-block': false,
+                      'latex': false,
+                      'link-tooltip': false,
+                      'table': false,
+                      'toolbar': false,
+                    }"
+                    @blur="handlePointUpdate(point)"
+                  />
+                  <span v-else class="poi-text poi-text-comment">{{ point.comment || 'Нет комментария' }}</span>
+                </div>
+                <div v-if="!readonly" class="poi-controls">
+                  <div class="poi-coords">
+                    <KitInput v-model="point.coordinates[1]" size="sm" type="text" @keydown.enter="updatePointCoords(point)" @blur="updatePointCoords(point)" />
+                    <KitInput v-model="point.coordinates[0]" size="sm" type="text" @keydown.enter="updatePointCoords(point)" @blur="updatePointCoords(point)" />
+                  </div>
+                  <div class="poi-actions">
+                    <KitBtn icon="mdi:arrow-all" variant="outlined" size="sm" aria-label="Переместить точку" @click="startMovePoint(point.id)" />
+                    <KitBtn icon="mdi:delete-outline" variant="solid" size="sm" aria-label="Удалить точку" @click="deletePoiPoint(point.id)" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
 
+<style>
+.ol-popup-comment {
+  background-color: var(--bg-secondary-color);
+  color: var(--fg-primary-color);
+  padding: 6px 10px;
+  border-radius: var(--r-xs);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border-secondary-color);
+  box-shadow: var(--s-m);
+}
+</style>
+
 <style scoped lang="scss">
+.modes-group {
+  .kit-view-switcher {
+    background-color: var(--bg-tertiary-color);
+
+    :deep(.kit-view-switcher-button) {
+      &.is-active {
+        background-color: var(--bg-secondary-color);
+      }
+    }
+  }
+}
+
 .geolocation-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px;
+  gap: 4px;
+  padding: 4px;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);
@@ -427,30 +520,53 @@ function handleContextMenuAction(actionId: string) {
   gap: 8px;
 
   .kit-input-group {
-    max-width: 110px;
-    width: 110px;
+    max-width: 150px;
   }
-}
-
-.modes-group {
-  display: flex;
-  gap: 8px;
 }
 
 .poi-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .poi-item {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
+  padding: 12px;
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-xs);
-  gap: 12px;
+  transition: background-color 0.2s ease;
+  margin: 4px;
+
+  &.is-readonly {
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
+  }
+}
+
+.poi-marker-visual {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  opacity: 0.6;
+
+  .poi-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Sansation';
+    width: 20px;
+    height: 20px;
+    border-radius: var(--r-xs);
+    color: white;
+    font-size: 0.65rem;
+    line-height: 20px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
 }
 
 .poi-info {
@@ -458,22 +574,79 @@ function handleContextMenuAction(actionId: string) {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+}
+
+.poi-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .field-icon {
+    font-size: 1.1rem;
+    color: var(--fg-secondary-color);
+    flex-shrink: 0;
+  }
+}
+
+.poi-text {
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 4px 0;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+
+  &-comment {
+    font-size: 0.85rem;
+    color: var(--fg-secondary-color);
+    font-style: italic;
+  }
+}
+
+.poi-editor {
+  width: 100%;
+  padding: 4px 0;
+  line-height: 1.4;
+  min-height: 25px;
 }
 
 .poi-address {
-  font-size: 0.9rem;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  :deep() {
+    .milkdown .ProseMirror p {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--fg-primary-color);
+    }
+  }
+}
+
+.poi-comment {
+  :deep() {
+    .milkdown .ProseMirror p {
+      font-size: 0.85rem;
+      color: var(--fg-secondary-color);
+    }
+  }
+}
+
+.poi-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .poi-coords {
   display: flex;
   align-items: center;
   gap: 4px;
-  .kit-input {
-    max-width: 100px;
+  flex-shrink: 1;
+  min-width: 0;
+
+  .kit-input-group {
+    max-width: 150px;
     font-family: var(--font-mono);
     font-size: 0.8rem;
   }
@@ -481,50 +654,7 @@ function handleContextMenuAction(actionId: string) {
 
 .poi-actions {
   display: flex;
-  align-items: center;
-}
-
-.route-info-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  background-color: var(--bg-tertiary-color);
-  border-radius: var(--r-xs);
-}
-.route-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  h4 {
-    margin: 0;
-    font-size: 1rem;
-  }
-  .route-meta {
-    font-size: 0.8rem;
-    color: var(--fg-secondary-color);
-  }
-}
-
-.waypoints-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
   gap: 4px;
-  li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    .waypoint-address {
-      flex-grow: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
 }
 
 .geolocation-map-container {
@@ -553,5 +683,75 @@ function handleContextMenuAction(actionId: string) {
   justify-content: center;
   z-index: 100;
   font-weight: 500;
+}
+
+// Стили для полноэкранной панели
+.fullscreen-side-panel {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  bottom: 12px;
+  width: 420px;
+  z-index: 1000;
+  border-radius: var(--r-m);
+  box-shadow: var(--s-xl);
+
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bg-secondary-color-rgb), 0.85);
+  border: 1px solid var(--border-secondary-color);
+
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+
+  .poi-list {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+
+  .modes-group {
+    width: 100%;
+    :deep() {
+      .kit-view-switcher {
+        width: 100%;
+        .kit-view-switcher-button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+  }
+
+  .poi-address {
+    :deep() {
+      .milkdown .ProseMirror p {
+        font-size: 0.8rem;
+        line-height: 18px;
+      }
+    }
+  }
+  .poi-comment {
+    :deep() {
+      .milkdown .ProseMirror p {
+        font-size: 0.7rem;
+        line-height: 16px;
+      }
+    }
+  }
+  .add-by-coords-group {
+    display: none;
+  }
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(-50px);
+  opacity: 0;
 }
 </style>
