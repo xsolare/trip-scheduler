@@ -242,7 +242,9 @@ function handleContextMenuAction() {
 }
 
 // --- Инициализация и обработчики карты ---
-onClickOutside(contextMenuRef, () => { isContextMenuVisible.value = false })
+onClickOutside(contextMenuRef, () => {
+  isContextMenuVisible.value = false
+})
 
 watch(points, (newPoints) => {
   emit('update:section', {
