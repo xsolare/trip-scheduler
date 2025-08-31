@@ -1,12 +1,29 @@
 <script setup lang="ts">
+import type { DayMetaBadgePreset } from '../../lib/badge-presets'
 import type { DayMetaInfo } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRoot,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  TooltipArrow,
+  TooltipContent,
+  TooltipPortal,
+  TooltipProvider,
+  TooltipRoot,
+  TooltipTrigger,
+} from 'reka-ui'
 import { v4 as uuidv4 } from 'uuid'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitInput } from '~/components/01.kit/kit-input'
+import { badgePresets } from '../../lib/badge-presets'
 
 interface Props {
   meta: DayMetaInfo[]
@@ -22,8 +39,8 @@ const confirm = useConfirm()
 const isEditorOpen = ref(false)
 const isViewerOpen = ref(false)
 const currentItem = ref<DayMetaInfo | null>(null)
-const isNewItem = ref(false)
 const iconSearchQuery = ref('')
+const isAddMenuOpen = ref(false)
 
 // --- Constants ---
 const defaultColors = [
@@ -32,7 +49,7 @@ const defaultColors = [
   '#FFADAD',
   '#FFD6A5',
   '#FDFFB6',
-  '#CAFFBF',
+  '#A3D9A5',
   '#9BF6FF',
   '#A0C4FF',
   '#BDB2FF',
@@ -100,6 +117,16 @@ const filteredIcons = computed(() => {
   return iconList.filter(icon => icon.toLowerCase().includes(iconSearchQuery.value.toLowerCase()))
 })
 
+const groupedPresets = computed(() => {
+  return badgePresets.reduce((acc, preset) => {
+    const category = preset.templateCategory || 'Прочее'
+    if (!acc[category])
+      acc[category] = []
+    acc[category].push(preset)
+    return acc
+  }, {} as Record<string, DayMetaBadgePreset[]>)
+})
+
 // --- Methods ---
 function getContrastColor(hexcolor: string | undefined): string {
   if (!hexcolor)
@@ -113,8 +140,7 @@ function getContrastColor(hexcolor: string | undefined): string {
 }
 
 function openEditor(item?: DayMetaInfo) {
-  isNewItem.value = !item
-  currentItem.value = { ...(item || { id: uuidv4(), title: '', color: defaultColors[0], icon: 'mdi:information-outline', content: '' }) }
+  currentItem.value = { ...(item || { id: uuidv4(), title: '', subtitle: '', color: defaultColors[0], icon: 'mdi:information-outline', content: '' }) }
   isEditorOpen.value = true
 }
 
@@ -126,16 +152,19 @@ function openViewer(item: DayMetaInfo) {
 }
 
 function handleSave() {
-  if (!currentItem.value?.title)
+  if (!currentItem.value || !currentItem.value.title)
     return
 
+  const existingItemIndex = props.meta.findIndex(m => m.id === currentItem.value!.id)
   let newMeta: DayMetaInfo[]
-  if (isNewItem.value) {
-    newMeta = [...props.meta, currentItem.value]
-  }
-  else {
+
+  if (existingItemIndex > -1) {
     newMeta = props.meta.map(m => (m.id === currentItem.value!.id ? currentItem.value! : m))
   }
+  else {
+    newMeta = [...props.meta, currentItem.value]
+  }
+
   emit('update:meta', newMeta)
   closeEditor()
 }
@@ -160,47 +189,141 @@ function closeViewer() {
   isViewerOpen.value = false
   currentItem.value = null
 }
+
+function applyPreset(preset: DayMetaBadgePreset) {
+  const newItem: DayMetaInfo = {
+    id: uuidv4(),
+    title: preset.title || '',
+    subtitle: preset.subtitle || '',
+    icon: preset.icon || 'mdi:information-outline',
+    color: preset.color || defaultColors[0],
+    content: preset.content || '',
+  }
+  openEditor(newItem)
+}
+
+function createBlankBadge() {
+  openEditor()
+}
 </script>
 
 <template>
   <div class="day-meta-badges-container">
     <div class="badges-wrapper">
-      <div v-for="item in meta" :key="item.id" class="badge-wrapper">
-        <button
-          class="badge"
-          :style="{
-            backgroundColor: `${item.color}70`,
-            color: getContrastColor(item.color),
-            borderColor: `${item.color}50`,
-          }"
-          @click="openViewer(item)"
-        >
-          <Icon v-if="item.icon" :icon="item.icon" class="badge-icon" />
-          <div class="badge-text">
-            <span class="badge-title">{{ item.title }}</span>
-            <span v-if="item.subtitle" class="badge-subtitle">{{ item.subtitle }}</span>
+      <TooltipProvider :delay-duration="200">
+        <template v-for="item in meta" :key="item.id">
+          <TooltipRoot v-if="item.content">
+            <TooltipTrigger as-child>
+              <div class="badge-wrapper">
+                <button
+                  class="badge"
+                  :style="{
+                    backgroundColor: `${item.color}70`,
+                    color: getContrastColor(item.color),
+                    borderColor: `${item.color}50`,
+                  }"
+                  @click="openViewer(item)"
+                >
+                  <Icon v-if="item.icon" :icon="item.icon" class="badge-icon" />
+                  <div class="badge-text">
+                    <span class="badge-title">{{ item.title }}</span>
+                    <span v-if="item.subtitle" class="badge-subtitle">{{ item.subtitle }}</span>
+                  </div>
+                </button>
+                <div v-if="!readonly" class="badge-actions">
+                  <button class="action-btn edit" title="Редактировать" @click="openEditor(item)">
+                    <Icon icon="mdi:pencil-outline" />
+                  </button>
+                  <button class="action-btn delete" title="Удалить" @click="handleDelete(item)">
+                    <Icon icon="mdi:trash-can-outline" />
+                  </button>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent
+                class="badge-tooltip-content"
+                :side-offset="8"
+                side="top"
+              >
+                <KitInlineMdEditorWrapper :model-value="item.content || ''" :readonly="true" />
+                <TooltipArrow class="badge-tooltip-arrow" />
+              </TooltipContent>
+            </TooltipPortal>
+          </TooltipRoot>
+          <div v-else class="badge-wrapper">
+            <button
+              class="badge"
+              :style="{
+                backgroundColor: `${item.color}70`,
+                color: getContrastColor(item.color),
+                borderColor: `${item.color}50`,
+              }"
+            >
+              <Icon v-if="item.icon" :icon="item.icon" class="badge-icon" />
+              <div class="badge-text">
+                <span class="badge-title">{{ item.title }}</span>
+                <span v-if="item.subtitle" class="badge-subtitle">{{ item.subtitle }}</span>
+              </div>
+            </button>
+            <div v-if="!readonly" class="badge-actions">
+              <button class="action-btn edit" title="Редактировать" @click="openEditor(item)">
+                <Icon icon="mdi:pencil-outline" />
+              </button>
+              <button class="action-btn delete" title="Удалить" @click="handleDelete(item)">
+                <Icon icon="mdi:trash-can-outline" />
+              </button>
+            </div>
           </div>
-        </button>
-        <div v-if="!readonly" class="badge-actions">
-          <button class="action-btn edit" title="Редактировать" @click="openEditor(item)">
-            <Icon icon="mdi:pencil-outline" />
-          </button>
-          <button class="action-btn delete" title="Удалить" @click="handleDelete(item)">
-            <Icon icon="mdi:trash-can-outline" />
-          </button>
-        </div>
-      </div>
+        </template>
+      </TooltipProvider>
     </div>
 
-    <KitBtn
-      v-if="!readonly"
-      variant="outlined"
-      icon="mdi:plus-circle-outline"
-      class="add-badge-btn"
-      @click="openEditor()"
-    >
-      Добавить инфо
-    </KitBtn>
+    <DropdownMenuRoot v-if="!readonly" v-model:open="isAddMenuOpen">
+      <DropdownMenuTrigger as-child>
+        <KitBtn
+          variant="outlined"
+          icon="mdi:plus-circle-outline"
+          class="add-badge-btn"
+        >
+          Добавить инфо
+        </KitBtn>
+      </DropdownMenuTrigger>
+      <DropdownMenuPortal>
+        <DropdownMenuContent class="add-badge-dropdown" :side-offset="8" align="start">
+          <DropdownMenuItem class="preset-item" @click="createBlankBadge">
+            <div class="preset-icon-wrapper">
+              <Icon icon="mdi:pencil-plus-outline" />
+            </div>
+            <div class="preset-text">
+              <span class="preset-title">Пустой блок</span>
+              <span class="preset-description">Создать информационный блок с нуля</span>
+            </div>
+          </DropdownMenuItem>
+
+          <template v-for="(presets, category) in groupedPresets" :key="category">
+            <DropdownMenuSeparator class="dropdown-separator" />
+            <DropdownMenuLabel class="category-label">
+              {{ category }}
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              v-for="preset in presets"
+              :key="preset.templateName"
+              class="preset-item"
+              @click="applyPreset(preset)"
+            >
+              <div class="preset-icon-wrapper" :style="{ backgroundColor: `${preset.color}30` }">
+                <Icon :icon="preset.icon || 'mdi:information-outline'" :style="{ color: preset.color }" />
+              </div>
+              <div class="preset-text">
+                <span class="preset-title">{{ preset.templateName }}</span>
+                <span class="preset-description">{{ preset.templateDescription }}</span>
+              </div>
+            </DropdownMenuItem>
+          </template>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+    </DropdownMenuRoot>
 
     <!-- Viewer Dialog -->
     <KitDialogWithClose
@@ -218,7 +341,7 @@ function closeViewer() {
     <KitDialogWithClose
       v-if="currentItem"
       v-model:visible="isEditorOpen"
-      :title="isNewItem ? 'Новая информация' : 'Редактирование'"
+      :title="currentItem.id && meta.some(m => m.id === currentItem?.id) ? 'Редактирование' : 'Новая информация'"
       icon="mdi:pencil-outline"
     >
       <div class="editor-form">
@@ -343,6 +466,7 @@ function closeViewer() {
   opacity: 0;
   transform: translateY(5px);
   transition: all 0.2s ease;
+  z-index: 5;
 
   .action-btn {
     width: 24px;
@@ -399,7 +523,7 @@ function closeViewer() {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap; /* ИЗМЕНЕНИЕ */
+  flex-wrap: wrap;
 }
 .color-option {
   width: 28px;
@@ -444,7 +568,7 @@ function closeViewer() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
   gap: 8px;
-  max-height: 142px; /* 3 rows * (36px height + 8px gap) - 8px gap */
+  max-height: 142px;
   overflow-y: auto;
   background-color: var(--bg-secondary-color);
   padding: 8px;
@@ -498,6 +622,130 @@ function closeViewer() {
     border: 1px solid var(--border-primary-color);
     border-radius: var(--r-s);
     padding: 8px;
+  }
+}
+
+:deep(.add-badge-dropdown) {
+  min-width: 300px;
+  max-width: 350px;
+  background: var(--bg-primary-color);
+  border: 1px solid var(--border-primary-color);
+  border-radius: var(--r-m);
+  box-shadow: var(--s-l);
+  z-index: 50;
+  padding: 8px;
+}
+
+.dropdown-separator {
+  height: 1px;
+  background-color: var(--border-secondary-color);
+  margin: 6px -8px;
+}
+
+.category-label {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preset-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: var(--r-s);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: background-color 0.2s ease;
+
+  &[data-highlighted] {
+    background: var(--bg-hover-color);
+  }
+}
+
+.preset-icon-wrapper {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary-color);
+  border-radius: var(--r-s);
+
+  .iconify {
+    font-size: 18px;
+    color: var(--fg-accent-color);
+  }
+}
+
+.preset-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.preset-title {
+  font-weight: 500;
+  color: var(--fg-primary-color);
+  font-size: 14px;
+}
+
+.preset-description {
+  font-size: 12px;
+  color: var(--fg-secondary-color);
+  white-space: normal;
+}
+
+:deep(.badge-tooltip-content) {
+  background-color: var(--bg-secondary-color);
+  color: var(--fg-primary-color);
+  border-radius: var(--r-s);
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border: 1px solid var(--border-primary-color);
+  box-shadow: var(--s-l);
+  max-width: 800px;
+  z-index: 100;
+
+  &[data-state='delayed-open'] {
+    animation: tooltip-fade-in 0.2s ease-out;
+  }
+  &[data-state='closed'] {
+    animation: tooltip-fade-out 0.2s ease-in;
+  }
+}
+
+:deep(.badge-tooltip-arrow) {
+  fill: var(--bg-secondary-color);
+  stroke: var(--border-primary-color);
+  stroke-width: 1;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tooltip-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
   }
 }
 </style>

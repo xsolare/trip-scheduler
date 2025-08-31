@@ -131,12 +131,27 @@ useEditor((root) => {
       font-family: var(--font-mono);
     }
     blockquote {
-      padding-left: 0;
+      padding-left: 8px;
       border-left: none;
+      ::before {
+        top: 1px;
+        bottom: 1px;
+      }
     }
     ul,
     ol {
       padding-top: 0.5em;
+
+      .list-item {
+        gap: 4px;
+
+        .children {
+          padding-top: 4px;
+        }
+        .bullet {
+          padding: 0;
+        }
+      }
     }
   }
 }

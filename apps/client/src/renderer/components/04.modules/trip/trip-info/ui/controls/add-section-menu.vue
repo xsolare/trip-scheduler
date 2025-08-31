@@ -440,7 +440,7 @@ useEventListener('keydown', (e) => {
 .dropdown-separator {
   height: 1px;
   background-color: var(--border-secondary-color);
-  margin: 8px 0;
+  margin: 8px -12px;
 }
 
 @keyframes slideUpAndFade {
