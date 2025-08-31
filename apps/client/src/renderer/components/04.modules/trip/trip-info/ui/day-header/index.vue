@@ -7,7 +7,7 @@ const store = useModuleStore(['data', 'ui'])
 const { getSelectedDay: selectedDay } = storeToRefs(store.data)
 const { isViewMode } = storeToRefs(store.ui)
 
-function updateDayDetails(details: { title?: string, description?: string }) {
+function updateDayDetails(details: { title?: string, description?: string, meta?: any[] }) {
   store.data.updateDayDetails(selectedDay.value!.id, details)
 }
 

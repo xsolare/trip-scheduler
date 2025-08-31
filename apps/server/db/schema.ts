@@ -21,6 +21,15 @@ interface ActivitySectionBase {
   icon?: string
 }
 
+export interface DayMetaInfo {
+  id: string
+  title: string
+  subtitle?: string
+  icon?: string
+  color?: string
+  content?: string
+}
+
 interface ActivitySectionText extends ActivitySectionBase {
   type: 'description'
   text: string
@@ -145,6 +154,7 @@ export const days = pgTable('days', {
   title: text('title').notNull(),
   description: text('description'),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  meta: jsonb('meta').$type<DayMetaInfo[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })

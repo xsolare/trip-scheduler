@@ -89,6 +89,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-height: 90vh; /* ИЗМЕНЕНИЕ */
 
   &:focus {
     outline: none;

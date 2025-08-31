@@ -94,13 +94,8 @@ const visibilityIcon = computed(() => {
           {{ title }}
         </h3>
 
-        <span class="card-visibility" :title="visibilityIcon.title">
-          <KitAnimatedTooltip
-            :name="visibilityIcon.title"
-            :offset="18"
-          >
-            <Icon :icon="visibilityIcon.icon" />
-          </KitAnimatedTooltip>
+        <span class="card-visibility">
+          <Icon :icon="visibilityIcon.icon" />
         </span>
 
         <div class="card-actions">

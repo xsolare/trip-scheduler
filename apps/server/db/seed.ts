@@ -113,12 +113,20 @@ async function seed() {
     if (mockDays) {
       for (const mockDay of mockDays) {
         const { activities: mockActivities, ...dayDetails } = mockDay
+
         daysToInsert.push({
-          ...dayDetails,
+          id: dayDetails.id,
           date: new Date(mockDay.date).toISOString().split('T')[0],
+          title: dayDetails.title,
+          description: dayDetails.description,
+          tripId: dayDetails.tripId,
+          createdAt: dayDetails.createdAt ? new Date(dayDetails.createdAt) : new Date(),
+          updatedAt: dayDetails.updatedAt ? new Date(dayDetails.updatedAt) : new Date(),
         })
-        if (mockActivities)
+
+        if (mockActivities) {
           activitiesToInsert.push(...mockActivities)
+        }
       }
     }
 

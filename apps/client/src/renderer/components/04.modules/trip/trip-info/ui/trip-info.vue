@@ -12,6 +12,7 @@ import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayActivitiesList from './day-activities/list.vue'
 import DayHeader from './day-header/index.vue'
+import DayMetaBadges from './day-meta-badges'
 import MemoriesList from './memories/list.vue'
 import TripInfoSkeleton from './states/trip-info-skeleton.vue'
 
@@ -176,6 +177,14 @@ onBeforeUnmount(() => {
                 маршрут
               </Divider>
               <button
+                v-if="isViewMode && getSelectedDay?.meta?.length"
+                class="collapse-all-btn"
+                title="Свернуть/развернуть все активности"
+                @click="handleToggleAllActivities"
+              >
+                <Icon :icon="collapseRouteIcon" />
+              </button>
+              <button
                 v-if="isViewMode && allActivityIds.length > 0"
                 class="collapse-all-btn"
                 title="Свернуть/развернуть все активности"
@@ -185,6 +194,18 @@ onBeforeUnmount(() => {
               </button>
             </div>
             <DayActivitiesList @add="handleAddNewActivity" />
+
+            <Divider v-if="getSelectedDay?.meta?.length">
+              мета-информация
+            </Divider>
+
+            <DayMetaBadges
+              v-if="getSelectedDay && (getSelectedDay.meta?.length || !isViewMode)"
+              :day-id="getSelectedDay.id"
+              :meta="getSelectedDay.meta || []"
+              :readonly="isViewMode"
+              @update:meta="newMeta => store.data.updateDayDetails(getSelectedDay!.id, { meta: newMeta })"
+            />
           </div>
 
           <div v-if="activeView === 'memories' || activeView === 'split'" class="memories-view">

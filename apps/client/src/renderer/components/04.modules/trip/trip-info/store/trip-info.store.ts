@@ -120,7 +120,7 @@ export const useTripInfoStore = defineStore('tripInfo', {
       })
     },
 
-    updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date'>>) {
+    updateDayDetails(dayId: string, details: Partial<Pick<IDay, 'title' | 'description' | 'date' | 'meta'>>) {
       const dayIndex = this.days.findIndex(d => d.id === dayId)
       if (dayIndex === -1) {
         console.error('Не удалось найти день для обновления:', dayId)

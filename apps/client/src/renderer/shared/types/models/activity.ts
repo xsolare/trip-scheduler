@@ -53,6 +53,14 @@ export enum EActivityStatus {
   SKIPPED = 'skipped',
 }
 
+export interface DayMetaInfo {
+  id: string
+  title: string
+  subtitle?: string
+  icon?: string
+  color?: string
+  content?: string
+}
 export interface Day {
   id: string
   tripId: string
@@ -60,4 +68,5 @@ export interface Day {
   title: string
   description: string
   activities: Activity[]
+  meta?: DayMetaInfo[]
 }
