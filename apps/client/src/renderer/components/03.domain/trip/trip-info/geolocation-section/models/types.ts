@@ -49,6 +49,8 @@ export interface MapRoute {
   duration?: number // Общее время в секундах
   geometry?: Coordinate[] // Геометрия маршрута для отображения на карте
   isVisible: boolean // Видимость маршрута на карте
+  isFetching?: boolean // Флаг для отображения состояния загрузки маршрута
+  isDirect?: boolean // Флаг для отображения маршрута в виде прямой пунктирной линии
 }
 
 /**
@@ -57,7 +59,7 @@ export interface MapRoute {
 export interface DrawnRoute {
   id: string
   title: string
-  coordinates: Coordinate[] // Координаты нарисованной линии
+  segments: Coordinate[][] // Координаты нарисованной линии
   color?: string
   distance?: number // Приблизительное расстояние
   isVisible: boolean
@@ -89,8 +91,6 @@ export interface GeolocationMapOptions {
   interactive?: boolean
 }
 
-
-
 /**
  * Ответ от OSRM API
  */
@@ -98,30 +98,7 @@ export interface OSRMResponse {
   code: string
   routes: Array<{
     legs: Array<{
-      steps: Array<{
-        intersections: Array<{
-          out?: number
-          in?: number
-          entry: boolean[]
-          bearings: number[]
-          location: [number, number]
-        }>
-        driving_side: string
-        geometry: string
-        maneuver: {
-          bearing_after: number
-          bearing_before: number
-          location: [number, number]
-          modifier?: string
-          type: string
-        }
-        name: string
-        mode: string
-        weight: number
-        duration: number
-        distance: number
-        ref?: string
-      }>
+      steps: any[]
       weight: number
       summary: string
       duration: number
@@ -131,6 +108,7 @@ export interface OSRMResponse {
     weight: number
     duration: number
     distance: number
+    geometry: string
   }>
   waypoints: Array<{
     hint: string

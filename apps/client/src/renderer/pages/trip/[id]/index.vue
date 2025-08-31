@@ -7,7 +7,7 @@ import { useDisplay } from '~/shared/composables/use-display'
 const store = useModuleStore(['ui'])
 const { mdAndDown } = useDisplay()
 
-const { isDaysPanelPinned } = storeToRefs(store.ui)
+const { isDaysPanelPinned, activeView } = storeToRefs(store.ui)
 
 const hasFetchError = ref(false)
 </script>
@@ -18,6 +18,7 @@ const hasFetchError = ref(false)
     :class="[
       { isPanelPinned: isDaysPanelPinned && !mdAndDown },
       { 'has-error': hasFetchError },
+      activeView,
     ]"
   >
     <NavigationBack />
@@ -36,6 +37,45 @@ const hasFetchError = ref(false)
   &.isPanelPinned {
     @media (max-width: 1800px) {
       margin-left: 440px;
+    }
+  }
+
+  &.split {
+    max-width: 100%;
+    justify-content: center;
+    align-items: center;
+
+    :deep() {
+      .navigation-back-container,
+      .controls {
+        max-width: 968px;
+        width: 100%;
+      }
+
+      .trip-info-wrapper {
+        .trip-info {
+          justify-content: center;
+          align-items: center;
+
+          .day-header {
+            max-width: 968px;
+            width: 100%;
+          }
+
+          .divider {
+            padding: 0 32px;
+          }
+
+          .view-content {
+            padding: 0 32px;
+          }
+        }
+      }
+
+      .day-navigation {
+        max-width: 968px;
+        width: 100%;
+      }
     }
   }
 }

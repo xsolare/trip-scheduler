@@ -1,17 +1,17 @@
-<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import type { useGeolocationMap } from '../composables/use-geolocation-map'
-import type { ActivitySectionGeolocation, Coordinate, MapPoint } from '../models/types'
+import type { ActivitySectionGeolocation, Coordinate, DrawnRoute, MapPoint, MapRoute } from '../models/types'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
-import { KitBtn } from '~/components/01.kit/kit-btn'
-import { KitInput } from '~/components/01.kit/kit-input'
+import { toLonLat } from 'ol/proj'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
+import { useGeolocationDrawing } from '../composables/use-geolocation-drawing'
 import { useGeolocationPoints } from '../composables/use-geolocation-points'
+import { useGeolocationRoutes } from '../composables/use-geolocation-routes'
 import { POI_COLORS } from '../constant'
-import GeolocationMapControls from './geolocation-map-controls.vue'
 import GeolocationMap from './geolocation-map.vue'
 import GeolocationPoiList from './geolocation-poi-list.vue'
+import GeolocationRouteList from './geolocation-route-list.vue'
 
 interface Props {
   section: ActivitySectionGeolocation
@@ -21,74 +21,113 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
-  height: '350px',
+  height: '450px',
 })
 
 const emit = defineEmits(['update:section'])
 
 // --- Состояние компонента ---
-const mode = ref<'pan' | 'add_point' | 'build_route' | 'move_point'>('pan')
+const sectionContainerRef = ref<HTMLElement | null>(null)
 const mapController = ref<ReturnType<typeof useGeolocationMap>>()
-
-const {
-  points,
-  isLoading,
-  pointToMoveId,
-  addPoiPoint,
-  deletePoiPoint,
-  startMovePoint,
-  movePoint,
-  updatePointCoords,
-  handlePointUpdate,
-} = useGeolocationPoints(mapController)
-
-const poiPoints = computed(() => points.value.filter(p => p.type === 'poi'))
-
-// Состояние для полноэкранного режима
+const activeView = ref<'points' | 'routes'>('points')
+const activeRouteId = ref<string | null>(null)
 const isMapFullscreen = ref(false)
-const isPanelVisibleInFullscreen = ref(false)
+const isPanelVisible = ref(true)
+const routeIdForNewSegment = ref<string | null>(null)
 
-// Добавляем стиль (цвет) к каждой точке для отображения
-const poiPointsWithStyle = computed(() => {
-  return poiPoints.value.map((point, index) => ({
-    ...point,
-    style: { ...point.style, color: POI_COLORS[index % POI_COLORS.length] },
+// --- Композиции ---
+const { points, isLoading: isPointsLoading, mode, pointToMoveId, addPoiPoint, deletePoiPoint, startMovePoint, movePoint: movePoiPoint, updatePointCoords, handlePointUpdate, setInitialPoints }
+  = useGeolocationPoints(mapController)
+
+const { routes, drawnRoutes, isLoading: isRoutesLoading, createNewRoute, addPointToRoute, deleteRoute, deletePointFromRoute, updatePointInRoute, handlePointDataUpdate: handleRoutePointUpdate, setInitialRoutes, addDrawnRoute, addSegmentToDrawnRoute, deleteSegmentFromDrawnRoute }
+  = useGeolocationRoutes(mapController)
+
+const { startDrawing, stopDrawing }
+  = useGeolocationDrawing(mapController)
+
+const isLoading = computed(() => isPointsLoading.value || isRoutesLoading.value)
+const poiPointsWithStyle = computed(() => points.value.map((point, index) => ({ ...point, style: { ...point.style, color: POI_COLORS[index % POI_COLORS.length] } })))
+const allMapPoints = computed(() => {
+  const routePoints = routes.value.flatMap(r => r.points.map((p, index) => {
+    let type: MapPoint['type'] = 'via'
+    if (index === 0)
+      type = 'start'
+    if (index === r.points.length - 1 && r.points.length > 1)
+      type = 'end'
+    return { ...p, type, style: { ...p.style, color: r.color } }
   }))
+  return [...poiPointsWithStyle.value, ...routePoints]
 })
 
-// --- Вычисляемые свойства для безопасного доступа к данным ---
+// --- Вычисляемые свойства ---
 const mapCenter = computed<Coordinate>(() => {
-  if (props.section.points?.length > 0) {
+  if (props.section.points?.length > 0)
     return props.section.points[0].coordinates
-  }
-  return [37.6176, 55.7558] // Значение по умолчанию (Москва)
+  if (props.section.routes?.length > 0 && props.section.routes[0].points.length > 0)
+    return props.section.routes[0].points[0].coordinates
+  return [37.6176, 55.7558] // Москва
 })
 
-// --- Данные для контролов ---
-const newPointLat = ref('')
-const newPointLon = ref('')
-
-const modeItems: ViewSwitcherItem[] = [
-  { id: 'pan', icon: 'mdi:cursor-move', label: 'Панорама' },
-  { id: 'add_point', icon: 'mdi:map-marker-plus', label: 'Точка' },
+const viewItems: ViewSwitcherItem[] = [
+  { id: 'points', icon: 'mdi:map-marker-multiple', label: 'Точки' },
+  { id: 'routes', icon: 'mdi:directions', label: 'Маршруты' },
 ]
+const modeItems = computed((): ViewSwitcherItem[] => {
+  if (activeView.value === 'points') {
+    return [
+      { id: 'pan', icon: 'mdi:cursor-move', label: 'Панорама' },
+      { id: 'add_point', icon: 'mdi:map-marker-plus', label: 'Точка' },
+    ]
+  }
+  return [
+    { id: 'pan', icon: 'mdi:cursor-move', label: 'Панорама' },
+    { id: 'add_route_point', icon: 'mdi:source-commit-start-next-local', label: 'Добавить в маршрут' },
+    { id: 'draw_route', icon: 'mdi:draw', label: 'Нарисовать' },
+  ]
+})
 
-// --- Обработчики событий от дочерних компонентов ---
+// --- Обработчики ---
 async function handleMapClick(coords: Coordinate) {
   if (props.readonly)
     return
-
   if (mode.value === 'add_point') {
     await addPoiPoint(coords)
     mode.value = 'pan'
-    return
   }
-
-  if (mode.value === 'move_point' && pointToMoveId.value) {
-    await movePoint(pointToMoveId.value, coords)
+  else if (mode.value === 'add_route_point') {
+    if (!activeRouteId.value) {
+      useToast().info('Сначала выберите или создайте маршрут для добавления точки.')
+      return
+    }
+    await addPointToRoute(activeRouteId.value, coords)
+  }
+  else if (mode.value === 'move_point' && pointToMoveId.value) {
+    if (points.value.some(p => p.id === pointToMoveId.value))
+      await movePoiPoint(pointToMoveId.value, coords)
+    else
+      await updatePointInRoute(pointToMoveId.value, coords)
     pointToMoveId.value = null
     mode.value = 'pan'
   }
+}
+
+async function handleContextMenuAction(actionId: string, coords: Coordinate) {
+  if (actionId === 'route-from') {
+    const newRoute = await createNewRoute(coords)
+    if (newRoute) {
+      activeRouteId.value = newRoute.id
+      activeView.value = 'routes'
+      mode.value = 'add_route_point'
+    }
+  }
+  else if (actionId === 'draw-new-route') {
+    activeView.value = 'routes'
+    mode.value = 'draw_route'
+  }
+}
+
+function handleFocusOnPoint(point: MapPoint) {
+  mapController.value?.flyToLocation(point.coordinates[0], point.coordinates[1], 16)
 }
 
 function handleStartMovePoint(pointId: string) {
@@ -96,129 +135,201 @@ function handleStartMovePoint(pointId: string) {
   mode.value = 'move_point'
 }
 
-function handleFocusOnPoint(point: MapPoint) {
-  mapController.value?.flyToLocation(point.coordinates[0], point.coordinates[1], 16)
-}
-
-async function addPointFromInputs() {
-  const lat = Number.parseFloat(newPointLat.value)
-  const lon = Number.parseFloat(newPointLon.value)
-
-  if (Number.isNaN(lat) || Number.isNaN(lon)) {
-    useToast().error('Неверный формат координат!')
+function handleRouteUpdate(route: MapRoute | DrawnRoute) {
+  const pointRouteIndex = routes.value.findIndex(r => r.id === route.id)
+  if (pointRouteIndex !== -1) {
+    routes.value[pointRouteIndex] = { ...routes.value[pointRouteIndex], ...route }
     return
   }
+  const drawnRouteIndex = drawnRoutes.value.findIndex(r => r.id === route.id)
+  if (drawnRouteIndex !== -1)
+    drawnRoutes.value[drawnRouteIndex] = { ...drawnRoutes.value[drawnRouteIndex], ...route }
+}
 
-  await addPoiPoint([lon, lat])
-  newPointLat.value = ''
-  newPointLon.value = ''
+function handleAddSegment(routeId: string) {
+  routeIdForNewSegment.value = routeId
+  mode.value = 'draw_route'
+}
+
+function setActiveRoute(routeId: string | null) {
+  activeRouteId.value = routeId
+  if (routeId)
+    mode.value = 'add_route_point'
+  else
+    mode.value = 'pan'
+}
+
+// --- Полноэкранный режим ---
+function handleToggleFullscreen() {
+  if (!sectionContainerRef.value)
+    return
+
+  if (!document.fullscreenElement) {
+    sectionContainerRef.value.requestFullscreen().catch((err) => {
+      console.error(`Ошибка при попытке включить полноэкранный режим: ${err.message} (${err.name})`)
+    })
+  }
+  else {
+    document.exitFullscreen()
+  }
+}
+
+function handleFullscreenChange() {
+  isMapFullscreen.value = document.fullscreenElement === sectionContainerRef.value
 }
 
 // --- Инициализация и синхронизация ---
 function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
   mapController.value = controller
-  // Инициализируем точки после того, как карта будет готова
-  points.value = JSON.parse(JSON.stringify(props.section.points || []))
+  setInitialPoints(props.section.points)
+  setInitialRoutes({ routes: props.section.routes, drawnRoutes: props.section.drawnRoutes })
+
+  controller.modifyInteraction.on('modifyend', (event) => {
+    const feature = event.features.getArray()[0]
+    if (!feature)
+      return
+    const pointId = feature.getId() as string
+    const newCoords = toLonLat((feature.getGeometry() as any).getCoordinates()) as Coordinate
+    if (points.value.some(p => p.id === pointId))
+      movePoiPoint(pointId, newCoords)
+    else
+      updatePointInRoute(pointId, newCoords)
+  })
 }
 
-watch(points, (newPoints) => {
+onMounted(() => {
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+onUnmounted(() => {
+  stopDrawing() // Очищаем за собой при размонтировании
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+watch(activeView, () => {
+  mode.value = 'pan'
+  activeRouteId.value = null
+})
+
+// FIX: Использование watchEffect для решения "гонки состояний"
+watchEffect(() => {
+  // Этот код выполнится только когда mapController станет доступен
+  if (!mapController.value)
+    return
+
+  if (mode.value === 'draw_route') {
+    startDrawing((coords) => {
+      if (routeIdForNewSegment.value) {
+        addSegmentToDrawnRoute(routeIdForNewSegment.value, coords)
+        routeIdForNewSegment.value = null
+      }
+      else {
+        addDrawnRoute(coords)
+      }
+      mode.value = 'pan'
+    })
+  }
+  else {
+    // Если режим любой другой - гарантированно останавливаем рисование
+    stopDrawing()
+  }
+})
+
+watch([points, routes, drawnRoutes], () => {
   emit('update:section', {
     ...props.section,
-    points: newPoints,
+    points: toRaw(points.value),
+    routes: toRaw(routes.value),
+    drawnRoutes: toRaw(drawnRoutes.value),
   })
 }, { deep: true })
 </script>
 
 <template>
-  <div class="geolocation-section">
-    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
-    <div v-if="!readonly && !isMapFullscreen" class="geolocation-controls-panel">
-      <div class="modes-group">
-        <KitViewSwitcher v-model="mode" :items="modeItems" />
+  <div ref="sectionContainerRef" class="geolocation-section" :class="{ 'is-fullscreen': isMapFullscreen }">
+    <div
+      v-show="!isMapFullscreen || isPanelVisible"
+      class="main-panel"
+      :class="{ 'fullscreen-panel': isMapFullscreen }"
+    >
+      <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+      <div v-if="!readonly">
+        <div class="geolocation-controls-panel">
+          <KitViewSwitcher v-model="activeView" :items="viewItems" />
+          <KitViewSwitcher v-model="mode" :items="modeItems" />
+        </div>
       </div>
-      <div v-if="mode !== 'pan'" class="add-by-coords-group">
-        <KitInput v-model="newPointLat" type="text" placeholder="Широта" size="sm" />
-        <KitInput v-model="newPointLon" type="text" placeholder="Долгота" size="sm" />
-        <KitBtn icon="mdi:plus" aria-label="Добавить точку по координатам" @click="addPointFromInputs" />
+
+      <!-- СПИСКИ -->
+      <div class="lists-container">
+        <template v-if="!readonly">
+          <GeolocationPoiList
+            v-if="activeView === 'points'"
+            :points="poiPointsWithStyle"
+            :readonly="readonly"
+            @focus-on-point="handleFocusOnPoint"
+            @update-point="handlePointUpdate"
+            @update-point-coords="updatePointCoords"
+            @start-move-point="handleStartMovePoint"
+            @delete-point="deletePoiPoint"
+          />
+          <GeolocationRouteList
+            v-if="activeView === 'routes'"
+            :routes="routes"
+            :drawn-routes="drawnRoutes"
+            :readonly="readonly"
+            :active-route-id="activeRouteId"
+            @focus-on-point="handleFocusOnPoint"
+            @update-point="handleRoutePointUpdate"
+            @update-route="handleRouteUpdate"
+            @update-point-coords="updatePointCoords"
+            @start-move-point="handleStartMovePoint"
+            @delete-point="deletePointFromRoute"
+            @delete-route="deleteRoute"
+            @set-active-route="setActiveRoute"
+            @add-segment="handleAddSegment"
+            @delete-segment="deleteSegmentFromDrawnRoute"
+          />
+        </template>
+        <template v-else>
+          <GeolocationPoiList
+            :points="poiPointsWithStyle"
+            :readonly="readonly"
+            @focus-on-point="handleFocusOnPoint"
+          />
+          <GeolocationRouteList
+            :routes="routes"
+            :drawn-routes="drawnRoutes"
+            :readonly="readonly"
+            :active-route-id="activeRouteId"
+            @focus-on-point="handleFocusOnPoint"
+          />
+        </template>
       </div>
     </div>
 
-    <!-- СПИСОК ТОЧЕК ИНТЕРЕСА (POI) -->
-    <GeolocationPoiList
-      v-if="poiPointsWithStyle.length > 0 && !isMapFullscreen"
-      :points="poiPointsWithStyle"
-      :readonly="readonly"
-      @focus-on-point="handleFocusOnPoint"
-      @update-point="handlePointUpdate"
-      @update-point-coords="updatePointCoords"
-      @start-move-point="handleStartMovePoint"
-      @delete-point="deletePoiPoint"
-    />
-
     <!-- КАРТА -->
     <GeolocationMap
-      :points="poiPointsWithStyle"
+      class="map-wrapper"
+      :points="allMapPoints"
+      :routes="routes"
+      :drawn-routes="drawnRoutes"
       :mode="mode"
       :center="mapCenter"
       :height="height"
       :is-loading="isLoading"
       :readonly="readonly"
+      :is-fullscreen="isMapFullscreen"
       @map-ready="onMapReady"
       @map-click="handleMapClick"
-      @update:is-fullscreen="isMapFullscreen = $event"
-    >
-      <template #controls="{ mapInstance, centerCoordinates }">
-        <GeolocationMapControls
-          :map-instance="mapInstance"
-          :center-coordinates="centerCoordinates"
-          :is-fullscreen="isMapFullscreen"
-          @update:is-fullscreen="isMapFullscreen = $event"
-          @toggle-panel="isPanelVisibleInFullscreen = !isPanelVisibleInFullscreen"
-        />
-      </template>
-
-      <!-- ПАНЕЛЬ ДЛЯ ПОЛНОЭКРАННОГО РЕЖИМА -->
-      <template #fullscreen-panel>
-        <Transition name="slide-fade">
-          <div v-if="isMapFullscreen && isPanelVisibleInFullscreen" class="fullscreen-side-panel">
-            <!-- Панель управления (полноэкранный режим) -->
-            <div v-if="!readonly" class="geolocation-controls-panel">
-              <div class="modes-group">
-                <KitViewSwitcher v-model="mode" :items="modeItems" />
-              </div>
-            </div>
-            <!-- Список точек (полноэкранный режим) -->
-            <GeolocationPoiList
-              v-if="poiPointsWithStyle.length > 0"
-              :points="poiPointsWithStyle"
-              :readonly="readonly"
-              @focus-on-point="handleFocusOnPoint"
-              @update-point="handlePointUpdate"
-              @update-point-coords="updatePointCoords"
-              @start-move-point="handleStartMovePoint"
-              @delete-point="deletePoiPoint"
-            />
-          </div>
-        </Transition>
-      </template>
-    </GeolocationMap>
+      @context-menu-action="handleContextMenuAction"
+      @toggle-panel="isPanelVisible = !isPanelVisible"
+      @toggle-fullscreen="handleToggleFullscreen"
+    />
   </div>
 </template>
 
 <style scoped lang="scss">
-/* Стили, относящиеся к geolocation-section и его элементам управления */
-.modes-group {
-  .kit-view-switcher {
-    background-color: var(--bg-tertiary-color);
-
-    :deep(.kit-view-switcher-button) {
-      &.is-active {
-        background-color: var(--bg-secondary-color);
-      }
-    }
-  }
-}
-
 .geolocation-section {
   display: flex;
   flex-direction: column;
@@ -227,92 +338,59 @@ watch(points, (newPoints) => {
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);
+
+  &.is-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    background-color: var(--bg-primary-color);
+    padding: 0;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+.main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  background-color: var(--bg-primary-color);
+  border-radius: var(--r-xs);
+  padding: 4px;
+
+  &.fullscreen-panel {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    z-index: 1001;
+    width: 380px;
+    max-width: calc(100% - 80px);
+    box-shadow: var(--s-l);
+    border: 1px solid var(--border-primary-color);
+  }
 }
 
 .geolocation-controls-panel {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.add-by-coords-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .kit-input-group {
-    max-width: 150px;
-  }
-}
-
-// Стили для полноэкранной панели
-.fullscreen-side-panel {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  bottom: 12px;
-  width: 420px;
-  z-index: 1000;
-  border-radius: var(--r-m);
-  box-shadow: var(--s-xl);
-
-  backdrop-filter: blur(10px);
-  background-color: rgba(var(--bg-secondary-color-rgb), 0.85);
-  border: 1px solid var(--border-secondary-color);
-
-  padding: 6px;
-  display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow: hidden;
-
-  .poi-list {
-    overflow-y: auto;
-    flex-grow: 1;
-  }
-
-  .modes-group {
-    width: 100%;
-    :deep() {
-      .kit-view-switcher {
-        width: 100%;
-        .kit-view-switcher-button {
-          width: 100%;
-          justify-content: center;
-        }
-      }
-    }
-  }
-
-  .poi-address {
-    :deep() {
-      .milkdown .ProseMirror p {
-        font-size: 0.8rem;
-        line-height: 18px;
-      }
-    }
-  }
-  .poi-comment {
-    :deep() {
-      .milkdown .ProseMirror p {
-        font-size: 0.7rem;
-        line-height: 16px;
-      }
-    }
-  }
-  .add-by-coords-group {
-    display: none;
-  }
+  background-color: var(--bg-secondary-color);
+  padding: 6px;
+  border-radius: var(--r-xs);
 }
 
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease-out;
+.lists-container {
+  overflow-y: auto;
+  flex-grow: 1;
 }
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateX(-50px);
-  opacity: 0;
+
+.map-wrapper {
+  min-width: 0;
+  flex-grow: 1;
 }
 </style>

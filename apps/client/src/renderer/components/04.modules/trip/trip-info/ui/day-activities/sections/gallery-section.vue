@@ -218,6 +218,8 @@ const visibleImages = computed(() =>
       :show-counter="true"
       :enable-thumbnails="imageUrls.length > 1"
       :close-on-overlay-click="true"
+      :show-quality-selector="false"
+      :show-info-button="false"
     />
 
     <KitDialogWithClose

@@ -10,7 +10,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['update:isFullscreen', 'togglePanel'])
+const emit = defineEmits(['update:isFullscreen', 'togglePanel', 'toggleFullscreen'])
 
 function zoomIn() {
   const view = props.mapInstance?.getView()
@@ -40,33 +40,8 @@ function centerOnMarker() {
 }
 
 function toggleFullscreen() {
-  const mapElement = props.mapInstance?.getTargetElement()
-  if (!mapElement)
-    return
-
-  if (!document.fullscreenElement) {
-    mapElement.requestFullscreen().catch((err) => {
-      console.error(`Ошибка при попытке включить полноэкранный режим: ${err.message} (${err.name})`)
-    })
-  }
-  else {
-    document.exitFullscreen()
-  }
+  emit('toggleFullscreen')
 }
-
-function handleFullscreenChange() {
-  const mapElement = props.mapInstance?.getTargetElement()
-  const isCurrentlyFullscreen = document.fullscreenElement === mapElement
-  emit('update:isFullscreen', isCurrentlyFullscreen)
-}
-
-onMounted(() => {
-  document.addEventListener('fullscreenchange', handleFullscreenChange)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', handleFullscreenChange)
-})
 </script>
 
 <template>

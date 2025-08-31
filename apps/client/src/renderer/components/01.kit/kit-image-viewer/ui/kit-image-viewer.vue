@@ -19,6 +19,8 @@ interface Props {
   zoomStep?: number
   enableTouch?: boolean
   animationDuration?: number
+  showQualitySelector?: boolean
+  showInfoButton?: boolean
 }
 
 interface Emits {
@@ -38,6 +40,8 @@ const props = withDefaults(defineProps<Props>(), {
   zoomStep: 0.5,
   enableTouch: true,
   animationDuration: 300,
+  showQualitySelector: true,
+  showInfoButton: true,
 })
 
 const emit = defineEmits<Emits>()
@@ -287,6 +291,8 @@ onUnmounted(() => {
                 :can-zoom-out="canZoomOut"
                 :is-zoomed="isZoomed"
                 :has-metadata="!!currentImageMeta"
+                :show-quality-selector="showQualitySelector"
+                :show-info-button="showInfoButton"
                 @reset-transform="resetTransform"
                 @show-metadata="isMetadataPanelVisible = true"
                 @close="close"

@@ -15,7 +15,7 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
   const isLoading = ref(false)
   const points = ref<MapPoint[]>([])
   const pointToMoveId = ref<string | null>(null)
-  const mode = ref<'pan' | 'add_point' | 'build_route' | 'move_point'>('pan')
+  const mode = ref<'pan' | 'add_point' | 'add_route_point' | 'draw_route' | 'move_point'>('pan')
 
   // --- Управление точками (POI) ---
 
@@ -96,13 +96,12 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
   }
 
   function setInitialPoints(initialPoints: MapPoint[]) {
-    if (!mapApiRef.value)
+    if (!mapApiRef.value || !initialPoints)
       return
-    points.value = JSON.parse(JSON.stringify(initialPoints || []))
+    points.value = JSON.parse(JSON.stringify(initialPoints))
     points.value.forEach(p => mapApiRef.value!.addOrUpdatePoint(p))
   }
 
-  // Обновляем цвета маркеров при изменении списка
   watch(points, (currentPoints) => {
     if (!mapApiRef.value)
       return
@@ -112,9 +111,12 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
       if (point.style?.color !== color) {
         const updatedPoint = { ...point, style: { ...point.style, color } }
         mapApiRef.value!.addOrUpdatePoint(updatedPoint)
+        const originalPoint = points.value.find(p => p.id === updatedPoint.id)
+        if (originalPoint)
+          originalPoint.style = updatedPoint.style
       }
     })
-  }, { deep: true })
+  }, { deep: true, immediate: true })
 
   return {
     points,

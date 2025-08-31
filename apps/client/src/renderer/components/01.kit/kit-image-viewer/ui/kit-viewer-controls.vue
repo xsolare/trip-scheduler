@@ -11,6 +11,8 @@ interface Props {
   isZoomed: boolean
   hasMetadata: boolean
   quality: ImageQuality
+  showQualitySelector: boolean
+  showInfoButton: boolean
 }
 
 const props = defineProps<Props>()
@@ -50,6 +52,7 @@ const currentQuality = computed({
     </button>
     <div v-if="isUiVisible" class="control-buttons-group">
       <KitViewerDropdown
+        v-if="showQualitySelector"
         v-model="currentQuality"
         :items="qualityOptions"
         align="end"
@@ -61,7 +64,7 @@ const currentQuality = computed({
         </template>
       </KitViewerDropdown>
       <button
-        v-if="hasMetadata"
+        v-if="hasMetadata && showInfoButton"
         class="control-btn"
         title="Информация о снимке"
         @click="emit('showMetadata')"

@@ -17,6 +17,7 @@ const emit = defineEmits(['action'])
 
 const menuItems: MenuItem[] = [
   { id: 'route-from', label: 'Маршрут отсюда', icon: 'mdi:directions-fork' },
+  { id: 'draw-new-route', label: 'Рисовать новый маршрут', icon: 'mdi:draw-pen' },
   { id: 'show-address', label: 'Показать адрес', icon: 'mdi:map-marker-question-outline' },
   { id: 'center-map', label: 'Центрировать карту', icon: 'mdi:crosshairs' },
 ]
@@ -51,7 +52,7 @@ function handleAction(actionId: string) {
 <style scoped lang="scss">
 .context-menu {
   position: absolute;
-  z-index: 10;
+  z-index: 1001;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-primary-color);
   border-radius: var(--r-s);

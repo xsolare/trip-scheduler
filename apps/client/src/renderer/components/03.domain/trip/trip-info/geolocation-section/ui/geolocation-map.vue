@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Coordinate, MapPoint } from '../models/types'
+import type { Coordinate, DrawnRoute, MapPoint, MapRoute } from '../models/types'
 import { onClickOutside } from '@vueuse/core'
 import { toLonLat } from 'ol/proj'
 import { useGeolocationMap } from '../composables/use-geolocation-map'
@@ -10,19 +10,24 @@ import 'ol/ol.css'
 
 interface Props {
   points: MapPoint[]
-  mode: 'pan' | 'add_point' | 'build_route' | 'move_point'
+  routes: MapRoute[]
+  drawnRoutes: DrawnRoute[]
+  mode: 'pan' | 'add_point' | 'add_route_point' | 'draw_route' | 'move_point'
   center: Coordinate
   height: string
   isLoading: boolean
   readonly?: boolean
+  isFullscreen: boolean
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'mapClick', coords: Coordinate): void
-  (e: 'update:is-fullscreen', value: boolean): void
+  (e: 'contextMenuAction', actionId: string, coords: Coordinate): void
   (e: 'mapReady', controller: ReturnType<typeof useGeolocationMap>): void
+  (e: 'togglePanel'): void
+  (e: 'toggleFullscreen'): void
 }>()
 
 const {
@@ -31,66 +36,87 @@ const {
   initMap,
   addOrUpdatePoint,
   removePoint,
+  addOrUpdateRoute,
+  addOrUpdateDrawnRoute,
+  removeRoute,
   ...restMapController
 } = useGeolocationMap()
 
 const mapContainerRef = ref<HTMLElement>()
 
-// Состояние для полноэкранного режима
-const isMapFullscreen = ref(false)
-
-// --- Логика для контекстного меню ---
+// --- Контекстное меню ---
 const contextMenuRef = ref<HTMLElement | null>(null)
 const isContextMenuVisible = ref(false)
-const contextMenuPosition = reactive({ top: 0, left: 0 })
+const contextMenuPosition = reactive({ top: 0, left: 0, coords: [0, 0] as Coordinate })
+
+function openContextMenu(event: MouseEvent) {
+  if (props.readonly || !mapInstance.value)
+    return
+  const mapContainer = mapInstance.value.getTargetElement() as HTMLElement
+  const mapRect = mapContainer.getBoundingClientRect()
+  contextMenuPosition.top = event.clientY - mapRect.top
+  contextMenuPosition.left = event.clientX - mapRect.left
+  const pixel = [event.clientX - mapRect.left, event.clientY - mapRect.top]
+  contextMenuPosition.coords = toLonLat(mapInstance.value.getCoordinateFromPixel(pixel)) as Coordinate
+  isContextMenuVisible.value = true
+}
+
+function handleContextMenuAction(actionId: string) {
+  isContextMenuVisible.value = false
+  emit('contextMenuAction', actionId, contextMenuPosition.coords)
+}
+
+// --- Синхронизация с состоянием ---
+watch(() => props.points, (newPoints, oldPoints = []) => {
+  if (!mapInstance.value)
+    return
+  const newPointIds = new Set(newPoints.map(p => p.id))
+  oldPoints.forEach((point) => {
+    if (!newPointIds.has(point.id))
+      removePoint(point.id)
+  })
+  newPoints.forEach(addOrUpdatePoint)
+}, { deep: true })
+
+watch(() => props.routes, (newRoutes, oldRoutes = []) => {
+  if (!mapInstance.value)
+    return
+  const newRouteIds = new Set(newRoutes.map(r => r.id))
+  oldRoutes.forEach((route) => {
+    if (!newRouteIds.has(route.id))
+      removeRoute(route.id)
+  })
+  newRoutes.forEach((route) => {
+    if (route.isVisible)
+      addOrUpdateRoute(route)
+    else
+      removeRoute(route.id)
+  })
+}, { deep: true })
+
+watch(() => props.drawnRoutes, (newRoutes, oldRoutes = []) => {
+  if (!mapInstance.value)
+    return
+  const newRouteIds = new Set(newRoutes.map(r => r.id))
+  oldRoutes.forEach((route) => {
+    if (!newRouteIds.has(route.id))
+      removeRoute(route.id)
+  })
+  newRoutes.forEach((route) => {
+    if (route.isVisible)
+      addOrUpdateDrawnRoute(route)
+    else
+      removeRoute(route.id)
+  })
+}, { deep: true })
 
 onClickOutside(contextMenuRef, () => {
   isContextMenuVisible.value = false
 })
 
-function openContextMenu(event: MouseEvent) {
-  if (props.readonly || !mapInstance.value)
-    return
-
-  const mapContainer = mapInstance.value.getTargetElement() as HTMLElement
-  const mapRect = mapContainer.getBoundingClientRect()
-
-  contextMenuPosition.top = event.clientY - mapRect.top
-  contextMenuPosition.left = event.clientX - mapRect.left
-
-  isContextMenuVisible.value = true
-}
-
-function handleContextMenuAction() {
-  isContextMenuVisible.value = false
-  // TODO: emit action to parent
-}
-
-// Отслеживаем изменения в точках и обновляем карту
-watch(() => props.points, (newPoints, oldPoints = []) => {
-  const newPointIds = new Set(newPoints.map(p => p.id))
-
-  // Удаляем старые точки
-  oldPoints.forEach((point) => {
-    if (!newPointIds.has(point.id)) {
-      removePoint(point.id)
-    }
-  })
-
-  // Добавляем/обновляем новые
-  newPoints.forEach((point) => {
-    addOrUpdatePoint(point)
-  })
-}, { deep: true })
-
-watch(isMapFullscreen, (value) => {
-  emit('update:is-fullscreen', value)
-})
-
 onMounted(async () => {
   if (!mapContainerRef.value)
     return
-
   await initMap({
     container: mapContainerRef.value,
     center: props.center,
@@ -99,14 +125,15 @@ onMounted(async () => {
   })
 
   props.points.forEach(addOrUpdatePoint)
+  props.routes.forEach(addOrUpdateRoute)
+  props.drawnRoutes.forEach(addOrUpdateDrawnRoute)
 
   mapInstance.value?.on('click', (event) => {
     const coords = toLonLat(event.coordinate) as Coordinate
     emit('mapClick', coords)
   })
 
-  // Передаем контроллер карты родительскому компоненту
-  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, ...restMapController })
+  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, ...restMapController })
 })
 </script>
 
@@ -115,7 +142,7 @@ onMounted(async () => {
     ref="mapContainerRef"
     class="geolocation-map-container"
     :style="{ height }"
-    :class="{ 'cursor-crosshair': mode === 'add_point' || mode === 'move_point', 'cursor-grab': mode === 'pan' }"
+    :class="{ 'cursor-crosshair': mode === 'add_point' || mode === 'add_route_point' || mode === 'draw_route', 'cursor-grab': mode === 'pan', 'cursor-move': mode === 'move_point' }"
     @contextmenu.prevent="openContextMenu"
   >
     <div v-if="!isMapLoaded || isLoading" class="loading-overlay">
@@ -125,12 +152,18 @@ onMounted(async () => {
       <GeolocationMapControls
         :map-instance="mapInstance"
         :center-coordinates="center"
-        :is-fullscreen="isMapFullscreen"
-        @update:is-fullscreen="isMapFullscreen = $event"
+        :is-fullscreen="isFullscreen"
+        @toggle-panel="$emit('togglePanel')"
+        @toggle-fullscreen="$emit('toggleFullscreen')"
       />
     </slot>
     <div ref="contextMenuRef">
-      <GeolocationContextMenu :visible="isContextMenuVisible" :top="contextMenuPosition.top" :left="contextMenuPosition.left" @action="handleContextMenuAction" />
+      <GeolocationContextMenu
+        :visible="isContextMenuVisible"
+        :top="contextMenuPosition.top"
+        :left="contextMenuPosition.left"
+        @action="handleContextMenuAction"
+      />
     </div>
     <slot name="fullscreen-panel" />
   </div>
@@ -149,6 +182,9 @@ onMounted(async () => {
   backdrop-filter: blur(4px);
   border: 1px solid var(--border-secondary-color);
   box-shadow: var(--s-m);
+}
+.cursor-move {
+  cursor: move;
 }
 </style>
 
