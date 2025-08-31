@@ -27,7 +27,6 @@ export interface MarkerStyle {
 
 /**
  * Основной интерфейс для представления точки (маркера) на карте.
- * Заменяет собой GeolocationMarkerOptions для большей гибкости.
  */
 export interface MapPoint {
   id: string // Уникальный идентификатор точки.
@@ -38,6 +37,32 @@ export interface MapPoint {
   comment?: string // Комментарий который будет отображен над маркером
 }
 
+/**
+ * Интерфейс для маршрута.
+ */
+export interface MapRoute {
+  id: string // Уникальный идентификатор маршрута
+  title: string // Название маршрута, по умолчанию "Маршрут-<index>"
+  points: MapPoint[] // Точки маршрута
+  color?: string // Цвет линии маршрута
+  distance?: number // Общее расстояние в метрах (Первоначально расчитывается после запроса API, а после его можно будет изменить самостоятельно)
+  duration?: number // Общее время в секундах
+  geometry?: Coordinate[] // Геометрия маршрута для отображения на карте
+  isVisible: boolean // Видимость маршрута на карте
+}
+
+/**
+ * Интерфейс для нарисованного от руки маршрута
+ */
+export interface DrawnRoute {
+  id: string
+  title: string
+  coordinates: Coordinate[] // Координаты нарисованной линии
+  color?: string
+  distance?: number // Приблизительное расстояние
+  isVisible: boolean
+}
+
 export interface ActivitySectionGeolocation {
   // Общие метаданные
   id: string
@@ -45,9 +70,13 @@ export interface ActivitySectionGeolocation {
   isAttached?: boolean
   title?: string
   icon?: string
+
   // Данные связанные с геолокацией
   points: MapPoint[] // Point of Interest - обычные точки интереса
-  routes: unknown[] // Later
+  routes: MapRoute[] // Маршруты
+  drawnRoutes: DrawnRoute[] // От руки нарисованные маршруты
+  center?: Coordinate // Координаты центра карты
+  zoom?: number // Уровень масштабирования карты
 }
 
 /**
@@ -58,4 +87,55 @@ export interface GeolocationMapOptions {
   center: [number, number]
   zoom?: number
   interactive?: boolean
+}
+
+
+
+/**
+ * Ответ от OSRM API
+ */
+export interface OSRMResponse {
+  code: string
+  routes: Array<{
+    legs: Array<{
+      steps: Array<{
+        intersections: Array<{
+          out?: number
+          in?: number
+          entry: boolean[]
+          bearings: number[]
+          location: [number, number]
+        }>
+        driving_side: string
+        geometry: string
+        maneuver: {
+          bearing_after: number
+          bearing_before: number
+          location: [number, number]
+          modifier?: string
+          type: string
+        }
+        name: string
+        mode: string
+        weight: number
+        duration: number
+        distance: number
+        ref?: string
+      }>
+      weight: number
+      summary: string
+      duration: number
+      distance: number
+    }>
+    weight_name: string
+    weight: number
+    duration: number
+    distance: number
+  }>
+  waypoints: Array<{
+    hint: string
+    location: [number, number]
+    name: string
+    distance: number
+  }>
 }

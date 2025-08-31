@@ -23,7 +23,6 @@ function useGeolocationMap() {
   let resizeObserver: ResizeObserver | null = null
 
   // --- Инициализация и уничтожение карты ---
-
   const initMap = async (options: GeolocationMapOptions) => {
     if (!options.container) {
       console.error('Map container is required')
