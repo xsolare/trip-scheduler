@@ -19,6 +19,7 @@ interface ActivitySectionBase {
   isAttached?: boolean
   title?: string
   icon?: string
+  color?: string
 }
 
 export interface DayMetaInfo {

@@ -195,7 +195,7 @@ onBeforeUnmount(() => {
             </div>
             <DayActivitiesList @add="handleAddNewActivity" />
 
-            <Divider v-if="getSelectedDay?.meta?.length">
+            <Divider v-if="getSelectedDay?.meta?.length || !isViewMode">
               мета-информация
             </Divider>
 

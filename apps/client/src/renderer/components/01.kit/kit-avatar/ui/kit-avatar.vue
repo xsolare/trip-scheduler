@@ -3,8 +3,8 @@ import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
 import { resolveApiUrl } from '~/shared/lib/url'
 
 interface Props {
-  name?: string
-  src?: string
+  name?: string | null
+  src?: string | null
   size?: number | string
   isMore?: boolean
 }

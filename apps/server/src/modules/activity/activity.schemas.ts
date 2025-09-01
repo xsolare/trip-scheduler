@@ -5,6 +5,7 @@ const ActivitySectionBaseSchema = z.object({
   isAttached: z.boolean().optional(),
   title: z.string().optional(),
   icon: z.string().optional(),
+  color: z.string().optional(),
 })
 
 const ActivitySectionTextSchema = ActivitySectionBaseSchema.extend({

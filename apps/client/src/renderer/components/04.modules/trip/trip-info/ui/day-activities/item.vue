@@ -47,6 +47,21 @@ const tagOptions = Object.values(EActivityTag).map(tag => ({
   icon: activityTagIcons[tag],
 }))
 
+function getContrastColor(hexcolor: string | undefined): string {
+  if (!hexcolor)
+    return '#000000'
+
+  hexcolor = hexcolor.replace('#', '')
+  if (hexcolor.length === 3)
+    hexcolor = hexcolor.split('').map(char => char + char).join('')
+
+  const r = Number.parseInt(hexcolor.substring(0, 2), 16)
+  const g = Number.parseInt(hexcolor.substring(2, 4), 16)
+  const b = Number.parseInt(hexcolor.substring(4, 6), 16)
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
+  return (yiq >= 128) ? '#000000' : '#FFFFFF'
+}
+
 function handleTagUpdate(newTag: EActivityTag) {
   updateActivity({ tag: newTag })
 }
@@ -55,7 +70,7 @@ function getGroupedChildren(children: ActivitySection[]) {
   const withTitle: ActivitySection[] = []
   const withoutTitle: ActivitySection[] = []
   children.forEach((child) => {
-    if (child.title)
+    if ((child as any).title)
       withTitle.push(child)
     else
       withoutTitle.push(child)
@@ -171,11 +186,11 @@ const sectionGroups = computed(() => {
   while (i < sections.length) {
     const currentSection = sections[i]
 
-    if (!currentSection.isAttached) {
+    if (!(currentSection as any).isAttached) {
       const attachedChildren = []
       let j = i + 1
 
-      while (j < sections.length && sections[j].isAttached) {
+      while (j < sections.length && (sections[j] as any).isAttached) {
         attachedChildren.push(sections[j])
         j++
       }
@@ -321,10 +336,15 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                   <button
                     class="attached-pill titled-pin"
                     :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
+                    :style="(child as any).color ? {
+                      backgroundColor: `${(child as any).color}33`,
+                      color: getContrastColor((child as any).color),
+                      borderColor: `${(child as any).color}`,
+                    } : {}"
                     @click="toggleSection(group.parent.id, child.id)"
                   >
-                    <Icon width="18" height="18" :icon="child.icon || sectionTypeIcons[child.type]" class="pill-icon" />
-                    <span class="pill-title">{{ child.title }}</span>
+                    <Icon width="18" height="18" :icon="(child as any).icon || sectionTypeIcons[child.type]" class="pill-icon" />
+                    <span class="pill-title">{{ (child as any).title }}</span>
                     <Icon width="18" height="18" :icon="isSectionExpanded(group.parent.id, child.id) ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="pill-chevron" />
                   </button>
                   <div v-if="index < getGroupedChildren(group.children).withTitle.length - 1 || getGroupedChildren(group.children).withoutTitle.length > 0" class="attachment-line-end" />
@@ -348,12 +368,16 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                       :key="child.id"
                       class="attached-pill"
                       :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
+                      :style="(child as any).color ? {
+                        backgroundColor: `${(child as any).color}33`,
+                        color: getContrastColor((child as any).color),
+                      } : {}"
                       @click="toggleSection(group.parent.id, child.id)"
                     >
                       <Icon
                         width="18"
                         height="18"
-                        :icon="child.icon || sectionTypeIcons[child.type]"
+                        :icon="(child as any).icon || sectionTypeIcons[child.type]"
                         class="pill-icon"
                       />
                     </button>
@@ -668,6 +692,11 @@ onClickOutside(timeEditorRef, saveTimeChanges)
       background: var(--fg-accent-color);
       color: var(--fg-inverted-color);
     }
+    &:active {
+      &:not([style*='background-color']) {
+        background-color: var(--bg-tertiary-color);
+      }
+    }
     &:hover {
       background: var(--bg-hover-color);
       color: var(--fg-accent-color);
@@ -685,6 +714,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     padding: 6px 12px;
     gap: 8px;
     border-radius: var(--r-l);
+    backdrop-filter: blur(4px);
 
     .pill-title {
       font-size: 0.8rem;
@@ -693,6 +723,12 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     .pill-chevron {
       font-size: 0.9rem;
       margin-left: 4px;
+    }
+    &.active {
+      box-shadow:
+        0 0 0 2px var(--bg-primary-color),
+        0 0 0 4px var(--fg-accent-color);
+      border-color: var(--fg-accent-color) !important;
     }
     &-block {
       .expanded-pin-content {
@@ -782,6 +818,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     transition: all 0.2s ease;
     color: var(--fg-primary-color);
     line-height: 24px;
+    backdrop-filter: blur(4px);
 
     .chevron {
       font-size: 1rem;

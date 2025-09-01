@@ -23,8 +23,9 @@ const emit = defineEmits(['updateSection', 'deleteSection'])
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)
 
-const editableTitle = ref(props.section.title || '')
-const editableIcon = ref(props.section.icon || 'mdi:map-marker')
+const editableTitle = ref((props.section as any).title || '')
+const editableIcon = ref((props.section as any).icon || 'mdi:map-marker')
+const editableColor = ref((props.section as any).color || '#A0C4FF')
 
 function onUpdate(data: ActivitySection) {
   emit('updateSection', data)
@@ -33,23 +34,26 @@ function onUpdate(data: ActivitySection) {
 function toggleAttached() {
   const newSectionData = {
     ...props.section,
-    isAttached: !props.section.isAttached,
+    isAttached: !(props.section as any).isAttached,
   }
-  if (!newSectionData.isAttached) {
-    delete newSectionData.title
-    delete newSectionData.icon
+  if (!(newSectionData as any).isAttached) {
+    delete (newSectionData as any).title
+    delete (newSectionData as any).icon
+    delete (newSectionData as any).color
   }
   emit('updateSection', newSectionData)
 }
 
 function updatePinSettings() {
-  if (editableTitle.value !== (props.section.title || '')
-    || editableIcon.value !== (props.section.icon || 'mdi:map-marker')
+  if (editableTitle.value !== ((props.section as any).title || '')
+    || editableIcon.value !== ((props.section as any).icon || 'mdi:map-marker')
+    || editableColor.value !== ((props.section as any).color || '#A0C4FF')
   ) {
     emit('updateSection', {
       ...props.section,
       title: editableTitle.value,
       icon: editableIcon.value,
+      color: editableColor.value,
     })
   }
 }
@@ -59,14 +63,15 @@ watch(editableIcon, () => {
 })
 
 watch(() => props.section, (newSection) => {
-  editableTitle.value = newSection.title || ''
-  editableIcon.value = newSection.icon || 'mdi:map-marker'
+  editableTitle.value = (newSection as any).title || ''
+  editableIcon.value = (newSection as any).icon || 'mdi:map-marker'
+  editableColor.value = (newSection as any).color || '#A0C4FF'
 }, { deep: true, immediate: true })
 </script>
 
 <template>
-  <div class="activity-section-renderer" :class="{ 'is-attached': section.isAttached }">
-    <div v-if="section.isAttached && !isViewMode" class="pin-settings">
+  <div class="activity-section-renderer" :class="{ 'is-attached': (section as any).isAttached }">
+    <div v-if="(section as any).isAttached && !isViewMode" class="pin-settings">
       <KitInput
         v-model="editableTitle"
         placeholder="Заголовок пина (необязательно)"
@@ -78,7 +83,16 @@ watch(() => props.section, (newSection) => {
       <IconPicker
         v-model="editableIcon"
         size="sm"
+        @update:model-value="updatePinSettings"
       />
+      <div class="color-picker-wrapper">
+        <input
+          v-model="editableColor"
+          type="color"
+          class="color-input-native"
+          @input="updatePinSettings"
+        >
+      </div>
     </div>
 
     <DescriptionSection
@@ -101,10 +115,10 @@ watch(() => props.section, (newSection) => {
     <div v-if="!isViewMode" class="section-controls">
       <button
         class="control-btn attach-btn"
-        :title="section.isAttached ? 'Открепить секцию' : 'Прикрепить к предыдущей'"
+        :title="(section as any).isAttached ? 'Открепить секцию' : 'Прикрепить к предыдущей'"
         @click="toggleAttached"
       >
-        <Icon :icon="section.isAttached ? 'mdi:link-variant-off' : 'mdi:link-variant-plus'" />
+        <Icon :icon="(section as any).isAttached ? 'mdi:link-variant-off' : 'mdi:link-variant-plus'" />
       </button>
       <button
         class="control-btn delete-btn"
@@ -144,12 +158,44 @@ watch(() => props.section, (newSection) => {
       font-size: 0.9rem;
     }
   }
+
+  .color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background-color: var(--bg-primary-color);
+    border: 1px solid var(--border-secondary-color);
+    border-radius: var(--r-s);
+    padding: 2px;
+  }
+
+  .color-input-native {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    &::-webkit-color-swatch {
+      border: none;
+      border-radius: calc(var(--r-s) - 2px);
+    }
+  }
 }
 
 .section-controls {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -12px;
+  right: -12px;
   display: flex;
   gap: 4px;
   opacity: 0;
@@ -159,8 +205,8 @@ watch(() => props.section, (newSection) => {
 }
 
 .control-btn {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--r-full);
   background-color: var(--bg-tertiary-color);
   border: 1px solid var(--border-secondary-color);
@@ -170,6 +216,7 @@ watch(() => props.section, (newSection) => {
   justify-content: center;
   cursor: pointer;
   font-size: 0.9rem;
+  padding: 2px;
 
   &:hover {
     background-color: var(--bg-hover-color);

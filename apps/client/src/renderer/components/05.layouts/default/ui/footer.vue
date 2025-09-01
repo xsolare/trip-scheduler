@@ -28,7 +28,7 @@
   display: flex;
   justify-content: center;
   padding: 1rem;
-  z-index: 11;
+  z-index: 9;
 
   .copyright {
     font-size: 0.75rem;

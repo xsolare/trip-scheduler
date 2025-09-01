@@ -1,11 +1,14 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
+import { ProfileDrawer } from '~/components/02.shared/profile-drawer'
 import { AppRoutePaths } from '~/shared/constants/routes'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()
 const store = useAppStore(['auth', 'theme'])
+
+const isProfileDrawerOpen = ref(false)
 
 const isScrolled = ref(false)
 const isHeaderVisible = ref(true)
@@ -88,7 +91,7 @@ onMounted(() => {
 
         <div class="vr" />
 
-        <div class="profile">
+        <div class="profile" @click="isProfileDrawerOpen = true">
           <KitAvatar
             v-if="store.auth.isAuthenticated"
             :src="`${store.auth.user?.avatarUrl}`"
@@ -96,7 +99,7 @@ onMounted(() => {
           <div
             v-else
             class="profile-img"
-            @click="router.push(AppRoutePaths.Auth.SignIn)"
+            @click.stop="router.push(AppRoutePaths.Auth.SignIn)"
           >
             <Icon
               icon="mdi:face-man-profile"
@@ -109,6 +112,7 @@ onMounted(() => {
 
     <div class="header-border" />
   </header>
+  <ProfileDrawer v-model:open="isProfileDrawerOpen" />
 </template>
 
 <style lang="scss" scoped>
@@ -312,6 +316,7 @@ onMounted(() => {
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
 
       &-img {
         border-radius: var(--r-full);

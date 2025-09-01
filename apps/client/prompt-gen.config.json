@@ -4,5 +4,5 @@
   "output": "project_prompt.md",
   "format": "structured",
   "maxSize": "35",
-  "excludePaths": "pnpm-lock.yaml,**/theme-manager/**,**/stories/**,**/configs/**,**/public/**,**/test/**,**/*.spec.ts,version.json,bun.lock,**/.vscode/**,**/data/**,**/auto-imports.d.ts/**,**/mock/**,**/assets/**,**/.storybook/**"
+  "excludePaths": "pnpm-lock.yaml,**/main/**,**/preload/**,**/theme-manager/**,**/stories/**,**/configs/**,**/public/**,**/test/**,**/*.spec.ts,version.json,bun.lock,**/.vscode/**,**/data/**,**/auto-imports.d.ts/**,**/mock/**,**/assets/**,**/.storybook/**"
 }
