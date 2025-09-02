@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { NavigationBack } from '~/components/02.shared/navigation-back/index'
-import { TripInfo } from '~/components/04.modules/trip/trip-info'
-import { useModuleStore } from '~/components/04.modules/trip/trip-info/composables/use-module'
+import { TripInfo } from '~/components/04.modules/trip-info'
+import { useModuleStore } from '~/components/04.modules/trip-info/composables/use-module'
 import { useDisplay } from '~/shared/composables/use-display'
 
 const store = useModuleStore(['ui'])
@@ -21,7 +20,6 @@ const hasFetchError = ref(false)
       activeView,
     ]"
   >
-    <NavigationBack />
     <TripInfo />
   </section>
 </template>

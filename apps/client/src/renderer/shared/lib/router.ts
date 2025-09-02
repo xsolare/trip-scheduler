@@ -59,7 +59,7 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.Trip.Info(':id'),
     name: AppRouteNames.TripInfo,
     component: TripInfo,
-    meta: { layout: 'default' },
+    meta: { layout: 'trip-info' },
   },
 
   // --- Системные маршруты ---

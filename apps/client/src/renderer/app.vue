@@ -3,6 +3,7 @@ import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { ToastContainer } from '~/components/01.kit/kit-toast'
 import { DefaultLayout } from '~/components/05.layouts/default'
 import { EmptyLayout } from '~/components/05.layouts/empty'
+import { TripInfoLayout } from '~/components/05.layouts/trip-info'
 
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
@@ -24,8 +25,9 @@ const ReloadPrompt = isStandaloneApp
   : defineAsyncComponent(() => import('~/components/02.shared/reload-prompt/ui/reload-prompt.vue'))
 
 const layouts = {
-  default: DefaultLayout,
-  empty: EmptyLayout,
+  'default': DefaultLayout,
+  'empty': EmptyLayout,
+  'trip-info': TripInfoLayout,
 }
 </script>
 

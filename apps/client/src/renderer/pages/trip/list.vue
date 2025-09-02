@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NavigationBack } from '~/components/02.shared/navigation-back/index'
-import { TripsHub } from '~/components/04.modules/trip/trips-hub'
+import { TripsHub } from '~/components/04.modules/trips-hub'
 
 const hasFetchError = ref(false)
 </script>

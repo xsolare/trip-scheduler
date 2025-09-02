@@ -59,6 +59,14 @@ export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed'
 export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
 
+// НОВЫЙ ENUM ДЛЯ ТИПОВ РАЗДЕЛОВ ПУТЕШЕСТВИЯ
+export const tripSectionTypeEnum = pgEnum('trip_section_type', [
+  'bookings', // Бронирования (отели, авиа)
+  'finances', // Финансы
+  'checklist', // Чек-листы
+  'notes', // Общие заметки (гибкий/кастомный раздел)
+])
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
 
@@ -106,6 +114,19 @@ export const trips = pgTable('trips', {
 
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
 
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// НОВАЯ ТАБЛИЦА ДЛЯ РАЗДЕЛОВ ПУТЕШЕСТВИЯ
+export const tripSections = pgTable('trip_sections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  type: tripSectionTypeEnum('type').notNull(),
+  title: text('title').notNull(),
+  icon: text('icon'),
+  content: jsonb('content').$type<any>().default('{}'), // Позволяет хранить любую структуру
+  order: integer('order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
@@ -183,6 +204,15 @@ export const tripsRelations = relations(trips, ({ one, many }) => ({
   images: many(tripImages),
   memories: many(memories),
   participants: many(tripParticipants),
+  sections: many(tripSections), // НОВАЯ СВЯЗЬ
+}))
+
+// НОВАЯ СВЯЗЬ ДЛЯ РАЗДЕЛОВ
+export const tripSectionsRelations = relations(tripSections, ({ one }) => ({
+  trip: one(trips, {
+    fields: [tripSections.tripId],
+    references: [trips.id],
+  }),
 }))
 
 export const tripParticipantsRelations = relations(tripParticipants, ({ one }) => ({

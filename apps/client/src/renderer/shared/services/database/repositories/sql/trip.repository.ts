@@ -77,6 +77,7 @@ class TripRepository implements ITripRepository {
       visibility: TripVisibility.PRIVATE,
       createdAt: now,
       updatedAt: now,
+      sections: [],
     }
 
     await this.db.execute(
