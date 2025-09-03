@@ -32,14 +32,16 @@ const confirmStore = useConfirmDialogStore()
           >
             Отмена
           </AlertDialogCancel>
+          <!--
+            Динамически применяем класс в зависимости от типа
+            и используем текст из хранилища
+          -->
           <AlertDialogAction
             class="dialog-button confirm"
-            @click="() => {
-              console.log('123');
-              confirmStore._confirm()
-            }"
+            :class="{ danger: confirmStore.type === 'danger' }"
+            @click="confirmStore._confirm"
           >
-            Подтвердить
+            {{ confirmStore.confirmText }}
           </AlertDialogAction>
         </div>
       </AlertDialogContent>
@@ -138,12 +140,18 @@ const confirmStore = useConfirmDialogStore()
   }
 
   &.confirm {
-    background-color: var(--bg-error-color);
-    color: var(--fg-error-color);
-    border: 1px solid var(--border-error-color);
+    background-color: var(--bg-accent-color);
+    color: var(--fg-on-accent-color);
+    border: 1px solid transparent;
 
     &:hover {
       filter: brightness(0.95);
+    }
+
+    &.danger {
+      background-color: var(--bg-error-color);
+      color: var(--fg-error-color);
+      border: 1px solid var(--border-error-color);
     }
   }
 }
