@@ -13,7 +13,7 @@
           <i class="pi pi-info-circle" style="font-size: 0.875rem; color: var(--fg-primary-color)" />
         </a>
 
-        <a href="https://github.com/injurka/chinisik" target="_blank" rel="noopener noreferrer" class="p-link">
+        <a href="https://github.com/xsolare/trip-scheduler" target="_blank" rel="noopener noreferrer" class="p-link">
           <i class="pi pi-github" style="font-size: 0.875rem; color: var(--fg-primary-color)" />
         </a>
       </div>

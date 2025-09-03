@@ -1,34 +1,93 @@
 <script lang="ts" setup>
+import type { ComputedRef, Ref } from 'vue'
 import { Icon } from '@iconify/vue'
+import { onClickOutside } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { ProfileDrawer } from '~/components/02.shared/profile-drawer'
 import { AppRoutePaths } from '~/shared/constants/routes'
 
+interface ViewSwitcherItem<T> {
+  id: T
+  label: string
+  icon?: string
+}
+
+interface NavigationState {
+  isNavigationVisible: boolean
+  activeTab: ViewSwitcherItem<string> | undefined
+  tabItems: ViewSwitcherItem<string>[]
+  isMobile: boolean
+  navigate: (direction: 'prev' | 'next') => void
+  handleCurrentSectionClick: () => void
+  selectSection: (id: string) => void
+  isAddSectionDialogOpen: Ref<boolean>
+}
+
 const headerEl = ref<HTMLElement>()
+const headerCenterRef = ref<HTMLElement>()
 const router = useRouter()
 const store = useAppStore(['auth', 'theme'])
 
 const isProfileDrawerOpen = ref(false)
-
 const isScrolled = ref(false)
 const isHeaderVisible = ref(true)
 const lastScrollY = ref(0)
 const isSmallScreen = ref(false)
+const isHeaderDropdownOpen = ref(false)
+
+const navigationState = inject<ComputedRef<NavigationState>>('navigationState')
 
 function checkScreenSize() {
   isSmallScreen.value = window.innerWidth < 1400
 }
+
+const shouldShowCurrentSection = computed(() => {
+  return navigationState?.value
+    && !navigationState.value.isNavigationVisible
+    && router.currentRoute.value.name === 'trip-info'
+})
+
+function handleHeaderCurrentSectionClick() {
+  if (!navigationState?.value)
+    return
+
+  if (navigationState.value.isMobile) {
+    navigationState.value.handleCurrentSectionClick()
+  }
+  else {
+    isHeaderDropdownOpen.value = !isHeaderDropdownOpen.value
+  }
+}
+
+function handleHeaderSelectSection(id: string) {
+  if (!navigationState?.value)
+    return
+  navigationState.value.selectSection(id)
+  isHeaderDropdownOpen.value = false
+}
+
+function handleHeaderAddSection() {
+  if (!navigationState?.value)
+    return
+  navigationState.value.isAddSectionDialogOpen.value = true
+  isHeaderDropdownOpen.value = false
+}
+
+onClickOutside(headerCenterRef, () => {
+  isHeaderDropdownOpen.value = false
+})
 
 onMounted(() => {
   let ticking = false
 
   const handleScroll = () => {
     if (!ticking) {
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         const currentScrollY = window.scrollY
 
         if (currentScrollY > lastScrollY.value && currentScrollY > 100) {
           isHeaderVisible.value = false
+          isHeaderDropdownOpen.value = false
         }
         else {
           isHeaderVisible.value = true
@@ -78,9 +137,32 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="header-center">
-        <div v-if="router.currentRoute.value.name === 'trip-info'" class="title">
-          <!-- Путешествие по Китаю -->
+      <div ref="headerCenterRef" class="header-center">
+        <div v-if="shouldShowCurrentSection" class="header-navigation-wrapper">
+          <div class="header-current-section" @click="handleHeaderCurrentSectionClick">
+            <h2 class="header-current-section-title">
+              {{ navigationState?.activeTab?.label }}
+            </h2>
+          </div>
+
+          <Transition name="fade-dropdown">
+            <div v-if="!navigationState?.isMobile && isHeaderDropdownOpen" class="header-sections-dropdown-panel">
+              <ul class="header-sections-list">
+                <li
+                  v-for="item in navigationState?.tabItems"
+                  :key="item.id"
+                  @click="handleHeaderSelectSection(item.id)"
+                >
+                  <Icon :icon="item.icon!" class="header-section-item-icon" />
+                  <span>{{ item.label }}</span>
+                </li>
+                <li class="header-add-section-item" @click="handleHeaderAddSection">
+                  <Icon icon="mdi:plus-circle-outline" class="header-section-item-icon" />
+                  <span>Добавить раздел</span>
+                </li>
+              </ul>
+            </div>
+          </Transition>
         </div>
       </div>
 
@@ -231,12 +313,125 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     height: 40px;
+    position: relative;
 
     .title {
       color: var(--fg-secondary-color);
       font-size: 0.9rem;
       font-weight: 500;
       letter-spacing: 2px;
+    }
+
+    // Стили для навигации в header
+    .header-navigation-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    .header-nav-arrow {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-full);
+      border: 1px solid transparent;
+      background-color: var(--bg-secondary-color);
+      color: var(--fg-secondary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      opacity: 0.7;
+
+      &:hover {
+        color: var(--fg-accent-color);
+        background-color: var(--bg-hover-color);
+        border-color: var(--border-secondary-color);
+        opacity: 1;
+      }
+    }
+
+    .header-current-section {
+      padding: 6px 16px;
+      border-radius: var(--r-m);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      min-width: 200px;
+      text-align: center;
+
+      &:hover {
+        background-color: var(--bg-hover-color);
+      }
+
+      &-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--fg-primary-color);
+        margin: 0;
+        line-height: 1.2;
+        font-family: 'Sansation';
+      }
+    }
+
+    .header-sections-dropdown-panel {
+      position: absolute;
+      top: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      max-width: 90vw;
+      background-color: var(--bg-secondary-color);
+      border: 1px solid var(--border-secondary-color);
+      border-radius: var(--r-l);
+      box-shadow: var(--s-xl);
+      z-index: 20;
+      padding: 16px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .header-sections-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      column-count: 2;
+      column-gap: 24px;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: var(--r-m);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        color: var(--fg-secondary-color);
+        break-inside: avoid;
+        page-break-inside: avoid;
+
+        .header-section-item-icon {
+          font-size: 1.1rem;
+          color: var(--fg-secondary-color);
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          background-color: var(--bg-hover-color);
+          color: var(--fg-primary-color);
+        }
+
+        &.header-add-section-item {
+          color: var(--fg-accent-color);
+
+          &:hover {
+            color: var(--fg-accent-color);
+            background-color: var(--bg-accent-overlay-color);
+          }
+        }
+      }
     }
   }
 
@@ -363,6 +558,34 @@ onMounted(() => {
     transition:
       opacity 0.3s ease,
       transform 0.3s ease;
+  }
+}
+
+// Анимации для dropdown
+.fade-dropdown-enter-active,
+.fade-dropdown-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fade-dropdown-enter-from,
+.fade-dropdown-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+@include media-down(lg) {
+  .header {
+    &-center {
+      .header-sections-dropdown-panel {
+        width: calc(100vw - 48px);
+      }
+
+      .header-sections-list {
+        column-count: 1;
+      }
+    }
   }
 }
 

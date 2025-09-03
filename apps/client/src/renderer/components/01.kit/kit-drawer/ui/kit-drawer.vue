@@ -76,7 +76,7 @@ const visible = defineModel<boolean>('open', { required: true })
     top: 0;
     bottom: 0;
     left: 0;
-    width: 300px;
+    width: 340px;
     max-width: 80vw;
     border-right: 1px solid var(--border-secondary-color);
     &[data-state='open'] {
@@ -91,7 +91,7 @@ const visible = defineModel<boolean>('open', { required: true })
     top: 0;
     bottom: 0;
     right: 0;
-    width: 300px;
+    width: 340px;
     max-width: 80vw;
     border-left: 1px solid var(--border-secondary-color);
     &[data-state='open'] {
