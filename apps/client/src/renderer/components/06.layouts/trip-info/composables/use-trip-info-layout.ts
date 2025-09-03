@@ -1,4 +1,3 @@
-import type { InjectionKey } from 'vue'
 import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import type { TripSection } from '~/shared/types/models/trip'
@@ -7,51 +6,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
-
-// --- ИКОНЫ И КОНСТАНТЫ ---
-const iconList = [
-  'mdi:walk',
-  'mdi:car',
-  'mdi:train',
-  'mdi:airplane',
-  'mdi:bus',
-  'mdi:taxi',
-  'mdi:ferry',
-  'mdi:bike',
-  'mdi:bed',
-  'mdi:food-fork-drink',
-  'mdi:coffee-outline',
-  'mdi:store-outline',
-  'mdi:tent',
-  'mdi:camera-outline',
-  'mdi:map-marker-outline',
-  'mdi:hiking',
-  'mdi:swim',
-  'mdi:beach',
-  'mdi:shopping-outline',
-  'mdi:music-note-outline',
-  'mdi:party-popper',
-  'mdi:currency-usd',
-  'mdi:ticket-confirmation-outline',
-  'mdi:weather-sunny',
-  'mdi:weather-night',
-  'mdi:flag-variant-outline',
-  'mdi:information-outline',
-  'mdi:run-fast',
-  'mdi:bank-outline',
-  'mdi:gas-station-outline',
-  'mdi:fire',
-  'mdi:heart-outline',
-  'mdi:star-outline',
-  'mdi:check-circle-outline',
-  'mdi:alert-circle-outline',
-  'mdi:help-circle-outline',
-  'mdi:account-group-outline',
-  'mdi:phone-outline',
-  'mdi:link-variant',
-  'mdi:calendar-blank-outline',
-  'mdi:file-document-outline',
-]
+import { useIconPicker } from './use-icon-picker'
 
 export function useTripInfoLayout() {
   const store = useModuleStore(['sections'])
@@ -67,26 +22,15 @@ export function useTripInfoLayout() {
   const mainNavigationRef = ref<HTMLElement>()
   const isNavigationVisible = ref(true)
 
-  const isAddSectionDialogOpen = ref(false)
-  const newSectionTitle = ref('')
-  const newSectionIcon = ref('mdi:file-document-outline')
-  const iconSearchQuery = ref('')
-
   const isEditSectionDialogOpen = ref(false)
   const sectionToEdit = ref<{ id: string, title: string, icon: string } | null>(null)
-  const iconSearchQueryEdit = ref('')
 
-  const filteredIcons = computed(() => {
-    if (!iconSearchQuery.value)
-      return iconList
-    return iconList.filter(icon => icon.toLowerCase().includes(iconSearchQuery.value.toLowerCase()))
-  })
-
-  const filteredIconsEdit = computed(() => {
-    if (!iconSearchQueryEdit.value)
-      return iconList
-    return iconList.filter(icon => icon.toLowerCase().includes(iconSearchQueryEdit.value.toLowerCase()))
-  })
+  // Используем наш новый composable для логики иконок
+  // Переименовываем переменные, чтобы избежать конфликтов и сохранить совместимость с шаблоном
+  const {
+    iconSearchQuery: iconSearchQueryEdit,
+    filteredIcons: filteredIconsEdit,
+  } = useIconPicker()
 
   const tabItems = computed((): ViewSwitcherItem<string>[] => {
     const dailyRouteTab: ViewSwitcherItem<string> = {
@@ -110,7 +54,7 @@ export function useTripInfoLayout() {
     const section = sortedSections.value.find((s: TripSection) => s.id === activeTab.value!.id)
     if (!section)
       return false
-    const nonEditableLabels = ['Бронирования', 'Финансы']
+    const nonEditableLabels = ['Бронирования', 'Финансы', 'Чек-лист']
     return !nonEditableLabels.includes(section.title)
   })
 
@@ -133,6 +77,7 @@ export function useTripInfoLayout() {
     isDrawerOpen.value = false
     isLayoutDropdownOpen.value = false
     isHeaderDropdownOpen.value = false
+    router.push({ query: { section: activeTabId.value } })
   }
 
   function handleCurrentSectionClick() {
@@ -147,24 +92,6 @@ export function useTripInfoLayout() {
       isDrawerOpen.value = true
     else
       isHeaderDropdownOpen.value = !isHeaderDropdownOpen.value
-  }
-
-  function openAddSectionDialog() {
-    isAddSectionDialogOpen.value = true
-    isHeaderDropdownOpen.value = false
-    isLayoutDropdownOpen.value = false
-  }
-
-  async function handleAddSection() {
-    if (!newSectionTitle.value.trim())
-      return
-
-    // @ts-expect-error Сделать позже
-    await store.sections.createSection({
-      title: newSectionTitle.value,
-      icon: newSectionIcon.value,
-    })
-    isAddSectionDialogOpen.value = false
   }
 
   function openEditDialog() {
@@ -243,14 +170,6 @@ export function useTripInfoLayout() {
     activeTabId.value = tabItems.value[nextIndex].id
   }
 
-  watch(isAddSectionDialogOpen, (isOpen) => {
-    if (!isOpen) {
-      newSectionTitle.value = ''
-      newSectionIcon.value = 'mdi:file-document-outline'
-      iconSearchQuery.value = ''
-    }
-  })
-
   watch(isNavigationVisible, (isVisible) => {
     if (!isVisible)
       isLayoutDropdownOpen.value = false
@@ -295,10 +214,6 @@ export function useTripInfoLayout() {
     isLayoutDropdownOpen,
     isHeaderDropdownOpen,
     isNavigationVisible,
-    isAddSectionDialogOpen,
-    newSectionTitle,
-    newSectionIcon,
-    iconSearchQuery,
     isEditSectionDialogOpen,
     sectionToEdit,
     iconSearchQueryEdit,
@@ -307,15 +222,12 @@ export function useTripInfoLayout() {
     tabItems,
     activeTab,
     menuItems,
-    filteredIcons,
     filteredIconsEdit,
 
     // Methods
     selectSection,
     handleCurrentSectionClick,
     handleHeaderCurrentSectionClick,
-    openAddSectionDialog,
-    handleAddSection,
     handleMenuAction,
     navigate,
     openEditDialog,
@@ -324,4 +236,3 @@ export function useTripInfoLayout() {
 }
 
 export type TripInfoLayout = ReturnType<typeof useTripInfoLayout>
-export const TripInfoLayoutKey: InjectionKey<TripInfoLayout> = Symbol('TripInfoLayout')

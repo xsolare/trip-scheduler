@@ -6,6 +6,7 @@ import { useAppStore } from '~/shared/composables/use-store'
 export interface ITripInfoUiState {
   isDaysPanelOpen: boolean
   isDaysPanelPinned: boolean
+  isAddSectionDialogOpen: boolean // ++
   activeView: RemovableRef<ActiveView>
   interactionMode: RemovableRef<InteractionMode>
   collapsedActivities: Set<string>
@@ -20,6 +21,7 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
   state: (): ITripInfoUiState => ({
     isDaysPanelOpen: false,
     isDaysPanelPinned: false,
+    isAddSectionDialogOpen: false, // ++
     activeView: useStorage<ActiveView>('trip-active-view', 'plan'),
     interactionMode: useStorage<InteractionMode>('tripinfo-interaction-mode', 'view'),
     collapsedActivities: new Set<string>(),
@@ -46,29 +48,31 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
       return state.collapsedActivities.size === allIds.length
     },
     areAllMemoryGroupsCollapsed: state => (allGroupKeys: string[]) => {
-      if (allGroupKeys.length === 0)
-        return false
-      return state.collapsedMemoryGroups.size === allGroupKeys.length
+      if (allGroupKeys.length > 0)
+        return state.collapsedMemoryGroups.size === allGroupKeys.length
+      return false
     },
   },
 
   actions: {
+    openAddSectionDialog() {
+      this.isAddSectionDialogOpen = true
+    },
+    closeAddSectionDialog() {
+      this.isAddSectionDialogOpen = false
+    },
     setPreferredQuality(quality: ImageQuality) {
       this.preferredQuality = quality
     },
-
     openDaysPanel() {
       this.isDaysPanelOpen = true
     },
-
     closeDaysPanel() {
       this.isDaysPanelOpen = false
     },
-
     toggleDaysPanelPinned() {
       this.isDaysPanelPinned = !this.isDaysPanelPinned
     },
-
     setInteractionMode(mode: 'view' | 'edit') {
       this.interactionMode = mode
     },

@@ -12,16 +12,14 @@ import { AppHeader } from '~/components/02.shared/app-header'
 import { BackgroundEffects } from '~/components/02.shared/background-effects'
 import { ThemeManager } from '~/components/02.shared/theme-manager'
 import { useModuleStore } from '~/components/05.modules/trip-info'
-import { TripInfoLayoutKey, useTripInfoLayout } from '../composables'
+import AddSectionDialog from '~/components/06.layouts/trip-info/ui/add-section-dialog.vue'
+import { useTripInfoLayout } from '../composables'
 
 const layout = useTripInfoLayout()
-provide(TripInfoLayoutKey, layout)
-
-const { mainNavigationRef, navigationWrapperRef } = layout
-
 const route = useRoute()
 const router = useRouter()
 
+const { mainNavigationRef, navigationWrapperRef } = layout
 const { plan, ui, routeGallery, memories, sections } = useModuleStore(['plan', 'ui', 'routeGallery', 'memories', 'sections'])
 
 const tripId = computed(() => route.params.id as string)
@@ -38,6 +36,11 @@ if (tripId.value) {
   routeGallery.setTripId(tripId.value)
   routeGallery.fetchTripImages()
   memories.fetchMemories(tripId.value)
+}
+
+function handleAddSection(type: any) {
+  sections.addSection(type)
+  ui.closeAddSectionDialog()
 }
 
 onBeforeUnmount(() => {
@@ -84,9 +87,11 @@ onBeforeUnmount(() => {
                   <Icon :icon="item.icon!" class="section-item-icon" />
                   <span>{{ item.label }}</span>
                 </li>
-                <li class="add-section-item" @click="layout.openAddSectionDialog">
-                  <Icon icon="mdi:plus-circle-outline" class="section-item-icon" />
-                  <span>Добавить раздел</span>
+                <li class="add-section-item-wrapper">
+                  <button class="add-section-btn" @click="ui.openAddSectionDialog">
+                    <Icon icon="mdi:plus-circle-outline" />
+                    <span>Добавить раздел</span>
+                  </button>
                 </li>
               </ul>
             </div>
@@ -129,48 +134,20 @@ onBeforeUnmount(() => {
         <span>{{ item.label }}</span>
       </li>
     </ul>
+    <!-- ИЗМЕНЕНИЕ ЗДЕСЬ: Заменяем <AddTripSection /> на кнопку -->
     <div class="drawer-footer">
-      <KitBtn icon="mdi:plus" @click="layout.openAddSectionDialog">
-        Добавить раздел
-      </KitBtn>
+      <button
+        class="add-section-btn"
+        @click=" ui.openAddSectionDialog(), layout.isDrawerOpen.value = false "
+      >
+        <Icon icon="mdi:plus-circle-outline" />
+        <span>Добавить раздел</span>
+      </button>
     </div>
   </KitDrawer>
 
   <!-- Диалог добавления новой секции -->
-  <KitDialogWithClose
-    v-model:visible="layout.isAddSectionDialogOpen.value"
-    title="Новый раздел"
-    icon="mdi:plus"
-    :max-width="400"
-  >
-    <form class="add-section-form" @submit.prevent="layout.handleAddSection">
-      <KitInput
-        v-model="layout.newSectionTitle.value"
-        label="Название раздела"
-        placeholder="Например, 'Билеты' или 'Отели'"
-        required
-      />
-      <div class="icon-picker">
-        <label>Иконка</label>
-        <KitInput v-model="layout.iconSearchQuery.value" placeholder="Поиск иконки (напр. 'car')" icon="mdi:magnify" />
-        <div class="icon-picker-grid">
-          <button
-            v-for="icon in layout.filteredIcons.value"
-            :key="icon"
-            type="button"
-            class="icon-option"
-            :class="{ 'is-active': layout.newSectionIcon.value === icon }"
-            @click="layout.newSectionIcon.value = icon"
-          >
-            <Icon :icon="icon" />
-          </button>
-        </div>
-      </div>
-      <KitBtn type="submit" :disabled="!layout.newSectionTitle.value.trim()">
-        Создать раздел
-      </KitBtn>
-    </form>
-  </KitDialogWithClose>
+  <AddSectionDialog v-model:visible="ui.isAddSectionDialogOpen" @add-section="handleAddSection" />
 
   <!-- Диалог редактирования раздела -->
   <KitDialogWithClose
@@ -386,6 +363,28 @@ onBeforeUnmount(() => {
   .drawer-footer {
     padding: 16px;
     border-top: 1px solid var(--border-secondary-color);
+
+    .add-section-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--r-s);
+      border: 1px solid var(--border-secondary-color);
+      background-color: transparent;
+      color: var(--fg-secondary-color);
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: var(--fg-accent-color);
+        border-color: var(--fg-accent-color);
+      }
+    }
   }
 }
 
@@ -435,12 +434,33 @@ onBeforeUnmount(() => {
       background-color: var(--bg-hover-color);
       color: var(--fg-primary-color);
     }
+  }
 
-    &.add-section-item {
-      color: var(--fg-accent-color);
+  .add-section-item-wrapper {
+    padding: 0;
+    margin: 0;
+
+    &:hover {
+      background: none;
+    }
+
+    .add-section-btn {
+      display: inline-flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: var(--r-s);
+      color: var(--fg-secondary-color);
+      font-weight: 400;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+      width: 100%;
+
       &:hover {
         color: var(--fg-accent-color);
-        background-color: var(--bg-accent-overlay-color);
+        background-color: var(--bg-hover-color);
       }
     }
   }

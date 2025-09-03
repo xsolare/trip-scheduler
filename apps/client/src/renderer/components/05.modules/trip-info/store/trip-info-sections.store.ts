@@ -26,6 +26,8 @@ export const useTripSectionsStore = defineStore('tripSections', {
     sortedSections: (state): TripSection[] => {
       return [...state.sections].sort((a, b) => a.order - b.order)
     },
+    // Проверяем, существует ли уже раздел чек-листа
+    hasChecklistSection: state => state.sections.some(s => s.type === TripSectionType.CHECKLIST),
   },
 
   actions: {
