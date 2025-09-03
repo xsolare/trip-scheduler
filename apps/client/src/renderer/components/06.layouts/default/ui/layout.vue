@@ -1,14 +1,14 @@
 <script lang="ts" setup>
+import { AppHeader } from '~/components/02.shared/app-header'
 import { BackgroundEffects } from '~/components/02.shared/background-effects'
 import { ThemeManager } from '~/components/02.shared/theme-manager'
 
 import Footer from './footer.vue'
-import Header from './header.vue'
 </script>
 
 <template>
   <!-- eslint-disable vue/no-multiple-template-root -->
-  <Header />
+  <AppHeader />
 
   <main class="main">
     <div class="main-content">
