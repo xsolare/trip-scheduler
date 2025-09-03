@@ -1,4 +1,4 @@
-import type { ActivitySectionGeolocation } from '~/components/03.features/trip-info/proposal-geolocation-section/models/types'
+import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/proposal-geolocation-section/models/types'
 
 export enum EActivityTag {
   TRANSPORT = 'transport',

@@ -161,7 +161,7 @@ export interface Trip {
   visibility: TripVisibility
   createdAt: string
   updatedAt: string
-  sections: TripSection[] 
+  sections: TripSection[]
 }
 
 export interface TripWithDays extends Trip {

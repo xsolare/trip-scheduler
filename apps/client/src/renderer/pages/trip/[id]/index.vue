@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { TripInfo } from '~/components/04.modules/trip-info'
-import { useModuleStore } from '~/components/04.modules/trip-info/composables/use-module'
+import { TripInfo } from '~/components/05.modules/trip-info'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-module'
 import { useDisplay } from '~/shared/composables/use-display'
 
 const store = useModuleStore(['ui'])

@@ -1,9 +1,9 @@
 <script setup>
 import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { ToastContainer } from '~/components/01.kit/kit-toast'
-import { DefaultLayout } from '~/components/05.layouts/default'
-import { EmptyLayout } from '~/components/05.layouts/empty'
-import { TripInfoLayout } from '~/components/05.layouts/trip-info'
+import { DefaultLayout } from '~/components/06.layouts/default'
+import { EmptyLayout } from '~/components/06.layouts/empty'
+import { TripInfoLayout } from '~/components/06.layouts/trip-info'
 
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
