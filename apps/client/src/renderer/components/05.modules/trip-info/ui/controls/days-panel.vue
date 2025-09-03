@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Day } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
-import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-module'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { useDisplay } from '~/shared/composables/use-display'
 
 interface Props {

@@ -1,10 +1,10 @@
 import type { TripSection } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
 import { useToast } from '~/components/01.kit/kit-toast'
+import { useTripPlanStore } from '~/components/04.features/trip-info/trip-plan'
 import { useRequest } from '~/plugins/request'
 import { trpc } from '~/shared/services/trpc/trpc.service'
 import { TripSectionType } from '~/shared/types/models/trip'
-import { useTripInfoStore } from './trip-info.store'
 
 export enum ETripSectionsKeys {
   CREATE = 'trip-section:create',
@@ -12,12 +12,12 @@ export enum ETripSectionsKeys {
   DELETE = 'trip-section:delete',
 }
 
-export interface ITripInfoSectionsState {
+export interface ITripSectionsState {
   sections: TripSection[]
 }
 
-export const useTripInfoSectionsStore = defineStore('tripInfoSections', {
-  state: (): ITripInfoSectionsState => ({
+export const useTripSectionsStore = defineStore('tripSections', {
+  state: (): ITripSectionsState => ({
     sections: [],
   }),
 
@@ -35,8 +35,8 @@ export const useTripInfoSectionsStore = defineStore('tripInfoSections', {
     },
 
     async addSection(type: TripSectionType) {
-      const tripStore = useTripInfoStore()
-      if (!tripStore.currentTripId) {
+      const tripPlanStore = useTripPlanStore()
+      if (!tripPlanStore.currentTripId) {
         useToast().error('Невозможно создать раздел: не определено путешествие.')
         return
       }
@@ -57,15 +57,15 @@ export const useTripInfoSectionsStore = defineStore('tripInfoSections', {
           defaultIcon = 'mdi:book-multiple-outline'
           defaultTitle = 'Бронирования'
           break
-        case TripSectionType.CHECKLIST:
-          defaultContent = { items: [] }
-          defaultIcon = 'mdi:format-list-checks'
-          defaultTitle = 'Чек-лист'
-          break
         case TripSectionType.FINANCES:
           defaultContent = { totalBudget: 0, expenses: [] }
           defaultIcon = 'mdi:cash-multiple'
           defaultTitle = 'Финансы'
+          break
+        case TripSectionType.CHECKLIST:
+          defaultContent = { items: [] }
+          defaultIcon = 'mdi:format-list-checks'
+          defaultTitle = 'Чек-лист'
           break
       }
 
@@ -73,7 +73,7 @@ export const useTripInfoSectionsStore = defineStore('tripInfoSections', {
       const tempId = `temp-section-${Date.now()}`
       const newSection: TripSection = {
         id: tempId,
-        tripId: tripStore.currentTripId,
+        tripId: tripPlanStore.currentTripId,
         type,
         title: defaultTitle,
         icon: defaultIcon,
@@ -87,7 +87,7 @@ export const useTripInfoSectionsStore = defineStore('tripInfoSections', {
       await useRequest({
         key: `${ETripSectionsKeys.CREATE}:${tempId}`,
         fn: () => trpc.tripSection.create.mutate({
-          tripId: tripStore.currentTripId!,
+          tripId: tripPlanStore.currentTripId!,
           type,
           title: defaultTitle,
           icon: defaultIcon,

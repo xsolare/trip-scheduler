@@ -3,7 +3,7 @@ import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
 import { Icon } from '@iconify/vue'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { TripSectionType } from '~/shared/types/models/trip'
-import { useModuleStore } from '../../composables/use-module'
+import { useModuleStore } from '../../composables/use-trip-info-module.ts'
 
 const { sections: sectionsStore } = useModuleStore(['sections'])
 

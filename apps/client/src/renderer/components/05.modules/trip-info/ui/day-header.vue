@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
-import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-module'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 
-const store = useModuleStore(['data', 'ui'])
+const store = useModuleStore(['plan', 'ui'])
 
-const { getSelectedDay: selectedDay } = storeToRefs(store.data)
+const { getSelectedDay: selectedDay } = storeToRefs(store.plan)
 const { isViewMode } = storeToRefs(store.ui)
 
 function updateDayDetails(details: { title?: string, description?: string, meta?: any[] }) {
-  store.data.updateDayDetails(selectedDay.value!.id, details)
+  store.plan.updateDayDetails(selectedDay.value!.id, details)
 }
 
 function handleDescriptionBlur(newDesc: string) {

@@ -135,7 +135,7 @@ export interface TripSection {
   type: TripSectionType
   title: string
   icon: string | null
-  content: any
+  content: unknown
   order: number
   createdAt: string
   updatedAt: string

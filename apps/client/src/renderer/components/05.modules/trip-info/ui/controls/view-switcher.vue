@@ -2,7 +2,7 @@
 import type { ActiveView } from '../../models/types'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
-import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-module'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 
 const store = useModuleStore(['ui'])
 const { activeView } = storeToRefs(store.ui)

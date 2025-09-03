@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useModuleStore } from '../../composables/use-module'
+import { useModuleStore } from '../../composables/use-trip-info-module'
 
-const store = useModuleStore(['data'])
+const store = useModuleStore(['plan'])
 </script>
 
 <template>
   <div class="trip-content-empty">
     <p>Пока не создано ни одного дня для вашего путешествия.</p>
-    <button @click="store.data.addNewDay">
+    <button @click="store.plan.addNewDay">
       Создать первый день
     </button>
   </div>

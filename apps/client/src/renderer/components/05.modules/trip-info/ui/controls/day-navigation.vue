@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { nextTick } from 'vue'
-import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-module'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 
-const store = useModuleStore(['data'])
+const store = useModuleStore(['plan'])
 
-const { getPreviousDayId, getNextDayId } = storeToRefs(store.data)
-const { selectPreviousDay, selectNextDay } = store.data
+const { getPreviousDayId, getNextDayId } = storeToRefs(store.plan)
+const { selectPreviousDay, selectNextDay } = store.plan
 
 async function handleSelectPreviousDay() {
   selectPreviousDay()

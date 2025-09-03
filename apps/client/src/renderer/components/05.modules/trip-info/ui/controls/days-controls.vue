@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
+import type { IDay } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
 import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
-import { useModuleStore } from '../../composables/use-module'
+import { useModuleStore } from '../../composables/use-trip-info-module'
 import DaysPanel from './days-panel.vue'
 import ViewSwitcher from './view-switcher.vue'
 
-const store = useModuleStore(['ui', 'data'])
+const store = useModuleStore(['ui', 'plan'])
 const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView, isEditModeAllow } = storeToRefs(store.ui)
-const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.data)
-const { setCurrentDay, updateDayDetails } = store.data
+const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.plan)
+const { setCurrentDay, updateDayDetails } = store.plan
 
 const buttonConfig = computed(() => {
   if (isViewMode.value) {
@@ -35,7 +36,7 @@ function toggleMode() {
 }
 
 function handleAddNewDay() {
-  store.data.addNewDay()
+  store.plan.addNewDay()
   if (!store.ui.isDaysPanelPinned)
     store.ui.closeDaysPanel()
 }
@@ -44,7 +45,7 @@ function handleDeleteDay() {
   if (!getSelectedDay.value)
     return
 
-  store.data.deleteDay()
+  store.plan.deleteDay()
 }
 
 const isDayInfoLoading = computed(() => isLoading.value || isLoadingNewDay.value)
@@ -67,7 +68,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     const newIsoDate = new Date(newDateString).toISOString()
 
     const occupiedDay = getAllDays.value.find(
-      day => day.date.startsWith(newDateString) && day.id !== currentDay.id,
+      (day: IDay) => day.date.startsWith(newDateString) && day.id !== currentDay.id,
     )
 
     if (occupiedDay) {

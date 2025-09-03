@@ -1,14 +1,14 @@
+<!-- Маршрут по дням (план + воспоминания) -->
 <script setup lang="ts">
 import { TripInfo } from '~/components/05.modules/trip-info'
-import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-module'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { useDisplay } from '~/shared/composables/use-display'
 
-const store = useModuleStore(['ui'])
+const store = useModuleStore(['plan', 'ui'])
 const { mdAndDown } = useDisplay()
 
+const { fetchError } = storeToRefs(store.plan)
 const { isDaysPanelPinned, activeView } = storeToRefs(store.ui)
-
-const hasFetchError = ref(false)
 </script>
 
 <template>
@@ -16,7 +16,7 @@ const hasFetchError = ref(false)
     class="content-wrapper"
     :class="[
       { isPanelPinned: isDaysPanelPinned && !mdAndDown },
-      { 'has-error': hasFetchError },
+      { 'has-error': fetchError },
       activeView,
     ]"
   >
