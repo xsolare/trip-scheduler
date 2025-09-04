@@ -1,10 +1,21 @@
 import { z } from 'zod'
-import { tripSectionTypeEnum } from '~/../db/schema'
+
+// Определение enum, идентичного тому, что используется на клиенте.
+// Это необходимо для совместимости типов в tRPC.
+// Значения должны быть синхронизированы с `tripSectionTypeEnum` в `db/schema.ts`.
+export enum TripSectionType {
+  BOOKINGS = 'bookings',
+  FINANCES = 'finances',
+  CHECKLIST = 'checklist',
+  NOTES = 'notes',
+}
 
 export const TripSectionSchema = z.object({
   id: z.string().uuid(),
   tripId: z.string().uuid(),
-  type: z.enum(tripSectionTypeEnum.enumValues),
+  // Используем z.nativeEnum для корректной генерации типов для клиента.
+  // Zod будет по-прежнему валидировать, что значение является одним из значений enum.
+  type: z.nativeEnum(TripSectionType),
   title: z.string(),
   icon: z.string().nullable(),
   content: z.any(), // z.any() для гибкости jsonb

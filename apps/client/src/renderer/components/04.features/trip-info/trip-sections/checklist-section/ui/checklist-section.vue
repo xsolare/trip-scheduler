@@ -1,24 +1,13 @@
 <script setup lang="ts">
+import type { ChecklistSectionContent } from '../composables'
 import { Icon } from '@iconify/vue'
-import { useDebounceFn } from '@vueuse/core'
-import { v4 as uuidv4 } from 'uuid'
-import { computed, nextTick, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
 import { KitEditable } from '~/components/01.kit/kit-editable'
+import { useChecklistSection } from '../composables'
 
-// --- Types ---
-interface ChecklistItem {
-  id: string
-  text: string
-  completed: boolean
-}
-
-interface ChecklistSectionContent {
-  items: ChecklistItem[]
-}
-
+// --- Типы ---
 interface Props {
   section: {
     id: string
@@ -31,60 +20,16 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits(['updateSection'])
 
-// --- Local State ---
-const items = ref<ChecklistItem[]>(JSON.parse(JSON.stringify(props.section.content?.items || [])))
-const newItemText = ref('')
-const newItemInputRef = ref<HTMLInputElement | null>(null)
-
-// --- Logic ---
-const debouncedUpdate = useDebounceFn(() => {
-  emit('updateSection', {
-    ...props.section,
-    content: { items: items.value },
-  })
-}, 700)
-
-async function addItem() {
-  if (!newItemText.value.trim())
-    return
-  items.value.push({
-    id: uuidv4(),
-    text: newItemText.value,
-    completed: false,
-  })
-  newItemText.value = ''
-  await nextTick()
-  newItemInputRef.value?.focus()
-}
-
-function deleteItem(id: string) {
-  items.value = items.value.filter(item => item.id !== id)
-}
-
-function updateItemText(id: string, newText: string) {
-  const item = items.value.find(i => i.id === id)
-  if (item) {
-    item.text = newText
-  }
-}
-
-const progress = computed(() => {
-  const total = items.value.length
-  if (total === 0)
-    return 0
-  const completed = items.value.filter(item => item.completed).length
-  return Math.round((completed / total) * 100)
-})
-
-watch(items, () => {
-  debouncedUpdate()
-}, { deep: true })
-
-watch(() => props.section.content, (newContent) => {
-  if (JSON.stringify(newContent?.items) !== JSON.stringify(items.value)) {
-    items.value = JSON.parse(JSON.stringify(newContent?.items || []))
-  }
-}, { deep: true })
+// --- Логика из хука ---
+const {
+  items,
+  newItemText,
+  newItemInputRef,
+  progress,
+  addItem,
+  deleteItem,
+  updateItemText,
+} = useChecklistSection(props, emit)
 </script>
 
 <template>
@@ -94,33 +39,37 @@ watch(() => props.section.content, (newContent) => {
       <span class="progress-text">{{ progress }}% выполнено</span>
     </div>
 
-    <div class="checklist-items">
-      <draggable
-        v-model="items"
-        item-key="id"
-        handle=".drag-handle"
-        ghost-class="ghost-item"
-        :disabled="readonly"
-      >
-        <template #item="{ element: item }">
-          <div class="checklist-item" :class="{ completed: item.completed }">
-            <button v-if="!readonly" class="drag-handle" title="Перетащить">
-              <Icon icon="mdi:drag-vertical" />
-            </button>
-            <KitCheckbox v-model="item.completed" :disabled="readonly" />
-            <KitEditable
-              :model-value="item.text"
-              :readonly="readonly"
-              class="item-text"
-              @update:model-value="updateItemText(item.id, $event)"
-            />
-            <button v-if="!readonly" class="delete-item-btn" @click="deleteItem(item.id)">
-              <Icon icon="mdi:close" />
-            </button>
-          </div>
-        </template>
-      </draggable>
-    </div>
+    <draggable
+      :model-value="items"
+      item-key="id"
+      handle=".drag-handle"
+      ghost-class="ghost-item"
+      :disabled="readonly"
+      class="checklist-items"
+      @update:model-value="items = $event"
+    >
+      <template #item="{ element: item }">
+        <div class="checklist-item" :class="{ completed: item.completed }">
+          <button v-if="!readonly" class="drag-handle" title="Перетащить">
+            <Icon icon="mdi:drag-vertical" />
+          </button>
+          <KitCheckbox
+            v-model="item.completed"
+            color="accent"
+            :readonly="readonly"
+          />
+          <KitEditable
+            :model-value="item.text"
+            :readonly="readonly"
+            class="item-text"
+            @update:model-value="updateItemText(item.id, $event)"
+          />
+          <button v-if="!readonly" class="delete-item-btn" @click="deleteItem(item.id)">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+      </template>
+    </draggable>
 
     <form v-if="!readonly" class="add-item-form" @submit.prevent="addItem">
       <input
@@ -174,14 +123,15 @@ watch(() => props.section.content, (newContent) => {
 .checklist-items {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
 }
 
 .checklist-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 0.5rem;
+  padding-left: 16px;
   background-color: var(--bg-secondary-color);
   border-radius: var(--r-s);
   transition: all 0.2s ease;
@@ -202,11 +152,24 @@ watch(() => props.section.content, (newContent) => {
   }
 }
 
-.drag-handle {
-  cursor: grab;
+.drag-handle,
+.delete-item-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
   color: var(--fg-tertiary-color);
   opacity: 0;
   transition: opacity 0.2s ease;
+  font-size: 1.2rem;
+}
+
+.drag-handle {
+  cursor: grab;
   &:active {
     cursor: grabbing;
   }
@@ -214,13 +177,10 @@ watch(() => props.section.content, (newContent) => {
 
 .item-text {
   flex-grow: 1;
+  margin-left: 0;
 }
 
 .delete-item-btn {
-  color: var(--fg-tertiary-color);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  font-size: 1rem;
   &:hover {
     color: var(--fg-error-color);
   }

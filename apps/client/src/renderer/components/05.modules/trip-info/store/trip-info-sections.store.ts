@@ -26,8 +26,14 @@ export const useTripSectionsStore = defineStore('tripSections', {
     sortedSections: (state): TripSection[] => {
       return [...state.sections].sort((a, b) => a.order - b.order)
     },
-    // Проверяем, существует ли уже раздел чек-листа
-    hasChecklistSection: state => state.sections.some(s => s.type === TripSectionType.CHECKLIST),
+    // Получаем Set существующих уникальных типов секций (всех, кроме NOTES)
+    existingUniqueSectionTypes: (state): Set<TripSectionType> => {
+      return new Set(
+        state.sections
+          .map(s => s.type)
+          .filter(t => t !== TripSectionType.NOTES),
+      )
+    },
   },
 
   actions: {
@@ -129,6 +135,40 @@ export const useTripSectionsStore = defineStore('tripSections', {
           useToast().error(`Ошибка при обновлении раздела: ${error}`)
         },
       })
+    },
+
+    async clearSection(sectionId: string) {
+      const index = this.sections.findIndex(s => s.id === sectionId)
+      if (index === -1) {
+        useToast().error('Не удалось найти раздел для очистки.')
+        return
+      }
+
+      const sectionToClear = this.sections[index]
+
+      let defaultContent: any = {}
+      switch (sectionToClear.type) {
+        case TripSectionType.NOTES:
+          defaultContent = { markdown: '' }
+          break
+        case TripSectionType.BOOKINGS:
+          defaultContent = { items: [] }
+          break
+        case TripSectionType.FINANCES:
+          defaultContent = { totalBudget: 0, expenses: [] }
+          break
+        case TripSectionType.CHECKLIST:
+          defaultContent = { items: [] }
+          break
+      }
+
+      const clearedSection: TripSection = {
+        ...sectionToClear,
+        content: defaultContent,
+      }
+
+      await this.updateSection(clearedSection)
+      useToast().success(`Раздел "${clearedSection.title}" был очищен.`)
     },
 
     async deleteSection(sectionId: string) {

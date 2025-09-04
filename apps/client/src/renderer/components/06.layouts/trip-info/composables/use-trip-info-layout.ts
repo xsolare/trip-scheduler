@@ -4,6 +4,7 @@ import type { TripSection } from '~/shared/types/models/trip'
 import { onClickOutside, useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { useIconPicker } from './use-icon-picker'
@@ -13,6 +14,8 @@ export function useTripInfoLayout() {
   const { sortedSections } = storeToRefs(store.sections)
   const confirm = useConfirm()
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const router = useRouter()
+  const route = useRoute()
 
   const activeTabId = ref<string>('daily-route')
   const isDrawerOpen = ref(false)
@@ -48,27 +51,22 @@ export function useTripInfoLayout() {
 
   const activeTab = computed(() => tabItems.value.find(item => item.id === activeTabId.value))
 
-  const isCurrentTabEditable = computed(() => {
-    if (!activeTab.value || activeTab.value.id === 'daily-route')
-      return false
-    const section = sortedSections.value.find((s: TripSection) => s.id === activeTab.value!.id)
-    if (!section)
-      return false
-    const nonEditableLabels = ['Бронирования', 'Финансы', 'Чек-лист']
-    return !nonEditableLabels.includes(section.title)
-  })
-
   const menuItems = computed((): KitDropdownItem[] => {
-    const items: KitDropdownItem[] = [
+    const baseItems: KitDropdownItem[] = [
       { value: 'share', label: 'Поделиться', icon: 'mdi:share-variant-outline' },
     ]
-    if (isCurrentTabEditable.value) {
-      items.push(
+
+    // Если выбрана какая-либо секция (а не "Маршрут по дням")
+    if (activeTab.value && activeTab.value.id !== 'daily-route') {
+      const sectionActions: KitDropdownItem[] = [
         { value: 'edit', label: 'Редактировать', icon: 'mdi:pencil-outline' },
+        { value: 'clear', label: 'Очистить', icon: 'mdi:broom' },
         { value: 'delete', label: 'Удалить', icon: 'mdi:trash-can-outline' },
-      )
+      ]
+      return [...sectionActions, ...baseItems]
     }
-    return items
+
+    return baseItems
   })
 
   // --- МЕТОДЫ (METHODS) ---
@@ -77,7 +75,16 @@ export function useTripInfoLayout() {
     isDrawerOpen.value = false
     isLayoutDropdownOpen.value = false
     isHeaderDropdownOpen.value = false
-    router.push({ query: { section: activeTabId.value } })
+
+    const currentQuery = { ...route.query }
+
+    if (activeTabId.value === 'daily-route') {
+      delete currentQuery.section
+      router.push({ query: currentQuery })
+    }
+    else {
+      router.push({ query: { ...currentQuery, section: activeTabId.value } })
+    }
   }
 
   function handleCurrentSectionClick() {
@@ -95,7 +102,7 @@ export function useTripInfoLayout() {
   }
 
   function openEditDialog() {
-    if (!activeTab.value || !isCurrentTabEditable.value)
+    if (!activeTab.value || activeTab.value.id === 'daily-route')
       return
     const section = sortedSections.value.find((s: TripSection) => s.id === activeTab.value!.id)
     if (!section)
@@ -123,8 +130,22 @@ export function useTripInfoLayout() {
     isEditSectionDialogOpen.value = false
   }
 
+  async function handleClearSection() {
+    if (!activeTab.value || activeTab.value.id === 'daily-route')
+      return
+
+    const isConfirmed = await confirm({
+      title: `Очистить раздел "${activeTab.value.label}"?`,
+      description: 'Все содержимое раздела будет удалено, но сам раздел останется.',
+      confirmText: 'Очистить',
+      type: 'danger',
+    })
+    if (isConfirmed)
+      await store.sections.clearSection(activeTab.value.id)
+  }
+
   async function handleDeleteSection() {
-    if (!activeTab.value || !isCurrentTabEditable.value)
+    if (!activeTab.value || activeTab.value.id === 'daily-route')
       return
     const isConfirmed = await confirm({
       title: `Удалить раздел "${activeTab.value.label}"?`,
@@ -139,16 +160,21 @@ export function useTripInfoLayout() {
     }
   }
 
-  function handleMenuAction(item: KitDropdownItem) {
-    if (!item.value)
+  function handleMenuAction(item: KitDropdownItem | string) {
+    const value = typeof item === 'object' && item !== null ? item.value : item
+    if (!value)
       return
-    switch (item.value) {
+
+    switch (value) {
       case 'share':
         // eslint-disable-next-line no-console
         console.log('Share action triggered for:', activeTab.value?.label)
         break
       case 'edit':
         openEditDialog()
+        break
+      case 'clear':
+        handleClearSection()
         break
       case 'delete':
         handleDeleteSection()
@@ -167,7 +193,7 @@ export function useTripInfoLayout() {
     else
       nextIndex = (currentIndex - 1 + totalItems) % totalItems
 
-    activeTabId.value = tabItems.value[nextIndex].id
+    selectSection(tabItems.value[nextIndex].id)
   }
 
   watch(isNavigationVisible, (isVisible) => {

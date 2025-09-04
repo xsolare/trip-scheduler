@@ -35,10 +35,6 @@ watch(
 </script>
 
 <template>
-  <template v-if="!fetchError">
-    <DaysControls />
-  </template>
-
   <AsyncStateWrapper
     :loading="isLoading || plan.isLoadingNewDay"
     :error="fetchError"
@@ -53,6 +49,8 @@ watch(
 
     <template #success>
       <template v-if="!section">
+        <DaysControls />
+
         <div :key="plan.currentDayId!" class="trip-info-day-view">
           <KitDivider :is-loading="plan.isLoadingUpdateDay">
             о дне

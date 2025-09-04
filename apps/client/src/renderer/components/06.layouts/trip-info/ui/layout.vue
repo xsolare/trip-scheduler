@@ -43,6 +43,14 @@ function handleAddSection(type: any) {
   ui.closeAddSectionDialog()
 }
 
+function toggleMode() {
+  const newMode = ui.isViewMode ? 'edit' : 'view'
+  if (newMode === 'edit')
+    ui.clearCollapsedState()
+
+  ui.setInteractionMode(newMode)
+}
+
 onBeforeUnmount(() => {
   plan.reset()
   memories.reset()
@@ -61,9 +69,11 @@ onBeforeUnmount(() => {
         ref="mainNavigationRef"
         class="main-navigation"
       >
-        <button class="nav-button" title="Назад" @click="router.back()">
-          <Icon icon="mdi:arrow-left" />
-        </button>
+        <div class="main-navigation-left">
+          <button class="nav-button" title="Назад" @click="router.back()">
+            <Icon icon="mdi:arrow-left" />
+          </button>
+        </div>
 
         <div ref="navigationWrapperRef" class="navigation-wrapper">
           <button class="nav-arrow left" title="Предыдущая секция" @click="layout.navigate('prev')">
@@ -71,6 +81,7 @@ onBeforeUnmount(() => {
           </button>
 
           <div class="current-section" @click="layout.handleCurrentSectionClick">
+            <Icon v-if="layout.activeTab.value?.icon" :icon="layout.activeTab.value.icon" class="current-section-icon" />
             <h1 class="current-section-title">
               {{ layout.activeTab.value?.label }}
             </h1>
@@ -98,13 +109,23 @@ onBeforeUnmount(() => {
           </Transition>
         </div>
 
-        <KitDropdown :items="layout.menuItems.value" @update:model-value="layout.handleMenuAction">
-          <template #trigger>
-            <button class="nav-button" title="Меню">
-              <Icon icon="mdi:dots-vertical" />
-            </button>
-          </template>
-        </KitDropdown>
+        <div class="main-navigation-right">
+          <button
+            v-if="ui.isEditModeAllow"
+            class="nav-button"
+            :title="ui.isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
+            @click="toggleMode"
+          >
+            <Icon width="18" height="18" :icon="ui.isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
+          </button>
+          <KitDropdown :items="layout.menuItems.value" @update:model-value="layout.handleMenuAction">
+            <template #trigger>
+              <button class="nav-button" title="Меню">
+                <Icon icon="mdi:dots-vertical" />
+              </button>
+            </template>
+          </KitDropdown>
+        </div>
       </div>
       <KitDivider class="trip-info-divider">
         <Icon width="16" height="16" icon="mdi-axis-arrow-info" />
@@ -134,7 +155,6 @@ onBeforeUnmount(() => {
         <span>{{ item.label }}</span>
       </li>
     </ul>
-    <!-- ИЗМЕНЕНИЕ ЗДЕСЬ: Заменяем <AddTripSection /> на кнопку -->
     <div class="drawer-footer">
       <button
         class="add-section-btn"
@@ -286,6 +306,9 @@ onBeforeUnmount(() => {
     }
 
     .current-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       padding: 8px 24px;
       border-radius: var(--r-m);
       cursor: pointer;
@@ -296,8 +319,13 @@ onBeforeUnmount(() => {
         background-color: var(--bg-hover-color);
       }
 
+      &-icon {
+        font-size: 1.5rem;
+        color: var(--fg-secondary-color);
+      }
+
       &-title {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 600;
         color: var(--fg-primary-color);
         margin: 0;
@@ -308,6 +336,14 @@ onBeforeUnmount(() => {
           font-size: 1.1rem;
         }
       }
+    }
+
+    &-right,
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 88px;
     }
   }
   &-content {

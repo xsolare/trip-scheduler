@@ -14,27 +14,6 @@ const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView, isEditModeAl
 const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.plan)
 const { setCurrentDay, updateDayDetails } = store.plan
 
-const buttonConfig = computed(() => {
-  if (isViewMode.value) {
-    return {
-      icon: 'mdi:pencil-outline',
-      title: 'Перейти в режим редактирования',
-    }
-  }
-  return {
-    icon: 'mdi:eye-outline',
-    title: 'Перейти в режим просмотра',
-  }
-})
-
-function toggleMode() {
-  const newMode = isViewMode.value ? 'edit' : 'view'
-  if (newMode === 'edit')
-    store.ui.clearCollapsedState()
-
-  store.ui.setInteractionMode(newMode)
-}
-
 function handleAddNewDay() {
   store.plan.addNewDay()
   if (!store.ui.isDaysPanelPinned)
@@ -121,15 +100,6 @@ const selectedCalendarDate = computed<CalendarDate | null>({
           @click="handleDeleteDay"
         >
           <Icon icon="mdi:trash-can-outline" />
-        </button>
-        <button
-          v-if="isEditModeAllow"
-          key="mode"
-          class="mode-button"
-          :title="buttonConfig.title"
-          @click="toggleMode"
-        >
-          <Icon :icon="buttonConfig.icon" />
         </button>
       </TransitionGroup>
 

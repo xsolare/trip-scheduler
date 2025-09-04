@@ -1,28 +1,41 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
+import { computed } from 'vue'
+
+type CheckboxColor = 'accent' | 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'error'
 
 interface Props {
   disabled?: boolean
+  readonly?: boolean
+  color?: CheckboxColor
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  color: 'accent',
+})
 
 const model = defineModel<boolean>()
 
 const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
+
+/**
+ * Генерирует класс для цветового оформления.
+ */
+const colorClass = computed(() => `is-color-${props.color}`)
 </script>
 
 <template>
   <label
     :for="id"
     class="kit-checkbox-wrapper"
-    :class="{ 'is-disabled': disabled }"
+    :class="{ 'is-disabled': disabled, 'is-readonly': readonly }"
   >
     <CheckboxRoot
       :id="id"
       v-model="model"
       class="kit-checkbox-root"
+      :class="colorClass"
       :disabled="disabled"
     >
       <CheckboxIndicator class="kit-checkbox-indicator">
@@ -30,7 +43,7 @@ const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
       </CheckboxIndicator>
     </CheckboxRoot>
 
-    <span class="kit-checkbox-label">
+    <span v-if="$slots.default" class="kit-checkbox-label">
       <slot />
     </span>
   </label>
@@ -45,9 +58,15 @@ const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
   user-select: none;
   transition: opacity 0.2s ease-out;
 
+  // Стиль для полностью отключенного состояния
   &.is-disabled {
     cursor: not-allowed;
     opacity: 0.6;
+  }
+
+  // Стиль для состояния "только для чтения"
+  &.is-readonly {
+    pointer-events: none; // Блокируем любые события мыши (клики, наведения)
   }
 }
 
@@ -65,13 +84,81 @@ const id = `kit-checkbox-${Math.random().toString(36).substring(2, 9)}`
   position: relative;
 
   &:hover:not([data-disabled]) {
-    border-color: var(--border-accent-color);
     transform: scale(1.05);
   }
 
+  // --- Стили для разных цветов ---
+  &.is-color-accent {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-accent-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-accent-color);
+      border-color: var(--fg-accent-color);
+    }
+  }
+
+  &.is-color-primary {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-primary-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-primary-color);
+      border-color: var(--fg-primary-color);
+    }
+  }
+
+  &.is-color-secondary {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-secondary-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-secondary-color);
+      border-color: var(--fg-secondary-color);
+    }
+  }
+
+  &.is-color-tertiary {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-tertiary-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-tertiary-color);
+      border-color: var(--fg-tertiary-color);
+    }
+  }
+
+  &.is-color-success {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-success-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-success-color);
+      border-color: var(--fg-success-color);
+    }
+  }
+
+  &.is-color-warning {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-warning-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-warning-color);
+      border-color: var(--fg-warning-color);
+    }
+  }
+
+  &.is-color-error {
+    &:hover:not([data-disabled]) {
+      border-color: var(--border-error-color);
+    }
+    &[data-state='checked'] {
+      background-color: var(--fg-error-color);
+      border-color: var(--fg-error-color);
+    }
+  }
+
   &[data-state='checked'] {
-    background-color: var(--fg-accent-color);
-    border-color: var(--fg-accent-color);
     transform: scale(1.02);
   }
 

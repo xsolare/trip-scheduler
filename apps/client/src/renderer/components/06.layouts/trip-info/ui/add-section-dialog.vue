@@ -15,9 +15,8 @@ const { sections: sectionsStore } = useModuleStore(['sections'])
 // --- Состояние для кастомного режима ---
 const isCustomMode = ref(false)
 const newSectionTitle = ref('')
-const newSectionIcon = ref('mdi:file-document-outline')
+const newSectionIcon = ref('mdi:note-text-outline')
 
-// Используем наш новый composable для логики иконок
 const { iconSearchQuery, filteredIcons } = useIconPicker()
 
 interface SectionPreset {
@@ -28,36 +27,36 @@ interface SectionPreset {
   isAvailable: boolean
 }
 
-const sectionPresets = computed((): SectionPreset[] => [
-  {
-    type: TripSectionType.NOTES,
-    title: 'Заметки',
-    description: 'Текстовый блок для любой информации.',
-    icon: 'mdi:note-text-outline',
-    isAvailable: true,
-  },
-  {
-    type: TripSectionType.BOOKINGS,
-    title: 'Бронирования',
-    description: 'Для хранения информации о билетах, отелях.',
-    icon: 'mdi:book-multiple-outline',
-    isAvailable: true,
-  },
-  {
-    type: TripSectionType.CHECKLIST,
-    title: 'Чек-лист',
-    description: 'Список дел или вещей, которые нужно взять.',
-    icon: 'mdi:format-list-checks',
-    isAvailable: !sectionsStore.hasChecklistSection,
-  },
-  {
-    type: TripSectionType.FINANCES,
-    title: 'Финансы',
-    description: 'Бюджет поездки и учет расходов.',
-    icon: 'mdi:cash-multiple',
-    isAvailable: true,
-  },
-])
+const sectionPresets = computed((): SectionPreset[] => {
+  const existingTypes = sectionsStore.existingUniqueSectionTypes
+  return [
+    {
+      type: TripSectionType.BOOKINGS,
+      title: 'Бронирования',
+      description: 'Для хранения информации о билетах, отелях.',
+      icon: 'mdi:book-multiple-outline',
+      isAvailable: !existingTypes.has(TripSectionType.BOOKINGS),
+    },
+    {
+      type: TripSectionType.CHECKLIST,
+      title: 'Чек-лист',
+      description: 'Список дел или вещей, которые нужно взять.',
+      icon: 'mdi:format-list-checks',
+      isAvailable: !existingTypes.has(TripSectionType.CHECKLIST),
+    },
+    {
+      type: TripSectionType.FINANCES,
+      title: 'Финансы',
+      description: 'Бюджет поездки и учет расходов.',
+      icon: 'mdi:cash-multiple',
+      isAvailable: !existingTypes.has(TripSectionType.FINANCES),
+    },
+  ]
+})
+
+const availablePresets = computed(() => {
+  return sectionPresets.value.filter(p => p.isAvailable)
+})
 
 function handleAddSection(payload: TripSectionType | { type: TripSectionType, title: string, icon: string }) {
   emit('addSection', payload)
@@ -86,6 +85,12 @@ watch(() => props.visible, (isVisible) => {
     newSectionIcon.value = 'mdi:file-document-outline'
     iconSearchQuery.value = ''
   }
+  else {
+    // Если окно открывается и доступных пресетов нет,
+    // сразу переходим в режим создания своего варианта
+    if (availablePresets.value.length === 0)
+      isCustomMode.value = true
+  }
 })
 </script>
 
@@ -98,9 +103,9 @@ watch(() => props.visible, (isVisible) => {
     @update:visible="emit('update:visible', $event)"
   >
     <div v-if="!isCustomMode" class="presets-grid">
-      <template v-for="preset in sectionPresets" :key="preset.type">
+      <!-- Теперь итерация идет по отфильтрованному списку -->
+      <template v-for="preset in availablePresets" :key="preset.type">
         <button
-          v-if="preset.isAvailable"
           class="preset-card"
           @click="handleAddSection(preset.type)"
         >
@@ -132,7 +137,8 @@ watch(() => props.visible, (isVisible) => {
       </button>
     </div>
     <form v-else class="add-section-form" @submit.prevent="handleAddCustomSection">
-      <KitBtn variant="text" class="back-btn" @click="isCustomMode = false">
+      <!-- Кнопка "Назад" отображается только если были доступны другие пресеты -->
+      <KitBtn v-if="availablePresets.length > 0" variant="text" class="back-btn" @click="isCustomMode = false">
         <Icon icon="mdi:arrow-left" /> Назад к пресетам
       </KitBtn>
       <KitInput
@@ -165,6 +171,7 @@ watch(() => props.visible, (isVisible) => {
 </template>
 
 <style scoped lang="scss">
+/* Стили остаются без изменений */
 .presets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
