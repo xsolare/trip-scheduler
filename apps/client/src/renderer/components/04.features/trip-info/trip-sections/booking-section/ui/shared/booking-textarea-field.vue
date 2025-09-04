@@ -9,7 +9,7 @@ interface Props {
   readonly: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const modelValue = defineModel<string>()
 
 const internalModel = computed({
@@ -27,7 +27,11 @@ const internalModel = computed({
       {{ label }}
     </label>
     <div class="editor-wrapper" :class="{ 'is-readonly': readonly }">
+      <div v-if="props.readonly && !modelValue">
+        Нет заметок...
+      </div>
       <KitInlineMdEditorWrapper
+        v-else
         v-model="internalModel"
         :readonly="readonly"
         placeholder="Добавьте заметки..."
@@ -70,7 +74,6 @@ const internalModel = computed({
 
   :deep() {
     .milkdown .ProseMirror p {
-      font-weight: 500;
       font-size: 0.9rem;
       color: var(--fg-primary-color);
     }
@@ -80,5 +83,7 @@ const internalModel = computed({
   background-color: transparent;
   border-color: transparent;
   padding: 0;
+  font-size: 0.9rem;
+  color: var(--fg-primary-color);
 }
 </style>
