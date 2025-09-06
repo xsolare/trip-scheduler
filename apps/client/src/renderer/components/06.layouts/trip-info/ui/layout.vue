@@ -345,6 +345,9 @@ onBeforeUnmount(() => {
       gap: 8px;
       width: 88px;
     }
+    &-right {
+      justify-content: flex-end;
+    }
   }
   &-content {
     height: 100%;

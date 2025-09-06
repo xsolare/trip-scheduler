@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import type { ChecklistSectionContent } from '../composables'
+import type { ChecklistGroup, ChecklistItem, ChecklistSectionContent } from '../models/types'
 import { Icon } from '@iconify/vue'
+import { ref } from 'vue'
 import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
-import { KitEditable } from '~/components/01.kit/kit-editable'
+import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
+import { KitDivider } from '~/components/01.kit/kit-divider'
+import { KitTabs } from '~/components/01.kit/kit-tabs'
 import { useChecklistSection } from '../composables'
+import ChecklistGroupComponent from './checklist-group.vue'
+import ChecklistItemComponent from './checklist-item.vue'
 
 // --- Типы ---
 interface Props {
@@ -23,66 +27,247 @@ const emit = defineEmits(['updateSection'])
 // --- Логика из хука ---
 const {
   items,
-  newItemText,
-  newItemInputRef,
+  groups,
+  activeTab,
+  tabItems,
   progress,
+  currentTabGroups,
+  currentTabUngroupedItems,
+  itemsByGroupId,
   addItem,
+  updateItem,
   deleteItem,
-  updateItemText,
+  addGroup,
+  deleteGroup,
+  updateGroup,
 } = useChecklistSection(props, emit)
+
+const newUngroupedItemText = ref('')
+
+function onGroupItemsUpdate(groupId: string, updatedItems: ChecklistItem[]) {
+  const otherItems = items.value.filter(i => i.groupId !== groupId)
+  items.value = [...otherItems, ...updatedItems]
+}
+
+function onUngroupedItemsUpdate(newUngroupedItems: ChecklistItem[]) {
+  const otherItems = items.value.filter(i => i.groupId || i.type !== activeTab.value)
+  items.value = [...newUngroupedItems, ...otherItems]
+}
+
+function onAddUngroupedItem() {
+  if (newUngroupedItemText.value.trim()) {
+    addItem(newUngroupedItemText.value, activeTab.value)
+    newUngroupedItemText.value = ''
+  }
+}
+
+function getTemplateComponent(tabId: 'preparation' | 'in-trip') {
+  return {
+    render() {
+      return this.$slots.default()
+    },
+    setup() {
+      // Это необходимо, чтобы каждый таб имел свое состояние для `newUngroupedItemText`
+      // но в данном случае мы можем сбрасывать его при смене таба
+      watch(activeTab, () => {
+        newUngroupedItemText.value = ''
+      })
+      return {}
+    },
+  }
+}
 </script>
 
 <template>
   <div class="checklist-section">
-    <div class="progress-bar-container">
-      <div class="progress-bar" :style="{ width: `${progress}%` }" />
-      <span class="progress-text">{{ progress }}% выполнено</span>
-    </div>
+    <KitConfirmDialog />
+    <KitTabs v-model="activeTab" :items="tabItems">
+      <template #preparation>
+        <component :is="getTemplateComponent('preparation')">
+          <div class="tab-content-wrapper">
+            <!-- Панель действий -->
+            <div v-if="!readonly" class="actions-panel">
+              <KitBtn icon="mdi:playlist-plus" @click="addGroup('preparation')">
+                Добавить группу
+              </KitBtn>
+            </div>
 
-    <draggable
-      :model-value="items"
-      item-key="id"
-      handle=".drag-handle"
-      ghost-class="ghost-item"
-      :disabled="readonly"
-      class="checklist-items"
-      @update:model-value="items = $event"
-    >
-      <template #item="{ element: item }">
-        <div class="checklist-item" :class="{ completed: item.completed }">
-          <button v-if="!readonly" class="drag-handle" title="Перетащить">
-            <Icon icon="mdi:drag-vertical" />
-          </button>
-          <KitCheckbox
-            v-model="item.completed"
-            color="accent"
-            :readonly="readonly"
-          />
-          <KitEditable
-            :model-value="item.text"
-            :readonly="readonly"
-            class="item-text"
-            @update:model-value="updateItemText(item.id, $event)"
-          />
-          <button v-if="!readonly" class="delete-item-btn" @click="deleteItem(item.id)">
-            <Icon icon="mdi:close" />
-          </button>
-        </div>
+            <!-- Прогресс-бар -->
+            <div class="progress-container">
+              <div class="progress-bar-container">
+                <div class="progress-bar" :style="{ width: `${progress}%` }" />
+              </div>
+              <span class="progress-text">{{ progress }}%</span>
+            </div>
+
+            <!-- Контент -->
+            <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
+              <!-- Группы -->
+              <draggable
+                :model-value="currentTabGroups"
+                item-key="id"
+                handle=".drag-handle-group"
+                ghost-class="ghost-item"
+                :disabled="readonly"
+                class="groups-list"
+                @update:model-value="groups = $event"
+              >
+                <template #item="{ element: group }">
+                  <ChecklistGroupComponent
+                    :group="group"
+                    :items="itemsByGroupId[group.id] || []"
+                    :readonly="readonly"
+                    @update:group="updateGroup"
+                    @update:items="onGroupItemsUpdate(group.id, $event)"
+                    @delete="deleteGroup(group.id)"
+                    @add-item="text => addItem(text, 'preparation', group.id)"
+                  />
+                </template>
+              </draggable>
+
+              <!-- Задачи без группы -->
+              <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
+                <KitDivider v-if="currentTabGroups.length > 0" class="group-divider">
+                  Прочие задачи
+                </KitDivider>
+                <div class="ungrouped-wrapper">
+                  <draggable
+                    :model-value="currentTabUngroupedItems"
+                    item-key="id"
+                    handle=".drag-handle"
+                    ghost-class="ghost-item"
+                    :disabled="readonly"
+                    class="ungrouped-items-list"
+                    @update:model-value="onUngroupedItemsUpdate"
+                  >
+                    <template #item="{ element: item }">
+                      <ChecklistItemComponent
+                        :item="item"
+                        :readonly="readonly"
+                        @update:item="updateItem"
+                        @delete="deleteItem(item.id)"
+                      />
+                    </template>
+                  </draggable>
+                  <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
+                    <input
+                      v-model="newUngroupedItemText"
+                      type="text"
+                      placeholder="Добавить прочую задачу..."
+                      class="add-item-input"
+                    >
+                    <KitBtn type="submit" size="sm" :disabled="!newUngroupedItemText.trim()">
+                      Добавить
+                    </KitBtn>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Пустое состояние -->
+            <div v-else class="empty-state">
+              <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
+              <p>Задач пока нет.</p>
+              <p v-if="!readonly">
+                Нажмите "Добавить группу", чтобы начать.
+              </p>
+            </div>
+          </div>
+        </component>
       </template>
-    </draggable>
+      <template #in-trip>
+        <component :is="getTemplateComponent('in-trip')">
+          <div class="tab-content-wrapper">
+            <!-- Панель действий -->
+            <div v-if="!readonly" class="actions-panel">
+              <KitBtn icon="mdi:playlist-plus" @click="addGroup('in-trip')">
+                Добавить группу
+              </KitBtn>
+            </div>
 
-    <form v-if="!readonly" class="add-item-form" @submit.prevent="addItem">
-      <input
-        ref="newItemInputRef"
-        v-model="newItemText"
-        type="text"
-        placeholder="Добавить новый пункт..."
-        class="add-item-input"
-      >
-      <KitBtn type="submit" icon="mdi:plus" :disabled="!newItemText.trim()">
-        Добавить
-      </KitBtn>
-    </form>
+            <!-- Прогресс-бар -->
+            <div class="progress-container">
+              <div class="progress-bar-container">
+                <div class="progress-bar" :style="{ width: `${progress}%` }" />
+              </div>
+              <span class="progress-text">{{ progress }}%</span>
+            </div>
+
+            <!-- Контент -->
+            <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
+              <!-- Группы -->
+              <draggable
+                :model-value="currentTabGroups"
+                item-key="id"
+                handle=".drag-handle-group"
+                ghost-class="ghost-item"
+                :disabled="readonly"
+                class="groups-list"
+                @update:model-value="groups = $event"
+              >
+                <template #item="{ element: group }">
+                  <ChecklistGroupComponent
+                    :group="group"
+                    :items="itemsByGroupId[group.id] || []"
+                    :readonly="readonly"
+                    @update:group="updateGroup"
+                    @update:items="onGroupItemsUpdate(group.id, $event)"
+                    @delete="deleteGroup(group.id)"
+                    @add-item="text => addItem(text, 'in-trip', group.id)"
+                  />
+                </template>
+              </draggable>
+
+              <!-- Задачи без группы -->
+              <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
+                <KitDivider v-if="currentTabGroups.length > 0">
+                  Прочие задачи
+                </KitDivider>
+                <div class="ungrouped-wrapper">
+                  <draggable
+                    :model-value="currentTabUngroupedItems"
+                    item-key="id"
+                    handle=".drag-handle"
+                    ghost-class="ghost-item"
+                    :disabled="readonly"
+                    class="ungrouped-items-list"
+                    @update:model-value="onUngroupedItemsUpdate"
+                  >
+                    <template #item="{ element: item }">
+                      <ChecklistItemComponent
+                        :item="item"
+                        :readonly="readonly"
+                        @update:item="updateItem"
+                        @delete="deleteItem(item.id)"
+                      />
+                    </template>
+                  </draggable>
+                  <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
+                    <input
+                      v-model="newUngroupedItemText"
+                      type="text"
+                      placeholder="Добавить прочую задачу..."
+                      class="add-item-input"
+                    >
+                    <KitBtn type="submit" size="sm" :disabled="!newUngroupedItemText.trim()">
+                      Добавить
+                    </KitBtn>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- Пустое состояние -->
+            <div v-else class="empty-state">
+              <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
+              <p>Задач пока нет.</p>
+              <p v-if="!readonly">
+                Нажмите "Добавить группу", чтобы начать.
+              </p>
+            </div>
+          </div>
+        </component>
+      </template>
+    </KitTabs>
   </div>
 </template>
 
@@ -90,15 +275,37 @@ const {
 .checklist-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.tab-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 4px;
+}
+
+.group-divider {
+  margin: 16px 0;
+}
+
+.actions-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .progress-bar-container {
-  width: 100%;
-  height: 24px;
+  flex-grow: 1;
+  height: 16px;
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-full);
-  position: relative;
   overflow: hidden;
 }
 
@@ -110,104 +317,76 @@ const {
 }
 
 .progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--fg-inverted-color);
-  font-size: 0.8rem;
+  color: var(--fg-secondary-color);
+  font-size: 0.85rem;
   font-weight: 600;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
-.checklist-items {
+.checklist-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.75rem;
 }
 
-.checklist-item {
+.groups-list,
+.ungrouped-items-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
-  padding: 0.5rem;
-  padding-left: 16px;
-  background-color: var(--bg-secondary-color);
-  border-radius: var(--r-s);
-  transition: all 0.2s ease;
-
-  &.completed {
-    .item-text {
-      text-decoration: line-through;
-      color: var(--fg-tertiary-color);
-    }
-  }
-
-  &:hover {
-    background-color: var(--bg-hover-color);
-    .delete-item-btn,
-    .drag-handle {
-      opacity: 1;
-    }
-  }
 }
 
-.drag-handle,
-.delete-item-btn {
-  padding: 0;
-  border: none;
-  background: none;
+.ungrouped-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  color: var(--fg-tertiary-color);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  font-size: 1.2rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: var(--bg-secondary-color);
+  border-radius: var(--r-m);
+  padding: 0.5rem;
+  border: 1px solid var(--border-secondary-color);
 }
 
-.drag-handle {
-  cursor: grab;
-  &:active {
-    cursor: grabbing;
-  }
+.add-item-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-top: 1px solid var(--border-secondary-color);
+  margin-top: 0.25rem;
 }
 
-.item-text {
+.add-item-input {
   flex-grow: 1;
-  margin-left: 0;
-}
-
-.delete-item-btn {
-  &:hover {
-    color: var(--fg-error-color);
+  border: none;
+  background: transparent;
+  color: var(--fg-primary-color);
+  font-size: 0.9rem;
+  padding: 0.25rem;
+  &:focus {
+    outline: none;
   }
 }
 
 .ghost-item {
   opacity: 0.5;
-  background: var(--bg-accent-color);
+  background: var(--bg-accent-overlay-color);
+  border-radius: var(--r-m);
 }
 
-.add-item-form {
+.empty-state {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  margin-top: 1rem;
+  text-align: center;
+  color: var(--fg-tertiary-color);
+  background-color: var(--bg-secondary-color);
+  border-radius: var(--r-m);
+  border: 2px dashed var(--border-secondary-color);
 }
 
-.add-item-input {
-  flex-grow: 1;
-  padding: 0.75rem;
-  background-color: var(--bg-secondary-color);
-  border: 1px solid var(--border-primary-color);
-  border-radius: var(--r-s);
-  color: var(--fg-primary-color);
-  font-size: 1rem;
-  &:focus {
-    outline: none;
-    border-color: var(--border-focus-color);
-  }
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
 }
 </style>

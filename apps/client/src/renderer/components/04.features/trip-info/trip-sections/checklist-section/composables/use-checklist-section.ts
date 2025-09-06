@@ -1,17 +1,8 @@
+import type { ChecklistGroup, ChecklistItem, ChecklistSectionContent, ChecklistTab } from '../models/types'
 import { useDebounceFn } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
-import { computed, nextTick, ref, watch } from 'vue'
-
-// --- Типы ---
-export interface ChecklistItem {
-  id: string
-  text: string
-  completed: boolean
-}
-
-export interface ChecklistSectionContent {
-  items: ChecklistItem[]
-}
+import { computed, ref, watch } from 'vue'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 
 interface UseChecklistSectionProps {
   section: {
@@ -31,85 +22,137 @@ export function useChecklistSection(
   props: UseChecklistSectionProps,
   emit: (event: 'updateSection', payload: any) => void,
 ) {
+  const confirm = useConfirm()
+
   // --- Локальное состояние ---
   const items = ref<ChecklistItem[]>(JSON.parse(JSON.stringify(props.section.content?.items || [])))
-  const newItemText = ref('')
-  const newItemInputRef = ref<HTMLInputElement | null>(null)
+  const groups = ref<ChecklistGroup[]>(JSON.parse(JSON.stringify(props.section.content?.groups || [])))
+  const activeTab = ref<ChecklistTab>('preparation')
+
+  const tabItems = [
+    { id: 'preparation', label: 'Подготовка', icon: 'mdi:briefcase-check-outline' },
+    { id: 'in-trip', label: 'В путешествии', icon: 'mdi:map-marker-path' },
+  ]
 
   // --- Логика ---
   const debouncedUpdate = useDebounceFn(() => {
     emit('updateSection', {
       ...props.section,
-      content: { items: items.value },
+      content: { items: items.value, groups: groups.value },
     })
   }, 700)
 
-  /**
-   * Добавляет новый элемент в список.
-   */
-  async function addItem() {
-    if (props.readonly || !newItemText.value.trim())
+  // --- Управление элементами ---
+  function addItem(text: string, tab: ChecklistTab, groupId: string | null = null) {
+    if (props.readonly || !text.trim())
       return
 
-    items.value.push({
+    items.value.unshift({
       id: uuidv4(),
-      text: newItemText.value,
+      text,
       completed: false,
+      type: tab,
+      groupId,
     })
-    newItemText.value = ''
-    await nextTick()
-    newItemInputRef.value?.focus()
   }
 
-  /**
-   * Удаляет элемент из списка по ID.
-   * @param id - ID элемента для удаления.
-   */
   function deleteItem(id: string) {
     if (props.readonly)
       return
     items.value = items.value.filter(item => item.id !== id)
   }
 
-  /**
-   * Обновляет текст элемента.
-   * @param id - ID элемента для обновления.
-   * @param newText - Новый текст элемента.
-   */
-  function updateItemText(id: string, newText: string) {
+  function updateItem(updatedItem: ChecklistItem) {
     if (props.readonly)
       return
-    const item = items.value.find(i => i.id === id)
-    if (item)
-      item.text = newText
+    const index = items.value.findIndex(i => i.id === updatedItem.id)
+    if (index !== -1)
+      items.value[index] = updatedItem
+  }
+
+  // --- Управление группами ---
+  function addGroup(tab: ChecklistTab) {
+    if (props.readonly)
+      return
+    groups.value.unshift({
+      id: uuidv4(),
+      name: 'Новая группа',
+      icon: 'mdi:tag-outline',
+      type: tab,
+    })
+  }
+
+  async function deleteGroup(id: string) {
+    if (props.readonly)
+      return
+
+    const isConfirmed = await confirm({
+      title: 'Удалить группу?',
+      description: 'Все задачи внутри этой группы также будут удалены. Это действие необратимо.',
+      confirmText: 'Удалить',
+      type: 'danger',
+    })
+
+    if (isConfirmed) {
+      groups.value = groups.value.filter(g => g.id !== id)
+      // Удаляем все элементы, принадлежащие этой группе
+      items.value = items.value.filter(item => item.groupId !== id)
+    }
+  }
+
+  function updateGroup(updatedGroup: ChecklistGroup) {
+    if (props.readonly)
+      return
+    const index = groups.value.findIndex(g => g.id === updatedGroup.id)
+    if (index !== -1)
+      groups.value[index] = updatedGroup
   }
 
   // --- Вычисляемые свойства ---
+  const currentTabItems = computed(() => items.value.filter(item => item.type === activeTab.value))
+  const currentTabGroups = computed(() => groups.value.filter(group => group.type === activeTab.value))
+  const currentTabUngroupedItems = computed(() => currentTabItems.value.filter(item => !item.groupId))
+
+  const itemsByGroupId = computed(() => {
+    return currentTabItems.value.reduce((acc, item) => {
+      if (item.groupId) {
+        if (!acc[item.groupId])
+          acc[item.groupId] = []
+
+        acc[item.groupId].push(item)
+      }
+      return acc
+    }, {} as Record<string, ChecklistItem[]>)
+  })
+
   const progress = computed(() => {
-    const total = items.value.length
+    const relevantItems = currentTabItems.value
+    const total = relevantItems.length
     if (total === 0)
       return 0
-    const completed = items.value.filter(item => item.completed).length
+    const completed = relevantItems.filter(item => item.completed).length
     return Math.round((completed / total) * 100)
   })
 
   // --- Наблюдатели ---
-  watch(items, () => {
+  watch([items, groups], () => {
     debouncedUpdate()
-  }, { deep: true })
-
-  watch(() => props.section.content, (newContent) => {
-    if (JSON.stringify(newContent?.items) !== JSON.stringify(items.value))
-      items.value = JSON.parse(JSON.stringify(newContent?.items || []))
   }, { deep: true })
 
   return {
     items,
-    newItemText,
-    newItemInputRef,
+    groups,
+    activeTab,
+    tabItems,
     progress,
+    currentTabGroups,
+    currentTabUngroupedItems,
+    itemsByGroupId,
     addItem,
     deleteItem,
-    updateItemText,
+    updateItem,
+    addGroup,
+    deleteGroup,
+    updateGroup,
   }
 }
