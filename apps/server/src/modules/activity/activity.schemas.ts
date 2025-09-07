@@ -20,9 +20,11 @@ const ActivitySectionGallerySchema = ActivitySectionBaseSchema.extend({
 
 const ActivitySectionGeolocationSchema = ActivitySectionBaseSchema.extend({
   type: z.literal('geolocation'),
-  latitude: z.number(),
-  longitude: z.number(),
-  address: z.string(),
+  points: z.array(z.any()),
+  routes: z.array(z.any()),
+  drawnRoutes: z.array(z.any()),
+  center: z.array(z.number()).optional(),
+  zoom: z.number().optional(),
 })
 
 export const ActivitySectionSchema = z.discriminatedUnion('type', [

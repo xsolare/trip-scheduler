@@ -37,6 +37,9 @@ function initializeForm() {
         date: new Date().toISOString().split('T')[0],
         currency: props.mainCurrency,
         categoryId: null,
+        title: '',
+        amount: 0,
+        notes: '',
       }
 }
 
@@ -52,7 +55,7 @@ watch(() => props.visible, (isVisible) => {
 
 <template>
   <KitDialogWithClose :visible="visible" :title="title" icon="mdi:cash-plus" @update:visible="emit('update:visible', $event)">
-    <form class="form-grid" @submit.prevent="handleSubmit">
+    <form v-if="form.type" class="form-grid" @submit.prevent="handleSubmit">
       <KitViewSwitcher v-model="form.type" :items="typeItems" full-width />
 
       <KitInput v-model="form.title" label="Название" placeholder="Обед в ресторане" required class="span-2" />
@@ -64,7 +67,7 @@ watch(() => props.visible, (isVisible) => {
 
       <div class="category-select-wrapper span-2">
         <KitSelectWithSearch
-          v-model="form.categoryId"
+          v-model="form.categoryId!"
           :items="categoryItems"
           label="Категория"
           placeholder="Выберите категорию"

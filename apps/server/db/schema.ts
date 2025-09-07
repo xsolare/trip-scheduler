@@ -43,9 +43,9 @@ interface ActivitySectionGallery extends ActivitySectionBase {
 
 interface ActivitySectionGeolocation extends ActivitySectionBase {
   type: 'geolocation'
-  latitude: number
-  longitude: number
-  address: string
+  points: any[]
+  routes: any[]
+  drawnRoutes: any[]
 }
 
 export type ActivitySection = ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation

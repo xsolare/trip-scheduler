@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { useTripPlanStore } from '~/components/04.features/trip-info/trip-plan'
 import { useRequest } from '~/plugins/request'
-import { trpc } from '~/shared/services/trpc/trpc.service'
 import { TripSectionType } from '~/shared/types/models/trip'
 
 export enum ETripSectionsKeys {
@@ -94,7 +93,7 @@ export const useTripSectionsStore = defineStore('tripSections', {
 
       await useRequest({
         key: `${ETripSectionsKeys.CREATE}:${tempId}`,
-        fn: () => trpc.tripSection.create.mutate({
+        fn: db => db.tripSections.create({
           tripId: tripPlanStore.currentTripId!,
           type,
           title: defaultTitle,
@@ -124,7 +123,7 @@ export const useTripSectionsStore = defineStore('tripSections', {
 
       await useRequest({
         key: `${ETripSectionsKeys.UPDATE}:${section.id}`,
-        fn: () => trpc.tripSection.update.mutate({
+        fn: db => db.tripSections.update({
           id: section.id,
           title: section.title,
           icon: section.icon,
@@ -180,7 +179,7 @@ export const useTripSectionsStore = defineStore('tripSections', {
 
       await useRequest({
         key: `${ETripSectionsKeys.DELETE}:${sectionId}`,
-        fn: () => trpc.tripSection.delete.mutate({ id: sectionId }),
+        fn: db => db.tripSections.delete(sectionId),
         onError: (error) => {
           this.sections.splice(index, 0, removedSection) // Откат
           useToast().error(`Ошибка при удалении раздела: ${error}`)

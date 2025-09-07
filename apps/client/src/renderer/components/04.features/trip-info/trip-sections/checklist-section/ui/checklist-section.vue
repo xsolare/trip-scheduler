@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ChecklistGroup, ChecklistItem, ChecklistSectionContent } from '../models/types'
 import { Icon } from '@iconify/vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
@@ -61,21 +61,9 @@ function onAddUngroupedItem() {
   }
 }
 
-function getTemplateComponent(tabId: 'preparation' | 'in-trip') {
-  return {
-    render() {
-      return this.$slots.default()
-    },
-    setup() {
-      // Это необходимо, чтобы каждый таб имел свое состояние для `newUngroupedItemText`
-      // но в данном случае мы можем сбрасывать его при смене таба
-      watch(activeTab, () => {
-        newUngroupedItemText.value = ''
-      })
-      return {}
-    },
-  }
-}
+watch(activeTab, () => {
+  newUngroupedItemText.value = ''
+})
 </script>
 
 <template>
@@ -83,189 +71,185 @@ function getTemplateComponent(tabId: 'preparation' | 'in-trip') {
     <KitConfirmDialog />
     <KitTabs v-model="activeTab" :items="tabItems">
       <template #preparation>
-        <component :is="getTemplateComponent('preparation')">
-          <div class="tab-content-wrapper">
-            <!-- Панель действий -->
-            <div v-if="!readonly" class="actions-panel">
-              <KitBtn icon="mdi:playlist-plus" @click="addGroup('preparation')">
-                Добавить группу
-              </KitBtn>
+        <div class="tab-content-wrapper">
+          <!-- Панель действий -->
+          <div v-if="!readonly" class="actions-panel">
+            <KitBtn icon="mdi:playlist-plus" @click="addGroup('preparation')">
+              Добавить группу
+            </KitBtn>
+          </div>
+
+          <!-- Прогресс-бар -->
+          <div class="progress-container">
+            <div class="progress-bar-container">
+              <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>
+            <span class="progress-text">{{ progress }}%</span>
+          </div>
 
-            <!-- Прогресс-бар -->
-            <div class="progress-container">
-              <div class="progress-bar-container">
-                <div class="progress-bar" :style="{ width: `${progress}%` }" />
-              </div>
-              <span class="progress-text">{{ progress }}%</span>
-            </div>
+          <!-- Контент -->
+          <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
+            <!-- Группы -->
+            <draggable
+              :model-value="currentTabGroups"
+              item-key="id"
+              handle=".drag-handle-group"
+              ghost-class="ghost-item"
+              :disabled="readonly"
+              class="groups-list"
+              @update:model-value="groups = $event"
+            >
+              <template #item="{ element: group }">
+                <ChecklistGroupComponent
+                  :group="group"
+                  :items="itemsByGroupId[group.id] || []"
+                  :readonly="readonly"
+                  @update:group="updateGroup"
+                  @update:items="onGroupItemsUpdate(group.id, $event)"
+                  @delete="deleteGroup(group.id)"
+                  @add-item="text => addItem(text, 'preparation', group.id)"
+                />
+              </template>
+            </draggable>
 
-            <!-- Контент -->
-            <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
-              <!-- Группы -->
-              <draggable
-                :model-value="currentTabGroups"
-                item-key="id"
-                handle=".drag-handle-group"
-                ghost-class="ghost-item"
-                :disabled="readonly"
-                class="groups-list"
-                @update:model-value="groups = $event"
-              >
-                <template #item="{ element: group }">
-                  <ChecklistGroupComponent
-                    :group="group"
-                    :items="itemsByGroupId[group.id] || []"
-                    :readonly="readonly"
-                    @update:group="updateGroup"
-                    @update:items="onGroupItemsUpdate(group.id, $event)"
-                    @delete="deleteGroup(group.id)"
-                    @add-item="text => addItem(text, 'preparation', group.id)"
-                  />
-                </template>
-              </draggable>
-
-              <!-- Задачи без группы -->
-              <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
-                <KitDivider v-if="currentTabGroups.length > 0" class="group-divider">
-                  Прочие задачи
-                </KitDivider>
-                <div class="ungrouped-wrapper">
-                  <draggable
-                    :model-value="currentTabUngroupedItems"
-                    item-key="id"
-                    handle=".drag-handle"
-                    ghost-class="ghost-item"
-                    :disabled="readonly"
-                    class="ungrouped-items-list"
-                    @update:model-value="onUngroupedItemsUpdate"
+            <!-- Задачи без группы -->
+            <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
+              <KitDivider v-if="currentTabGroups.length > 0" class="group-divider">
+                Прочие задачи
+              </KitDivider>
+              <div class="ungrouped-wrapper">
+                <draggable
+                  :model-value="currentTabUngroupedItems"
+                  item-key="id"
+                  handle=".drag-handle"
+                  ghost-class="ghost-item"
+                  :disabled="readonly"
+                  class="ungrouped-items-list"
+                  @update:model-value="onUngroupedItemsUpdate"
+                >
+                  <template #item="{ element: item }">
+                    <ChecklistItemComponent
+                      :item="item"
+                      :readonly="readonly"
+                      @update:item="updateItem"
+                      @delete="deleteItem(item.id)"
+                    />
+                  </template>
+                </draggable>
+                <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
+                  <input
+                    v-model="newUngroupedItemText"
+                    type="text"
+                    placeholder="Добавить прочую задачу..."
+                    class="add-item-input"
                   >
-                    <template #item="{ element: item }">
-                      <ChecklistItemComponent
-                        :item="item"
-                        :readonly="readonly"
-                        @update:item="updateItem"
-                        @delete="deleteItem(item.id)"
-                      />
-                    </template>
-                  </draggable>
-                  <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
-                    <input
-                      v-model="newUngroupedItemText"
-                      type="text"
-                      placeholder="Добавить прочую задачу..."
-                      class="add-item-input"
-                    >
-                    <KitBtn type="submit" size="sm" :disabled="!newUngroupedItemText.trim()">
-                      Добавить
-                    </KitBtn>
-                  </form>
-                </div>
+                  <KitBtn type="submit" size="sm" :disabled="!newUngroupedItemText.trim()">
+                    Добавить
+                  </KitBtn>
+                </form>
               </div>
-            </div>
-
-            <!-- Пустое состояние -->
-            <div v-else class="empty-state">
-              <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
-              <p>Задач пока нет.</p>
-              <p v-if="!readonly">
-                Нажмите "Добавить группу", чтобы начать.
-              </p>
             </div>
           </div>
-        </component>
+
+          <!-- Пустое состояние -->
+          <div v-else class="empty-state">
+            <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
+            <p>Задач пока нет.</p>
+            <p v-if="!readonly">
+              Нажмите "Добавить группу", чтобы начать.
+            </p>
+          </div>
+        </div>
       </template>
       <template #in-trip>
-        <component :is="getTemplateComponent('in-trip')">
-          <div class="tab-content-wrapper">
-            <!-- Панель действий -->
-            <div v-if="!readonly" class="actions-panel">
-              <KitBtn icon="mdi:playlist-plus" @click="addGroup('in-trip')">
-                Добавить группу
-              </KitBtn>
+        <div class="tab-content-wrapper">
+          <!-- Панель действий -->
+          <div v-if="!readonly" class="actions-panel">
+            <KitBtn icon="mdi:playlist-plus" @click="addGroup('in-trip')">
+              Добавить группу
+            </KitBtn>
+          </div>
+
+          <!-- Прогресс-бар -->
+          <div class="progress-container">
+            <div class="progress-bar-container">
+              <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>
+            <span class="progress-text">{{ progress }}%</span>
+          </div>
 
-            <!-- Прогресс-бар -->
-            <div class="progress-container">
-              <div class="progress-bar-container">
-                <div class="progress-bar" :style="{ width: `${progress}%` }" />
-              </div>
-              <span class="progress-text">{{ progress }}%</span>
-            </div>
+          <!-- Контент -->
+          <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
+            <!-- Группы -->
+            <draggable
+              :model-value="currentTabGroups"
+              item-key="id"
+              handle=".drag-handle-group"
+              ghost-class="ghost-item"
+              :disabled="readonly"
+              class="groups-list"
+              @update:model-value="groups = $event"
+            >
+              <template #item="{ element: group }">
+                <ChecklistGroupComponent
+                  :group="group"
+                  :items="itemsByGroupId[group.id] || []"
+                  :readonly="readonly"
+                  @update:group="updateGroup"
+                  @update:items="onGroupItemsUpdate(group.id, $event)"
+                  @delete="deleteGroup(group.id)"
+                  @add-item="text => addItem(text, 'in-trip', group.id)"
+                />
+              </template>
+            </draggable>
 
-            <!-- Контент -->
-            <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
-              <!-- Группы -->
-              <draggable
-                :model-value="currentTabGroups"
-                item-key="id"
-                handle=".drag-handle-group"
-                ghost-class="ghost-item"
-                :disabled="readonly"
-                class="groups-list"
-                @update:model-value="groups = $event"
-              >
-                <template #item="{ element: group }">
-                  <ChecklistGroupComponent
-                    :group="group"
-                    :items="itemsByGroupId[group.id] || []"
-                    :readonly="readonly"
-                    @update:group="updateGroup"
-                    @update:items="onGroupItemsUpdate(group.id, $event)"
-                    @delete="deleteGroup(group.id)"
-                    @add-item="text => addItem(text, 'in-trip', group.id)"
-                  />
-                </template>
-              </draggable>
-
-              <!-- Задачи без группы -->
-              <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
-                <KitDivider v-if="currentTabGroups.length > 0">
-                  Прочие задачи
-                </KitDivider>
-                <div class="ungrouped-wrapper">
-                  <draggable
-                    :model-value="currentTabUngroupedItems"
-                    item-key="id"
-                    handle=".drag-handle"
-                    ghost-class="ghost-item"
-                    :disabled="readonly"
-                    class="ungrouped-items-list"
-                    @update:model-value="onUngroupedItemsUpdate"
+            <!-- Задачи без группы -->
+            <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
+              <KitDivider v-if="currentTabGroups.length > 0">
+                Прочие задачи
+              </KitDivider>
+              <div class="ungrouped-wrapper">
+                <draggable
+                  :model-value="currentTabUngroupedItems"
+                  item-key="id"
+                  handle=".drag-handle"
+                  ghost-class="ghost-item"
+                  :disabled="readonly"
+                  class="ungrouped-items-list"
+                  @update:model-value="onUngroupedItemsUpdate"
+                >
+                  <template #item="{ element: item }">
+                    <ChecklistItemComponent
+                      :item="item"
+                      :readonly="readonly"
+                      @update:item="updateItem"
+                      @delete="deleteItem(item.id)"
+                    />
+                  </template>
+                </draggable>
+                <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
+                  <input
+                    v-model="newUngroupedItemText"
+                    type="text"
+                    placeholder="Добавить прочую задачу..."
+                    class="add-item-input"
                   >
-                    <template #item="{ element: item }">
-                      <ChecklistItemComponent
-                        :item="item"
-                        :readonly="readonly"
-                        @update:item="updateItem"
-                        @delete="deleteItem(item.id)"
-                      />
-                    </template>
-                  </draggable>
-                  <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
-                    <input
-                      v-model="newUngroupedItemText"
-                      type="text"
-                      placeholder="Добавить прочую задачу..."
-                      class="add-item-input"
-                    >
-                    <KitBtn type="submit" size="sm" :disabled="!newUngroupedItemText.trim()">
-                      Добавить
-                    </KitBtn>
-                  </form>
-                </div>
+                  <KitBtn type="submit" size="sm" :disabled="!newUngroupedItemText.trim()">
+                    Добавить
+                  </KitBtn>
+                </form>
               </div>
-            </div>
-            <!-- Пустое состояние -->
-            <div v-else class="empty-state">
-              <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
-              <p>Задач пока нет.</p>
-              <p v-if="!readonly">
-                Нажмите "Добавить группу", чтобы начать.
-              </p>
             </div>
           </div>
-        </component>
+          <!-- Пустое состояние -->
+          <div v-else class="empty-state">
+            <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
+            <p>Задач пока нет.</p>
+            <p v-if="!readonly">
+              Нажмите "Добавить группу", чтобы начать.
+            </p>
+          </div>
+        </div>
       </template>
     </KitTabs>
   </div>

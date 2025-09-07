@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { useTripPlanStore } from '~/components/04.features/trip-info/trip-plan'
 import { getLocalDate } from '~/components/05.modules/trip-info/lib/helpers'
 import { useAbortRequest, useRequest, useRequestStatus } from '~/plugins/request'
-import { trpc } from '~/shared/services/trpc/trpc.service'
 import { TripImagePlacement } from '~/shared/types/models/trip'
 
 export interface IProcessingMemory {
@@ -294,13 +293,9 @@ export const useTripMemoriesStore = defineStore('tripMemories', {
 
       const originalMemory = { ...memory }
 
-      // Для этого действия нам не нужно лезть в другой стор,
-      // так как `takenAt` приходит с сервера при создании.
-      // Мы можем просто вызвать мутацию.
-
       await useRequest({
         key: `${ETripMemoriesKeys.APPLY_TIMESTAMP}:${memoryId}`,
-        fn: () => trpc.memory.applyTakenAt.mutate({ id: memoryId }),
+        fn: db => db.memories.applyTakenAtTimestamp(memoryId),
         onSuccess: (updatedMemory) => {
           if (updatedMemory)
             Object.assign(memory, updatedMemory)
@@ -326,7 +321,7 @@ export const useTripMemoriesStore = defineStore('tripMemories', {
 
       await useRequest({
         key: `${ETripMemoriesKeys.REMOVE_TIMESTAMP}:${memoryId}`,
-        fn: () => trpc.memory.unassignDate.mutate({ id: memoryId }),
+        fn: db => db.memories.unassignTimestamp(memoryId),
         onError: () => {
           // Откат в случае ошибки
           memory.timestamp = originalTimestamp

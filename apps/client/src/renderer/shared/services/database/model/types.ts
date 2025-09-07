@@ -1,7 +1,7 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
 import type { SignInPayload, TokenPair, User } from '~/shared/types/models/auth'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
-import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
+import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripSection, TripSectionType, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 
 export interface TripListFilters {
   search?: string
@@ -47,6 +47,12 @@ export interface IAuthRepository {
   me: () => Promise<User>
 }
 
+export interface ITripSectionRepository {
+  create: (data: { tripId: string, type: TripSectionType, title: string, icon: string | null, content: any }) => Promise<TripSection>
+  update: (data: { id: string, title?: string, icon?: string | null, content?: any }) => Promise<TripSection>
+  delete: (id: string) => Promise<TripSection>
+}
+
 // Интерфейс для всей базы данных
 export interface IDatabaseClient {
   trips: ITripRepository
@@ -55,6 +61,7 @@ export interface IDatabaseClient {
   activities: IActivityRepository
   memories: IMemoryRepository
   auth: IAuthRepository
+  tripSections: ITripSectionRepository
 
   initDb: () => Promise<this>
 
@@ -69,6 +76,8 @@ export interface IMemoryRepository {
   create: (data: CreateMemoryInput) => Promise<Memory>
   update: (data: UpdateMemoryInput) => Promise<Memory>
   delete: (id: string) => Promise<Memory>
+  applyTakenAtTimestamp: (id: string) => Promise<Memory>
+  unassignTimestamp: (id: string) => Promise<Memory>
 }
 
 // Режимы работы

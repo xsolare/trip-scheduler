@@ -8,6 +8,7 @@ import { EActivityTag } from '~/components/05.modules/trip-info/models/types'
 import DayMetaBadges from '~/components/05.modules/trip-info/ui/day-meta-badges.vue'
 import { EActivityStatus } from '~/shared/types/models/activity'
 import DayActivitiesList from './list.vue'
+import PossibleActivities from './possible-activities.vue'
 
 const { plan: store, ui } = useModuleStore(['plan', 'ui'])
 
@@ -71,6 +72,15 @@ function handleToggleAllActivities() {
     </div>
     <DayActivitiesList @add="handleAddNewActivity" />
 
+    <div v-if="!isViewMode" class="add-ideas-wrapper">
+      <button class="add-from-ideas-btn" @click="ui.openPossibleActivitiesDrawer">
+        <Icon icon="mdi:lightbulb-on-outline" />
+        <span>Добавить из идей</span>
+      </button>
+    </div>
+
+    <PossibleActivities />
+
     <KitDivider v-if="getSelectedDay?.meta?.length || !isViewMode">
       мета-информация
     </KitDivider>
@@ -122,6 +132,34 @@ function handleToggleAllActivities() {
       border-color: var(--fg-accent-color);
       background-color: var(--bg-hover-color);
     }
+  }
+}
+
+.add-ideas-wrapper {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.add-from-ideas-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--bg-secondary-color);
+  border: 1px solid var(--border-secondary-color);
+  color: var(--fg-secondary-color);
+  border-radius: var(--r-s);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  &:hover {
+    border-color: var(--border-accent-color);
+    color: var(--fg-accent-color);
   }
 }
 </style>
