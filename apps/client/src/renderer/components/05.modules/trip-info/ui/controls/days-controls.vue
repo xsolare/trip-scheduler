@@ -135,6 +135,7 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   gap: 16px;
   padding-bottom: 8px;
   min-height: 80px;
+  margin: 0 auto;
 }
 .left-controls {
   display: flex;

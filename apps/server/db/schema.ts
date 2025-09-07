@@ -158,17 +158,6 @@ export const tripImages = pgTable('trip_images', {
   metadata: jsonb('metadata'),
 })
 
-// Таблица для воспоминаний (Memories)
-export const memories = pgTable('memories', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
-  timestamp: timestamp('timestamp'), // Может быть null для неотсортированных
-  comment: text('comment'),
-  imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
-
 // Таблица для дней (Days)
 export const days = pgTable('days', {
   id: uuid('id').primaryKey(),
@@ -192,6 +181,20 @@ export const activities = pgTable('activities', {
   status: activityStatusEnum('status').notNull().default('none'),
   rating: integer('rating'),
   dayId: uuid('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
+})
+
+// Таблица для воспоминаний (Memories)
+export const memories = pgTable('memories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  timestamp: timestamp('timestamp'), // Может быть null для неотсортированных
+  comment: text('comment'),
+  imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка
+  title: text('title'),
+  tag: activityTagEnum('tag'),
+  sourceActivityId: uuid('source_activity_id').references(() => activities.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // Отношения

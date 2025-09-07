@@ -13,8 +13,13 @@ export const memoryRepository = {
     const [newMemory] = await db
       .insert(memories)
       .values({
-        ...data,
+        tripId: data.tripId,
         timestamp: data.timestamp ? new Date(data.timestamp) : null,
+        comment: data.comment,
+        imageId: data.imageId,
+        title: data.title,
+        tag: data.tag,
+        sourceActivityId: data.sourceActivityId,
       })
       .returning()
 

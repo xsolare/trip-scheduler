@@ -1,3 +1,4 @@
+import type { Activity } from '~/shared/types/models/activity'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
@@ -235,6 +236,34 @@ export const useTripMemoriesStore = defineStore('tripMemories', {
         onSuccess: (newMemory) => {
           this.memories.push(newMemory)
         },
+      })
+    },
+
+    /**
+     * Создает новое воспоминание на основе активности из плана.
+     * @param activity - Активность из плана.
+     */
+    async importActivityFromPlan(activity: Activity) {
+      const tripPlanStore = useTripPlanStore()
+      const tripId = tripPlanStore.currentTripId
+      const day = tripPlanStore.getSelectedDay
+
+      if (!tripId || !day) {
+        console.error('Невозможно импортировать активность: не выбран день или путешествие.')
+        return
+      }
+
+      // Создаем timestamp на основе даты дня и времени начала активности
+      const datePart = day.date.split('T')[0]
+      const timePart = `${activity.startTime}:00`
+      const timestamp = `${datePart}T${timePart}.000Z`
+
+      await this.createMemory({
+        tripId,
+        title: activity.title,
+        tag: activity.tag,
+        timestamp,
+        sourceActivityId: activity.id,
       })
     },
 

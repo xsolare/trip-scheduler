@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { CustomImageViewerImageMeta } from '~/components/05.modules/trip-info/lib/helpers'
-import type { Memory } from '~/shared/types/models/memory'
+import type { IMemory } from '~/components/05.modules/trip-info/models/types'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
@@ -13,7 +13,7 @@ import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 
 interface Props {
-  memory: Memory
+  memory: IMemory
   galleryImages?: ImageViewerImage[]
   isUnsorted?: boolean
   isViewMode?: boolean
@@ -83,6 +83,10 @@ const displayTime = computed(() => {
 
   const formattedTime = `${hours}:${minutes}`
 
+  // Do not display time for memories that are acting as activities (they have their own time display)
+  if (props.memory.title)
+    return ''
+
   if (formattedTime === '00:00') {
     return ''
   }
@@ -139,7 +143,7 @@ watch(imageViewer.currentImage, (newImage) => {
     activeViewerComment.value = newImage.caption || ''
 
     const memoryId = meta.memoryId
-    const correspondingMemory = memoryId ? store.memories.memories.find((m: Memory) => m.id === memoryId) : undefined
+    const correspondingMemory = memoryId ? store.memories.memories.find((m: IMemory) => m.id === memoryId) : undefined
 
     let dateToUse: Date | null = null
 
@@ -165,7 +169,7 @@ watch(imageViewer.currentImage, (newImage) => {
     }
 
     if (memoryId) {
-      const group = props.timelineGroups?.find(g => g.memories.some((m: Memory) => m.id === memoryId))
+      const group = props.timelineGroups?.find(g => g.memories.some((m: IMemory) => m.id === memoryId))
       activeViewerActivityTitle.value = group ? group.title : ''
     }
     else {
@@ -192,7 +196,7 @@ function openImageViewer() {
 function saveViewerComment() {
   const meta = imageViewer.currentImage.value?.meta as CustomImageViewerImageMeta | undefined
   if (meta?.memoryId) {
-    const originalMemory = store.memories.memories.find((m: Memory) => m.id === meta.memoryId)
+    const originalMemory = store.memories.memories.find((m: IMemory) => m.id === meta.memoryId)
     if (originalMemory && activeViewerComment.value !== (originalMemory.comment || '')) {
       updateMemory({ id: meta.memoryId, comment: activeViewerComment.value })
     }
@@ -205,7 +209,7 @@ function saveViewerTime() {
   if (!meta?.memoryId || !activeViewerTime.value || !day)
     return
 
-  const originalMemory = store.memories.memories.find((m: Memory) => m.id === meta.memoryId)
+  const originalMemory = store.memories.memories.find((m: IMemory) => m.id === meta.memoryId)
   if (!originalMemory)
     return
 
@@ -226,7 +230,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
 <template>
   <div
     class="memory-item"
-    :class="{ 'is-photo': memory.imageId, 'is-note': !memory.imageId, 'is-unsorted': isUnsorted }"
+    :class="{ 'is-photo': memory.imageId, 'is-note': !memory.imageId && !memory.title, 'is-activity': memory.title, 'is-unsorted': isUnsorted }"
   >
     <template v-if="memory.imageId && memory?.image?.url">
       <div class="photo-wrapper" @click="openImageViewer">
@@ -274,7 +278,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
       </div>
     </template>
 
-    <template v-if="!memory.imageId">
+    <template v-if="!memory.imageId && !memory.title">
       <div class="memory-content">
         <div class="memory-comment">
           <KitInlineMdEditorWrapper
@@ -312,6 +316,11 @@ onClickOutside(commentEditorRef, saveViewerComment)
           </button>
         </div>
       </div>
+    </template>
+
+    <!-- Hide item if it's an activity without an image, as it's rendered in the group header -->
+    <template v-if="memory.title && memory.imageId">
+      <!-- Content for activity with image is already handled by the photo template -->
     </template>
 
     <KitImageViewer
@@ -379,6 +388,11 @@ onClickOutside(commentEditorRef, saveViewerComment)
   border-radius: var(--r-m);
   background-color: var(--bg-secondary-color);
   overflow: hidden;
+
+  // Hide activity-only memories from the grid, as their title is in the group header
+  &.is-activity:not(.is-photo) {
+    display: none;
+  }
 
   &.is-note {
     position: relative;

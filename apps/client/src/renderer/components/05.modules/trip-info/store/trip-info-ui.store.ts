@@ -6,7 +6,7 @@ import { useAppStore } from '~/shared/composables/use-store'
 export interface ITripInfoUiState {
   isDaysPanelOpen: boolean
   isDaysPanelPinned: boolean
-  isAddSectionDialogOpen: boolean 
+  isAddSectionDialogOpen: boolean
   isPossibleActivitiesDrawerOpen: boolean
   activeView: RemovableRef<ActiveView>
   interactionMode: RemovableRef<InteractionMode>
@@ -22,7 +22,7 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
   state: (): ITripInfoUiState => ({
     isDaysPanelOpen: false,
     isDaysPanelPinned: false,
-    isAddSectionDialogOpen: false, 
+    isAddSectionDialogOpen: false,
     isPossibleActivitiesDrawerOpen: false,
     activeView: useStorage<ActiveView>('trip-active-view', 'plan'),
     interactionMode: useStorage<InteractionMode>('tripinfo-interaction-mode', 'view'),

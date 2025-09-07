@@ -1,52 +1,68 @@
 <script setup lang="ts">
-import type { Activity } from '~/shared/types/models/activity'
-import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
-import { timeToMinutes } from '~/components/05.modules/trip-info/lib/helpers'
 import MemoriesList from './list.vue'
 
-const { plan, ui, memories } = useModuleStore(['plan', 'ui', 'memories'])
-const { getActivitiesForSelectedDay } = storeToRefs(plan)
+const { ui, memories } = useModuleStore(['ui', 'memories'])
 const { areAllMemoryGroupsCollapsed } = storeToRefs(ui)
 
 const timelineGroups = computed(() => {
-  const activities = getActivitiesForSelectedDay.value
   const memoriesList = memories.memoriesForSelectedDay
-  const groups: any[] = []
-
-  if (memoriesList.length === 0 && activities.length === 0)
+  if (memoriesList.length === 0)
     return []
 
-  const unlinkedMemories = memoriesList.filter((m: Memory) => !m.timestamp || (new Date(m.timestamp).getUTCHours() === 0 && new Date(m.timestamp).getUTCMinutes() === 0))
-  const timedMemories = memoriesList.filter((m: Memory) => !unlinkedMemories.includes(m))
+  const groups: any[] = []
+  let currentGroup: any = null
 
-  const START_OF_DAY_MINUTES = 6 * 60 // 06:00
+  const ensureStartGroup = () => {
+    let startGroup = groups.find(g => g.type === 'start')
+    if (!startGroup) {
+      startGroup = {
+        type: 'start',
+        title: 'Начало дня',
+        memories: [],
+        activity: null,
+      }
+      groups.unshift(startGroup) // Add to the beginning
+    }
+    return startGroup
+  }
 
-  const nightMemories = timedMemories.filter((m: Memory) => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) < START_OF_DAY_MINUTES)
-  if (nightMemories.length > 0)
-    groups.push({ type: 'night', title: 'Ночь', memories: nightMemories })
+  // Memories are already sorted by timestamp from the store
+  for (const memory of memoriesList) {
+    if (memory.title) {
+      // This is an activity-like memory, it starts a new group
+      currentGroup = {
+        type: 'activity',
+        activity: memory, // The memory itself provides the group's data
+        title: memory.title,
+        memories: [], // Child memories (photos/notes) will be added here
+      }
+      // An activity can also be a photo or have a comment, so we add it to its own items.
+      if (memory.imageId || memory.comment)
+        currentGroup.memories.push(memory)
 
-  const firstActivityStart = activities.length > 0 ? timeToMinutes(activities[0].startTime) : Infinity
-  const dayStartMemories = timedMemories.filter((m: Memory) => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) >= START_OF_DAY_MINUTES && (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) < firstActivityStart)
-  if (dayStartMemories.length > 0)
-    groups.push({ type: 'start', title: 'Начало дня', memories: dayStartMemories })
+      groups.push(currentGroup)
+    }
+    else {
+      // This is a simple photo or note memory
+      if (currentGroup) {
+        // Add it to the last known activity group
+        currentGroup.memories.push(memory)
+      }
+      else {
+        // No activity has occurred yet, add to the "Start of Day" group
+        const startGroup = ensureStartGroup()
+        startGroup.memories.push(memory)
+      }
+    }
+  }
 
-  activities.forEach((activity: Activity, index: number) => {
-    const start = timeToMinutes(activity.startTime)
-    const end = activities[index + 1] ? timeToMinutes(activities[index + 1].startTime) : timeToMinutes(activity.endTime)
-    const activityMemories = timedMemories.filter((m: Memory) => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) >= start && (index === activities.length - 1 ? (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) <= end : (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) < end))
-    groups.push({ type: 'activity', activity, title: activity.title, memories: activityMemories })
-  })
-
-  const lastActivityEnd = activities.length > 0 ? timeToMinutes(activities[activities.length - 1].endTime) : -1
-  const dayEndMemories = timedMemories.filter((m: Memory) => (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) > lastActivityEnd && (new Date(m.timestamp!).getUTCHours() * 60 + new Date(m.timestamp!).getUTCMinutes()) >= START_OF_DAY_MINUTES)
-  if (dayEndMemories.length > 0)
-    groups.push({ type: 'end', title: 'Завершение дня', memories: dayEndMemories })
-
-  if (unlinkedMemories.length > 0)
-    groups.push({ type: 'unlinked', title: 'Прочие воспоминания за этот день', memories: unlinkedMemories })
+  // Clean up empty start group if no items were added before the first activity
+  const startGroup = groups.find(g => g.type === 'start')
+  if (startGroup && startGroup.memories.length === 0)
+    return groups.filter(g => g.type !== 'start')
 
   return groups
 })
@@ -88,6 +104,7 @@ function handleToggleAllMemories() {
   position: relative;
   display: flex;
   align-items: center;
+  margin-bottom: 16px;
 
   .kit-divider {
     flex-grow: 1;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChecklistGroup, ChecklistItem, ChecklistSectionContent } from '../models/types'
+import type { ChecklistItem, ChecklistSectionContent } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { ref, watch } from 'vue'
 import draggable from 'vuedraggable'

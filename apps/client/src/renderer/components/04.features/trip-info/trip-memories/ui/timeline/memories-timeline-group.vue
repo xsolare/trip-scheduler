@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
-import type { Activity } from '~/shared/types/models/activity'
+import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
-import { KitDropdown } from '~/components/01.kit/kit-dropdown'
-import { EActivityStatus } from '~/shared/types/models/activity'
+import { getTagInfo } from '~/components/05.modules/trip-info/lib/helpers'
 import MemoriesItem from './memories-timeline-item.vue'
 
 interface TimelineGroup {
-  type: 'start' | 'activity' | 'end' | 'unlinked'
+  type: 'start' | 'activity'
   title: string
-  memories: any[]
-  activity?: Activity
+  memories: Memory[]
+  activity: Memory | null // A memory that acts as an activity
 }
 
 type TimelineGroups = TimelineGroup[]
@@ -25,136 +24,60 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  (e: 'updateActivity', payload: { activity: Activity, data: Partial<Activity> }): void
+defineEmits<{
   (e: 'toggleCollapse'): void
 }>()
 
-const statusOptions: { value: EActivityStatus, label: string, icon: string }[] = [
-  { value: EActivityStatus.COMPLETED, label: 'Пройден', icon: 'mdi:check-circle-outline' },
-  { value: EActivityStatus.SKIPPED, label: 'Пропущен', icon: 'mdi:close-circle-outline' },
-  { value: EActivityStatus.NONE, label: 'Не указан', icon: 'mdi:circle-outline' },
-]
-
-const statusInfo = computed(() => {
-  return (status: EActivityStatus) => {
-    return statusOptions.find(o => o.value === status) || statusOptions.find(o => o.value === EActivityStatus.NONE)!
-  }
+const tagInfo = computed(() => {
+  if (!props.group.activity?.tag)
+    return null
+  return getTagInfo(props.group.activity.tag)
 })
 
-function handleUpdateActivity(data: Partial<Activity>) {
-  if (!props.group.activity)
-    return
+const displayTime = computed(() => {
+  if (!props.group.activity?.timestamp)
+    return '...'
 
-  emit('updateActivity', { activity: props.group.activity, data })
-}
+  const d = new Date(props.group.activity.timestamp)
+  const hours = d.getUTCHours().toString().padStart(2, '0')
+  const minutes = d.getUTCMinutes().toString().padStart(2, '0')
+
+  return `${hours}:${minutes}`
+})
 </script>
 
 <template>
   <div class="activity-timeline-node" :class="{ 'is-collapsed': isCollapsed }">
     <div class="activity-header">
-      <div class="activity-time">
-        <span>{{ group.activity ? group.activity.startTime : '...' }}</span>
+      <div v-if="group.type === 'activity'" class="activity-time">
+        <span>{{ displayTime }}</span>
       </div>
+
+      <!-- Title for "Start of day" and etc. INSIDE the header -->
+      <h5 v-if="group.type !== 'activity'" class="activity-title in-header">
+        <Icon v-if="tagInfo" :icon="tagInfo.icon" class="title-icon" />
+        {{ group.title }}
+      </h5>
+
       <button class="collapse-toggle-btn" @click="$emit('toggleCollapse')">
         <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
       </button>
-      <div class="header-spacer" />
-      <div v-if="group.type === 'activity' && group.activity" class="activity-header-controls">
-        <template v-if="!isViewMode">
-          <KitDropdown
-            :items="statusOptions"
-            :model-value="group.activity.status"
-            @update:model-value="(status: EActivityStatus) => handleUpdateActivity({ status })"
-          >
-            <template #trigger>
-              <div
-                class="status-badge"
-                :class="`status-${group.activity.status}`"
-                :title="statusInfo(group.activity.status).label"
-              >
-                <Icon :icon="statusInfo(group.activity.status).icon" class="status-icon" />
-                <span class="status-text">{{ statusInfo(group.activity.status).label }}</span>
-              </div>
-            </template>
-          </KitDropdown>
 
-          <KitDropdown>
-            <template #trigger>
-              <div class="rating-control" :class="{ 'has-rating': group.activity.rating }">
-                <div class="rating-stars">
-                  <template v-if="!!group.activity.rating">
-                    <Icon
-                      v-for="i in 5"
-                      :key="i"
-                      :icon="group.activity.rating && group.activity.rating >= i ? 'mdi:star' : 'mdi:star-outline'"
-                      class="star"
-                      height="14"
-                      width="14"
-                      :class="{ filled: group.activity.rating && group.activity.rating >= i }"
-                    />
-                  </template>
-                </div>
-                <span v-if="!group.activity.rating" class="rating-placeholder">Оценить</span>
-              </div>
-            </template>
-            <div class="rating-picker">
-              <div class="rating-picker-header">
-                Оценка события
-              </div>
-              <div class="rating-options">
-                <button
-                  v-for="i in 5"
-                  :key="i"
-                  class="star-btn"
-                  :class="{ active: group.activity.rating && group.activity.rating >= i }"
-                  @click="handleUpdateActivity({ rating: i === group.activity.rating ? null : i })"
-                >
-                  <Icon :icon="group.activity.rating && group.activity.rating >= i ? 'mdi:star' : 'mdi:star-outline'" />
-                </button>
-              </div>
-              <button
-                v-if="group.activity.rating"
-                class="clear-rating-btn"
-                @click="handleUpdateActivity({ rating: null })"
-              >
-                Очистить оценку
-              </button>
-            </div>
-          </KitDropdown>
-        </template>
-        <template v-else>
-          <div
-            v-if="group.activity.status !== EActivityStatus.NONE"
-            class="status-badge"
-            :class="`status-${group.activity.status}`"
-            :title="statusInfo(group.activity.status).label"
-            style="cursor: default;"
-          >
-            <Icon :icon="statusInfo(group.activity.status).icon" class="status-icon" />
-            <span class="status-text">{{ statusInfo(group.activity.status).label }}</span>
-          </div>
-          <div v-if="group.activity.rating" class="rating-control has-rating" style="cursor: default;">
-            <div class="rating-stars">
-              <Icon
-                v-for="i in 5"
-                :key="i"
-                :icon="group.activity.rating && group.activity.rating >= i ? 'mdi:star' : 'mdi:star-outline'"
-                class="star"
-                height="14"
-                width="14"
-                :class="{ filled: group.activity.rating && group.activity.rating >= i }"
-              />
-            </div>
-          </div>
-        </template>
-      </div>
+      <div v-if="group.type === 'activity'" class="header-spacer" />
+      <!-- Controls for status and rating are removed -->
     </div>
 
+    <!-- Title for regular activities OUTSIDE the header -->
+    <h5 v-if="group.type === 'activity'" class="activity-title">
+      <Icon v-if="tagInfo" :icon="tagInfo.icon" class="title-icon" />
+      {{ group.title }}
+    </h5>
+
     <div v-show="!isCollapsed" class="collapsible-content">
-      <h5 class="activity-title">
-        {{ group.title }}
-      </h5>
+      <div v-if="group.activity?.sourceActivityId" class="imported-badge">
+        <Icon width="18" height="18" icon="mdi:import" />
+        <span>Взято из плана</span>
+      </div>
 
       <div v-if="group.memories.length > 0" class="memories-for-activity">
         <MemoriesItem
@@ -181,6 +104,10 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   &.is-collapsed {
     padding-bottom: 0;
+
+    .activity-title:not(.in-header) {
+      margin-bottom: 0;
+    }
 
     &:not(:last-child) {
       border-left-style: dashed;
@@ -238,13 +165,16 @@ function handleUpdateActivity(data: Partial<Activity>) {
 
   .activity-time {
     background-color: var(--bg-secondary-color);
-    padding: 4px 10px;
+    padding: 2px 10px;
     border: 1px solid var(--border-secondary-color);
     border-radius: var(--r-s);
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--fg-secondary-color);
-    white-space: nowrap;
+
+    > span {
+      white-space: nowrap;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--fg-secondary-color);
+    }
   }
 
   .collapse-toggle-btn {
@@ -284,203 +214,40 @@ function handleUpdateActivity(data: Partial<Activity>) {
 }
 
 .activity-title {
-  margin: 8px 0 20px;
   font-size: 1rem;
   font-weight: 600;
-}
-
-.activity-header-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-right: 8px;
-}
+  gap: 8px;
+  margin: 8px 0 12px;
+  transition: margin-bottom 0.3s ease;
 
-.status-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 0 10px;
-  border-radius: var(--r-full);
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  height: 28px;
-  font-family: 'Sansation';
-
-  .status-icon {
-    font-size: 1.1rem;
+  &.in-header {
+    margin: 0;
   }
 
-  .status-text {
-    display: none;
-
-    @include media-up(sm) {
-      display: inline;
-      white-space: nowrap;
-      font-family: 'Sansation';
-      font-size: 0.8rem;
-    }
-  }
-
-  &.status-completed {
-    background-color: var(--bg-success-color);
-    color: var(--fg-success-color);
-
-    .status-text {
-      color: var(--fg-success-color);
-    }
-    .status-icon {
-      color: var(--fg-success-color);
-    }
-  }
-
-  &.status-skipped {
-    background-color: var(--bg-error-color);
-    color: var(--fg-error-color);
-
-    .status-text {
-      color: var(--fg-error-color);
-    }
-    .status-icon {
-      color: var(--fg-error-color);
-    }
-  }
-
-  &.status-none {
-    background: var(--bg-secondary-color);
-    color: var(--fg-primary-color);
-
-    .status-text {
-      color: var(--fg-secondary-color);
-    }
-    .status-icon {
-      color: var(--fg-secondary-color);
-    }
-  }
-}
-
-.rating-control {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 8px;
-  background: var(--bg-secondary-color);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  height: 28px;
-  min-width: 80px;
-
-  &:hover {
-    border-color: #f1c40f;
-
-    .rating-placeholder {
-      color: #f1c40f;
-    }
-  }
-
-  &.has-rating {
-    border-color: #f1c40f;
-    background: linear-gradient(90deg, rgba(241, 196, 15, 0.15), rgba(241, 196, 15, 0.05));
-
-    .star.filled {
-      color: #f1c40f;
-      filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6));
-    }
-  }
-
-  .rating-stars {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-
-    .star {
-      color: var(--fg-tertiary-color);
-      font-size: 15px;
-      transition:
-        transform 0.15s ease,
-        color 0.2s ease;
-
-      &.filled {
-        color: #f1c40f;
-      }
-
-      &:hover {
-        transform: scale(1.15);
-      }
-    }
-  }
-
-  .rating-placeholder {
-    font-size: 0.78rem;
+  .title-icon {
+    font-size: 1.2rem;
     color: var(--fg-secondary-color);
-    font-weight: 500;
+  }
+}
+
+.imported-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background-color: var(--bg-secondary-color);
+  color: var(--fg-secondary-color);
+  border-radius: var(--r-xs);
+  margin-bottom: 20px;
+  border: 1px solid var(--border-secondary-color);
+  height: 34px;
+
+  > span {
+    font-size: 0.75rem;
     font-family: 'Sansation';
-    transition: color 0.2s ease;
-    white-space: nowrap;
-  }
-}
-
-:deep(.kit-dropdown-content) {
-  min-width: 200px;
-}
-.rating-picker {
-  padding: 12px;
-
-  .rating-picker-header {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--fg-primary-color);
-    margin-bottom: 12px;
-    text-align: center;
-  }
-
-  .rating-options {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  .star-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    font-size: 1.6rem;
-    color: var(--fg-tertiary-color);
-    transition: all 0.2s ease;
-    border-radius: var(--r-s);
-
-    &:hover {
-      transform: scale(1.2);
-      background-color: var(--bg-hover-color);
-    }
-    &.active {
-      color: #f1c40f;
-    }
-  }
-
-  .clear-rating-btn {
-    width: 100%;
-    padding: 8px;
-    background: none;
-    border: 1px solid var(--border-secondary-color);
-    border-radius: var(--r-xs);
-    color: var(--fg-secondary-color);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-top: 12px;
-
-    &:hover {
-      background-color: var(--bg-hover-color);
-      border-color: var(--fg-accent-color);
-      color: var(--fg-accent-color);
-    }
+    line-height: 34px;
   }
 }
 
