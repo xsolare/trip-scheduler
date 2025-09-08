@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import type { CalendarDate } from '@internationalized/date'
 import type { Category, Transaction } from '../../models/types'
+import { Icon } from '@iconify/vue'
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
+import { onClickOutside, useDateFormat } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitCalendar } from '~/components/01.kit/kit-calendar'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
-import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
 
 interface Props {
   visible: boolean
@@ -18,23 +22,51 @@ const emit = defineEmits(['update:visible', 'save', 'openCategoryManager'])
 
 const form = ref<Partial<Transaction>>({})
 
-const title = computed(() => props.transaction ? 'Редактировать транзакцию' : 'Новая транзакция')
+// --- Date Picker Logic ---
+const isCalendarOpen = ref(false)
+const datePickerWrapperRef = ref(null)
+onClickOutside(datePickerWrapperRef, () => { isCalendarOpen.value = false })
+
+const formattedDate = computed(() => {
+  if (!form.value.date)
+    return 'Выберите дату'
+  // We need to parse the YYYY-MM-DD string as UTC to avoid timezone shifts.
+  const [year, month, day] = form.value.date.split('-').map(Number)
+  const dateObj = new Date(Date.UTC(year, month - 1, day))
+  return useDateFormat(dateObj, 'D MMMM YYYY г.', { locales: 'ru-RU' }).value
+})
+
+const calendarDate = computed<CalendarDate>({
+  get() {
+    try {
+      if (form.value.date)
+        return parseDate(form.value.date)
+    }
+    catch (e) {
+      console.error('Invalid date format:', form.value.date)
+    }
+    return today(getLocalTimeZone())
+  },
+  set(newDate: CalendarDate | null) {
+    if (newDate)
+      form.value.date = newDate.toString()
+    isCalendarOpen.value = false
+  },
+})
+
+// --- General Form Logic ---
+const title = computed(() => props.transaction ? 'Редактировать трату' : 'Новая трата')
 
 const categoryItems = computed(() =>
   props.categories.map(c => ({ value: c.id, label: c.name, icon: c.icon })),
 )
 
-const typeItems = [
-  { id: 'expense', label: 'Расход', icon: 'mdi:arrow-down' },
-  { id: 'income', label: 'Доход', icon: 'mdi:arrow-up' },
-]
-
 function initializeForm() {
+  isCalendarOpen.value = false // Ensure calendar is closed on re-init
   form.value = props.transaction
     ? { ...props.transaction }
     : {
-        type: 'expense',
-        date: new Date().toISOString().split('T')[0],
+        date: today(getLocalTimeZone()).toString(),
         currency: props.mainCurrency,
         categoryId: null,
         title: '',
@@ -55,15 +87,24 @@ watch(() => props.visible, (isVisible) => {
 
 <template>
   <KitDialogWithClose :visible="visible" :title="title" icon="mdi:cash-plus" @update:visible="emit('update:visible', $event)">
-    <form v-if="form.type" class="form-grid" @submit.prevent="handleSubmit">
-      <KitViewSwitcher v-model="form.type" :items="typeItems" full-width />
-
+    <form v-if="form" class="form-grid" @submit.prevent="handleSubmit">
       <KitInput v-model="form.title" label="Название" placeholder="Обед в ресторане" required class="span-2" />
 
       <KitInput v-model.number="form.amount" label="Сумма" type="number" required />
       <KitInput v-model="form.currency" label="Валюта" placeholder="RUB, USD..." />
 
-      <KitInput v-model="form.date" label="Дата" type="text" placeholder="YYYY-MM-DD" required class="span-2" />
+      <div ref="datePickerWrapperRef" class="date-picker-wrapper span-2">
+        <label class="kit-input__label">Дата</label>
+        <button type="button" class="date-input" @click="isCalendarOpen = !isCalendarOpen">
+          <span>{{ formattedDate }}</span>
+          <Icon icon="mdi:calendar-blank-outline" />
+        </button>
+        <KitCalendar
+          v-if="isCalendarOpen"
+          v-model="calendarDate"
+          class="calendar-popover"
+        />
+      </div>
 
       <div class="category-select-wrapper span-2">
         <KitSelectWithSearch
@@ -72,7 +113,7 @@ watch(() => props.visible, (isVisible) => {
           label="Категория"
           placeholder="Выберите категорию"
         />
-        <KitBtn icon="mdi:cog-outline" variant="text" title="Управлять категориями" @click="$emit('openCategoryManager')" />
+        <KitBtn icon="mdi:cog-outline" variant="text" title="Управлять категориями" class="manage-categories-btn" @click="$emit('openCategoryManager')" />
       </div>
 
       <KitInput v-model="form.notes" label="Заметки" placeholder="Дополнительная информация" class="span-2" />
@@ -98,6 +139,51 @@ watch(() => props.visible, (isVisible) => {
 .span-2 {
   grid-column: span 2;
 }
+
+.date-picker-wrapper {
+  position: relative;
+  // Borrow label styles from KitInput for consistency
+  .kit-input__label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--fg-secondary-color);
+  }
+}
+
+.date-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background-color: var(--bg-secondary-color);
+  border: 1px solid var(--border-primary-color);
+  border-radius: var(--r-s);
+  text-align: left;
+  font-size: 1rem;
+  color: var(--fg-primary-color);
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: var(--border-secondary-color);
+  }
+
+  svg {
+    color: var(--fg-tertiary-color);
+  }
+}
+
+.calendar-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  z-index: 100;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -111,6 +197,11 @@ watch(() => props.visible, (isVisible) => {
   gap: 0.5rem;
   .kit-select-with-search {
     flex-grow: 1;
+  }
+  .manage-categories-btn {
+    height: 44px;
+    width: 44px;
+    flex-shrink: 0;
   }
 }
 </style>

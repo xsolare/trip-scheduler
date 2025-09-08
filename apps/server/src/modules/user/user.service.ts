@@ -17,10 +17,15 @@ export const userService = {
     const hashedPassword = await authUtils.passwords.hash(input.password)
     const user = await userRepository.create({ ...input, password: hashedPassword })
 
-    // После регистрации сразу генерируем токены для автоматического входа
-    const token = await authUtils.generateTokens({ id: user.id, email: user.email })
+    // ИЗМЕНЕНИЕ: Получаем пользователя с планом после создания
+    const fullUser = await userRepository.getById(user.id)
+    if (!fullUser) {
+      throw createTRPCError('INTERNAL_SERVER_ERROR', 'Не удалось получить данные пользователя после регистрации.')
+    }
 
-    return { user, token }
+    const token = await authUtils.generateTokens({ id: fullUser.id, email: fullUser.email })
+
+    return { user: fullUser, token }
   },
 
   /**

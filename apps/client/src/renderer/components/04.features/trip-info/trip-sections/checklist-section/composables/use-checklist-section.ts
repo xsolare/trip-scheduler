@@ -29,6 +29,10 @@ export function useChecklistSection(
   const groups = ref<ChecklistGroup[]>(JSON.parse(JSON.stringify(props.section.content?.groups || [])))
   const activeTab = ref<ChecklistTab>('preparation')
 
+  // --- Состояния для UI ---
+  const hideCompleted = ref(false)
+  const searchQuery = ref('')
+
   const tabItems = [
     { id: 'preparation', label: 'Подготовка', icon: 'mdi:briefcase-check-outline' },
     { id: 'in-trip', label: 'В путешествии', icon: 'mdi:map-marker-path' },
@@ -53,6 +57,7 @@ export function useChecklistSection(
       completed: false,
       type: tab,
       groupId,
+      priority: 'normal',
     })
   }
 
@@ -95,7 +100,6 @@ export function useChecklistSection(
 
     if (isConfirmed) {
       groups.value = groups.value.filter(g => g.id !== id)
-      // Удаляем все элементы, принадлежащие этой группе
       items.value = items.value.filter(item => item.groupId !== id)
     }
   }
@@ -108,25 +112,60 @@ export function useChecklistSection(
       groups.value[index] = updatedGroup
   }
 
-  // --- Вычисляемые свойства ---
-  const currentTabItems = computed(() => items.value.filter(item => item.type === activeTab.value))
-  const currentTabGroups = computed(() => groups.value.filter(group => group.type === activeTab.value))
-  const currentTabUngroupedItems = computed(() => currentTabItems.value.filter(item => !item.groupId))
+  // --- Вычисляемые свойства (ДОРАБОТАНЫ) ---
+  const filteredItems = computed(() => {
+    let result = items.value.filter(item => item.type === activeTab.value)
+
+    if (hideCompleted.value)
+      result = result.filter(item => !item.completed)
+
+    if (searchQuery.value.trim()) {
+      const query = searchQuery.value.toLowerCase()
+      result = result.filter(item =>
+        item.text.toLowerCase().includes(query)
+        || (item.description && item.description.toLowerCase().includes(query)),
+      )
+    }
+
+    return result
+  })
 
   const itemsByGroupId = computed(() => {
-    return currentTabItems.value.reduce((acc, item) => {
+    return filteredItems.value.reduce((acc, item) => {
       if (item.groupId) {
         if (!acc[item.groupId])
           acc[item.groupId] = []
-
         acc[item.groupId].push(item)
       }
       return acc
     }, {} as Record<string, ChecklistItem[]>)
   })
 
+  // --- ЛОГИКА СКРЫТИЯ ПУСТЫХ ГРУПП ---
+  const currentTabGroups = computed(() => {
+    return groups.value.filter((group) => {
+      if (group.type !== activeTab.value)
+        return false
+
+      // Группа видима, если в ней есть отфильтрованные задачи
+      const hasVisibleItems = (itemsByGroupId.value[group.id] || []).length > 0
+
+      const search = searchQuery.value.trim().toLowerCase()
+      if (search) {
+        // При поиске также показываем группу, если ее имя совпадает
+        const nameMatchesSearch = group.name.toLowerCase().includes(search)
+        return hasVisibleItems || nameMatchesSearch
+      }
+
+      // Без поиска показываем группу только если в ней есть видимые элементы
+      return hasVisibleItems
+    })
+  })
+
+  const currentTabUngroupedItems = computed(() => filteredItems.value.filter(item => !item.groupId))
+
   const progress = computed(() => {
-    const relevantItems = currentTabItems.value
+    const relevantItems = items.value.filter(item => item.type === activeTab.value)
     const total = relevantItems.length
     if (total === 0)
       return 0
@@ -134,7 +173,6 @@ export function useChecklistSection(
     return Math.round((completed / total) * 100)
   })
 
-  // --- Наблюдатели ---
   watch([items, groups], () => {
     debouncedUpdate()
   }, { deep: true })
@@ -145,6 +183,8 @@ export function useChecklistSection(
     activeTab,
     tabItems,
     progress,
+    hideCompleted,
+    searchQuery,
     currentTabGroups,
     currentTabUngroupedItems,
     itemsByGroupId,

@@ -3,6 +3,7 @@ import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDrawer } from '~/components/01.kit/kit-drawer'
+import { UserQuotaWidget } from '~/components/02.shared/user-quota-widget'
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -37,6 +38,23 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
           <span class="user-nickname">injurka</span>
           <span class="user-name">Иван Тайпскриптович</span>
         </div>
+      </div>
+
+      <div v-if="user && user.plan" class="quota-section">
+        <UserQuotaWidget
+          title="Путешествия"
+          icon="mdi:briefcase-outline"
+          :current="user.currentTripsCount"
+          :limit="user.plan.maxTrips"
+          unit="items"
+        />
+        <UserQuotaWidget
+          title="Хранилище"
+          icon="mdi:database-outline"
+          :current="user.currentStorageBytes"
+          :limit="user.plan.maxStorageBytes"
+          unit="bytes"
+        />
       </div>
 
       <nav class="drawer-nav">
@@ -117,6 +135,13 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
     font-size: 0.8rem;
     color: var(--fg-secondary-color);
   }
+}
+
+.quota-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
 }
 
 .drawer-nav {

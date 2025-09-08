@@ -9,7 +9,7 @@ interface TimelineGroup {
   type: 'start' | 'activity'
   title: string
   memories: Memory[]
-  activity: Memory | null // A memory that acts as an activity
+  activity: Memory | null
 }
 
 type TimelineGroups = TimelineGroup[]
@@ -53,7 +53,6 @@ const displayTime = computed(() => {
         <span>{{ displayTime }}</span>
       </div>
 
-      <!-- Title for "Start of day" and etc. INSIDE the header -->
       <h5 v-if="group.type !== 'activity'" class="activity-title in-header">
         <Icon v-if="tagInfo" :icon="tagInfo.icon" class="title-icon" />
         {{ group.title }}
@@ -64,10 +63,8 @@ const displayTime = computed(() => {
       </button>
 
       <div v-if="group.type === 'activity'" class="header-spacer" />
-      <!-- Controls for status and rating are removed -->
     </div>
 
-    <!-- Title for regular activities OUTSIDE the header -->
     <h5 v-if="group.type === 'activity'" class="activity-title">
       <Icon v-if="tagInfo" :icon="tagInfo.icon" class="title-icon" />
       {{ group.title }}

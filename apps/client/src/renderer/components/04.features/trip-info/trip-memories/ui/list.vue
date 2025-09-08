@@ -156,7 +156,6 @@ onChange((files) => {
       </KitDropdown>
     </div>
 
-    <!-- Новый компонент для отображения процесса загрузки -->
     <UploadingQueue
       v-if="isProcessing"
       :processing-memories="getProcessingMemories"
@@ -322,14 +321,15 @@ onChange((files) => {
   color: var(--fg-secondary-color);
   border: 2px dashed var(--border-secondary-color);
   border-radius: var(--r-l);
+
   p {
     margin: 0;
     line-height: 1.6;
+
     &:first-child {
       font-weight: 500;
       font-size: 1.1rem;
       color: var(--fg-primary-color);
-      margin-bottom: 8px;
     }
   }
 }

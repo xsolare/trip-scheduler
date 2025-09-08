@@ -5,8 +5,10 @@ import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
 import { useBookingSection } from '../composables'
+import AttractionCard from './cards/attraction-card.vue'
 import FlightCard from './cards/flight-card.vue'
 import HotelCard from './cards/hotel-card.vue'
+import TrainCard from './cards/train-card.vue'
 
 interface Props {
   section: {
@@ -29,61 +31,60 @@ const {
   bookings,
   updateBooking,
   updateBookingsForGroup,
+  bookingTypeConfigs,
 } = useBookingSection(props, emit)
 
 const cardComponents = {
   flight: FlightCard,
   hotel: HotelCard,
+  train: TrainCard,
+  attraction: AttractionCard,
 }
 
 function getCardComponent(type: Booking['type']) {
   return cardComponents[type]
+}
+
+function formatAddButtonLabel(label: string): string {
+  const words = label.toLowerCase().split(' ')
+  const lastWord = words[words.length - 1]
+
+  // Простое правило для единственного числа
+  if (lastWord.endsWith('ы')) {
+    words[words.length - 1] = lastWord.slice(0, -1)
+  }
+  else if (lastWord.endsWith('а')) {
+    words[words.length - 1] = `${lastWord.slice(0, -1)}о`
+  }
+  return `Добавить ${words.join(' ')}`
 }
 </script>
 
 <template>
   <div class="booking-section">
     <div v-if="!readonly" class="actions-panel">
-      <KitBtn icon="mdi:airplane" @click="addBooking('flight')">
-        Добавить авиабилет
-      </KitBtn>
-      <KitBtn icon="mdi:hotel" color="secondary" @click="addBooking('hotel')">
-        Добавить отель
+      <KitBtn
+        v-for="(config, type) in bookingTypeConfigs"
+        :key="type"
+        :icon="config.icon"
+        color="secondary"
+        @click="addBooking(type)"
+      >
+        {{ formatAddButtonLabel(config.label) }}
       </KitBtn>
     </div>
 
-    <div v-if="bookings.length > 0" class="tabs-container">
+    <div v-if="bookings.length > 0 && tabItems.length > 0" class="tabs-container">
       <KitTabs v-model="activeTab" :items="tabItems">
-        <template #flight>
+        <template v-for="tab in tabItems" :key="tab.id" #[tab.id]>
           <draggable
-            :model-value="bookingGroups.flight || []"
+            :model-value="bookingGroups[tab.id] || []"
             item-key="id"
             handle=".drag-handle"
             ghost-class="ghost-item"
             :disabled="readonly"
             class="bookings-grid"
-            @update:model-value="updateBookingsForGroup('flight', $event)"
-          >
-            <template #item="{ element: booking }">
-              <component
-                :is="getCardComponent(booking.type)"
-                :booking="booking"
-                :readonly="readonly"
-                @delete="deleteBooking(booking.id)"
-                @update:booking="updateBooking"
-              />
-            </template>
-          </draggable>
-        </template>
-        <template #hotel>
-          <draggable
-            :model-value="bookingGroups.hotel || []"
-            item-key="id"
-            handle=".drag-handle"
-            ghost-class="ghost-item"
-            :disabled="readonly"
-            class="bookings-grid"
-            @update:model-value="updateBookingsForGroup('hotel', $event)"
+            @update:model-value="updateBookingsForGroup(tab.id, $event)"
           >
             <template #item="{ element: booking }">
               <component

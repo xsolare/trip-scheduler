@@ -72,12 +72,13 @@ function handleToggleAllActivities() {
     </div>
     <DayActivitiesList @add="handleAddNewActivity" />
 
-    <div v-if="!isViewMode" class="add-ideas-wrapper">
+    <!-- TODO позже -->
+    <!-- <div v-if="!isViewMode" class="add-ideas-wrapper">
       <button class="add-from-ideas-btn" @click="ui.openPossibleActivitiesDrawer">
         <Icon icon="mdi:lightbulb-on-outline" />
         <span>Добавить из идей</span>
       </button>
-    </div>
+    </div> -->
 
     <PossibleActivities />
 

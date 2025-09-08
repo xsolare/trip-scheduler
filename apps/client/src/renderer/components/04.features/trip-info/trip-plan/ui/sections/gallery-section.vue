@@ -395,11 +395,9 @@ const visibleImages = computed(() =>
   }
 }
 
-/* ОБЩИЕ СТИЛИ КОМПОНЕНТА ГАЛЕРЕИ (ОСТАЛИСЬ БЕЗ ИЗМЕНЕНИЙ) */
 .gallery-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);

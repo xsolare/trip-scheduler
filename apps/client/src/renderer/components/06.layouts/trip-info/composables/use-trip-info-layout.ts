@@ -28,8 +28,6 @@ export function useTripInfoLayout() {
   const isEditSectionDialogOpen = ref(false)
   const sectionToEdit = ref<{ id: string, title: string, icon: string } | null>(null)
 
-  // Используем наш новый composable для логики иконок
-  // Переименовываем переменные, чтобы избежать конфликтов и сохранить совместимость с шаблоном
   const {
     iconSearchQuery: iconSearchQueryEdit,
     filteredIcons: filteredIconsEdit,

@@ -24,7 +24,7 @@ const { formatDate } = useDateFormatter()
 <template>
   <div class="transactions-wrapper">
     <header class="list-header">
-      <h3>Все транзакции</h3>
+      <h3>Все траты</h3>
       <div v-if="filteredTotal > 0" class="total-amount">
         <span>Потрачено:</span>
         <strong>{{ formatCurrency(filteredTotal, mainCurrency) }}</strong>
@@ -33,7 +33,7 @@ const { formatDate } = useDateFormatter()
     <div v-if="transactions.length > 0" class="transactions-list">
       <div v-for="tx in transactions" :key="tx.id" class="transaction-item">
         <div class="item-main">
-          <div class="item-icon" :class="tx.type">
+          <div class="item-icon">
             <Icon :icon="getCategory(tx.categoryId, categories)?.icon || 'mdi:help-rhombus-outline'" />
           </div>
           <div class="item-details">
@@ -42,8 +42,8 @@ const { formatDate } = useDateFormatter()
           </div>
         </div>
         <div class="item-amount">
-          <span :class="tx.type">
-            {{ tx.type === 'expense' ? '-' : '+' }} {{ formatCurrency(tx.amount, tx.currency) }}
+          <span>
+            -{{ formatCurrency(tx.amount, tx.currency) }}
           </span>
           <div v-if="!readonly" class="item-actions">
             <button title="Редактировать" @click="$emit('editTransaction', tx)">
@@ -58,7 +58,7 @@ const { formatDate } = useDateFormatter()
     </div>
     <div v-else class="empty-state">
       <Icon icon="mdi:receipt-text-outline" />
-      <p>Транзакций пока нет. Начните учет, добавив первую запись.</p>
+      <p>Трат пока нет. Начните учет, добавив первую запись.</p>
     </div>
   </div>
 </template>
@@ -114,14 +114,8 @@ const { formatDate } = useDateFormatter()
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  &.expense {
-    background-color: var(--bg-error-color);
-    color: var(--fg-error-color);
-  }
-  &.income {
-    background-color: var(--bg-success-color);
-    color: var(--fg-success-color);
-  }
+  background-color: var(--bg-error-color);
+  color: var(--fg-error-color);
 }
 
 .item-details {
@@ -142,11 +136,8 @@ const { formatDate } = useDateFormatter()
   gap: 1.5rem;
   font-weight: 500;
   font-size: 1rem;
-  .expense {
+  span {
     color: var(--fg-error-color);
-  }
-  .income {
-    color: var(--fg-success-color);
   }
 }
 

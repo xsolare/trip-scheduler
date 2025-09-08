@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
 import {
+  bigint,
   date,
   index,
   integer,
@@ -13,6 +14,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { ONE_GIGABYTE_IN_BYTES } from '~/lib/constants'
 
 interface ActivitySectionBase {
   id: string
@@ -59,13 +61,20 @@ export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed'
 export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
 
-// НОВЫЙ ENUM ДЛЯ ТИПОВ РАЗДЕЛОВ ПУТЕШЕСТВИЯ
 export const tripSectionTypeEnum = pgEnum('trip_section_type', [
   'bookings', // Бронирования (отели, авиа)
   'finances', // Финансы
   'checklist', // Чек-листы
   'notes', // Общие заметки (гибкий/кастомный раздел)
 ])
+
+// Таблица для тарифных планов
+export const plans = pgTable('plans', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(), // e.g., "Free", "Pro"
+  maxTrips: integer('max_trips').notNull().default(1),
+  maxStorageBytes: bigint('max_storage_bytes', { mode: 'number' }).notNull().default(ONE_GIGABYTE_IN_BYTES),
+})
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -81,6 +90,11 @@ export const users = pgTable('users', {
   // Поля для OAuth
   githubId: text('github_id').unique(),
   googleId: text('google_id').unique(),
+
+  // --- ПОЛЯ ДЛЯ КВОТ ---
+  planId: integer('plan_id').references(() => plans.id).notNull().default(1), // FK на тарифный план
+  currentTripsCount: integer('current_trips_count').notNull().default(0),
+  currentStorageBytes: bigint('current_storage_bytes', { mode: 'number' }).notNull().default(0),
 
   // Таймстампы
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -144,6 +158,7 @@ export const tripImages = pgTable('trip_images', {
   url: text('url').notNull(),
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull().default(0), // Размер файла в байтах
 
   takenAt: timestamp('taken_at'),
   latitude: real('latitude'), // Для отображения на карте
@@ -262,10 +277,18 @@ export const memoriesRelations = relations(memories, ({ one }) => ({
   }),
 }))
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   trips: many(trips),
   refreshTokens: many(refreshTokens),
   tripParticipations: many(tripParticipants),
+  plan: one(plans, { // Связь пользователя с его планом
+    fields: [users.planId],
+    references: [plans.id],
+  }),
+}))
+
+export const plansRelations = relations(plans, ({ many }) => ({
+  users: many(users), // Связь плана с пользователями
 }))
 
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({

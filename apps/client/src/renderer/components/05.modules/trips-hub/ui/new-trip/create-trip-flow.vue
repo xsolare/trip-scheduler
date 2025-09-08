@@ -18,7 +18,7 @@ const isFormValid = computed(() => {
   <KitDialogWithClose
     v-model:visible="tripsHub.isCreateModalOpen.value"
     title="Новое путешествие"
-    icon="mdi:map-plus-outline"
+    icon="mdi:compass-outline"
     :max-width="500"
   >
     <div class="create-trip-flow">
@@ -37,7 +37,7 @@ const isFormValid = computed(() => {
           :loading="tripsHub.isCreating.value"
           @click="tripsHub.createTrip"
         >
-          Создать и перейти
+          Создать
         </KitBtn>
       </div>
     </div>

@@ -210,7 +210,6 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     background-color: var(--bg-hover-color);
   }
 }
-/* --- Конец стилей из mode-switcher --- */
 
 .current-day-info-skeleton {
   display: flex;

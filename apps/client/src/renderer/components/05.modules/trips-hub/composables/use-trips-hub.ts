@@ -31,7 +31,6 @@ function getDefaultTripData() {
     title: '',
     description: '',
     startDate: new Date().toISOString(),
-    endDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
     cities: [],
     status: TripStatus.PLANNED,
     visibility: TripVisibility.PRIVATE,
@@ -40,6 +39,7 @@ function getDefaultTripData() {
 
 export function useTripsHub() {
   const { abort } = useAbortRequest()
+  const authStore = useAppStore('auth')
 
   // State
   const trips = ref<ITrip[]>([])
@@ -137,20 +137,20 @@ export function useTripsHub() {
   }
 
   async function createTrip() {
-    const router = useRouter()
+    if (!authStore.canCreateTrip) {
+      useToast().error('Вы достигли лимита на создание путешествий.')
+      return
+    }
+
     const toast = useToast()
-
-    toast.warn(`В процессе разработки :)`)
-
-    return closeCreateModal()
 
     const newTrip = await useRequest({
       key: ETripHubKeys.CREATE,
       fn: db => db.trips.create(newTripData.value),
       onSuccess: (createdTrip) => {
         trips.value.unshift(createdTrip)
+        authStore.incrementTripCount()
         toast.success(`Путешествие "${createdTrip.title}" создано!`)
-        router.push(AppRoutePaths.Trip.Info(createdTrip.id))
         closeCreateModal()
       },
       onError: (error) => {
@@ -173,6 +173,9 @@ export function useTripsHub() {
     useRequest({
       key: `${ETripHubKeys.DELETE}:${tripId}`,
       fn: db => db.trips.delete(tripId),
+      onSuccess: () => {
+        authStore.decrementTripCount()
+      },
       onError: (error) => {
         trips.value.splice(tripIndex, 0, removedTrip)
         toast.error(`Не удалось удалить путешествие: ${error}`)
@@ -193,6 +196,10 @@ export function useTripsHub() {
   }
 
   function openCreateModal() {
+    if (!authStore.canCreateTrip) {
+      useToast().error('Вы достигли лимита на создание путешествий. Улучшите ваш план, чтобы создавать больше.')
+      return
+    }
     isCreateModalOpen.value = true
   }
 

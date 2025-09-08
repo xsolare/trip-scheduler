@@ -1,4 +1,4 @@
-import type { Booking, BookingSectionContent } from '../models/types'
+import type { Booking, BookingSectionContent, BookingType } from '../models/types'
 import { useDebounceFn } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, ref, watch } from 'vue'
@@ -13,6 +13,17 @@ interface UseBookingSectionProps {
 }
 
 /**
+ * Конфигурация для различных типов бронирований.
+ * Определяет метки, иконки и заголовки по умолчанию.
+ */
+export const BOOKING_TYPES_CONFIG = {
+  flight: { label: 'Авиаперелеты', icon: 'mdi:airplane', defaultTitle: 'Новый авиабилет' },
+  hotel: { label: 'Отели', icon: 'mdi:hotel', defaultTitle: 'Новый отель' },
+  train: { label: 'Поезда', icon: 'mdi:train', defaultTitle: 'Новый билет на поезд' },
+  attraction: { label: 'Места', icon: 'mdi:map-marker-star-outline', defaultTitle: 'Новое место' },
+} as const
+
+/**
  * Хук для управления логикой секции бронирований.
  * @param props - Входящие параметры компонента.
  * @param emit - Функция для отправки событий.
@@ -22,7 +33,7 @@ export function useBookingSection(
   emit: (event: 'updateSection', payload: any) => void,
 ) {
   const bookings = ref<Booking[]>(JSON.parse(JSON.stringify(props.section.content?.bookings || [])))
-  const activeTab = ref<'flight' | 'hotel' | string>('flight')
+  const activeTab = ref<string>('flight') // Default tab
 
   const debouncedUpdate = useDebounceFn(() => {
     emit('updateSection', {
@@ -42,32 +53,37 @@ export function useBookingSection(
   })
 
   const tabItems = computed(() => {
-    const tabs = [
-      { id: 'flight', label: 'Авиаперелеты', icon: 'mdi:airplane' },
-      { id: 'hotel', label: 'Отели', icon: 'mdi:hotel' },
-    ]
-    // Устанавливаем активную вкладку на первую, где есть бронирования, если текущая пуста
-    if (bookingGroups.value[activeTab.value]?.length === 0) {
-      const firstNonEmptyTab = tabs.find(tab => bookingGroups.value[tab.id]?.length > 0)
-      if (firstNonEmptyTab) {
-        activeTab.value = firstNonEmptyTab.id
-      }
-    }
-    return tabs
+    const bookingOrder = Object.keys(BOOKING_TYPES_CONFIG)
+    return Object.keys(bookingGroups.value)
+      .filter(type => bookingGroups.value[type].length > 0)
+      .map(type => ({
+        id: type,
+        label: BOOKING_TYPES_CONFIG[type as BookingType]?.label || type,
+        icon: BOOKING_TYPES_CONFIG[type as BookingType]?.icon || 'mdi:help-circle',
+      }))
+      .sort((a, b) => bookingOrder.indexOf(a.id) - bookingOrder.indexOf(b.id))
   })
 
-  function addBooking(type: Booking['type']) {
+  watch(tabItems, (newTabs) => {
+    const currentTabExists = newTabs.some(tab => tab.id === activeTab.value)
+    if (!currentTabExists && newTabs.length > 0) {
+      activeTab.value = newTabs[0].id
+    }
+    // If newTabs is empty, the main component will show an empty state, activeTab doesn't matter.
+  }, { immediate: true })
+
+  function addBooking(type: BookingType) {
     if (props.readonly)
       return
 
-    const typeNameMap = { flight: 'авиабилет', hotel: 'отель' }
+    const config = BOOKING_TYPES_CONFIG[type]
     const newBooking: Booking = {
       id: uuidv4(),
       type,
-      icon: type === 'flight' ? 'mdi:airplane' : 'mdi:hotel',
-      title: `Новый ${typeNameMap[type] || 'элемент'}`,
+      icon: config.icon,
+      title: config.defaultTitle,
       data: {},
-    } as Booking // Утверждаем тип
+    } as Booking // Утверждаем тип для универсальности
     bookings.value.unshift(newBooking)
     activeTab.value = type // Переключаемся на вкладку нового бронирования
   }
@@ -103,5 +119,6 @@ export function useBookingSection(
     deleteBooking,
     updateBooking,
     updateBookingsForGroup,
+    bookingTypeConfigs: BOOKING_TYPES_CONFIG,
   }
 }

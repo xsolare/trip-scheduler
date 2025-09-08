@@ -58,7 +58,6 @@ class TripRepository implements ITripRepository {
     return Promise.resolve(filtered)
   }
 
-  // ... остальной код класса без изменений
   @throttle(300)
   async getById(id: string): Promise<Trip | null> {
     const trip = MOCK_TRIPS.find(t => t.id === id) || null

@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { ITrip } from '../../../models/types'
 import { Icon } from '@iconify/vue'
+import { DropdownMenuItem } from 'reka-ui'
+import { inject } from 'vue'
 import { KitAnimatedTooltip } from '~/components/01.kit/kit-animated-tooltip'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
+import { TripsHubKey } from '../../../composables'
 
 type Props = ITrip
 
@@ -13,9 +18,25 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const router = useRouter()
+const tripsHub = inject(TripsHubKey)
+const confirm = useConfirm()
+const isMoreMenuOpen = ref(false)
 
 function goTo() {
   router.push(AppRoutePaths.Trip.Info(`${props.id}`))
+}
+
+async function handleDelete() {
+  const isConfirmed = await confirm({
+    title: 'Удалить путешествие?',
+    description: 'Это действие необратимо. Все дни, планы и воспоминания, связанные с этим путешествием, будут удалены.',
+    type: 'danger',
+    confirmText: 'Удалить',
+  })
+
+  if (isConfirmed && tripsHub) {
+    tripsHub.deleteTrip(props.id)
+  }
 }
 
 const formattedDates = computed(() => {
@@ -73,7 +94,7 @@ const visibilityIcon = computed(() => {
 </script>
 
 <template>
-  <div class="travel-card-wrapper">
+  <div class="travel-card-wrapper" :class="{ 'more-menu-open': isMoreMenuOpen }">
     <div class="travel-card" @click="goTo">
       <div class="card-image-container">
         <KitImage
@@ -102,9 +123,16 @@ const visibilityIcon = computed(() => {
           <button class="action-btn" title="Редактировать" @click.stop>
             <Icon icon="mdi:pencil-outline" />
           </button>
-          <button class="action-btn" title="Еще" @click.stop>
-            <Icon icon="mdi:dots-vertical" />
-          </button>
+          <KitDropdown v-model:open="isMoreMenuOpen" align="end">
+            <template #trigger>
+              <button class="action-btn" title="Еще" @click.stop.prevent>
+                <Icon icon="mdi:dots-vertical" />
+              </button>
+            </template>
+            <DropdownMenuItem class="kit-dropdown-item is-destructive" @click="handleDelete">
+              <Icon icon="mdi:trash-can-outline" /><span>Удалить</span>
+            </DropdownMenuItem>
+          </KitDropdown>
         </div>
       </div>
 
@@ -296,7 +324,8 @@ const visibilityIcon = computed(() => {
   transform: translateX(10px);
   transition: all 0.3s ease;
 
-  .travel-card-wrapper:hover & {
+  .travel-card-wrapper:hover &,
+  .travel-card-wrapper.more-menu-open & {
     opacity: 1;
     transform: translateX(0);
   }

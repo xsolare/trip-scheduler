@@ -58,7 +58,6 @@ const { offlineReady, needRefresh } = storeToRefs(pwaStore)
 </template>
 
 <style lang="scss" scoped>
-/* Стили остаются без изменений */
 .reload-prompt {
   position: fixed;
   right: var(--p-l, 20px);

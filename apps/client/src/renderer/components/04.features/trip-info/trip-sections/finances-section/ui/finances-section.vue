@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FinancesSectionContent } from '../models/types'
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { useFinancesSection } from '../composables'
@@ -32,7 +32,7 @@ const {
   spendingByCategory,
   spendingByDay,
   filteredTransactions,
-  filteredExpensesTotal,
+  filteredTotal,
   selectedCategoryFilter,
   openTransactionForm,
   saveTransaction,
@@ -46,6 +46,23 @@ const categoryFilterItems = computed(() => {
   const items = categories.value.map(c => ({ value: c.id, label: c.name, icon: c.icon }))
   items.unshift({ value: null, label: 'Все категории', icon: 'mdi:format-list-bulleted' } as any)
   return items
+})
+
+const transactionFormVisibleBeforeCategoryManager = ref(false)
+
+function handleOpenCategoryManager() {
+  if (isTransactionFormOpen.value) {
+    isTransactionFormOpen.value = false
+    transactionFormVisibleBeforeCategoryManager.value = true
+  }
+  isCategoryManagerOpen.value = true
+}
+
+watch(isCategoryManagerOpen, (isOpen) => {
+  if (!isOpen && transactionFormVisibleBeforeCategoryManager.value) {
+    isTransactionFormOpen.value = true
+    transactionFormVisibleBeforeCategoryManager.value = false
+  }
 })
 </script>
 
@@ -74,9 +91,9 @@ const categoryFilterItems = computed(() => {
       </div>
       <div class="list-actions">
         <KitBtn v-if="!readonly" icon="mdi:plus" @click="openTransactionForm()">
-          Добавить транзакцию
+          Добавить трату
         </KitBtn>
-        <KitBtn v-if="!readonly" icon="mdi:tag-outline" variant="text" @click="isCategoryManagerOpen = true">
+        <KitBtn v-if="!readonly" icon="mdi:tag-outline" variant="text" @click="handleOpenCategoryManager">
           Категории
         </KitBtn>
         <KitBtn v-if="!readonly" icon="mdi:cog-outline" variant="text" @click="isSettingsOpen = true">
@@ -90,7 +107,7 @@ const categoryFilterItems = computed(() => {
       :categories="categories"
       :main-currency="settings.mainCurrency"
       :readonly="readonly"
-      :filtered-total="filteredExpensesTotal"
+      :filtered-total="filteredTotal"
       @edit-transaction="openTransactionForm"
       @delete-transaction="deleteTransaction"
     />
@@ -102,7 +119,7 @@ const categoryFilterItems = computed(() => {
       :categories="categories"
       :main-currency="settings.mainCurrency"
       @save="saveTransaction"
-      @open-category-manager="isCategoryManagerOpen = true"
+      @open-category-manager="handleOpenCategoryManager"
     />
 
     <CategoryManagerDialog

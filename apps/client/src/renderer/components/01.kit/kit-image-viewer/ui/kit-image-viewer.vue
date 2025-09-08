@@ -55,7 +55,9 @@ const naturalSize = reactive({ width: 0, height: 0 })
 const isUiVisible = ref(true)
 const isMetadataPanelVisible = ref(false)
 
-const imageLoadStatus = reactive<Record<string, 'loading' | 'loaded' | 'error'>>({})
+// --- Новая, более надежная система отслеживания загрузки ---
+const isCurrentImageLoading = ref(true)
+const isCurrentImageInError = ref(false)
 
 const currentImage = computed(() => props.images[props.currentIndex])
 const currentImageSrc = computed(() => {
@@ -74,8 +76,7 @@ const currentImageSrc = computed(() => {
       return image.variants?.large || image.url
   }
 })
-const isCurrentImageLoaded = computed(() => imageLoadStatus[currentImageSrc.value] === 'loaded')
-const isCurrentImageInError = computed(() => imageLoadStatus[currentImageSrc.value] === 'error')
+
 const hasMultipleImages = computed(() => props.images.length > 1)
 
 const {
@@ -144,48 +145,13 @@ const currentImageMeta = computed((): IImageViewerImageMeta | null => {
   return toRaw(props.images[props.currentIndex]?.meta) || null
 })
 
-// --- Image Preloading ---
-function preloadImage(url: string | undefined) {
-  if (!url || imageLoadStatus[url])
-    return
-
-  imageLoadStatus[url] = 'loading'
-  const img = new Image()
-
-  img.src = url
-  img.onload = () => {
-    imageLoadStatus[url] = 'loaded'
+// Сбрасываем состояние загрузки при смене изображения
+watch(currentImageSrc, (src) => {
+  if (src) {
+    isCurrentImageLoading.value = true
+    isCurrentImageInError.value = false
   }
-  img.onerror = () => {
-    imageLoadStatus[url] = 'error'
-  }
-}
-
-watch([
-  () => props.currentIndex,
-  () => props.images,
-  () => props.visible,
-], ([index, imageList, visible]) => {
-  if (!visible || !imageList || imageList.length === 0)
-    return
-
-  const indicesToLoad = [index]
-  if (imageList.length > 1) {
-    indicesToLoad.push((index + 1) % imageList.length)
-    indicesToLoad.push((index - 1 + imageList.length) % imageList.length)
-  }
-
-  const uniqueIndices = [...new Set(indicesToLoad)]
-
-  uniqueIndices.forEach((i) => {
-    const image = imageList[i]
-    if (image) {
-      const src = image.variants?.medium || image.variants?.large || image.url
-
-      preloadImage(resolveApiUrl(src))
-    }
-  })
-}, { immediate: true, deep: true })
+}, { immediate: true })
 
 watch(() => props.currentIndex, () => {
   resetTransform()
@@ -204,23 +170,27 @@ watch(() => props.visible, (isVisible) => {
   }
 })
 
-function handleImageLoad() {
-  if (!currentImageSrc.value)
-    return
-
-  imageLoadStatus[currentImageSrc.value] = 'loaded'
-
-  if (imageRef.value) {
-    naturalSize.width = imageRef.value.naturalWidth
-    naturalSize.height = imageRef.value.naturalHeight
-    emit('imageLoad', currentImage.value)
+function handleImageLoad(event: Event) {
+  const target = event.target as HTMLImageElement | null
+  // Убедимся, что событие пришло от текущего изображения, чтобы избежать race condition
+  if (target && target.src === resolveApiUrl(currentImageSrc.value)) {
+    isCurrentImageLoading.value = false
+    isCurrentImageInError.value = false
+    if (imageRef.value) {
+      naturalSize.width = imageRef.value.naturalWidth
+      naturalSize.height = imageRef.value.naturalHeight
+      emit('imageLoad', currentImage.value)
+    }
   }
 }
 
 function handleImageError(event: Event) {
-  if (currentImageSrc.value)
-    imageLoadStatus[currentImageSrc.value] = 'error'
-  emit('imageError', event)
+  const target = event.target as HTMLImageElement | null
+  if (target && target.src === resolveApiUrl(currentImageSrc.value)) {
+    isCurrentImageLoading.value = false
+    isCurrentImageInError.value = true
+    emit('imageError', event)
+  }
 }
 
 function close() {
@@ -310,12 +280,12 @@ onUnmounted(() => {
                 <!-- Текущее изображение -->
                 <div class="current-image-wrapper">
                   <Transition name="loader-fade">
-                    <div v-if="!isCurrentImageLoaded" class="placeholder-wrapper">
+                    <div v-if="isCurrentImageLoading || isCurrentImageInError" class="placeholder-wrapper">
                       <div v-if="isCurrentImageInError" class="image-error">
                         <Icon width="64" height="64" icon="mdi:image-broken-variant" />
                         <span>Не удалось загрузить изображение</span>
                       </div>
-                      <div v-else class="image-placeholder">
+                      <div v-else-if="isCurrentImageLoading" class="image-placeholder">
                         <div class="loading-spinner">
                           <Icon width="64" height="64" icon="mdi:loading" class="spinning" />
                         </div>
@@ -331,7 +301,7 @@ onUnmounted(() => {
                     v-resolve-src="currentImageSrc"
                     :alt="currentImage.alt || `Image ${currentIndex + 1}`"
                     class="viewer-image"
-                    :class="{ loaded: isCurrentImageLoaded }"
+                    :class="{ loaded: !isCurrentImageLoading && !isCurrentImageInError }"
                     :style="[imageStyle, currentImageStyle]"
                     @load="handleImageLoad"
                     @error="handleImageError"

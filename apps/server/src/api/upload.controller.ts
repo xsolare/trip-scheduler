@@ -1,16 +1,29 @@
-// src/api/upload.controller.ts
-
 import type { Context } from 'hono'
 import type { ImageMetadata } from '~/repositories/image.repository'
 import { tripImagePlacementEnum } from 'db/schema'
 import { HTTPException } from 'hono/http-exception'
+import { authUtils } from '~/lib/auth.utils'
 import { imageRepository } from '~/repositories/image.repository'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
 import { extractAndStructureMetadata, generateImageVariants } from '~/services/image-metadata.service'
+import { quotaService } from '~/services/quota.service'
 
 export async function uploadFileController(c: Context) {
-  // 1. Валидация HTTP-запроса (без изменений)
+  // --- АУТЕНТИФИКАЦИЯ ---
+  const authHeader = c.req.header('authorization')
+  const token = authHeader?.split(' ')[1]
+  if (!token) {
+    throw new HTTPException(401, { message: 'Токен аутентификации не предоставлен.' })
+  }
+  const payload = await authUtils.verifyToken(token)
+  if (!payload) {
+    throw new HTTPException(401, { message: 'Невалидный или истекший токен.' })
+  }
+  const userId = payload.id
+
+  // 1. Валидация HTTP-запроса
   const formData = await c.req.formData()
+
   const file = formData.get('file')
   const tripId = formData.get('tripId')
   const placement = formData.get('placement') as 'route' | 'memories'
@@ -28,6 +41,11 @@ export async function uploadFileController(c: Context) {
   try {
     // 2. Подготовка данных
     const fileBuffer = Buffer.from(await file.arrayBuffer())
+
+    // --- ПРОВЕРКА КВОТЫ ХРАНИЛИЩА ---
+    // Предварительная проверка по размеру исходного файла
+    await quotaService.checkStorageQuota(userId, fileBuffer.length)
+
     const paths = generateFilePaths(`trips/${tripId}/${placement}`, file.name)
 
     // 3. Извлечение метаданных
@@ -36,6 +54,7 @@ export async function uploadFileController(c: Context) {
     // 4. Генерация и сохранение вариантов
     const imageVariants = await generateImageVariants(fileBuffer)
     const variantUrls: Record<string, string> = {}
+    let variantsTotalSize = 0
 
     // Используем Promise.all для параллельного сохранения
     await Promise.all(
@@ -43,6 +62,7 @@ export async function uploadFileController(c: Context) {
         const variantPaths = paths.getVariantPaths(name)
         await saveFile(variantPaths.diskPath, buffer)
         variantUrls[name] = variantPaths.dbPath
+        variantsTotalSize += buffer.length
       }),
     )
 
@@ -50,21 +70,32 @@ export async function uploadFileController(c: Context) {
     await saveFile(paths.original.diskPath, fileBuffer)
 
     // 6. Сохранение записи в БД
+    const totalSize = fileBuffer.length + variantsTotalSize
     const newImageRecord = await imageRepository.create(
       tripId,
       paths.original.dbPath, // URL оригинала
       placement,
+      totalSize,
       {
         ...metadata,
         variants: variantUrls, // Объект с URL вариантов
       } as ImageMetadata,
     )
 
+    // --- УВЕЛИЧЕНИЕ СЧЕТЧИКА ИСПОЛЬЗОВАНИЯ ---
+    await quotaService.incrementStorageUsage(userId, totalSize)
+
     // 7. Отправка ответа
     return c.json(newImageRecord)
   }
   catch (error) {
     console.error('Ошибка при обработке загруженного файла:', error)
+    // Перехватываем ошибки от tRPC и преобразуем их в HTTPException
+    if (error && typeof error === 'object' && 'message' in error && 'code' in error) {
+      if (error.code === 'FORBIDDEN') {
+        throw new HTTPException(403, { message: String(error.message) })
+      }
+    }
     throw new HTTPException(500, { message: 'Внутренняя ошибка при обработке файла.' })
   }
 }

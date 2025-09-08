@@ -4,8 +4,10 @@ import { Icon } from '@iconify/vue'
 import { ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
 import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDivider } from '~/components/01.kit/kit-divider'
+import { KitInput } from '~/components/01.kit/kit-input'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
 import { useChecklistSection } from '../composables'
 import ChecklistGroupComponent from './checklist-group.vue'
@@ -31,6 +33,8 @@ const {
   activeTab,
   tabItems,
   progress,
+  hideCompleted,
+  searchQuery,
   currentTabGroups,
   currentTabUngroupedItems,
   itemsByGroupId,
@@ -43,10 +47,15 @@ const {
 } = useChecklistSection(props, emit)
 
 const newUngroupedItemText = ref('')
+const newUngroupedItemInputRef = ref<HTMLInputElement | null>(null)
 
 function onGroupItemsUpdate(groupId: string, updatedItems: ChecklistItem[]) {
   const otherItems = items.value.filter(i => i.groupId !== groupId)
-  items.value = [...otherItems, ...updatedItems]
+  const groupItems = items.value
+    .filter(i => i.groupId === groupId)
+    .map(originalItem => updatedItems.find(u => u.id === originalItem.id) || originalItem)
+
+  items.value = [...otherItems, ...groupItems]
 }
 
 function onUngroupedItemsUpdate(newUngroupedItems: ChecklistItem[]) {
@@ -58,6 +67,7 @@ function onAddUngroupedItem() {
   if (newUngroupedItemText.value.trim()) {
     addItem(newUngroupedItemText.value, activeTab.value)
     newUngroupedItemText.value = ''
+    newUngroupedItemInputRef.value?.focus()
   }
 }
 
@@ -72,11 +82,17 @@ watch(activeTab, () => {
     <KitTabs v-model="activeTab" :items="tabItems">
       <template #preparation>
         <div class="tab-content-wrapper">
-          <!-- Панель действий -->
-          <div v-if="!readonly" class="actions-panel">
-            <KitBtn icon="mdi:playlist-plus" @click="addGroup('preparation')">
-              Добавить группу
-            </KitBtn>
+          <!-- Панель действий с новыми элементами -->
+          <div class="actions-panel">
+            <KitInput v-model="searchQuery" placeholder="Поиск по задачам..." icon="mdi:magnify" class="search-input" />
+            <div class="action-controls">
+              <KitCheckbox v-model="hideCompleted">
+                Скрыть выполненные
+              </KitCheckbox>
+              <KitBtn v-if="!readonly" icon="mdi:playlist-plus" @click="addGroup('preparation')">
+                Добавить группу
+              </KitBtn>
+            </div>
           </div>
 
           <!-- Прогресс-бар -->
@@ -88,7 +104,7 @@ watch(activeTab, () => {
           </div>
 
           <!-- Контент -->
-          <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
+          <div class="checklist-content">
             <!-- Группы -->
             <draggable
               :model-value="currentTabGroups"
@@ -136,8 +152,14 @@ watch(activeTab, () => {
                     />
                   </template>
                 </draggable>
-                <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
+                <form
+                  v-if="!readonly"
+                  class="add-item-form"
+                  :class="{ 'has-items': currentTabUngroupedItems.length > 0 }"
+                  @submit.prevent="onAddUngroupedItem"
+                >
                   <input
+                    ref="newUngroupedItemInputRef"
                     v-model="newUngroupedItemText"
                     type="text"
                     placeholder="Добавить прочую задачу..."
@@ -151,36 +173,40 @@ watch(activeTab, () => {
             </div>
           </div>
 
-          <!-- Пустое состояние -->
-          <div v-else class="empty-state">
+          <!-- Пустое состояние (если после всех фильтров ничего не осталось) -->
+          <div v-if="currentTabGroups.length === 0 && currentTabUngroupedItems.length === 0" class="empty-state">
             <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
-            <p>Задач пока нет.</p>
-            <p v-if="!readonly">
-              Нажмите "Добавить группу", чтобы начать.
+            <p v-if="searchQuery">
+              По вашему запросу ничего не найдено.
+            </p>
+            <p v-else-if="hideCompleted && (items.filter(i => i.type === activeTab)).length > 0">
+              Все задачи выполнены!
+            </p>
+            <p v-else>
+              Задач пока нет.
             </p>
           </div>
         </div>
       </template>
+      <!-- ... (Аналогичный шаблон для вкладки #in-trip) ... -->
       <template #in-trip>
         <div class="tab-content-wrapper">
-          <!-- Панель действий -->
-          <div v-if="!readonly" class="actions-panel">
-            <KitBtn icon="mdi:playlist-plus" @click="addGroup('in-trip')">
-              Добавить группу
-            </KitBtn>
+          <div class="actions-panel">
+            <KitInput v-model="searchQuery" placeholder="Поиск по задачам..." icon="mdi:magnify" class="search-input" />
+            <div class="action-controls">
+              <KitCheckbox v-model="hideCompleted" label="Скрыть выполненные" />
+              <KitBtn v-if="!readonly" icon="mdi:playlist-plus" @click="addGroup('in-trip')">
+                Добавить группу
+              </KitBtn>
+            </div>
           </div>
-
-          <!-- Прогресс-бар -->
           <div class="progress-container">
             <div class="progress-bar-container">
               <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>
             <span class="progress-text">{{ progress }}%</span>
           </div>
-
-          <!-- Контент -->
-          <div v-if="currentTabGroups.length > 0 || currentTabUngroupedItems.length > 0" class="checklist-content">
-            <!-- Группы -->
+          <div class="checklist-content">
             <draggable
               :model-value="currentTabGroups"
               item-key="id"
@@ -202,10 +228,8 @@ watch(activeTab, () => {
                 />
               </template>
             </draggable>
-
-            <!-- Задачи без группы -->
             <div v-if="currentTabUngroupedItems.length > 0 || !readonly">
-              <KitDivider v-if="currentTabGroups.length > 0">
+              <KitDivider v-if="currentTabGroups.length > 0" class="group-divider">
                 Прочие задачи
               </KitDivider>
               <div class="ungrouped-wrapper">
@@ -227,8 +251,14 @@ watch(activeTab, () => {
                     />
                   </template>
                 </draggable>
-                <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddUngroupedItem">
+                <form
+                  v-if="!readonly"
+                  class="add-item-form"
+                  :class="{ 'has-items': currentTabUngroupedItems.length > 0 }"
+                  @submit.prevent="onAddUngroupedItem"
+                >
                   <input
+                    ref="newUngroupedItemInputRef"
                     v-model="newUngroupedItemText"
                     type="text"
                     placeholder="Добавить прочую задачу..."
@@ -241,12 +271,16 @@ watch(activeTab, () => {
               </div>
             </div>
           </div>
-          <!-- Пустое состояние -->
-          <div v-else class="empty-state">
+          <div v-if="currentTabGroups.length === 0 && currentTabUngroupedItems.length === 0" class="empty-state">
             <Icon icon="mdi:clipboard-check-outline" class="empty-icon" />
-            <p>Задач пока нет.</p>
-            <p v-if="!readonly">
-              Нажмите "Добавить группу", чтобы начать.
+            <p v-if="searchQuery">
+              По вашему запросу ничего не найдено.
+            </p>
+            <p v-else-if="hideCompleted && (items.filter(i => i.type === activeTab)).length > 0">
+              Все задачи выполнены!
+            </p>
+            <p v-else>
+              Задач пока нет.
             </p>
           </div>
         </div>
@@ -265,18 +299,44 @@ watch(activeTab, () => {
 .tab-content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   margin-top: 4px;
 }
 
 .group-divider {
-  margin: 16px 0;
+  margin: 16px 0 8px;
 }
 
+/* ИСПРАВЛЕННЫЕ СТИЛИ ПАНЕЛИ ДЕЙСТВИЙ */
 .actions-panel {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1 1 250px; /* Позволяет инпуту расти и сжиматься */
+}
+
+.action-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .actions-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .action-controls {
+    justify-content: space-between;
+  }
 }
 
 .progress-container {
@@ -333,8 +393,11 @@ watch(activeTab, () => {
   display: flex;
   gap: 0.5rem;
   padding: 0.25rem;
-  border-top: 1px solid var(--border-secondary-color);
-  margin-top: 0.25rem;
+  /* УСЛОВНЫЕ СТИЛИ */
+  &.has-items {
+    border-top: 1px solid var(--border-secondary-color);
+    margin-top: 0.25rem;
+  }
 }
 
 .add-item-input {

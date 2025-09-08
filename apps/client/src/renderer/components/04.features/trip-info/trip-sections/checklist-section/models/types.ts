@@ -12,6 +12,10 @@ export interface ChecklistItem {
   completed: boolean
   type: ChecklistTab
   groupId: string | null
+  // --- НОВЫЕ ПОЛЯ ---
+  description?: string // Описание или заметка к задаче
+  priority?: 'normal' | 'high' // Приоритет задачи
+  link?: string // Внешняя ссылка
 }
 
 /**

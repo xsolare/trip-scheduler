@@ -17,7 +17,6 @@ export interface LocationCoords {
 
 /**
  * Тип данных для авиаперелета.
- * Добавлены поля для дат, аэропортов и времени.
  */
 export interface FlightData {
   departureCity?: string
@@ -53,10 +52,44 @@ export interface HotelData {
   notes?: string
 }
 
+/**
+ * Тип данных для билета на поезд.
+ */
+export interface TrainData {
+  departureStation?: string
+  arrivalStation?: string
+  departureDateTime?: string // ISO 8601 format
+  arrivalDateTime?: string // ISO 8601 format
+  trainNumber?: string
+  carriage?: string
+  seat?: string
+  bookingReference?: string
+  notes?: string
+}
+
+/**
+ * Тип данных для билета на достопримечательность/мероприятие.
+ */
+export interface AttractionData {
+  attractionName?: string
+  address?: string
+  location?: LocationCoords
+  dateTime?: string // ISO 8601 format
+  ticketType?: string
+  guests?: string
+  bookingReference?: string
+  notes?: string
+}
+
 // --- Общий тип бронирования ---
 
-export type Booking = (BookingBase & { type: 'flight', data: FlightData })
-  | (BookingBase & { type: 'hotel', data: HotelData })
+export type Booking
+  = | (BookingBase & { type: 'flight', data: FlightData })
+    | (BookingBase & { type: 'hotel', data: HotelData })
+    | (BookingBase & { type: 'train', data: TrainData })
+    | (BookingBase & { type: 'attraction', data: AttractionData })
+
+export type BookingType = Booking['type']
 
 export interface BookingSectionContent {
   bookings: Booking[]

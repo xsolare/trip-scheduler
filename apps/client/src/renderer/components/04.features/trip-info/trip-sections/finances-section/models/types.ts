@@ -1,9 +1,4 @@
 /**
- * Тип транзакции: расход или доход.
- */
-export type TransactionType = 'expense' | 'income'
-
-/**
  * Транзакция.
  */
 export interface Transaction {
@@ -12,7 +7,6 @@ export interface Transaction {
   amount: number
   currency: string // e.g., 'RUB', 'USD', 'EUR'
   date: string // ISO 8601 format
-  type: TransactionType
   categoryId: string | null
   notes?: string
 }

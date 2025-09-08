@@ -20,11 +20,12 @@ export function createStoreHook<T extends Record<string, () => any>>(
       const requestedStores = Object.fromEntries(
         keyOrKeys.map(key => [key, stores[key]()]),
       ) as { [P in K]: ReturnType<T[P]> }
-      return Object.freeze(requestedStores)
+      return requestedStores
     }
 
     const store = stores[keyOrKeys]()
-    return Object.freeze(store)
+
+    return store
   }
 
   return useStore

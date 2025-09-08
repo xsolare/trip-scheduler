@@ -3,8 +3,8 @@ import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestStatus } from '~/plugins/request'
 
-const TOKEN_KEY = 'auth_token'
-const REFRESH_TOKEN_KEY = 'auth_refresh_token'
+export const TOKEN_KEY = 'auth_token'
+export const REFRESH_TOKEN_KEY = 'auth_refresh_token'
 
 export enum EAuthRequestKeys {
   ME = 'auth:me',
@@ -39,6 +39,17 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isLoading: () => useRequestStatus(Object.values(EAuthRequestKeys)).value,
     isAuthenticated: state => !!state.user,
+
+    canCreateTrip(state): boolean {
+      if (!state.user || !state.user.plan)
+        return false
+      return state.user.currentTripsCount < state.user.plan.maxTrips
+    },
+    remainingStorageBytes(state): number {
+      if (!state.user || !state.user.plan)
+        return 0
+      return state.user.plan.maxStorageBytes - state.user.currentStorageBytes
+    },
   },
 
   actions: {
@@ -140,6 +151,44 @@ export const useAuthStore = defineStore('auth', {
     clearAuth() {
       this.user = null
       this.clearTokens()
+    },
+
+    /**
+     * Увеличивает счетчик путешествий на клиенте.
+     */
+    incrementTripCount() {
+      if (this.user) {
+        this.user.currentTripsCount++
+      }
+    },
+
+    /**
+     * Уменьшает счетчик путешествий на клиенте.
+     */
+    decrementTripCount() {
+      if (this.user && this.user.currentTripsCount > 0) {
+        this.user.currentTripsCount--
+      }
+    },
+
+    /**
+     * Увеличивает использование хранилища на клиенте.
+     * @param bytes - Размер добавленного файла в байтах.
+     */
+    incrementStorageUsage(bytes: number) {
+      if (this.user) {
+        this.user.currentStorageBytes += bytes
+      }
+    },
+
+    /**
+     * Уменьшает использование хранилища на клиенте.
+     * @param bytes - Размер удаленного файла в байтах.
+     */
+    decrementStorageUsage(bytes: number) {
+      if (this.user) {
+        this.user.currentStorageBytes = Math.max(0, this.user.currentStorageBytes - bytes)
+      }
     },
   },
 })

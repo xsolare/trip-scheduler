@@ -121,9 +121,8 @@ export function useFinancesSection(
     return amount * rate
   }
 
-  const totalExpenses = computed(() => {
+  const totalSpending = computed(() => {
     return transactions.value
-      .filter(t => t.type === 'expense')
       .reduce((sum, tx) => sum + convertToMainCurrency(tx.amount, tx.currency), 0)
   })
 
@@ -131,7 +130,6 @@ export function useFinancesSection(
     const spendingMap = new Map<string, { name: string, icon: string, amount: number }>()
 
     transactions.value
-      .filter(tx => tx.type === 'expense')
       .forEach((tx) => {
         const categoryId = tx.categoryId || 'cat-other'
         const category = categories.value.find(c => c.id === categoryId) || DEFAULT_CATEGORIES.find(c => c.id === 'cat-other')!
@@ -152,7 +150,6 @@ export function useFinancesSection(
     const spendingMap = new Map<string, number>()
 
     transactions.value
-      .filter(tx => tx.type === 'expense')
       .forEach((tx) => {
         const date = tx.date.split('T')[0] // Группируем по дню, отбрасывая время
         const amountInMain = convertToMainCurrency(tx.amount, tx.currency)
@@ -180,9 +177,8 @@ export function useFinancesSection(
     return sortedTransactions.value.filter(tx => tx.categoryId === selectedCategoryFilter.value)
   })
 
-  const filteredExpensesTotal = computed(() => {
+  const filteredTotal = computed(() => {
     return filteredTransactions.value
-      .filter(t => t.type === 'expense')
       .reduce((sum, tx) => sum + convertToMainCurrency(tx.amount, tx.currency), 0)
   })
 
@@ -200,11 +196,11 @@ export function useFinancesSection(
     selectedCategoryFilter,
 
     // Computed
-    totalExpenses,
+    totalSpending,
     spendingByCategory,
     spendingByDay,
     filteredTransactions,
-    filteredExpensesTotal,
+    filteredTotal,
 
     // Methods
     openTransactionForm,

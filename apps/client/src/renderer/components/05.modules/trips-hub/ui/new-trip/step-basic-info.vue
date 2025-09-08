@@ -17,15 +17,6 @@ const startDate = computed({
     }
   },
 })
-
-const endDate = computed({
-  get: () => parseDate(toYyyyMmDd(tripData.value.endDate!)),
-  set: (date: CalendarDate | null) => {
-    if (date) {
-      tripData.value.endDate = date.toDate('UTC').toISOString()
-    }
-  },
-})
 </script>
 
 <template>
@@ -47,16 +38,6 @@ const endDate = computed({
           <template #trigger>
             <button class="date-trigger">
               {{ startDate?.toString() }}
-            </button>
-          </template>
-        </CalendarPopover>
-      </div>
-      <div class="date-picker">
-        <label>Дата окончания</label>
-        <CalendarPopover v-model="endDate">
-          <template #trigger>
-            <button class="date-trigger">
-              {{ endDate?.toString() }}
             </button>
           </template>
         </CalendarPopover>

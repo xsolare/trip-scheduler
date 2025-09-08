@@ -124,6 +124,22 @@ export const tripRepository = {
   },
 
   /**
+   * Получает путешествие со всеми прикрепленными изображениями (для подсчета квот).
+   */
+  async getByIdWithImages(id: string) {
+    return await db.query.trips.findFirst({
+      where: eq(trips.id, id),
+      with: {
+        images: {
+          columns: {
+            sizeBytes: true,
+          },
+        },
+      },
+    })
+  },
+
+  /**
    * Получает путешествие со всеми днями и активностями.
    */
   async getByIdWithDays(id: string) {
@@ -215,8 +231,8 @@ export const tripRepository = {
   async create(data: z.infer<typeof CreateTripInputSchema>, userId: string) {
     const { startDate, endDate, ...restData } = data
 
-    const newStartDate = (startDate instanceof Date ? startDate : new Date()).toISOString().split('T')[0]
-    const newEndDate = (endDate instanceof Date ? endDate : new Date(Date.now() + 86400000)).toISOString().split('T')[0]
+    const newStartDate = (startDate ? new Date(startDate) : new Date()).toISOString().split('T')[0]
+    const newEndDate = (endDate ? new Date(endDate) : new Date(newStartDate)).toISOString().split('T')[0]
 
     const newTrip = await db.transaction(async (tx) => {
       const [createdTrip] = await tx

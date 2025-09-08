@@ -24,14 +24,17 @@ const emit = defineEmits<{
 const newItemText = ref('')
 const isIconPickerOpen = ref(false)
 const isCollapsed = ref(false)
+const newItemInputRef = ref<HTMLInputElement | null>(null) // Ref для инпута
 
 const groupProgress = computed(() => {
+  if (!props.items)
+    return { completed: 0, total: 0, percentage: 0 }
   const total = props.items.length
   if (total === 0)
-    return { completed: 0, total: 0 }
+    return { completed: 0, total: 0, percentage: 0 }
 
   const completed = props.items.filter(item => item.completed).length
-  return { completed, total }
+  return { completed, total, percentage: Math.round((completed / total) * 100) }
 })
 
 function handleUpdateGroup(key: keyof ChecklistGroup, value: any) {
@@ -55,6 +58,8 @@ function onAddItem() {
   if (newItemText.value.trim()) {
     emit('addItem', newItemText.value)
     newItemText.value = ''
+    // Авто-фокус
+    newItemInputRef.value?.focus()
   }
 }
 </script>
@@ -77,9 +82,14 @@ function onAddItem() {
         />
       </div>
       <div class="header-actions">
-        <span v-if="groupProgress.total > 0" class="group-progress">
-          {{ groupProgress.completed }} / {{ groupProgress.total }}
-        </span>
+        <div v-if="groupProgress.total > 0" class="group-progress-container" :title="`${groupProgress.percentage}% выполнено`">
+          <span class="group-progress-text">
+            {{ groupProgress.completed }} / {{ groupProgress.total }}
+          </span>
+          <div class="progress-bar-bg">
+            <div class="progress-bar" :style="{ width: `${groupProgress.percentage}%` }" />
+          </div>
+        </div>
         <button v-if="!readonly" class="delete-group-btn" title="Удалить группу" @click="$emit('delete')">
           <Icon icon="mdi:trash-can-outline" />
         </button>
@@ -112,6 +122,7 @@ function onAddItem() {
 
       <form v-if="!readonly" class="add-item-form" @submit.prevent="onAddItem">
         <input
+          ref="newItemInputRef"
           v-model="newItemText"
           type="text"
           placeholder="Добавить задачу..."
@@ -174,7 +185,6 @@ function onAddItem() {
   padding: 4px;
   border-radius: var(--r-s);
   transition: background-color 0.2s;
-
   &:not(:disabled):hover {
     background-color: var(--bg-hover-color);
   }
@@ -188,26 +198,41 @@ function onAddItem() {
 .group-name {
   font-weight: 600;
   font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
-.group-progress {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--fg-tertiary-color);
+/* Стили для нового прогресс-бара группы */
+.group-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background-color: var(--bg-secondary-color);
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: var(--r-full);
-  margin-right: 0.25rem;
+}
+.group-progress-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg-secondary-color);
+}
+.progress-bar-bg {
+  width: 50px;
+  height: 6px;
+  background-color: var(--bg-tertiary-color);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background-color: var(--fg-success-color);
+  border-radius: var(--r-full);
+  transition: width 0.3s ease;
 }
 
 .delete-group-btn,
@@ -220,7 +245,6 @@ function onAddItem() {
   height: 28px;
   border-radius: 50%;
   transition: all 0.2s;
-
   &:hover {
     background-color: var(--bg-hover-color);
   }
@@ -235,9 +259,9 @@ function onAddItem() {
 
 .collapse-btn svg {
   transition: transform 0.2s ease-in-out;
-}
-.collapse-btn .is-collapsed {
-  transform: rotate(-180deg);
+  &.is-collapsed {
+    transform: rotate(-180deg);
+  }
 }
 
 .group-content {

@@ -171,7 +171,6 @@ watch(() => props.visible, (isVisible) => {
 </template>
 
 <style scoped lang="scss">
-/* Стили остаются без изменений */
 .presets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

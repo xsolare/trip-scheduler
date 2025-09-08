@@ -108,6 +108,7 @@ const model = defineModel<CalendarDate | null>({ required: true })
   padding: 16px;
   border-radius: 8px;
   width: 300px;
+  z-index: 2000;
 }
 
 .calendarHeader {

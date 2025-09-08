@@ -71,7 +71,6 @@ async function handleDelete() {
 </template>
 
 <style scoped lang="scss">
-/* Стили без изменений */
 .booking-card {
   background-color: var(--bg-secondary-color);
   border-radius: var(--r-m);
