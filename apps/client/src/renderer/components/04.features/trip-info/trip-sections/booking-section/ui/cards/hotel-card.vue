@@ -3,6 +3,7 @@ import type { Booking, HotelData } from '../../models/types'
 import { ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
+import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
 import BookingLocationField from '../shared/booking-location-field.vue'
 import BookingTextareaField from '../shared/booking-textarea-field.vue'
@@ -42,8 +43,8 @@ function updateTitle(newTitle: string) {
         <BookingField :model-value="booking.data.address" label="Адрес (текстом)" icon="mdi:map-marker-radius-outline" :readonly="readonly" @update:model-value="updateDataField('address', $event)" />
         <KitBtn v-if="!readonly" icon="mdi:map-marker-outline" title="Указать на карте" @click="isLocationPickerOpen = true" />
       </div>
-      <BookingField :model-value="booking.data.checkInDate" label="Дата заезда" icon="mdi:calendar-arrow-right" :readonly="readonly" @update:model-value="updateDataField('checkInDate', $event)" />
-      <BookingField :model-value="booking.data.checkOutDate" label="Дата выезда" icon="mdi:calendar-arrow-left" :readonly="readonly" @update:model-value="updateDataField('checkOutDate', $event)" />
+      <BookingDateTimeField :model-value="booking.data.checkInDate" label="Дата заезда" icon="mdi:calendar-arrow-right" :readonly="readonly" type="date" @update:model-value="updateDataField('checkInDate', $event)" />
+      <BookingDateTimeField :model-value="booking.data.checkOutDate" label="Дата выезда" icon="mdi:calendar-arrow-left" :readonly="readonly" type="date" @update:model-value="updateDataField('checkOutDate', $event)" />
     </div>
 
     <template #details>

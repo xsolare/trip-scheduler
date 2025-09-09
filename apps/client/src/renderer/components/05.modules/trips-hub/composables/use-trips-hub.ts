@@ -1,10 +1,8 @@
 import type { InjectionKey } from 'vue'
 import type { ITrip } from '../models/types'
 import { useDebounce } from '@vueuse/core'
-import { useRouter } from 'vue-router'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { useAbortRequest, useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
-import { AppRoutePaths } from '~/shared/constants/routes'
 import { TripStatus, TripVisibility } from '~/shared/types/models/trip'
 
 export type TripsHubTab = 'my' | 'public'

@@ -3,6 +3,7 @@ import type { AttractionData, Booking } from '../../models/types'
 import { ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
+import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
 import BookingLocationField from '../shared/booking-location-field.vue'
 import BookingTextareaField from '../shared/booking-textarea-field.vue'
@@ -42,7 +43,7 @@ function updateTitle(newTitle: string) {
         <BookingField :model-value="booking.data.address" label="Адрес (текстом)" icon="mdi:map-marker-radius-outline" :readonly="readonly" @update:model-value="updateDataField('address', $event)" />
         <KitBtn v-if="!readonly" icon="mdi:map-marker-outline" title="Указать на карте" @click="isLocationPickerOpen = true" />
       </div>
-      <BookingField :model-value="booking.data.dateTime" label="Дата и время" icon="mdi:calendar-clock" :readonly="readonly" @update:model-value="updateDataField('dateTime', $event)" />
+      <BookingDateTimeField :model-value="booking.data.dateTime" label="Дата и время" icon="mdi:calendar-clock" :readonly="readonly" type="datetime" @update:model-value="updateDataField('dateTime', $event)" />
     </div>
 
     <template #details>

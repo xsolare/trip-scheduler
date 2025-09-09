@@ -23,9 +23,22 @@ const emit = defineEmits(['updateSection', 'deleteSection'])
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)
 
+const defaultColors = [
+  'var(--bg-secondary-color)',
+  'var(--bg-tertiary-color)',
+  '#FFADAD',
+  '#FFD6A5',
+  '#FDFFB6',
+  '#A3D9A5',
+  '#9BF6FF',
+  '#A0C4FF',
+  '#BDB2FF',
+  '#FFC6FF',
+]
+
 const editableTitle = ref((props.section as any).title || '')
 const editableIcon = ref((props.section as any).icon || 'mdi:map-marker')
-const editableColor = ref((props.section as any).color || '#A0C4FF')
+const editableColor = ref((props.section as any).color || defaultColors[0])
 
 function onUpdate(data: ActivitySection) {
   emit('updateSection', data)
@@ -47,7 +60,7 @@ function toggleAttached() {
 function updatePinSettings() {
   if (editableTitle.value !== ((props.section as any).title || '')
     || editableIcon.value !== ((props.section as any).icon || 'mdi:map-marker')
-    || editableColor.value !== ((props.section as any).color || '#A0C4FF')
+    || editableColor.value !== ((props.section as any).color || defaultColors[0])
   ) {
     emit('updateSection', {
       ...props.section,
@@ -62,36 +75,52 @@ watch(editableIcon, () => {
   updatePinSettings()
 })
 
+watch(editableColor, () => {
+  updatePinSettings()
+})
+
 watch(() => props.section, (newSection) => {
   editableTitle.value = (newSection as any).title || ''
   editableIcon.value = (newSection as any).icon || 'mdi:map-marker'
-  editableColor.value = (newSection as any).color || '#A0C4FF'
+  editableColor.value = (newSection as any).color || defaultColors[0]
 }, { deep: true, immediate: true })
 </script>
 
 <template>
   <div class="activity-section-renderer" :class="{ 'is-attached': (section as any).isAttached }">
     <div v-if="(section as any).isAttached && !isViewMode" class="pin-settings">
-      <KitInput
-        v-model="editableTitle"
-        placeholder="Заголовок пина (необязательно)"
-        class="pin-input"
-        size="sm"
-        @blur="updatePinSettings"
-        @keydown.enter="($event.target as HTMLInputElement).blur()"
-      />
-      <IconPicker
-        v-model="editableIcon"
-        size="sm"
-        @update:model-value="updatePinSettings"
-      />
-      <div class="color-picker-wrapper">
-        <input
-          v-model="editableColor"
-          type="color"
-          class="color-input-native"
-          @input="updatePinSettings"
-        >
+      <div class="pin-main-settings">
+        <KitInput
+          v-model="editableTitle"
+          placeholder="Заголовок пина"
+          class="pin-input"
+          size="sm"
+          @blur="updatePinSettings"
+          @keydown.enter="($event.target as HTMLInputElement).blur()"
+        />
+        <IconPicker
+          v-model="editableIcon"
+          size="sm"
+          @update:model-value="updatePinSettings"
+        />
+      </div>
+      <div class="color-picker">
+        <div class="color-options">
+          <input
+            v-model="editableColor"
+            type="color"
+            class="color-input"
+            @input="updatePinSettings"
+          >
+          <button
+            v-for="color in defaultColors"
+            :key="color"
+            class="color-option"
+            :style="{ backgroundColor: color }"
+            :class="{ 'is-active': editableColor === color }"
+            @click="editableColor = color"
+          />
+        </div>
       </div>
     </div>
 
@@ -143,52 +172,66 @@ watch(() => props.section, (newSection) => {
 
 .pin-settings {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  padding: 4px;
+  padding: 8px;
   margin-bottom: 8px;
   background-color: var(--bg-tertiary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);
+}
 
-  .pin-input {
-    flex-grow: 1;
+.pin-main-settings {
+  display: flex;
+  gap: 8px;
+}
 
-    :deep(input) {
-      height: 38px;
-      font-size: 0.9rem;
-    }
-  }
+.pin-input {
+  flex-grow: 1;
 
-  .color-picker-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
+  :deep(input) {
     height: 38px;
-    background-color: var(--bg-primary-color);
-    border: 1px solid var(--border-secondary-color);
-    border-radius: var(--r-s);
-    padding: 2px;
+    font-size: 0.9rem;
   }
+}
 
-  .color-input-native {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: none;
-    cursor: pointer;
+.color-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.color-option {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  outline: 1px solid var(--border-secondary-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  &.is-active {
+    border-color: var(--fg-accent-color);
+    transform: scale(1.1);
+  }
+}
+
+.color-input {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
+  &::-webkit-color-swatch-wrapper {
     padding: 0;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-
-    &::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-    &::-webkit-color-swatch {
-      border: none;
-      border-radius: calc(var(--r-s) - 2px);
-    }
+  }
+  &::-webkit-color-swatch {
+    border: 1px solid var(--border-secondary-color);
+    border-radius: 50%;
   }
 }
 

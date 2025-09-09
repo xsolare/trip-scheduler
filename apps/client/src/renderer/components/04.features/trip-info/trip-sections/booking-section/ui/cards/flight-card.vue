@@ -3,6 +3,7 @@ import type { Booking, FlightData } from '../../models/types'
 import { ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
+import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
 import BookingLocationField from '../shared/booking-location-field.vue'
 import BookingTextareaField from '../shared/booking-textarea-field.vue'
@@ -40,8 +41,8 @@ function updateTitle(newTitle: string) {
     <div class="card-content">
       <BookingField :model-value="booking.data.departureCity" label="Город вылета" icon="mdi:airplane-takeoff" :readonly="readonly" @update:model-value="updateDataField('departureCity', $event)" />
       <BookingField :model-value="booking.data.arrivalCity" label="Город прилета" icon="mdi:airplane-landing" :readonly="readonly" @update:model-value="updateDataField('arrivalCity', $event)" />
-      <BookingField :model-value="booking.data.departureDateTime" label="Дата и время вылета" icon="mdi:calendar-clock" :readonly="readonly" @update:model-value="updateDataField('departureDateTime', $event)" />
-      <BookingField :model-value="booking.data.arrivalDateTime" label="Дата и время прилета" icon="mdi:calendar-clock" :readonly="readonly" @update:model-value="updateDataField('arrivalDateTime', $event)" />
+      <BookingDateTimeField :model-value="booking.data.departureDateTime" label="Дата и время вылета" icon="mdi:calendar-clock" :readonly="readonly" type="datetime" @update:model-value="updateDataField('departureDateTime', $event)" />
+      <BookingDateTimeField :model-value="booking.data.arrivalDateTime" label="Дата и время прилета" icon="mdi:calendar-clock" :readonly="readonly" type="datetime" @update:model-value="updateDataField('arrivalDateTime', $event)" />
     </div>
 
     <template #details>

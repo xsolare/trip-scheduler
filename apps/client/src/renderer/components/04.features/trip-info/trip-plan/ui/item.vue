@@ -62,6 +62,25 @@ function getContrastColor(hexcolor: string | undefined): string {
   return (yiq >= 128) ? '#000000' : '#FFFFFF'
 }
 
+function getTitledPinStyle(pin: ActivitySection) {
+  const color = (pin as any).color
+  if (!color)
+    return {}
+
+  if (color.startsWith('var(')) {
+    return {
+      backgroundColor: color,
+      borderColor: 'transparent', // Let's use transparency for borders on variables
+    }
+  }
+
+  return {
+    backgroundColor: `${color}33`,
+    color: getContrastColor(color),
+    borderColor: color,
+  }
+}
+
 function handleTagUpdate(newTag: EActivityTag) {
   updateActivity({ tag: newTag })
 }
@@ -336,11 +355,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                   <button
                     class="attached-pill titled-pin"
                     :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
-                    :style="(child as any).color ? {
-                      backgroundColor: `${(child as any).color}33`,
-                      color: getContrastColor((child as any).color),
-                      borderColor: `${(child as any).color}`,
-                    } : {}"
+                    :style="getTitledPinStyle(child)"
                     @click="toggleSection(group.parent.id, child.id)"
                   >
                     <Icon width="18" height="18" :icon="(child as any).icon || sectionTypeIcons[child.type]" class="pill-icon" />
@@ -688,7 +703,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     transition: all 0.2s ease;
     padding: 4px;
 
-    &.active {
+    &.active:not(.titled-pin) {
       background: var(--fg-accent-color);
       color: var(--fg-inverted-color);
     }
@@ -715,6 +730,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     gap: 8px;
     border-radius: var(--r-l);
     backdrop-filter: blur(4px);
+    border: 1px solid;
 
     .pill-title {
       font-size: 0.8rem;

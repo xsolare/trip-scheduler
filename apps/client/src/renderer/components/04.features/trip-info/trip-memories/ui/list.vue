@@ -146,7 +146,7 @@ onChange((files) => {
         <Icon icon="mdi:note-plus-outline" />
         <span>Добавить заметку</span>
       </button>
-      <KitDropdown :items="importOptions" @update:model-value="handleImport">
+      <KitDropdown :items="importOptions" align="end" @update:model-value="handleImport">
         <template #trigger>
           <button class="add-note-button" :disabled="importOptions.length === 0">
             <Icon icon="mdi:import" />
@@ -276,7 +276,7 @@ onChange((files) => {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.2s ease;
   white-space: nowrap;

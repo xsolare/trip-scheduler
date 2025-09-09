@@ -3,7 +3,7 @@ import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import type { TripSection } from '~/shared/types/models/trip'
 import { onClickOutside, useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
@@ -17,7 +17,7 @@ export function useTripInfoLayout() {
   const router = useRouter()
   const route = useRoute()
 
-  const activeTabId = ref<string>('daily-route')
+  const activeTabId = ref<string>((route.query.section as string) || 'daily-route')
   const isDrawerOpen = ref(false)
   const isLayoutDropdownOpen = ref(false)
   const isHeaderDropdownOpen = ref(false)
@@ -45,6 +45,18 @@ export function useTripInfoLayout() {
       icon: section.icon || 'mdi:file-document-outline',
     }))
     return [dailyRouteTab, ...sectionTabs]
+  })
+
+  watchEffect(() => {
+    const sectionIdFromQuery = route.query.section as string
+    if (sectionIdFromQuery && tabItems.value.some(item => item.id === sectionIdFromQuery)) {
+      if (activeTabId.value !== sectionIdFromQuery) {
+        activeTabId.value = sectionIdFromQuery
+      }
+    }
+    else if (!sectionIdFromQuery && activeTabId.value !== 'daily-route') {
+      activeTabId.value = 'daily-route'
+    }
   })
 
   const activeTab = computed(() => tabItems.value.find(item => item.id === activeTabId.value))

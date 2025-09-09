@@ -124,11 +124,9 @@ async function seed() {
         const { activities: mockActivities, ...dayDetails } = mockDay
 
         daysToInsert.push({
-          id: dayDetails.id,
-          date: new Date(mockDay.date).toISOString().split('T')[0],
-          title: dayDetails.title,
-          description: dayDetails.description,
-          tripId: dayDetails.tripId,
+          ...dayDetails,
+          date: new Date(dayDetails.date).toISOString().split('T')[0],
+          meta: dayDetails.meta ?? [],
           createdAt: dayDetails.createdAt ? new Date(dayDetails.createdAt) : new Date(),
           updatedAt: dayDetails.updatedAt ? new Date(dayDetails.updatedAt) : new Date(),
         })

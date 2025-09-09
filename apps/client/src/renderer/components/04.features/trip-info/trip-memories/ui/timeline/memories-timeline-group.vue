@@ -2,6 +2,8 @@
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
+import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { getTagInfo } from '~/components/05.modules/trip-info/lib/helpers'
 import MemoriesItem from './memories-timeline-item.vue'
 
@@ -27,6 +29,24 @@ const props = defineProps<Props>()
 defineEmits<{
   (e: 'toggleCollapse'): void
 }>()
+
+const { memories: memoriesStore } = useModuleStore(['memories'])
+const confirm = useConfirm()
+
+async function handleDeleteActivity() {
+  if (!props.group.activity)
+    return
+
+  const isConfirmed = await confirm({
+    title: `Удалить активность "${props.group.title}"?`,
+    description: 'Связанные с ней фото и заметки будут перемещены в предыдущую группу в ленте. Это действие нельзя отменить.',
+    type: 'danger',
+    confirmText: 'Удалить',
+  })
+
+  if (isConfirmed)
+    await memoriesStore.deleteMemory(props.group.activity.id)
+}
 
 const tagInfo = computed(() => {
   if (!props.group.activity?.tag)
@@ -58,11 +78,21 @@ const displayTime = computed(() => {
         {{ group.title }}
       </h5>
 
-      <button class="collapse-toggle-btn" @click="$emit('toggleCollapse')">
-        <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
-      </button>
+      <!-- This div will be pushed to the right -->
+      <div class="activity-header-actions">
+        <button class="collapse-toggle-btn" @click="$emit('toggleCollapse')">
+          <Icon :icon="isCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'" />
+        </button>
 
-      <div v-if="group.type === 'activity'" class="header-spacer" />
+        <button
+          v-if="!isViewMode && group.type === 'activity'"
+          class="delete-activity-btn"
+          title="Удалить активность"
+          @click.stop="handleDeleteActivity"
+        >
+          <Icon icon="mdi:trash-can-outline" />
+        </button>
+      </div>
     </div>
 
     <h5 v-if="group.type === 'activity'" class="activity-title">
@@ -155,6 +185,7 @@ const displayTime = computed(() => {
 .activity-header {
   display: flex;
   align-items: center;
+  justify-content: space-between; // Pushes children to ends
   gap: 12px;
   width: 100%;
   border-radius: var(--r-xs) var(--r-l) var(--r-l) var(--r-xs);
@@ -165,6 +196,7 @@ const displayTime = computed(() => {
     padding: 2px 10px;
     border: 1px solid var(--border-secondary-color);
     border-radius: var(--r-s);
+    flex-shrink: 0; // Prevent shrinking
 
     > span {
       white-space: nowrap;
@@ -174,7 +206,15 @@ const displayTime = computed(() => {
     }
   }
 
-  .collapse-toggle-btn {
+  .activity-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .collapse-toggle-btn,
+  .delete-activity-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -185,28 +225,16 @@ const displayTime = computed(() => {
     padding: 4px;
     border-radius: 50%;
     transition: all 0.2s ease;
-    opacity: 0;
-
-    &:hover {
-      background-color: var(--bg-hover-color);
-      color: var(--fg-primary-color);
-    }
   }
 
-  .header-spacer {
-    flex-grow: 1;
+  .collapse-toggle-btn:hover {
+    background-color: var(--bg-hover-color);
+    color: var(--fg-primary-color);
   }
 
-  &:hover {
-    .collapse-toggle-btn {
-      opacity: 1;
-    }
-  }
-
-  @include media-down(sm) {
-    .collapse-toggle-btn {
-      opacity: 1;
-    }
+  .delete-activity-btn:hover {
+    color: var(--fg-error-color);
+    background-color: var(--bg-hover-color);
   }
 }
 
