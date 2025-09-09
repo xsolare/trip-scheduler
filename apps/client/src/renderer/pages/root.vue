@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { WelcomeCard } from '~/components/04.modules/home/welcome-card'
+import { WelcomeCard } from '~/components/05.modules/welcome-card'
 </script>
 
 <template>

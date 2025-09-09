@@ -43,7 +43,7 @@ export function useImageViewerTransform(options: UseImageViewerTransformOptions)
 
   // --- Вычисляемые свойства ---
   const imageStyle = computed(() => ({
-    transform: `scale(${transform.scale}) translate(${transform.x}px, ${transform.y}px)`,
+    transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
     transition: (isAnimating.value && !isDragging.value && !isGesturing.value)
       ? `transform ${toValue(animationDuration)}ms cubic-bezier(0.4, 0.0, 0.2, 1)`
       : 'none',
@@ -82,8 +82,8 @@ export function useImageViewerTransform(options: UseImageViewerTransformOptions)
     const scaledWidth = imageRect.width
     const scaledHeight = imageRect.height
 
-    const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2) / transform.scale
-    const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2) / transform.scale
+    const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2)
+    const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2)
 
     return { minX: -maxX, maxX, minY: -maxY, maxY }
   }
@@ -234,8 +234,8 @@ export function useImageViewerTransform(options: UseImageViewerTransformOptions)
     if (!isDragging.value)
       return
 
-    const deltaX = (event.clientX - dragStart.x) / transform.scale
-    const deltaY = (event.clientY - dragStart.y) / transform.scale
+    const deltaX = event.clientX - dragStart.x
+    const deltaY = event.clientY - dragStart.y
     transform.x = transformStart.x + deltaX
     transform.y = transformStart.y + deltaY
   }
@@ -305,8 +305,8 @@ export function useImageViewerTransform(options: UseImageViewerTransformOptions)
 
     if (isDragging.value && currentTouches.length === 1 && touches.value.length === 1) {
       if (transform.scale > toValue(minZoom)) {
-        const deltaX = (currentTouches[0].x - dragStart.x) / transform.scale
-        const deltaY = (currentTouches[0].y - dragStart.y) / transform.scale
+        const deltaX = currentTouches[0].x - dragStart.x
+        const deltaY = currentTouches[0].y - dragStart.y
         transform.x = transformStart.x + deltaX
         transform.y = transformStart.y + deltaY
       }

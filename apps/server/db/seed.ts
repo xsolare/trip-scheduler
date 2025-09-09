@@ -3,11 +3,13 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import url from 'node:url'
+import { FREE_PLAN_ID, ONE_GIGABYTE_IN_BYTES } from '~/lib/constants'
 import { db } from './index'
 import {
   activities,
   days,
   memories,
+  plans,
   tripImages,
   tripParticipants,
   trips,
@@ -81,6 +83,13 @@ async function seed() {
   await db.delete(tripImages)
   await db.delete(trips)
   await db.delete(users)
+  await db.delete(plans)
+
+  console.log('⭐ Создание тарифных планов...')
+  await db.insert(plans).values([
+    { id: FREE_PLAN_ID, name: 'Free', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES },
+    { id: 2, name: 'Pro', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES },
+  ])
 
   console.log('✈️  Подготовка данных для вставки...')
 
@@ -147,7 +156,8 @@ async function seed() {
 
   // Вставка в правильном порядке для соблюдения foreign key constraints
   if (usersToInsert.length > 0)
-    await db.insert(users).values(usersToInsert)
+    await db.insert(users).values(usersToInsert.map(u => ({ ...u, planId: FREE_PLAN_ID })))
+
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)
   if (participantsToInsert.length > 0)

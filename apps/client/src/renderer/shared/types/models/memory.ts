@@ -1,13 +1,19 @@
 import type { RouterInput } from '../trpc'
+import type { EActivityTag } from './activity'
 import type { TripImage } from './trip'
 
 export interface Memory {
   id: string
+  title: string
   tripId: string
   timestamp: string | null
   comment: string | null
   imageId: string | null
   image: TripImage | null
+
+  sourceActivityId: string
+  tag?: EActivityTag
+
   createdAt: string
   updatedAt: string
 }

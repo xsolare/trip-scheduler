@@ -58,6 +58,10 @@ const visible = defineModel<boolean>('open', { required: true })
   &[data-state='closed'] {
     animation: overlay-hide 300ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
   }
+
+  @include media-down(sm) {
+    display: none;
+  }
 }
 
 .drawer-content-wrapper {
@@ -76,7 +80,7 @@ const visible = defineModel<boolean>('open', { required: true })
     top: 0;
     bottom: 0;
     left: 0;
-    width: 300px;
+    width: 340px;
     max-width: 80vw;
     border-right: 1px solid var(--border-secondary-color);
     &[data-state='open'] {
@@ -91,7 +95,7 @@ const visible = defineModel<boolean>('open', { required: true })
     top: 0;
     bottom: 0;
     right: 0;
-    width: 300px;
+    width: 340px;
     max-width: 80vw;
     border-left: 1px solid var(--border-secondary-color);
     &[data-state='open'] {
@@ -152,6 +156,16 @@ const visible = defineModel<boolean>('open', { required: true })
   &:hover {
     background-color: var(--bg-hover-color);
     color: var(--fg-accent-color);
+  }
+}
+
+@include media-down(sm) {
+  .drawer-content-wrapper {
+    &.drawer--left,
+    &.drawer--right {
+      width: 100%;
+      max-width: 100%;
+    }
   }
 }
 

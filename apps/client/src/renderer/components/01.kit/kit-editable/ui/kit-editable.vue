@@ -38,6 +38,7 @@ const model = defineModel<string>({ required: true })
     :class="{ 'is-readonly': props.readonly, 'is-disabled': props.disabled }"
     :disabled="props.disabled"
     :readonly="props.readonly"
+    :activation-mode="props.readonly ? 'none' : 'focus'"
     @submit="value => emit('submit', value || '')"
   >
     <EditableArea class="kit-editable-area">
@@ -77,6 +78,10 @@ const model = defineModel<string>({ required: true })
 
   &[data-editing='true'] .kit-editable-area {
     background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.is-readonly .kit-editable-area {
+    cursor: default;
   }
 
   &:not(.is-readonly):not(.is-disabled) {

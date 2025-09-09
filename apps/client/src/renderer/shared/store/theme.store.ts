@@ -124,6 +124,7 @@ export const useThemeStore = defineStore('theme', () => {
 
   // --- GETTERS ---
   const isCustomThemeActive = computed(() => activeThemeName.value === 'custom')
+  const currentTheme = computed(() => activeThemeName.value)
 
   // --- ACTIONS ---
   function setTheme(name: ThemeType) {
@@ -185,6 +186,7 @@ export const useThemeStore = defineStore('theme', () => {
     isCreatorOpen,
     applyCustomPalette,
     applyCustomRadius,
+    currentTheme,
     activeThemeName,
     customThemePalette,
     customThemeRadius,

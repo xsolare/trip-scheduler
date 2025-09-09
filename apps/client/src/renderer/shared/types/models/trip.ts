@@ -122,6 +122,26 @@ export enum TripVisibility {
   PRIVATE = 'private',
 }
 
+export enum TripSectionType {
+  BOOKINGS = 'bookings',
+  FINANCES = 'finances',
+  CHECKLIST = 'checklist',
+  NOTES = 'notes',
+  CUSTOM = 'custom',
+}
+
+export interface TripSection {
+  id: string
+  tripId: string
+  type: TripSectionType
+  title: string
+  icon: string | null
+  content: unknown
+  order: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Trip {
   id: string
   title: string
@@ -142,6 +162,7 @@ export interface Trip {
   visibility: TripVisibility
   createdAt: string
   updatedAt: string
+  sections: TripSection[]
 }
 
 export interface TripWithDays extends Trip {

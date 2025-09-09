@@ -25,13 +25,15 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: T): void
 }>()
 
+const open = defineModel<boolean>('open')
+
 function handleSelect(item: KitDropdownItem<T>) {
   emit('update:modelValue', item.value)
 }
 </script>
 
 <template>
-  <DropdownMenuRoot>
+  <DropdownMenuRoot v-model:open="open">
     <DropdownMenuTrigger as-child>
       <slot name="trigger" />
     </DropdownMenuTrigger>
@@ -93,6 +95,21 @@ function handleSelect(item: KitDropdownItem<T>) {
   &.active {
     font-weight: 600;
     color: var(--fg-accent-color);
+  }
+
+  &.is-destructive {
+    color: var(--fg-error-color);
+    .item-icon {
+      color: var(--fg-error-color);
+    }
+    &:hover,
+    &[data-highlighted] {
+      background-color: var(--bg-error-color);
+      color: var(--fg-error-color);
+      .item-icon {
+        color: var(--fg-error-color);
+      }
+    }
   }
 }
 

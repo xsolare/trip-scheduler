@@ -59,4 +59,24 @@ export class MemoryRepository implements IMemoryRepository {
     )
     return result[0] || null
   }
+
+  async applyTakenAtTimestamp(id: string): Promise<Memory> {
+    const memory = await this.getById(id)
+    if (!memory || !memory.imageId)
+      throw new Error('Memory or associated image not found')
+
+    const imageResult = await this.db.select<{ taken_at: string }[]>('SELECT taken_at FROM trip_images WHERE id = $1', [memory.imageId])
+    const image = imageResult[0]
+
+    if (!image || !image.taken_at)
+      throw new Error('Image taken_at timestamp not found')
+
+    const updatedMemory = await this.update({ id, timestamp: image.taken_at })
+    return updatedMemory
+  }
+
+  async unassignTimestamp(id: string): Promise<Memory> {
+    const updatedMemory = await this.update({ id, timestamp: null })
+    return updatedMemory
+  }
 }

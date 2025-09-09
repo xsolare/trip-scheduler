@@ -59,6 +59,7 @@ function handleUpdateValue(value: CalendarDate | null) {
   animation-duration: 0.6s;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 8px;
+  z-index: 2002;
 
   &[data-side='top'] {
     animation-name: slideUp;

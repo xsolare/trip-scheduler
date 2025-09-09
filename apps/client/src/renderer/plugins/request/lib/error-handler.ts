@@ -64,6 +64,8 @@ export function createApiErrorHandler(options: IApiErrorHandlerOptions = {}) {
       ? +(error.data?.httpStatus || error.shape?.data?.httpStatus || error.statusCode!)
       : 0
 
+    const trpcCode = error?.shape?.data?.code || error?.data?.code
+
     console.error('[API Error Handler]', error)
 
     // 1. Кастомный обработчик
@@ -87,29 +89,31 @@ export function createApiErrorHandler(options: IApiErrorHandlerOptions = {}) {
     // 4. Стандартная логика определения сообщения
     let description = 'Произошла неизвестная ошибка. Пожалуйста, попробуйте позже.'
 
-    switch (statusCode) {
-      case 401:
-        description = 'Вы не авторизованы. Пожалуйста, войдите в систему.'
-        break
-      case 403:
-        description = 'Сессия истекла или у вас нет прав доступа.'
-        break
-      case 409:
-        description = error?.shape?.message
-          || error?.data?.description
-          || error?.data?.message
-          || 'Произошел конфликт данных.'
-        break
-      default:
-        if (error?.shape?.message)
-          description = error.shape.message
-        else if (error?.data?.description)
-          description = error.data.description
-        else if (error?.data?.message)
-          description = error.data.message
-        else if (error?.message)
-          description = error.message
-        break
+    if (trpcCode === 'FORBIDDEN' || statusCode === 403) {
+      description = error?.shape?.message || error?.message || 'У вас нет прав для выполнения этого действия.'
+    }
+    else {
+      switch (statusCode) {
+        case 401:
+          description = 'Вы не авторизованы. Пожалуйста, войдите в систему.'
+          break
+        case 409:
+          description = error?.shape?.message
+            || error?.data?.description
+            || error?.data?.message
+            || 'Произошел конфликт данных.'
+          break
+        default:
+          if (error?.shape?.message)
+            description = error.shape.message
+          else if (error?.data?.description)
+            description = error.data.description
+          else if (error?.data?.message)
+            description = error.data.message
+          else if (error?.message)
+            description = error.message
+          break
+      }
     }
 
     // 5. Показываем toast-уведомление

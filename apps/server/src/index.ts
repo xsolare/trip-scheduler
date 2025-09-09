@@ -10,16 +10,8 @@ import { appRouter } from './router'
 
 const app = new Hono()
 
-const apiRoutes = new Hono()
-  .post('/upload', uploadFileController)
-  .route('/auth', authController)
-
-app.route('/api', apiRoutes)
-app.use('/static/*', serveStatic({ root: './' }))
-
-// tRPC middleware
 app.use(
-  '/trpc/*',
+  '*',
   cors({
     origin: [
       'http://localhost:5173',
@@ -29,7 +21,20 @@ app.use(
       'https://trip-scheduler.ru',
     ],
     credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   }),
+)
+
+// Определение API маршрутов
+const apiRoutes = new Hono()
+  .post('/upload', uploadFileController)
+  .route('/auth', authController)
+
+app.route('/api', apiRoutes)
+app.use('/static/*', serveStatic({ root: './' }))
+
+app.use(
+  '/trpc/*',
   trpcServer({
     router: appRouter,
     createContext,
@@ -50,7 +55,6 @@ app.onError((error, c) => {
   console.error('Application error:', error)
   return c.json({
     error: 'Internal Server Error',
-
     message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
   }, 500)
 })

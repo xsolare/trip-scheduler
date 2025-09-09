@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 
 interface Props {
   icon?: string
-  variant?: 'solid' | 'outlined' | 'text'
+  variant?: 'solid' | 'outlined' | 'text' | 'subtle'
   color?: 'primary' | 'secondary'
   disabled?: boolean
 }
@@ -134,6 +134,35 @@ const componentClasses = computed(() => [
       &:not(:disabled):hover {
         background-color: var(--bg-hover-color);
         color: var(--fg-primary-color);
+      }
+    }
+  }
+
+  &--subtle {
+    background-color: transparent;
+    box-shadow: none;
+    border-style: dashed;
+    border-width: 2px;
+    font-weight: 500;
+    padding: 12px;
+
+    &.kit-btn--color-primary {
+      border-color: var(--fg-accent-color);
+      color: var(--fg-accent-color);
+
+      &:not(:disabled):hover {
+        background-color: var(--bg-disabled-color);
+      }
+    }
+
+    &.kit-btn--color-secondary {
+      border-color: var(--border-secondary-color);
+      color: var(--fg-secondary-color);
+
+      &:not(:disabled):hover {
+        background-color: var(--bg-hover-color);
+        color: var(--fg-primary-color);
+        border-color: var(--border-primary-color);
       }
     }
   }

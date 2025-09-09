@@ -89,7 +89,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: 90vh; /* ИЗМЕНЕНИЕ */
+  max-height: 90vh;
 
   &:focus {
     outline: none;
@@ -150,7 +150,6 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
 
 .dialog-body {
   flex-grow: 1;
-  overflow-y: auto;
 }
 
 @keyframes overlay-show {

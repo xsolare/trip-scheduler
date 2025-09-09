@@ -30,14 +30,14 @@ export interface ImageMetadata {
 }
 
 export const imageRepository = {
-  async create(tripId: string, url: string, placement: Placement, metadata: ImageMetadata) {
+  async create(tripId: string, url: string, placement: Placement, sizeBytes: number, metadata: ImageMetadata) {
     const [newImage] = await db
       .insert(tripImages)
       .values({
         tripId,
         url,
         placement,
-
+        sizeBytes,
         takenAt: metadata.takenAt,
         latitude: metadata.latitude,
         longitude: metadata.longitude,

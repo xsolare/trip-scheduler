@@ -13,9 +13,10 @@ export const imageService = {
     tripId: string,
     url: string,
     placement: Placement,
+    sizeBytes: number,
     metadata: ImageMetadata,
   ) {
-    return await imageRepository.create(tripId, url, placement, metadata)
+    return await imageRepository.create(tripId, url, placement, sizeBytes, metadata)
   },
 
   /**

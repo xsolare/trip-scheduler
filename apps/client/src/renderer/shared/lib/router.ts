@@ -6,6 +6,7 @@ import { useAuthStore } from '~/shared/store/auth.store'
 // --- Компоненты страниц ---
 const Root = () => import('~/pages/root.vue')
 const NotFound = () => import('~/pages/not-found.vue')
+const About = () => import('~/pages/about.vue')
 
 // --- Аутентификация ---
 const SignIn = () => import('~/pages/auth/sign-in.vue')
@@ -22,6 +23,11 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.Root,
     name: AppRouteNames.Root,
     component: Root,
+  },
+  {
+    path: AppRoutePaths.About,
+    name: AppRouteNames.About,
+    component: About,
   },
   {
     path: AppRoutePaths.Auth.SignIn,
@@ -50,17 +56,22 @@ const routes: RouteRecordRaw[] = [
 
   // --- Основные маршруты приложения (требуют авторизации) ---
   {
+    // Список путешествий
     path: AppRoutePaths.Trip.List,
     name: AppRouteNames.TripList,
     component: TripList,
     meta: { layout: 'default' },
   },
   {
+    // Маршрут по дням (план + воспоминания)
     path: AppRoutePaths.Trip.Info(':id'),
     name: AppRouteNames.TripInfo,
     component: TripInfo,
-    meta: { layout: 'default' },
+    meta: { layout: 'trip-info' },
   },
+  // Секции
+  // {
+  // },
 
   // --- Системные маршруты ---
   {

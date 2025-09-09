@@ -5,6 +5,8 @@ import path from 'node:path'
 import { createTRPCError } from '~/lib/trpc'
 import { imageRepository } from '~/repositories/image.repository'
 import { memoryRepository } from '~/repositories/memory.repository'
+import { tripRepository } from '~/repositories/trip.repository'
+import { quotaService } from '~/services/quota.service'
 
 export const memoryService = {
   async create(data: z.infer<typeof CreateMemoryInputSchema>) {
@@ -30,9 +32,21 @@ export const memoryService = {
     const imageToDelete = deletedMemory.image
     if (deletedMemory.imageId && imageToDelete) {
       try {
-        // Сначала удаляем запись из таблицы trip_images
+        // Получаем ID пользователя для обновления квоты
+        const trip = await tripRepository.getById(deletedMemory.tripId)
+        if (!trip) {
+          throw new Error(`Путешествие ${deletedMemory.tripId} не найдено для обновления квоты.`)
+        }
+
+        // 1. Уменьшаем квоту использования хранилища
+        if (imageToDelete.sizeBytes) {
+          await quotaService.decrementStorageUsage(trip.userId, imageToDelete.sizeBytes)
+        }
+
+        // 2. Удаляем запись из таблицы trip_images
         await imageRepository.delete(deletedMemory.imageId)
 
+        // 3. Удаляем физические файлы
         const getFilePathFromUrl = (url: string) => {
           const staticRoot = process.env.STATIC_PATH
           if (!staticRoot) {
@@ -44,14 +58,12 @@ export const memoryService = {
 
         const filesToDelete: string[] = []
 
-        // 1. Добавляем оригинал в список на удаление
         if (imageToDelete.url) {
           const mainImagePath = getFilePathFromUrl(imageToDelete.url)
           if (mainImagePath)
             filesToDelete.push(mainImagePath)
         }
 
-        // 2. Добавляем все варианты в список на удаление
         if (imageToDelete.variants) {
           for (const variantPath of Object.values(imageToDelete.variants)) {
             const fullVariantPath = getFilePathFromUrl(variantPath)
@@ -60,7 +72,6 @@ export const memoryService = {
           }
         }
 
-        // 3. Параллельно удаляем все найденные файлы
         await Promise.all(
           filesToDelete.map(filePath =>
             fs.unlink(filePath).catch(err =>
@@ -71,6 +82,7 @@ export const memoryService = {
       }
       catch (error) {
         console.error(`Ошибка при удалении файлов изображения для воспоминания ${id}:`, error)
+        // Не бросаем ошибку клиенту, т.к. основная сущность (воспоминание) уже удалена
       }
     }
 
@@ -80,5 +92,4 @@ export const memoryService = {
   async getByTripId(tripId: string) {
     return await memoryRepository.getByTripId(tripId)
   },
-
 }

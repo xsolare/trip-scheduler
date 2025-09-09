@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
 import {
+  bigint,
   date,
   index,
   integer,
@@ -13,6 +14,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { ONE_GIGABYTE_IN_BYTES } from '~/lib/constants'
 
 interface ActivitySectionBase {
   id: string
@@ -43,9 +45,9 @@ interface ActivitySectionGallery extends ActivitySectionBase {
 
 interface ActivitySectionGeolocation extends ActivitySectionBase {
   type: 'geolocation'
-  latitude: number
-  longitude: number
-  address: string
+  points: any[]
+  routes: any[]
+  drawnRoutes: any[]
 }
 
 export type ActivitySection = ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation
@@ -58,6 +60,21 @@ export const activitySectionTypeEnum = pgEnum('activity_section_type', ['descrip
 export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed', 'skipped'])
 export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
+
+export const tripSectionTypeEnum = pgEnum('trip_section_type', [
+  'bookings', // Бронирования (отели, авиа)
+  'finances', // Финансы
+  'checklist', // Чек-листы
+  'notes', // Общие заметки (гибкий/кастомный раздел)
+])
+
+// Таблица для тарифных планов
+export const plans = pgTable('plans', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(), // e.g., "Free", "Pro"
+  maxTrips: integer('max_trips').notNull().default(1),
+  maxStorageBytes: bigint('max_storage_bytes', { mode: 'number' }).notNull().default(ONE_GIGABYTE_IN_BYTES),
+})
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -73,6 +90,11 @@ export const users = pgTable('users', {
   // Поля для OAuth
   githubId: text('github_id').unique(),
   googleId: text('google_id').unique(),
+
+  // --- ПОЛЯ ДЛЯ КВОТ ---
+  planId: integer('plan_id').references(() => plans.id).notNull().default(1), // FK на тарифный план
+  currentTripsCount: integer('current_trips_count').notNull().default(0),
+  currentStorageBytes: bigint('current_storage_bytes', { mode: 'number' }).notNull().default(0),
 
   // Таймстампы
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -110,6 +132,19 @@ export const trips = pgTable('trips', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// НОВАЯ ТАБЛИЦА ДЛЯ РАЗДЕЛОВ ПУТЕШЕСТВИЯ
+export const tripSections = pgTable('trip_sections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  type: tripSectionTypeEnum('type').notNull(),
+  title: text('title').notNull(),
+  icon: text('icon'),
+  content: jsonb('content').$type<any>().default('{}'), // Позволяет хранить любую структуру
+  order: integer('order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 export const tripParticipants = pgTable('trip_participants', {
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -123,6 +158,7 @@ export const tripImages = pgTable('trip_images', {
   url: text('url').notNull(),
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull().default(0), // Размер файла в байтах
 
   takenAt: timestamp('taken_at'),
   latitude: real('latitude'), // Для отображения на карте
@@ -135,17 +171,6 @@ export const tripImages = pgTable('trip_images', {
 
   // --- Все остальные метаданные в одном поле JSONB ---
   metadata: jsonb('metadata'),
-})
-
-// Таблица для воспоминаний (Memories)
-export const memories = pgTable('memories', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
-  timestamp: timestamp('timestamp'), // Может быть null для неотсортированных
-  comment: text('comment'),
-  imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // Таблица для дней (Days)
@@ -173,6 +198,20 @@ export const activities = pgTable('activities', {
   dayId: uuid('day_id').notNull().references(() => days.id, { onDelete: 'cascade' }),
 })
 
+// Таблица для воспоминаний (Memories)
+export const memories = pgTable('memories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  timestamp: timestamp('timestamp'), // Может быть null для неотсортированных
+  comment: text('comment'),
+  imageId: uuid('image_id').references(() => tripImages.id, { onDelete: 'cascade' }), // Если null - это текстовая заметка
+  title: text('title'),
+  tag: activityTagEnum('tag'),
+  sourceActivityId: uuid('source_activity_id').references(() => activities.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 // Отношения
 export const tripsRelations = relations(trips, ({ one, many }) => ({
   user: one(users, {
@@ -183,6 +222,15 @@ export const tripsRelations = relations(trips, ({ one, many }) => ({
   images: many(tripImages),
   memories: many(memories),
   participants: many(tripParticipants),
+  sections: many(tripSections), // НОВАЯ СВЯЗЬ
+}))
+
+// НОВАЯ СВЯЗЬ ДЛЯ РАЗДЕЛОВ
+export const tripSectionsRelations = relations(tripSections, ({ one }) => ({
+  trip: one(trips, {
+    fields: [tripSections.tripId],
+    references: [trips.id],
+  }),
 }))
 
 export const tripParticipantsRelations = relations(tripParticipants, ({ one }) => ({
@@ -229,10 +277,18 @@ export const memoriesRelations = relations(memories, ({ one }) => ({
   }),
 }))
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   trips: many(trips),
   refreshTokens: many(refreshTokens),
   tripParticipations: many(tripParticipants),
+  plan: one(plans, { // Связь пользователя с его планом
+    fields: [users.planId],
+    references: [plans.id],
+  }),
+}))
+
+export const plansRelations = relations(plans, ({ many }) => ({
+  users: many(users), // Связь плана с пользователями
 }))
 
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({

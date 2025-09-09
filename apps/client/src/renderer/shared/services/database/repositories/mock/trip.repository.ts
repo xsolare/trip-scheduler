@@ -58,7 +58,6 @@ class TripRepository implements ITripRepository {
     return Promise.resolve(filtered)
   }
 
-  // ... остальной код класса без изменений
   @throttle(300)
   async getById(id: string): Promise<Trip | null> {
     const trip = MOCK_TRIPS.find(t => t.id === id) || null
@@ -102,6 +101,7 @@ class TripRepository implements ITripRepository {
       visibility: TripVisibility.PRIVATE,
       createdAt: now,
       updatedAt: now,
+      sections: [],
     }
 
     MOCK_TRIPS.unshift(newTrip)
@@ -118,7 +118,11 @@ class TripRepository implements ITripRepository {
       return Promise.reject(new Error('Mock Trip not found'))
     }
 
-    MOCK_TRIPS[tripIndex] = { ...MOCK_TRIPS[tripIndex], ...details, updatedAt: new Date().toISOString() }
+    MOCK_TRIPS[tripIndex] = {
+      ...MOCK_TRIPS[tripIndex],
+      ...details,
+      updatedAt: new Date().toISOString(),
+    }
 
     // eslint-disable-next-line no-console
     console.log('[Mock] Updated trip:', MOCK_TRIPS[tripIndex])

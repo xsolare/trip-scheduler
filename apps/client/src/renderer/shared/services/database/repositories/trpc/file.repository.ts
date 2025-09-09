@@ -1,6 +1,7 @@
 import type { IFileRepository } from '../../model/types'
 import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 import { trpc } from '~/shared/services/trpc/trpc.service'
+import { TOKEN_KEY } from '~/shared/store/auth.store'
 import { throttle } from '../../lib/decorators'
 
 export class FileRepository implements IFileRepository {
@@ -24,9 +25,14 @@ export class FileRepository implements IFileRepository {
     if (comment)
       formData.append('comment', comment)
 
+    const accessToken = useStorage<string | null>(TOKEN_KEY, null)
+
     const response = await fetch(`${import.meta.env.VITE_APP_SERVER_URL}/api/upload`, {
       method: 'POST',
       body: formData,
+      headers: {
+        Authorization: `Bearer ${accessToken.value}`,
+      },
     })
 
     if (!response.ok) {

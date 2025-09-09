@@ -1,9 +1,9 @@
 import type { z } from 'zod'
 import type { CreateTripInputSchema, ListTripsInputSchema, UpdateTripInputSchema } from '~/modules/trip/trip.schemas'
-import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm'
+import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../../db'
-import { activities, days, tripParticipants, trips } from '../../db/schema'
+import { activities, days, tripParticipants, trips, tripSections } from '../../db/schema'
 
 const withParticipants = {
   participants: {
@@ -16,6 +16,13 @@ const withParticipants = {
         },
       },
     },
+  },
+}
+
+const withFullTripData = {
+  ...withParticipants,
+  sections: {
+    orderBy: asc(tripSections.order),
   },
 }
 
@@ -110,10 +117,26 @@ export const tripRepository = {
   async getById(id: string) {
     const result = await db.query.trips.findFirst({
       where: eq(trips.id, id),
-      with: withParticipants,
+      with: withFullTripData,
     })
 
     return mapTripParticipants(result)
+  },
+
+  /**
+   * Получает путешествие со всеми прикрепленными изображениями (для подсчета квот).
+   */
+  async getByIdWithImages(id: string) {
+    return await db.query.trips.findFirst({
+      where: eq(trips.id, id),
+      with: {
+        images: {
+          columns: {
+            sizeBytes: true,
+          },
+        },
+      },
+    })
   },
 
   /**
@@ -123,7 +146,7 @@ export const tripRepository = {
     const result = await db.query.trips.findFirst({
       where: eq(trips.id, id),
       with: {
-        ...withParticipants,
+        ...withFullTripData,
         days: {
           orderBy: days.date,
           with: {
@@ -192,7 +215,7 @@ export const tripRepository = {
 
       const result = await tx.query.trips.findFirst({
         where: eq(trips.id, id),
-        with: withParticipants,
+        with: withFullTripData,
       })
 
       return result
@@ -208,8 +231,8 @@ export const tripRepository = {
   async create(data: z.infer<typeof CreateTripInputSchema>, userId: string) {
     const { startDate, endDate, ...restData } = data
 
-    const newStartDate = (startDate instanceof Date ? startDate : new Date()).toISOString().split('T')[0]
-    const newEndDate = (endDate instanceof Date ? endDate : new Date(Date.now() + 86400000)).toISOString().split('T')[0]
+    const newStartDate = (startDate ? new Date(startDate) : new Date()).toISOString().split('T')[0]
+    const newEndDate = (endDate ? new Date(endDate) : new Date(newStartDate)).toISOString().split('T')[0]
 
     const newTrip = await db.transaction(async (tx) => {
       const [createdTrip] = await tx
@@ -233,7 +256,7 @@ export const tripRepository = {
 
     const result = await db.query.trips.findFirst({
       where: eq(trips.id, newTrip.id),
-      with: withParticipants,
+      with: withFullTripData,
     })
 
     return mapTripParticipants(result)

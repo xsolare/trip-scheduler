@@ -1,8 +1,11 @@
+// src/repositories/user.repository.ts
+
 import type { z } from 'zod'
 import type { SignUpInputSchema, UpdateUserInputSchema } from '~/modules/user/user.schemas'
 import { eq } from 'drizzle-orm'
 import { db } from '~/../db'
 import { users } from '~/../db/schema'
+import { FREE_PLAN_ID } from '~/lib/constants'
 
 interface OAuthInput {
   provider: 'google' | 'github'
@@ -12,7 +15,7 @@ interface OAuthInput {
   avatarUrl?: string
 }
 
-type UserForClient = Omit<typeof users.$inferSelect, 'password'>
+type UserForClient = Omit<typeof users.$inferSelect, 'password'> & { plan?: any }
 
 function excludePassword<T extends { password?: string | null }>(user: T): Omit<T, 'password'> {
   const { password, ...rest } = user
@@ -27,6 +30,9 @@ export const userRepository = {
   async findByEmail(email: string) {
     return await db.query.users.findFirst({
       where: eq(users.email, email),
+      with: { // ИЗМЕНЕНИЕ: Также добавляем план здесь
+        plan: true,
+      },
     })
   },
 
@@ -40,6 +46,7 @@ export const userRepository = {
         name: data.name,
         email: data.email,
         password: data.password,
+        planId: FREE_PLAN_ID, // Назначаем бесплатный план по умолчанию
       })
       .returning()
 
@@ -59,54 +66,56 @@ export const userRepository = {
     const providerColumn = provider === 'google' ? users.googleId : users.githubId
 
     // 1. Попытка найти пользователя по ID провайдера.
-    // Это самый надежный способ найти пользователя, который уже входил через этот OAuth.
-    let user = await db.query.users.findFirst({
+    const userWithProviderId = await db.query.users.findFirst({
       where: eq(providerColumn, providerId),
+      with: { plan: true },
     })
 
-    if (user) {
-      // Пользователь найден. Возвращаем его данные, исключив пароль.
-      return excludePassword(user)
+    if (userWithProviderId) {
+      return excludePassword(userWithProviderId)
     }
 
     // 2. Если не найден, ищем по email, чтобы связать аккаунты.
-    // Это позволяет пользователю, который сначала зарегистрировался по паролю,
-    // затем войти через Google/GitHub с тем же email.
-    user = await db.query.users.findFirst({
+    const userWithEmail = await db.query.users.findFirst({
       where: eq(users.email, email),
+      with: { plan: true },
     })
 
-    if (user) {
-      // Пользователь с таким email уже существует. Связываем аккаунты,
-      // добавляя ID провайдера к его записи.
+    if (userWithEmail) {
+      // Связываем аккаунты и возвращаем обновленного пользователя
       const [updatedUser] = await db.update(users)
         .set({ [providerColumn.name]: providerId, updatedAt: new Date() })
-        .where(eq(users.id, user.id))
+        .where(eq(users.id, userWithEmail.id))
         .returning()
 
-      return excludePassword(updatedUser)
+      return { ...excludePassword(updatedUser), plan: userWithEmail.plan }
     }
 
-    // 3. Если пользователь не найден ни по ID провайдера, ни по email — создаем нового.
+    // 3. Если пользователь не найден, создаем нового.
     const [newUser] = await db.insert(users)
       .values({
         email,
         name,
         avatarUrl: avatarUrl || undefined,
-        emailVerified: new Date(), // Email от OAuth-провайдера считаем подтвержденным
+        emailVerified: new Date(),
         [providerColumn.name]: providerId,
+        planId: FREE_PLAN_ID,
       })
       .returning()
 
-    return excludePassword(newUser)
+    // Возвращаем нового пользователя с планом
+    return await this.getById(newUser.id) as UserForClient
   },
 
   /**
-   * Находит пользователя по его ID.
+   * Находит пользователя по его ID вместе с тарифным планом.
    */
   async getById(id: string): Promise<UserForClient | null> {
     const user = await db.query.users.findFirst({
       where: eq(users.id, id),
+      with: {
+        plan: true,
+      },
     })
 
     return user ? excludePassword(user) : null
@@ -116,12 +125,11 @@ export const userRepository = {
    * Обновляет данные пользователя.
    */
   async update(id: string, data: z.infer<typeof UpdateUserInputSchema>): Promise<UserForClient> {
-    const [updatedUser] = await db
+    await db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, id))
-      .returning()
 
-    return excludePassword(updatedUser)
+    return await this.getById(id) as UserForClient
   },
 }
