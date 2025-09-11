@@ -87,14 +87,4 @@ export const quotaService = {
       .where(eq(users.id, userId))
   },
 
-  /**
-   * Получает текущее использование и лимиты пользователя.
-   */
-  async getUserUsage(userId: string) {
-    const user = await userRepository.getByIdWithPlan(userId)
-    if (!user || !user.plan) {
-      throw createTRPCError('NOT_FOUND', 'Пользователь или его тарифный план не найдены.')
-    }
-    return user
-  },
 }

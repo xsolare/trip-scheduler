@@ -1,5 +1,6 @@
-import type { IActivityRepository, IAuthRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types'
+import type { IActivityRepository, IAuthRepository, ICommentRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types'
 import { AuthRepository } from '../repositories/mock/auth.repository'
+import { CommentRepository } from '../repositories/mock/comment.repository'
 import { DayRepository } from '../repositories/mock/day.repository'
 import { MemoryRepository } from '../repositories/mock/memory.repository'
 import { TripSectionRepository } from '../repositories/mock/trip-section.repository'
@@ -15,6 +16,7 @@ class MockDatabaseClient implements IDatabaseClient {
   activities!: IActivityRepository
   memories!: IMemoryRepository
   auth!: IAuthRepository
+  comments!: ICommentRepository
 
   async initDb(): Promise<this> {
     this.tripSections = new TripSectionRepository()
@@ -24,6 +26,7 @@ class MockDatabaseClient implements IDatabaseClient {
     this.activities = new ActivityRepository()
     this.memories = new MemoryRepository()
     this.auth = new AuthRepository()
+    this.comments = new CommentRepository()
 
     return this
   }

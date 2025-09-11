@@ -132,7 +132,6 @@ export const trips = pgTable('trips', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-// НОВАЯ ТАБЛИЦА ДЛЯ РАЗДЕЛОВ ПУТЕШЕСТВИЯ
 export const tripSections = pgTable('trip_sections', {
   id: uuid('id').primaryKey().defaultRandom(),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
@@ -222,10 +221,9 @@ export const tripsRelations = relations(trips, ({ one, many }) => ({
   images: many(tripImages),
   memories: many(memories),
   participants: many(tripParticipants),
-  sections: many(tripSections), // НОВАЯ СВЯЗЬ
+  sections: many(tripSections),
 }))
 
-// НОВАЯ СВЯЗЬ ДЛЯ РАЗДЕЛОВ
 export const tripSectionsRelations = relations(tripSections, ({ one }) => ({
   trip: one(trips, {
     fields: [tripSections.tripId],
@@ -277,10 +275,38 @@ export const memoriesRelations = relations(memories, ({ one }) => ({
   }),
 }))
 
+export const commentParentTypeEnum = pgEnum('comment_parent_type', ['trip', 'day'])
+
+export const comments = pgTable('comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  text: text('text').notNull(),
+
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+
+  // Полиморфная связь
+  parentId: uuid('parent_id').notNull(),
+  parentType: commentParentTypeEnum('parent_type').notNull(),
+
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => ({
+  parentIndex: index('parent_idx').on(t.parentId),
+}))
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  // Обратные связи к trip, day, activity не указываем здесь из-за полиморфизма,
+  // будем делать join в запросах
+}))
+
 export const usersRelations = relations(users, ({ many, one }) => ({
   trips: many(trips),
   refreshTokens: many(refreshTokens),
   tripParticipations: many(tripParticipants),
+  comments: many(comments),
   plan: one(plans, { // Связь пользователя с его планом
     fields: [users.planId],
     references: [plans.id],

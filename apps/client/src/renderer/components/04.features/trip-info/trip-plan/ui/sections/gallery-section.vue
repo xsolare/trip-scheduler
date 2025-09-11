@@ -452,7 +452,7 @@ const visibleImages = computed(() =>
   border-radius: var(--r-s);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid var(--border-primary-color);
-  max-width: 400px;
+  max-width: 500px;
 
   &:hover {
     transform: scale(1.02);

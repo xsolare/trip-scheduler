@@ -93,7 +93,7 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
   input {
     width: 100%;
     background-color: var(--bg-secondary-color);
-    border: 1px solid var(--border-primary-color);
+    border: 1px solid var(--border-secondary-color);
     border-radius: var(--r-s);
     color: var(--fg-primary-color);
     transition: border-color 0.2s;

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import type { TripSection } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
@@ -11,8 +11,10 @@ import { AppFooter } from '~/components/02.shared/app-footer'
 import { AppHeader } from '~/components/02.shared/app-header'
 import { BackgroundEffects } from '~/components/02.shared/background-effects'
 import { ThemeManager } from '~/components/02.shared/theme-manager'
+import { TripCommentsWidget } from '~/components/04.features/trip-info/trip-comments'
 import { useModuleStore } from '~/components/05.modules/trip-info'
 import AddSectionDialog from '~/components/06.layouts/trip-info/ui/add-section-dialog.vue'
+import { CommentParentType } from '~/shared/types/models/comment'
 import { useTripInfoLayout } from '../composables'
 
 const layout = useTripInfoLayout()
@@ -110,6 +112,11 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="main-navigation-right">
+          <TripCommentsWidget
+            v-if="dayId"
+            :parent-id="dayId"
+            :parent-type="CommentParentType.DAY"
+          />
           <button
             v-if="ui.isEditModeAllow"
             class="nav-button"
@@ -343,10 +350,13 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: center;
       gap: 8px;
-      width: 88px;
+      width: 136px;
     }
     &-right {
       justify-content: flex-end;
+    }
+    &-left {
+      width: 88px;
     }
   }
   &-content {

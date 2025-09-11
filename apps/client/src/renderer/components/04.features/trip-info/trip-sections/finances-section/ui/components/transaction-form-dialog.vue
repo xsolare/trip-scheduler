@@ -25,12 +25,14 @@ const form = ref<Partial<Transaction>>({})
 // --- Date Picker Logic ---
 const isCalendarOpen = ref(false)
 const datePickerWrapperRef = ref(null)
-onClickOutside(datePickerWrapperRef, () => { isCalendarOpen.value = false })
+onClickOutside(datePickerWrapperRef, () => {
+  isCalendarOpen.value = false
+})
 
 const formattedDate = computed(() => {
   if (!form.value.date)
     return 'Выберите дату'
-  // We need to parse the YYYY-MM-DD string as UTC to avoid timezone shifts.
+
   const [year, month, day] = form.value.date.split('-').map(Number)
   const dateObj = new Date(Date.UTC(year, month - 1, day))
   return useDateFormat(dateObj, 'D MMMM YYYY г.', { locales: 'ru-RU' }).value
@@ -42,7 +44,7 @@ const calendarDate = computed<CalendarDate>({
       if (form.value.date)
         return parseDate(form.value.date)
     }
-    catch (e) {
+    catch {
       console.error('Invalid date format:', form.value.date)
     }
     return today(getLocalTimeZone())

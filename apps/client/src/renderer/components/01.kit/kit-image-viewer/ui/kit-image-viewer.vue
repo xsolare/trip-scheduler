@@ -687,7 +687,6 @@ onUnmounted(() => {
 
 @include media-down(md) {
   .viewer-header,
-  .header-center,
   .header-right {
     display: flex;
     justify-content: flex-end;
@@ -699,6 +698,12 @@ onUnmounted(() => {
   }
   .header-left {
     justify-content: flex-start;
+  }
+  .header-center {
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.5;
   }
   .viewer-content {
     padding: 0;
@@ -740,14 +745,10 @@ onUnmounted(() => {
   .viewer-header {
     display: block;
   }
-  .header-left,
-  .header-center {
+  .header-left {
     justify-content: flex-start;
   }
-  .header-center {
-    left: 50%;
-    transform: translateX(-50%);
-  }
+
   .preview-image {
     padding: 8px 16px;
   }

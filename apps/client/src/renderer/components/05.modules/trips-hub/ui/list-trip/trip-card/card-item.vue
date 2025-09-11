@@ -8,6 +8,8 @@ import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
+import { TripCommentsWidget } from '~/components/04.features/trip-info/trip-comments'
+import { CommentParentType } from '~/shared/types/models/comment'
 import { TripsHubKey } from '../../../composables'
 
 type Props = ITrip
@@ -184,10 +186,17 @@ const visibilityIcon = computed(() => {
               +{{ participants.length - 3 }}
             </KitAvatar>
           </div>
-          <div v-if="tags?.length" class="card-tags">
-            <span v-for="tag in tags.slice(0, 2)" :key="tag" class="tag">
-              {{ tag }}
-            </span>
+          <div class="card-footer-right">
+            <div v-if="tags?.length" class="card-tags">
+              <span v-for="tag in tags.slice(0, 2)" :key="tag" class="tag">
+                {{ tag }}
+              </span>
+            </div>
+            <TripCommentsWidget
+              :parent-id="id"
+              :parent-type="CommentParentType.TRIP"
+              @click.stop
+            />
           </div>
         </div>
       </div>
@@ -446,6 +455,11 @@ const visibilityIcon = computed(() => {
       margin-left: 0;
     }
   }
+}
+.card-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .card-tags {

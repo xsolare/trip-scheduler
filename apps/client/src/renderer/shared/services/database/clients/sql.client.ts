@@ -1,6 +1,7 @@
-import type { IActivityRepository, IAuthRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import type { IActivityRepository, IAuthRepository, ICommentRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
 import { ActivityRepository } from '../repositories/sql/activity.repository.ts'
 import { AuthRepository } from '../repositories/sql/auth.repository.ts'
+import { CommentRepository } from '../repositories/sql/comment.repository.ts'
 import { DayRepository } from '../repositories/sql/day.repository.ts'
 import { FileRepository } from '../repositories/sql/file.repository.ts'
 import { MemoryRepository } from '../repositories/sql/memory.repository.ts'
@@ -25,6 +26,7 @@ class SqlDatabaseClient implements IDatabaseClient {
   activities!: IActivityRepository
   memories!: IMemoryRepository
   auth!: IAuthRepository
+  comments!: ICommentRepository
 
   async initDb(): Promise<this> {
     if (!window.electronAPI) {
@@ -55,6 +57,7 @@ class SqlDatabaseClient implements IDatabaseClient {
     this.activities = new ActivityRepository()
     this.memories = new MemoryRepository(this.db)
     this.auth = new AuthRepository() // This is a mock, doesn't use the DB
+    this.comments = new CommentRepository()
 
     return this
   }
