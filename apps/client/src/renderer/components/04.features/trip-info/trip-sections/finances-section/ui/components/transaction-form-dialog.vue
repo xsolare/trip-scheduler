@@ -7,6 +7,7 @@ import { onClickOutside, useDateFormat } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCalendar } from '~/components/01.kit/kit-calendar'
+import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
@@ -21,6 +22,7 @@ const props = defineProps<Props>()
 const emit = defineEmits(['update:visible', 'save', 'openCategoryManager'])
 
 const form = ref<Partial<Transaction>>({})
+const isTimeless = ref(false)
 
 // --- Date Picker Logic ---
 const isCalendarOpen = ref(false)
@@ -63,27 +65,34 @@ const categoryItems = computed(() =>
   props.categories.map(c => ({ value: c.id, label: c.name, icon: c.icon })),
 )
 
-function initializeForm() {
-  isCalendarOpen.value = false // Ensure calendar is closed on re-init
-  form.value = props.transaction
-    ? { ...props.transaction }
-    : {
-        date: today(getLocalTimeZone()).toString(),
-        currency: props.mainCurrency,
-        categoryId: null,
-        title: '',
-        amount: 0,
-        notes: '',
-      }
-}
-
 function handleSubmit() {
-  emit('save', form.value)
+  const payload = { ...form.value }
+  if (isTimeless.value)
+    delete payload.date
+
+  emit('save', payload)
 }
 
 watch(() => props.visible, (isVisible) => {
-  if (isVisible)
-    initializeForm()
+  if (isVisible) {
+    isCalendarOpen.value = false
+    form.value = props.transaction
+      ? { ...props.transaction }
+      : {
+          date: today(getLocalTimeZone()).toString(),
+          currency: props.mainCurrency,
+          categoryId: null,
+          title: '',
+          amount: 0,
+          notes: '',
+        }
+    isTimeless.value = !form.value.date
+  }
+})
+
+watch(isTimeless, (isNowTimeless) => {
+  if (!isNowTimeless && !form.value.date)
+    form.value.date = today(getLocalTimeZone()).toString()
 })
 </script>
 
@@ -95,7 +104,13 @@ watch(() => props.visible, (isVisible) => {
       <KitInput v-model.number="form.amount" label="Сумма" type="number" required />
       <KitInput v-model="form.currency" label="Валюта" placeholder="RUB, USD..." />
 
-      <div ref="datePickerWrapperRef" class="date-picker-wrapper span-2">
+      <div class="span-2">
+        <KitCheckbox v-model="isTimeless">
+          Общая трата (без привязки к дате)
+        </KitCheckbox>
+      </div>
+
+      <div v-if="!isTimeless" ref="datePickerWrapperRef" class="date-picker-wrapper span-2">
         <label class="kit-input__label">Дата</label>
         <button type="button" class="date-input" @click="isCalendarOpen = !isCalendarOpen">
           <span>{{ formattedDate }}</span>

@@ -755,7 +755,8 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           top: 0;
           bottom: 0;
           width: 2px;
-          background-color: var(--border-secondary-color);
+          border: 1px dashed var(--border-secondary-color);
+          background-color: transparent;
         }
 
         .is-attached {

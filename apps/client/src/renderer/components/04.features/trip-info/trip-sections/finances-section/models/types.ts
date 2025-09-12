@@ -6,7 +6,7 @@ export interface Transaction {
   title: string
   amount: number
   currency: string // e.g., 'RUB', 'USD', 'EUR'
-  date: string // ISO 8601 format
+  date?: string // ISO 8601 format
   categoryId: string | null
   notes?: string
 }

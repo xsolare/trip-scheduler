@@ -15,28 +15,67 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits(['delete', 'update:booking'])
 
-// --- COMPUTED PROPERTIES ---
-
 const segments = computed(() => props.booking.data.segments || [])
 const firstSegment = computed(() => segments.value[0])
 const lastSegment = computed(() => segments.value[segments.value.length - 1])
 
 /**
- * Форматирует дату и время для отображения
+ * Безопасно создает объект Date из локального времени и смещения часового пояса.
+ * Возвращает null, если дата не может быть надежно создана (т.е. нет информации о поясе).
+ * Это предотвращает использование некорректной локальной таймзоны браузера.
+ * @param dateTime Локальное время, например, '2025-10-18T22:40:00'
+ * @param timeZone Смещение, например, '+03:00'
  */
-function formatDateTime(isoString?: string) {
-  if (!isoString)
-    return { time: '', date: '' }
-  const date = new Date(isoString)
-  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-  const dateStr = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', weekday: 'short' })
-  return { time, date: dateStr }
+function createDateWithTimezone(dateTime?: string, timeZone?: string): Date | null {
+  if (!dateTime)
+    return null
+
+  // Проверяем, содержит ли строка dateTime уже информацию о временной зоне
+  const hasOffset = /Z|[+-]\d{2}(?::\d{2})?$/.test(dateTime)
+  if (hasOffset) {
+    const date = new Date(dateTime)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  // Если смещения нет в основной строке, оно должно быть в параметре timeZone
+  if (timeZone) {
+    const fullIso = `${dateTime}${timeZone}`
+    const date = new Date(fullIso)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  // Если информация о часовом поясе отсутствует, мы не можем создать корректную дату.
+  // Возвращаем null, чтобы избежать неверных расчетов.
+  return null
 }
 
 /**
- * Преобразует миллисекунды в строку "Чч Мм"
+ * Форматирует локальную дату и время для отображения.
+ * Эта функция не использует new Date() для форматирования, чтобы всегда показывать
+ * время "как есть" в билете, а не в часовом поясе пользователя.
+ */
+function formatDisplayDateTime(localDateTime?: string) {
+  if (!localDateTime)
+    return { time: '', date: '' }
+  try {
+    const time = localDateTime.substring(11, 16)
+    // Создаем дату в UTC, чтобы избежать смещения локальной зоной браузера при форматировании дня недели.
+    const dateOnly = localDateTime.substring(0, 10)
+    const dateObj = new Date(`${dateOnly}T12:00:00Z`) // Use noon to avoid DST issues
+    const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', weekday: 'short' })
+    return { time, date: dateStr }
+  }
+  catch {
+    return { time: '??:??', date: 'Неверная дата' }
+  }
+}
+
+/**
+ * Преобразует миллисекунды в строку "Чч Мм".
  */
 function formatDuration(ms: number) {
+  if (ms < 0)
+    return '---'
   const hours = Math.floor(ms / (1000 * 60 * 60))
   const minutes = Math.round((ms % (1000 * 60 * 60)) / (1000 * 60))
   return `${hours}ч ${minutes}м`
@@ -44,12 +83,13 @@ function formatDuration(ms: number) {
 
 /**
  * Общая продолжительность всего путешествия в миллисекундах.
- * Это 100% нашей временной шкалы.
  */
 const totalDurationMs = computed(() => {
-  if (!firstSegment.value?.departureDateTime || !lastSegment.value?.arrivalDateTime)
+  const startDate = createDateWithTimezone(firstSegment.value?.departureDateTime, firstSegment.value?.departureTimeZone)
+  const endDate = createDateWithTimezone(lastSegment.value?.arrivalDateTime, lastSegment.value?.arrivalTimeZone)
+  if (!startDate || !endDate)
     return 0
-  return new Date(lastSegment.value.arrivalDateTime).getTime() - new Date(firstSegment.value.departureDateTime).getTime()
+  return endDate.getTime() - startDate.getTime()
 })
 
 /**
@@ -64,7 +104,7 @@ const totalDurationFormatted = computed(() => {
  * с рассчитанной шириной в процентах для визуализации.
  */
 const journeySegments = computed(() => {
-  if (totalDurationMs.value === 0 || segments.value.length === 0)
+  if (totalDurationMs.value <= 0 || segments.value.length === 0)
     return []
 
   const journeyParts = []
@@ -72,27 +112,39 @@ const journeySegments = computed(() => {
 
   for (let i = 0; i < segments.value.length; i++) {
     const segment = segments.value[i]
+    const departureDate = createDateWithTimezone(segment.departureDateTime, segment.departureTimeZone)
+    const arrivalDate = createDateWithTimezone(segment.arrivalDateTime, segment.arrivalTimeZone)
+
+    if (!departureDate || !arrivalDate)
+      continue
 
     // Добавляем полетный сегмент
-    const flightDurationMs = new Date(segment.arrivalDateTime!).getTime() - new Date(segment.departureDateTime!).getTime()
-    journeyParts.push({
-      type: 'flight',
-      widthPercent: (flightDurationMs / totalMs) * 100,
-      tooltip: `В полете: ${formatDuration(flightDurationMs)}`,
-    })
+    const flightDurationMs = arrivalDate.getTime() - departureDate.getTime()
+    if (flightDurationMs > 0) {
+      journeyParts.push({
+        type: 'flight',
+        widthPercent: (flightDurationMs / totalMs) * 100,
+        tooltip: `В полете: ${formatDuration(flightDurationMs)}`,
+      })
+    }
 
     // Добавляем сегмент пересадки (если это не последний полет)
     if (i < segments.value.length - 1) {
       const nextSegment = segments.value[i + 1]
-      const layoverDurationMs = new Date(nextSegment.departureDateTime!).getTime() - new Date(segment.arrivalDateTime!).getTime()
-      journeyParts.push({
-        type: 'layover',
-        widthPercent: (layoverDurationMs / totalMs) * 100,
-        tooltip: `Пересадка: ${formatDuration(layoverDurationMs)}`,
-      })
+      const nextDepartureDate = createDateWithTimezone(nextSegment.departureDateTime, nextSegment.departureTimeZone)
+      if (!nextDepartureDate)
+        continue
+
+      const layoverDurationMs = nextDepartureDate.getTime() - arrivalDate.getTime()
+      if (layoverDurationMs > 0) {
+        journeyParts.push({
+          type: 'layover',
+          widthPercent: (layoverDurationMs / totalMs) * 100,
+          tooltip: `Пересадка: ${formatDuration(layoverDurationMs)}`,
+        })
+      }
     }
   }
-
   return journeyParts
 })
 
@@ -100,11 +152,22 @@ const journeySegments = computed(() => {
  * Продолжительность одного сегмента
  */
 function segmentDuration(segment: FlightSegment) {
-  if (!segment.departureDateTime || !segment.arrivalDateTime)
+  const departureDate = createDateWithTimezone(segment.departureDateTime, segment.departureTimeZone)
+  const arrivalDate = createDateWithTimezone(segment.arrivalDateTime, segment.arrivalTimeZone)
+  if (!departureDate || !arrivalDate)
     return ''
   return formatDuration(
-    new Date(segment.arrivalDateTime).getTime() - new Date(segment.departureDateTime).getTime(),
+    arrivalDate.getTime() - departureDate.getTime(),
   )
+}
+
+function getLayoverDuration(prevSegment: FlightSegment, currentSegment: FlightSegment): string {
+  const prevArrivalDate = createDateWithTimezone(prevSegment.arrivalDateTime, prevSegment.arrivalTimeZone)
+  const currentDepartureDate = createDateWithTimezone(currentSegment.departureDateTime, currentSegment.departureTimeZone)
+  if (!prevArrivalDate || !currentDepartureDate)
+    return ''
+  const durationMs = currentDepartureDate.getTime() - prevArrivalDate.getTime()
+  return formatDuration(durationMs)
 }
 
 function updateTitle(newTitle: string) {
@@ -150,13 +213,13 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
     <div v-if="firstSegment" class="card-content">
       <div class="time-info">
         <div class="time">
-          {{ formatDateTime(firstSegment.departureDateTime).time }}
+          {{ formatDisplayDateTime(firstSegment.departureDateTime).time }}
         </div>
         <div class="city">
           {{ firstSegment.departureCity }}
         </div>
         <div class="date">
-          {{ formatDateTime(firstSegment.departureDateTime).date }}
+          {{ formatDisplayDateTime(firstSegment.departureDateTime).date }}
         </div>
       </div>
 
@@ -190,13 +253,13 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
 
       <div class="time-info arrival">
         <div class="time">
-          {{ formatDateTime(lastSegment.arrivalDateTime).time }}
+          {{ formatDisplayDateTime(lastSegment.arrivalDateTime).time }}
         </div>
         <div class="city">
           {{ lastSegment.arrivalCity }}
         </div>
         <div class="date">
-          {{ formatDateTime(lastSegment.arrivalDateTime).date }}
+          {{ formatDisplayDateTime(lastSegment.arrivalDateTime).date }}
         </div>
       </div>
     </div>
@@ -208,7 +271,7 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
           <div v-if="index > 0" class="layover-details span-2">
             <Icon icon="mdi:clock-outline" />
             Пересадка в г. {{ segments[index - 1].arrivalCity }} ({{ segments[index - 1].arrivalAirport }})
-            <span>{{ formatDuration(new Date(segment.departureDateTime!).getTime() - new Date(segments[index - 1].arrivalDateTime!).getTime()) }}</span>
+            <span>{{ getLayoverDuration(segments[index - 1], segment) }}</span>
           </div>
 
           <!-- Segment Details -->
@@ -222,7 +285,9 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
           <BookingField :model-value="segment.departureAirport" label="Аэропорт вылета (IATA)" icon="mdi:airplane-takeoff" :readonly="readonly" @update:model-value="updateSegmentField(index, 'departureAirport', $event)" />
           <BookingField :model-value="segment.arrivalAirport" label="Аэропорт прилета (IATA)" icon="mdi:airplane-landing" :readonly="readonly" @update:model-value="updateSegmentField(index, 'arrivalAirport', $event)" />
           <BookingDateTimeField :model-value="segment.departureDateTime" label="Дата и время вылета" icon="mdi:clock-start" :readonly="readonly" type="datetime" @update:model-value="updateSegmentField(index, 'departureDateTime', $event)" />
+          <BookingField :model-value="segment.departureTimeZone" label="Часовой пояс вылета" icon="mdi:clock-time-four-outline" :readonly="readonly" placeholder="+03:00" @update:model-value="updateSegmentField(index, 'departureTimeZone', $event)" />
           <BookingDateTimeField :model-value="segment.arrivalDateTime" label="Дата и время прилета" icon="mdi:clock-end" :readonly="readonly" type="datetime" @update:model-value="updateSegmentField(index, 'arrivalDateTime', $event)" />
+          <BookingField :model-value="segment.arrivalTimeZone" label="Часовой пояс прилета" icon="mdi:clock-time-four-outline" :readonly="readonly" placeholder="+08:00" @update:model-value="updateSegmentField(index, 'arrivalTimeZone', $event)" />
           <BookingField :model-value="segment.terminalDeparture" label="Терминал вылета" icon="mdi:gate" :readonly="readonly" @update:model-value="updateSegmentField(index, 'terminalDeparture', $event)" />
           <BookingField :model-value="segment.terminalArrival" label="Терминал прилета" icon="mdi:gate" :readonly="readonly" @update:model-value="updateSegmentField(index, 'terminalArrival', $event)" />
           <BookingField :model-value="segment.aircraft" label="Самолет" icon="mdi:airplane" :readonly="readonly" @update:model-value="updateSegmentField(index, 'aircraft', $event)" />
@@ -352,7 +417,6 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
   height: 100%;
   transition: filter 0.2s ease;
   height: 4px;
-  border-radius: var(--r-full);
 
   &.part-flight {
     background-color: var(--fg-accent-color);

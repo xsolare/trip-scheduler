@@ -25,8 +25,10 @@ export interface FlightSegment {
   arrivalAirport?: string // IATA code
   departureAirportLocation?: LocationCoords
   arrivalAirportLocation?: LocationCoords
-  departureDateTime?: string // ISO 8601 format
-  arrivalDateTime?: string // ISO 8601 format
+  departureDateTime?: string // ISO 8601 format, e.g., '2025-10-18T22:40:00'
+  arrivalDateTime?: string // ISO 8601 format, e.g., '2025-10-19T11:35:00'
+  departureTimeZone?: string // Timezone offset, e.g., "+03:00"
+  arrivalTimeZone?: string // Timezone offset, e.g., "+08:00"
   flightNumber?: string
   airline?: string
   aircraft?: string

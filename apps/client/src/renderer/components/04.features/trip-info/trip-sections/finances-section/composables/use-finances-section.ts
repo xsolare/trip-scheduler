@@ -150,8 +150,9 @@ export function useFinancesSection(
     const spendingMap = new Map<string, number>()
 
     transactions.value
+      .filter(tx => tx.date) // Исключаем транзакции без даты
       .forEach((tx) => {
-        const date = tx.date.split('T')[0] // Группируем по дню, отбрасывая время
+        const date = tx.date!.split('T')[0] // Группируем по дню, отбрасывая время
         const amountInMain = convertToMainCurrency(tx.amount, tx.currency)
 
         if (spendingMap.has(date))
@@ -167,7 +168,20 @@ export function useFinancesSection(
   })
 
   const sortedTransactions = computed(() => {
-    return [...transactions.value].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...transactions.value].sort((a, b) => {
+      // Траты без даты всегда наверху
+      if (!a.date && b.date)
+        return -1
+      if (a.date && !b.date)
+        return 1
+
+      // Если у обеих нет даты, порядок не важен
+      if (!a.date && !b.date)
+        return 0
+
+      // Если у обеих есть дата, сортируем по убыванию
+      return new Date(b.date!).getTime() - new Date(a.date!).getTime()
+    })
   })
 
   const filteredTransactions = computed(() => {

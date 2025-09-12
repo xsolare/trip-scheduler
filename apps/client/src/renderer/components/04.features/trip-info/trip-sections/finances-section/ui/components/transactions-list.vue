@@ -31,30 +31,43 @@ const { formatDate } = useDateFormatter()
       </div>
     </header>
     <div v-if="transactions.length > 0" class="transactions-list">
-      <div v-for="tx in transactions" :key="tx.id" class="transaction-item">
-        <div class="item-main">
-          <div class="item-icon">
-            <Icon :icon="getCategory(tx.categoryId, categories)?.icon || 'mdi:help-rhombus-outline'" />
+      <template v-for="(tx, index) in transactions" :key="tx.id">
+        <div
+          v-if="index > 0 && !transactions[index - 1].date && tx.date"
+          class="list-divider"
+        >
+          <span>Траты по дням</span>
+        </div>
+        <div class="transaction-item">
+          <div class="item-main">
+            <div class="item-icon">
+              <Icon :icon="getCategory(tx.categoryId, categories)?.icon || 'mdi:help-rhombus-outline'" />
+            </div>
+            <div class="item-details">
+              <span class="item-title">{{ tx.title }}</span>
+              <span class="item-category">
+                {{ getCategory(tx.categoryId, categories)?.name || 'Без категории' }}
+                <template v-if="tx.date">
+                  • {{ formatDate(tx.date, { dateStyle: 'medium' }) }}
+                </template>
+              </span>
+            </div>
           </div>
-          <div class="item-details">
-            <span class="item-title">{{ tx.title }}</span>
-            <span class="item-category">{{ getCategory(tx.categoryId, categories)?.name || 'Без категории' }} • {{ formatDate(tx.date, { dateStyle: 'medium' }) }}</span>
+          <div class="item-amount">
+            <span>
+              -{{ formatCurrency(tx.amount, tx.currency) }}
+            </span>
+            <div v-if="!readonly" class="item-actions">
+              <button title="Редактировать" @click="$emit('editTransaction', tx)">
+                <Icon icon="mdi:pencil-outline" />
+              </button>
+              <button title="Удалить" @click="$emit('deleteTransaction', tx.id)">
+                <Icon icon="mdi:trash-can-outline" />
+              </button>
+            </div>
           </div>
         </div>
-        <div class="item-amount">
-          <span>
-            -{{ formatCurrency(tx.amount, tx.currency) }}
-          </span>
-          <div v-if="!readonly" class="item-actions">
-            <button title="Редактировать" @click="$emit('editTransaction', tx)">
-              <Icon icon="mdi:pencil-outline" />
-            </button>
-            <button title="Удалить" @click="$emit('deleteTransaction', tx.id)">
-              <Icon icon="mdi:trash-can-outline" />
-            </button>
-          </div>
-        </div>
-      </div>
+      </template>
     </div>
     <div v-else class="empty-state">
       <Icon icon="mdi:receipt-text-outline" />
@@ -114,8 +127,8 @@ const { formatDate } = useDateFormatter()
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  background-color: var(--bg-error-color);
-  color: var(--fg-error-color);
+  background-color: var(--bg-tertiary-color);
+  color: var(--fg-secondary-color);
 }
 
 .item-details {
@@ -161,6 +174,27 @@ const { formatDate } = useDateFormatter()
   font-size: 2.5rem;
   p {
     font-size: 0.9rem;
+  }
+}
+
+.list-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1rem 0 0.5rem;
+  color: var(--fg-tertiary-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-secondary-color);
+  }
+
+  span {
+    padding: 0 0.5rem;
   }
 }
 </style>

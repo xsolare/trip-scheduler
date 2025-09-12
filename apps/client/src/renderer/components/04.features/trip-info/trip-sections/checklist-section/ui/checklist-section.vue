@@ -84,9 +84,9 @@ watch(activeTab, () => {
       <template #preparation>
         <div class="tab-content-wrapper">
           <!-- Панель действий с новыми элементами -->
-          <div class="actions-panel">
+          <div v-if="hasItemsInCurrentTab || !props.readonly" class="actions-panel">
             <KitInput v-model="searchQuery" placeholder="Поиск по задачам..." icon="mdi:magnify" class="search-input" />
-            <div v-if="hasItemsInCurrentTab" class="action-controls">
+            <div class="action-controls">
               <KitCheckbox v-model="hideCompleted">
                 Скрыть выполненные
               </KitCheckbox>
@@ -97,7 +97,7 @@ watch(activeTab, () => {
           </div>
 
           <!-- Прогресс-бар -->
-          <div v-if="hasItemsInCurrentTab" class="progress-container">
+          <div v-if="hasItemsInCurrentTab || !props.readonly" class="progress-container">
             <div class="progress-bar-container">
               <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>
@@ -191,9 +191,9 @@ watch(activeTab, () => {
       </template>
       <template #in-trip>
         <div class="tab-content-wrapper">
-          <div class="actions-panel">
+          <div v-if="hasItemsInCurrentTab || !props.readonly" class="actions-panel">
             <KitInput v-model="searchQuery" placeholder="Поиск по задачам..." icon="mdi:magnify" class="search-input" />
-            <div v-if="hasItemsInCurrentTab" class="action-controls">
+            <div class="action-controls">
               <KitCheckbox v-model="hideCompleted">
                 Скрыть выполненные
               </KitCheckbox>
@@ -202,7 +202,7 @@ watch(activeTab, () => {
               </KitBtn>
             </div>
           </div>
-          <div v-if="hasItemsInCurrentTab" class="progress-container">
+          <div v-if="hasItemsInCurrentTab || !props.readonly" class="progress-container">
             <div class="progress-bar-container">
               <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>

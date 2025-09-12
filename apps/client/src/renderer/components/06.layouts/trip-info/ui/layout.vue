@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
       justify-content: flex-end;
     }
     &-left {
-      width: 88px;
+      width: 136px;
     }
   }
   &-content {
@@ -604,6 +604,26 @@ onBeforeUnmount(() => {
 }
 
 @include media-down(sm) {
+  .main-navigation {
+    flex-wrap: wrap;
+    row-gap: 16px;
+
+    .navigation-wrapper {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+    }
+
+    &-left {
+      width: auto;
+      flex-grow: 1;
+    }
+
+    &-right {
+      width: auto;
+    }
+  }
+
   .sections-list {
     column-count: 1;
   }
