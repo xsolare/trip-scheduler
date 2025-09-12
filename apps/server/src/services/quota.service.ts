@@ -2,7 +2,6 @@ import { db } from 'db'
 import { users } from 'db/schema'
 import { eq, sql } from 'drizzle-orm'
 import { createTRPCError } from '~/lib/trpc'
-import { userRepository } from '~/repositories/user.repository'
 
 export const quotaService = {
   /**

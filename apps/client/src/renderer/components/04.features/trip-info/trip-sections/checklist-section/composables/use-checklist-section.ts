@@ -173,6 +173,10 @@ export function useChecklistSection(
     return Math.round((completed / total) * 100)
   })
 
+  const hasItemsInCurrentTab = computed(() => {
+    return items.value.some(item => item.type === activeTab.value)
+  })
+
   watch([items, groups], () => {
     debouncedUpdate()
   }, { deep: true })
@@ -188,6 +192,7 @@ export function useChecklistSection(
     currentTabGroups,
     currentTabUngroupedItems,
     itemsByGroupId,
+    hasItemsInCurrentTab,
     addItem,
     deleteItem,
     updateItem,

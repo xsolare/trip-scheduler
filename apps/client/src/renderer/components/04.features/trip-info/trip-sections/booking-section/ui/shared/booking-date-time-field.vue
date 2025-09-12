@@ -18,32 +18,122 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'date',
 })
 
-const modelValue = defineModel<string>()
+const modelValue = defineModel<string | undefined>()
 
+// --- MASK & PLACEHOLDER ---
 const mask = computed(() => {
-  if (props.type === 'datetime') {
-    return '##.## ##:##'
-  }
-  return '##.##'
+  if (props.type === 'datetime')
+    return '##.##.#### ##:##'
+
+  return '##.##.####'
 })
 
 const effectivePlaceholder = computed(() => {
   if (props.placeholder !== '...')
     return props.placeholder
   if (props.type === 'datetime')
-    return 'ДД.ММ ЧЧ:ММ'
-  return 'ДД.ММ'
+    return 'ДД.ММ.ГГГГ ЧЧ:ММ'
+
+  return 'ДД.ММ.ГГГГ'
+})
+
+// --- VALUE FORMATTING ---
+
+/**
+ * Helper function to format a Date object into 'DD.MM.YYYY HH:MM' or 'DD.MM.YYYY'
+ */
+function formatDateToDisplay(date: Date, type: 'date' | 'datetime'): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+
+  if (type === 'datetime') {
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${day}.${month}.${year} ${hours}:${minutes}`
+  }
+  return `${day}.${month}.${year}`
+}
+
+/**
+ * Helper function to parse 'DD.MM.YYYY HH:MM' or 'DD.MM.YYYY' into a Date object.
+ * Returns null if the format is invalid.
+ */
+function parseDisplayDate(dateString: string, type: 'date' | 'datetime'): Date | null {
+  if (!dateString)
+    return null
+
+  if (type === 'datetime') {
+    const parts = dateString.match(/^(\d{2})\.(\d{2})\.(\d{4})\s(\d{2}):(\d{2})$/)
+    if (!parts)
+      return null
+    const [, day, month, year, hours, minutes] = parts
+    const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes))
+    // Check for invalid dates that Date constructor might create (e.g., month 13)
+    if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day))
+      return null
+
+    return date
+  }
+  else {
+    const parts = dateString.match(/^(\d{2})\.(\d{2})\.(\d{4})$/)
+    if (!parts)
+      return null
+    const [, day, month, year] = parts
+    const date = new Date(Number(year), Number(month) - 1, Number(day))
+    if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day))
+      return null
+
+    return date
+  }
+}
+
+/**
+ * Computed property to bridge the ISO string (modelValue) and the display format (DD.MM.YYYY HH:MM).
+ */
+const displayValue = computed({
+  get() {
+    if (!modelValue.value)
+      return ''
+    const date = new Date(modelValue.value)
+    if (Number.isNaN(date.getTime()))
+      return '' // Invalid date in modelValue
+    return formatDateToDisplay(date, props.type)
+  },
+  set(newValue) {
+    const parsedDate = parseDisplayDate(newValue, props.type)
+    if (parsedDate) {
+      const year = parsedDate.getFullYear()
+      const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(parsedDate.getDate()).padStart(2, '0')
+
+      let isoString = `${year}-${month}-${day}`
+      if (props.type === 'datetime') {
+        const hours = String(parsedDate.getHours()).padStart(2, '0')
+        const minutes = String(parsedDate.getMinutes()).padStart(2, '0')
+        isoString += `T${hours}:${minutes}:00`
+      }
+      else {
+        // For date-only, we can just use the date part or a zeroed time
+        isoString += `T00:00:00`
+      }
+      modelValue.value = isoString
+    }
+    else if (!newValue) {
+      // Allow clearing the field
+      modelValue.value = undefined
+    }
+  },
 })
 
 /**
- * Форматирует значение даты/времени для режима "только для чтения".
+ * Formats value for readonly display.
  */
 const formattedValue = computed(() => {
   if (!modelValue.value)
     return props.placeholder
 
-  const cleanDateString = modelValue.value.replace(/\[.*\]/, '')
-  const date = new Date(cleanDateString)
+  const date = new Date(modelValue.value)
 
   if (Number.isNaN(date.getTime()))
     return modelValue.value
@@ -51,6 +141,7 @@ const formattedValue = computed(() => {
   const options: Intl.DateTimeFormatOptions = {
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   }
 
   if (props.type === 'datetime') {
@@ -80,7 +171,7 @@ const formattedValue = computed(() => {
     <!-- Editable View -->
     <KitInput
       v-else
-      v-model="modelValue"
+      v-model="displayValue"
       v-maska
       :data-maska="mask"
       :label="label"

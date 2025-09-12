@@ -16,22 +16,31 @@ export interface LocationCoords {
 }
 
 /**
- * Тип данных для авиаперелета.
+ * Тип данных для одного сегмента авиаперелета.
  */
-export interface FlightData {
+export interface FlightSegment {
   departureCity?: string
   arrivalCity?: string
-  departureAirport?: string
-  arrivalAirport?: string
+  departureAirport?: string // IATA code
+  arrivalAirport?: string // IATA code
   departureAirportLocation?: LocationCoords
   arrivalAirportLocation?: LocationCoords
   departureDateTime?: string // ISO 8601 format
   arrivalDateTime?: string // ISO 8601 format
   flightNumber?: string
   airline?: string
+  aircraft?: string
+  terminalDeparture?: string
+  terminalArrival?: string
+}
+
+/**
+ * Тип данных для авиаперелета. Теперь включает массив сегментов.
+ */
+export interface FlightData {
   bookingReference?: string
-  seat?: string
   notes?: string
+  segments: FlightSegment[]
 }
 
 /**
@@ -85,9 +94,9 @@ export interface AttractionData {
 
 export type Booking
   = | (BookingBase & { type: 'flight', data: FlightData })
-    | (BookingBase & { type: 'hotel', data: HotelData })
-    | (BookingBase & { type: 'train', data: TrainData })
-    | (BookingBase & { type: 'attraction', data: AttractionData })
+  | (BookingBase & { type: 'hotel', data: HotelData })
+  | (BookingBase & { type: 'train', data: TrainData })
+  | (BookingBase & { type: 'attraction', data: AttractionData })
 
 export type BookingType = Booking['type']
 

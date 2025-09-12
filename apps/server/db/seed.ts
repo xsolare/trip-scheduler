@@ -13,6 +13,7 @@ import {
   tripImages,
   tripParticipants,
   trips,
+  tripSections,
   users,
 } from './schema'
 
@@ -80,6 +81,7 @@ async function seed() {
   await db.delete(memories)
   await db.delete(activities)
   await db.delete(days)
+  await db.delete(tripSections)
   await db.delete(tripImages)
   await db.delete(trips)
   await db.delete(users)
@@ -99,9 +101,17 @@ async function seed() {
   const imagesToInsert: (typeof tripImages.$inferInsert)[] = []
   const memoriesToInsert: (typeof memories.$inferInsert)[] = []
   const participantsToInsert: (typeof tripParticipants.$inferInsert)[] = []
+  const sectionsToInsert: (typeof tripSections.$inferInsert)[] = []
 
   for (const tripData of sourceTrips) {
-    const { days: mockDays, images: mockImages, memories: mockMemories, participantIds, ...tripDetails } = tripData
+    const {
+      days: mockDays,
+      images: mockImages,
+      memories: mockMemories,
+      participantIds,
+      sections: mockSections,
+      ...tripDetails
+    } = tripData
 
     tripsToInsert.push({
       ...tripDetails,
@@ -118,6 +128,9 @@ async function seed() {
         userId: userId as string,
       })
     }
+
+    if (mockSections)
+      sectionsToInsert.push(...mockSections)
 
     if (mockDays) {
       for (const mockDay of mockDays) {
@@ -158,6 +171,8 @@ async function seed() {
 
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)
+  if (sectionsToInsert.length > 0)
+    await db.insert(tripSections).values(sectionsToInsert)
   if (participantsToInsert.length > 0)
     await db.insert(tripParticipants).values(participantsToInsert)
   if (daysToInsert.length > 0)

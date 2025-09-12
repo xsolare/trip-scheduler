@@ -23,6 +23,7 @@ const router = useRouter()
 
 const { mainNavigationRef, navigationWrapperRef } = layout
 const { plan, ui, routeGallery, memories, sections } = useModuleStore(['plan', 'ui', 'routeGallery', 'memories', 'sections'])
+const authStore = useAppStore('auth')
 
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
@@ -100,7 +101,7 @@ onBeforeUnmount(() => {
                   <Icon :icon="item.icon!" class="section-item-icon" />
                   <span>{{ item.label }}</span>
                 </li>
-                <li class="add-section-item-wrapper">
+                <li v-if="authStore.isAuthenticated" class="add-section-item-wrapper">
                   <button class="add-section-btn" @click="ui.openAddSectionDialog">
                     <Icon icon="mdi:plus-circle-outline" />
                     <span>Добавить раздел</span>
@@ -113,7 +114,7 @@ onBeforeUnmount(() => {
 
         <div class="main-navigation-right">
           <TripCommentsWidget
-            v-if="dayId"
+            v-if="dayId && layout.activeTab.value?.id === 'daily-route'"
             :parent-id="dayId"
             :parent-type="CommentParentType.DAY"
           />

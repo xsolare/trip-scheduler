@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { CommentParentType } from '~/shared/types/models/comment'
+import { Icon } from '@iconify/vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { AppRoutePaths } from '~/shared/constants/routes'
 import { useAuthStore } from '~/shared/store/auth.store'
 import { useTripCommentsStore } from '../store/trip-comments.store'
 import CommentForm from './comment-form.vue'
@@ -52,7 +54,7 @@ watch(comments, async (newComments, oldComments) => {
     <AsyncStateWrapper
       ref="asyncWrapper"
       :loading="commentsStore.isLoading && comments.length === 0"
-      :data="comments"
+      :data="comments.length > 0 ? comments : null"
       class="async-wrapper"
     >
       <template #loading>
@@ -75,7 +77,9 @@ watch(comments, async (newComments, oldComments) => {
       </template>
       <template #empty>
         <div class="empty-state">
-          Комментариев пока нет.
+          <Icon icon="mdi:message-text-outline" />
+          <p>Комментариев пока нет.</p>
+          <span v-if="authStore.isAuthenticated">Будьте первым, кто оставит комментарий!</span>
         </div>
       </template>
     </AsyncStateWrapper>
@@ -84,6 +88,15 @@ watch(comments, async (newComments, oldComments) => {
       v-if="authStore.isAuthenticated"
       @submit="handleAddComment"
     />
+    <div v-else class="unauthorized-placeholder">
+      <Icon icon="mdi:lock-outline" />
+      <p>
+        <router-link :to="AppRoutePaths.Auth.SignIn">
+          Войдите
+        </router-link>
+        , чтобы оставлять комментарии.
+      </p>
+    </div>
   </div>
 </template>
 
@@ -119,10 +132,59 @@ watch(comments, async (newComments, oldComments) => {
 
 .loading-state,
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 16px;
   color: var(--fg-secondary-color);
   font-size: 0.9rem;
   margin: auto;
+  .iconify {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+  p {
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--fg-primary-color);
+  }
+  span {
+    font-size: 0.85rem;
+  }
+}
+
+.unauthorized-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  background-color: var(--bg-tertiary-color);
+  border-radius: var(--r-m);
+  color: var(--fg-secondary-color);
+  margin-top: 8px;
+
+  .iconify {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+
+    a {
+      color: var(--fg-accent-color);
+      font-weight: 500;
+      text-decoration: none;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
 }
 </style>

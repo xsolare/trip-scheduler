@@ -42,6 +42,118 @@ export const MOCK_DATA = [
     visibility: 'public' as const,
     participantIds: [MOCK_USER_ID_1],
     images: imageObjects,
+    sections: [
+      // Отели
+      {
+        id: crypto.randomUUID(),
+        tripId: TRIP_ID,
+        type: 'bookings' as const,
+        title: 'Бронирования',
+        icon: 'mdi:ticket-confirmation-outline',
+        content: {
+          bookings: [
+            // 1. Бронирование в Чанше
+            {
+              id: 'b8c1b2a9-7c1c-4b5c-9c1c-1a2b3c4d5e6f',
+              type: 'hotel',
+              icon: 'mdi:hotel',
+              title: 'FUNGEE S Hotel, Changsha',
+              data: {
+                hotelName: 'FUNGEE S Hotel, Wuyi Square, Huangxing Square Station, Changsha',
+                address: 'No.265 Renmin West Road, Furong District, Changsha, Hunan, China',
+                checkInDate: '2025-10-19',
+                checkOutDate: '2025-10-22',
+                phone: '+86-731-82233088-8888',
+              },
+            },
+            // 2. Бронирование в Чжанцзяцзе
+            {
+              id: 'f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c',
+              type: 'hotel',
+              icon: 'mdi:hotel',
+              title: 'Vienna 3 Best Hotel, Zhangjiajie',
+              data: {
+                hotelName: 'Vienna 3 Best Hotel (Zhangjiajie Tianmenshan Cableway Station)',
+                address: 'Yongding District, Zhangjiajie, Hunan, China',
+                checkInDate: '2025-10-22',
+                checkOutDate: '2025-10-26',
+                phone: '+86-17774431215, +86-744-8296888',
+              },
+            },
+            // 3. Бронирование в Фэнхуане
+            {
+              id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+              type: 'hotel',
+              icon: 'mdi:hotel',
+              title: 'Fenghuang Jinshuian River View Hotel',
+              data: {
+                hotelName: 'Fenghuang Jinshuian River View Hotel',
+                address: 'No.59-2 Jinjiayuan Road, Fenghuang County, Hunan, China',
+                checkInDate: '2025-10-26',
+                checkOutDate: '2025-10-27',
+                phone: '+86-13397632336',
+              },
+            },
+            // 4. Бронирование в Чунцине
+            {
+              id: 'e6f7a8b9-c0d1-4e2f-b3c4-d5e6f7a8b9c0',
+              type: 'hotel',
+              icon: 'mdi:hotel',
+              title: 'Homeinn Plus Hotel, Chongqing',
+              data: {
+                hotelName: 'Homeinn Plus Hotel (Chongqing Liziba Niujiaotuo Light Rail Station)',
+                address: '114 Shangqingsi Road, Yuzhong District, Chongqing, China',
+                checkInDate: '2025-10-27',
+                checkOutDate: '2025-11-03',
+                phone: '+86-23-63266888-9',
+              },
+            },
+
+            // Авиаперелеты
+            // Перелет ТУДА: Москва -> Чанша (с пересадкой в Чэнду)
+            {
+              id: 'a1b2c3d4-e5f6-4a7b-8c9d-1e2f3a4b5c6d',
+              type: 'flight',
+              icon: 'mdi:airplane',
+              title: 'Перелет: Москва → Чанша',
+              data: {
+                bookingReference: '88YBQL',
+                segments: [
+                  {
+                    departureCity: 'Москва',
+                    arrivalCity: 'Чэнду',
+                    departureAirport: 'SVO',
+                    arrivalAirport: 'TFU',
+                    departureDateTime: '2025-10-18T22:40:00',
+                    arrivalDateTime: '2025-10-19T11:35:00',
+                    flightNumber: '3U 3888',
+                    airline: 'Sichuan Airlines',
+                    aircraft: 'Airbus A350-900',
+                    terminalDeparture: 'C',
+                    terminalArrival: '1',
+                  },
+                  {
+                    departureCity: 'Чэнду',
+                    arrivalCity: 'Чанша',
+                    departureAirport: 'TFU',
+                    arrivalAirport: 'CSX',
+                    departureDateTime: '2025-10-19T15:30:00',
+                    arrivalDateTime: '2025-10-19T17:25:00',
+                    flightNumber: '3U 6741',
+                    airline: 'Sichuan Airlines',
+                    aircraft: 'Airbus A320',
+                    terminalDeparture: '2',
+                    terminalArrival: '1',
+                  },
+                ],
+                notes: 'Общий номер электронного билета: 876-2899402792. Пассажир: Ivan Kornilov.',
+              },
+            },
+          ],
+        },
+        order: 1, // Порядок отображения секции в интерфейсе
+      },
+    ],
     memories: [],
     days: [
       // =================================================================

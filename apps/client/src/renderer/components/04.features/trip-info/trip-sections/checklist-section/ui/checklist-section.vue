@@ -38,6 +38,7 @@ const {
   currentTabGroups,
   currentTabUngroupedItems,
   itemsByGroupId,
+  hasItemsInCurrentTab,
   addItem,
   updateItem,
   deleteItem,
@@ -85,7 +86,7 @@ watch(activeTab, () => {
           <!-- Панель действий с новыми элементами -->
           <div class="actions-panel">
             <KitInput v-model="searchQuery" placeholder="Поиск по задачам..." icon="mdi:magnify" class="search-input" />
-            <div class="action-controls">
+            <div v-if="hasItemsInCurrentTab" class="action-controls">
               <KitCheckbox v-model="hideCompleted">
                 Скрыть выполненные
               </KitCheckbox>
@@ -96,7 +97,7 @@ watch(activeTab, () => {
           </div>
 
           <!-- Прогресс-бар -->
-          <div class="progress-container">
+          <div v-if="hasItemsInCurrentTab" class="progress-container">
             <div class="progress-bar-container">
               <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>
@@ -188,19 +189,20 @@ watch(activeTab, () => {
           </div>
         </div>
       </template>
-      <!-- ... (Аналогичный шаблон для вкладки #in-trip) ... -->
       <template #in-trip>
         <div class="tab-content-wrapper">
           <div class="actions-panel">
             <KitInput v-model="searchQuery" placeholder="Поиск по задачам..." icon="mdi:magnify" class="search-input" />
-            <div class="action-controls">
-              <KitCheckbox v-model="hideCompleted" label="Скрыть выполненные" />
+            <div v-if="hasItemsInCurrentTab" class="action-controls">
+              <KitCheckbox v-model="hideCompleted">
+                Скрыть выполненные
+              </KitCheckbox>
               <KitBtn v-if="!readonly" icon="mdi:playlist-plus" @click="addGroup('in-trip')">
                 Добавить группу
               </KitBtn>
             </div>
           </div>
-          <div class="progress-container">
+          <div v-if="hasItemsInCurrentTab" class="progress-container">
             <div class="progress-bar-container">
               <div class="progress-bar" :style="{ width: `${progress}%` }" />
             </div>
@@ -382,7 +384,6 @@ watch(activeTab, () => {
 .ungrouped-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   background-color: var(--bg-secondary-color);
   border-radius: var(--r-m);
   padding: 0.5rem;
@@ -393,10 +394,11 @@ watch(activeTab, () => {
   display: flex;
   gap: 0.5rem;
   padding: 0.25rem;
-  /* УСЛОВНЫЕ СТИЛИ */
+
   &.has-items {
     border-top: 1px solid var(--border-secondary-color);
-    margin-top: 0.25rem;
+    margin-top: 8px;
+    padding-top: 8px;
   }
 }
 

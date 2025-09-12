@@ -130,7 +130,7 @@ function onMouseMove() {
   }
 
   .btn {
-    border-radius: var(--r-2xl);
+    border-radius: var(--r-xl);
   }
 
   @include media-down(sm) {
