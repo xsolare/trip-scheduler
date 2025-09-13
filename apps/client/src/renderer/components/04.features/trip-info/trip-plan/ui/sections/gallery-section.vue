@@ -281,7 +281,7 @@ const visibleImages = computed(() =>
 .edit-controls {
   display: flex;
   gap: 12px;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-secondary-color);
   margin-bottom: 8px;
 }

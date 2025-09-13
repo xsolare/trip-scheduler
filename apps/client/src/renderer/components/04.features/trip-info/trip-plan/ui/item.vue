@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/proposal-geolocation-section'
+import type { CustomActivitySection, SectionGroup } from '../models/types'
+import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/plan-geolocation-section'
 import type { Activity, ActivitySection, ActivitySectionGallery, ActivitySections, ActivitySectionText } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
@@ -62,15 +63,15 @@ function getContrastColor(hexcolor: string | undefined): string {
   return (yiq >= 128) ? '#000000' : '#FFFFFF'
 }
 
-function getTitledPinStyle(pin: ActivitySection) {
-  const color = (pin as any).color
+function getTitledPinStyle(pin: CustomActivitySection) {
+  const color = pin.color
   if (!color)
     return {}
 
   if (color.startsWith('var(')) {
     return {
       backgroundColor: color,
-      borderColor: 'transparent', // Let's use transparency for borders on variables
+      borderColor: 'transparent',
     }
   }
 
@@ -81,15 +82,38 @@ function getTitledPinStyle(pin: ActivitySection) {
   }
 }
 
+function getRegularPinStyle(pin: CustomActivitySection) {
+  const color = pin.color
+  if (!color)
+    return {}
+
+  if (color === 'var(--bg-secondary-color)' || color === 'var(--bg-tertiary-color)') {
+    return {
+      backgroundColor: color,
+    }
+  }
+
+  if (color.startsWith('var(')) {
+    return {
+      backgroundColor: color,
+    }
+  }
+
+  return {
+    backgroundColor: `${color}33`,
+    color: getContrastColor(color),
+  }
+}
+
 function handleTagUpdate(newTag: EActivityTag) {
   updateActivity({ tag: newTag })
 }
 
-function getGroupedChildren(children: ActivitySection[]) {
-  const withTitle: ActivitySection[] = []
-  const withoutTitle: ActivitySection[] = []
+function getGroupedChildren(children: CustomActivitySection[]) {
+  const withTitle: CustomActivitySection[] = []
+  const withoutTitle: CustomActivitySection[] = []
   children.forEach((child) => {
-    if ((child as any).title)
+    if (child.title)
       withTitle.push(child)
     else
       withoutTitle.push(child)
@@ -102,17 +126,6 @@ function toggleSection(groupId: string, sectionId: string) {
     expandedSections.value[groupId] = {}
 
   expandedSections.value[groupId][sectionId] = !isSectionExpanded(groupId, sectionId)
-}
-
-function toggleAllInSection(group: { parent: ActivitySection, children: ActivitySection[] }) {
-  const groupId = group.parent.id
-  const shouldExpand = group.children.some(child => !isSectionExpanded(groupId, child.id))
-
-  if (!expandedSections.value[groupId])
-    expandedSections.value[groupId] = {}
-
-  for (const child of group.children)
-    expandedSections.value[groupId][child.id] = shouldExpand
 }
 
 function updateActivity(newActivityData: Partial<Activity>) {
@@ -197,19 +210,19 @@ function deleteSection(sectionId: string) {
   updateActivity({ sections: newSections })
 }
 
-const sectionGroups = computed(() => {
-  const groups: { parent: ActivitySection, children: ActivitySection[] }[] = []
-  const sections = props.activity.sections || []
+const sectionGroups = computed((): SectionGroup[] => {
+  const groups: SectionGroup[] = []
+  const sections = (props.activity.sections || []) as CustomActivitySection[]
   let i = 0
 
   while (i < sections.length) {
     const currentSection = sections[i]
 
-    if (!(currentSection as any).isAttached) {
-      const attachedChildren = []
+    if (!currentSection.isAttached) {
+      const attachedChildren: CustomActivitySection[] = []
       let j = i + 1
 
-      while (j < sections.length && (sections[j] as any).isAttached) {
+      while (j < sections.length && sections[j].isAttached) {
         attachedChildren.push(sections[j])
         j++
       }
@@ -226,14 +239,6 @@ const sectionGroups = computed(() => {
 
 function isSectionExpanded(groupId: string, sectionId: string): boolean {
   return expandedSections.value[groupId]?.[sectionId] ?? false
-}
-
-function isAnyChildExpanded(group: { parent: ActivitySection, children: ActivitySection[] }): boolean {
-  const groupId = group.parent.id
-  if (!group.children.length || !expandedSections.value[groupId])
-    return false
-
-  return group.children.some(child => isSectionExpanded(groupId, child.id))
 }
 
 function handleInlineEditorBlur() {
@@ -358,8 +363,8 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                     :style="getTitledPinStyle(child)"
                     @click="toggleSection(group.parent.id, child.id)"
                   >
-                    <Icon width="18" height="18" :icon="(child as any).icon || sectionTypeIcons[child.type]" class="pill-icon" />
-                    <span class="pill-title">{{ (child as any).title }}</span>
+                    <Icon width="18" height="18" :icon="child.icon || sectionTypeIcons[child.type]" class="pill-icon" />
+                    <span class="pill-title">{{ child.title }}</span>
                     <Icon width="18" height="18" :icon="isSectionExpanded(group.parent.id, child.id) ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="pill-chevron" />
                   </button>
                   <div v-if="index < getGroupedChildren(group.children).withTitle.length - 1 || getGroupedChildren(group.children).withoutTitle.length > 0" class="attachment-line-end" />
@@ -383,23 +388,17 @@ onClickOutside(timeEditorRef, saveTimeChanges)
                       :key="child.id"
                       class="attached-pill"
                       :class="{ active: isSectionExpanded(group.parent.id, child.id) }"
-                      :style="(child as any).color ? {
-                        backgroundColor: `${(child as any).color}33`,
-                        color: getContrastColor((child as any).color),
-                      } : {}"
+                      :style="getRegularPinStyle(child)"
                       @click="toggleSection(group.parent.id, child.id)"
                     >
                       <Icon
                         width="18"
                         height="18"
-                        :icon="(child as any).icon || sectionTypeIcons[child.type]"
+                        :icon="child.icon || sectionTypeIcons[child.type]"
                         class="pill-icon"
                       />
                     </button>
                   </div>
-                  <button class="expand-toggle-btn" @click="toggleAllInSection(group)">
-                    <Icon :icon="isAnyChildExpanded(group) ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
-                  </button>
                 </div>
                 <div
                   v-for="child in getGroupedChildren(group.children).withoutTitle"
@@ -682,7 +681,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 
   .attached-pills {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     background: var(--bg-secondary-color);
     padding: 4px;
     border-radius: var(--r-l);
@@ -696,16 +695,25 @@ onClickOutside(timeEditorRef, saveTimeChanges)
     width: 24px;
     height: 24px;
     border-radius: var(--r-full);
-    border: none;
+    border: 1px solid transparent;
     background: var(--bg-tertiary-color);
     color: var(--fg-secondary-color);
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 4px;
 
+    &.active {
+      box-shadow:
+        0 0 0 2px var(--bg-primary-color),
+        0 0 0 4px var(--fg-accent-color);
+      border-color: var(--fg-accent-color);
+    }
+
     &.active:not(.titled-pin) {
-      background: var(--fg-accent-color);
-      color: var(--fg-inverted-color);
+      &:not([style*='background-color: var']) {
+        background: var(--fg-accent-color);
+        color: var(--fg-inverted-color);
+      }
     }
     &:active {
       &:not([style*='background-color']) {
@@ -764,23 +772,6 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           border-left: 0;
         }
       }
-    }
-  }
-
-  .expand-toggle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: var(--r-full);
-    border: 1px solid var(--border-secondary-color);
-    background: transparent;
-    color: var(--fg-secondary-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    &:hover {
-      background: var(--bg-hover-color);
     }
   }
 

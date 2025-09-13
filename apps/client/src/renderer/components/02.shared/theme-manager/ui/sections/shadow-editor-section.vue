@@ -44,7 +44,7 @@ watch(customThemeShadowColor, (newColor) => {
         Пользовательский цвет
       </label>
       <div class="editor-input-group">
-        <div class="color-picker-wrapper">
+        <div class="a-wrapper">
           <input
             id="shadow-color-input"
             v-model="customThemeShadowColor"

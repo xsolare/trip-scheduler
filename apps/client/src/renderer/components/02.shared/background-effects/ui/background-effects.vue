@@ -13,7 +13,6 @@ const travelIcons = [
   'mdi:car',
   'mdi:train',
   'mdi:beach',
-  'mdi:mountain-uphill',
   'mdi:ticket-confirmation-outline',
   'mdi:passport',
   'mdi:briefcase-outline',

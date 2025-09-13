@@ -1,9 +1,8 @@
 /* eslint-disable no-console */
-import type { IActivity, IDay } from '~/components/05.modules/trip-info/models/types'
+import type { IActivity, IDay } from '../models/types'
 import type { TripSection } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
 import { useToast } from '~/components/01.kit/kit-toast'
-import { getActivityDuration, minutesToTime, timeToMinutes } from '~/components/05.modules/trip-info/lib/helpers'
 import { useRequest, useRequestError, useRequestStatus, useRequestStatusByPrefix, useRequestStore } from '~/plugins/request'
 
 export enum ETripPlanKeys {
@@ -243,6 +242,8 @@ export const useTripPlanStore = defineStore('tripPlan', {
     },
 
     updateActivity(dayId: string, updatedActivity: IActivity) {
+      console.log('>>updateActivity')
+
       const day = this.days.find(d => d.id === dayId)
       if (!day)
         return
@@ -391,7 +392,7 @@ export const useTripPlanStore = defineStore('tripPlan', {
       let lastEndTimeMinutes = anchorStartTimeMinutes - GAP_BETWEEN_ACTIVITIES_MINUTES
 
       for (const activity of newOrder) {
-        const duration = getActivityDuration(activity)
+        const duration = timeToMinutes(activity.endTime) - timeToMinutes(activity.startTime)
         const newStartTimeMinutes = lastEndTimeMinutes + GAP_BETWEEN_ACTIVITIES_MINUTES
         const newEndTimeMinutes = newStartTimeMinutes + duration
 

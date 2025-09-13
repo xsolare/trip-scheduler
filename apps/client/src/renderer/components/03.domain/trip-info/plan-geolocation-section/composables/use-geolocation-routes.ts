@@ -35,24 +35,31 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       color: POI_COLORS[routes.value.length % POI_COLORS.length],
     }
 
-    routes.value.push(newRoute)
+    routes.value = [...routes.value, newRoute] // Создаем новый массив
     mapApiRef.value.addOrUpdatePoint(startPoint)
     return newRoute
   }
 
   async function addPointToRoute(routeId: string, coords: Coordinate) {
-    const route = routes.value.find(r => r.id === routeId)
-    if (!route || !mapApiRef.value)
+    const routeIndex = routes.value.findIndex(r => r.id === routeId)
+    if (routeIndex === -1 || !mapApiRef.value)
       return
 
     isLoading.value = true
     const addressInfo = await mapApiRef.value.fetchAddress(coords)
     isLoading.value = false
 
-    if (route.points.length > 0) {
-      const lastPoint = route.points[route.points.length - 1]
-      if (lastPoint.type === 'start' || lastPoint.type === 'via')
-        lastPoint.type = 'via'
+    const route = routes.value[routeIndex]
+    let updatedPoints = [...route.points]
+
+    if (updatedPoints.length > 0) {
+      const lastPoint = updatedPoints[updatedPoints.length - 1]
+      if (lastPoint.type === 'start' || lastPoint.type === 'via') {
+        // Создаем новый массив точек с измененным типом последней точки
+        updatedPoints = updatedPoints.map((p, index) =>
+          index === updatedPoints.length - 1 ? { ...p, type: 'via' } : p,
+        )
+      }
     }
 
     const newPoint: MapPoint = {
@@ -62,7 +69,11 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       address: addressInfo?.address || 'Промежуточная точка',
     }
 
-    route.points.push(newPoint)
+    updatedPoints.push(newPoint)
+
+    const updatedRoute = { ...route, points: updatedPoints }
+    routes.value = routes.value.map(r => (r.id === routeId ? updatedRoute : r))
+
     mapApiRef.value.addOrUpdatePoint(newPoint)
     await updateRouteGeometry(routeId)
   }
@@ -73,30 +84,39 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       const routeToDelete = routes.value[routeIndex]
       routeToDelete.points.forEach(p => mapApiRef.value!.removePoint(p.id))
       mapApiRef.value!.removeRoute(routeId)
-      routes.value.splice(routeIndex, 1)
+      routes.value = routes.value.filter(r => r.id !== routeId)
       return
     }
 
     const drawnRouteIndex = drawnRoutes.value.findIndex(r => r.id === routeId)
     if (drawnRouteIndex !== -1) {
       mapApiRef.value!.removeRoute(routeId)
-      drawnRoutes.value.splice(drawnRouteIndex, 1)
+      drawnRoutes.value = drawnRoutes.value.filter(r => r.id !== routeId)
     }
   }
 
   async function deletePointFromRoute(routeId: string, pointId: string) {
-    const route = routes.value.find(r => r.id === routeId)
-    if (!route || !mapApiRef.value)
+    const routeIndex = routes.value.findIndex(r => r.id === routeId)
+    if (routeIndex === -1 || !mapApiRef.value)
       return
 
-    route.points = route.points.filter(p => p.id !== pointId)
+    const route = routes.value[routeIndex]
     mapApiRef.value.removePoint(pointId)
 
-    if (route.points.length > 0) {
-      route.points[0].type = 'start'
-      if (route.points.length > 1)
-        route.points[route.points.length - 1].type = 'end'
+    let updatedPoints = route.points.filter(p => p.id !== pointId)
+
+    if (updatedPoints.length > 0) {
+      updatedPoints = updatedPoints.map((p, index) => {
+        if (index === 0)
+          return { ...p, type: 'start' }
+        if (index === updatedPoints.length - 1)
+          return { ...p, type: 'end' }
+        return { ...p, type: 'via' }
+      })
     }
+
+    const updatedRoute = { ...route, points: updatedPoints }
+    routes.value = routes.value.map(r => (r.id === routeId ? updatedRoute : r))
 
     await updateRouteGeometry(routeId)
   }
@@ -127,12 +147,15 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
   function handlePointDataUpdate(routeId: string, point: MapPoint) {
     if (!mapApiRef.value)
       return
-    const route = routes.value.find(r => r.id === routeId)
-    if (!route)
+    const routeIndex = routes.value.findIndex(r => r.id === routeId)
+    if (routeIndex === -1)
       return
-    const index = route.points.findIndex(p => p.id === point.id)
-    if (index !== -1)
-      route.points.splice(index, 1, { ...point })
+
+    const route = routes.value[routeIndex]
+    const updatedPoints = route.points.map(p => (p.id === point.id ? { ...point } : p))
+    const updatedRoute = { ...route, points: updatedPoints }
+    routes.value = routes.value.map(r => (r.id === routeId ? updatedRoute : r))
+
     mapApiRef.value.addOrUpdatePoint(point)
   }
 
@@ -186,26 +209,33 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       isVisible: true,
       color: POI_COLORS[(routes.value.length + drawnRoutes.value.length) % POI_COLORS.length],
     }
-    drawnRoutes.value.push(newDrawnRoute)
+    drawnRoutes.value = [...drawnRoutes.value, newDrawnRoute]
     mapApiRef.value?.addOrUpdateDrawnRoute(newDrawnRoute)
   }
 
   function addSegmentToDrawnRoute(routeId: string, segmentCoords: Coordinate[]) {
-    const route = drawnRoutes.value.find(r => r.id === routeId)
-    if (route && mapApiRef.value) {
-      route.segments.push(segmentCoords)
-      mapApiRef.value.addOrUpdateDrawnRoute(route)
-    }
+    drawnRoutes.value = drawnRoutes.value.map((route) => {
+      if (route.id === routeId) {
+        const updatedRoute = { ...route, segments: [...route.segments, segmentCoords] }
+        mapApiRef.value?.addOrUpdateDrawnRoute(updatedRoute)
+        return updatedRoute
+      }
+      return route
+    })
   }
 
   function deleteSegmentFromDrawnRoute(routeId: string, segmentIndex: number) {
     const route = drawnRoutes.value.find(r => r.id === routeId)
     if (route && mapApiRef.value) {
-      route.segments.splice(segmentIndex, 1)
-      if (route.segments.length === 0)
+      const updatedSegments = route.segments.filter((_, index) => index !== segmentIndex)
+      if (updatedSegments.length === 0) {
         deleteRoute(routeId)
-      else
-        mapApiRef.value.addOrUpdateDrawnRoute(route)
+      }
+      else {
+        const updatedRoute = { ...route, segments: updatedSegments }
+        drawnRoutes.value = drawnRoutes.value.map(r => (r.id === routeId ? updatedRoute : r))
+        mapApiRef.value.addOrUpdateDrawnRoute(updatedRoute)
+      }
     }
   }
 

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/proposal-geolocation-section'
+import type { CustomActivitySection } from '../../models/types.ts'
+import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/plan-geolocation-section/index.ts'
 import type {
   ActivitySection,
   ActivitySectionGallery,
   ActivitySectionText,
 } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { IconPicker } from '~/components/02.shared/icon-picker'
-import { GeolocationSection } from '~/components/03.domain/trip-info/proposal-geolocation-section'
+import { GeolocationSection } from '~/components/03.domain/trip-info/plan-geolocation-section/index.ts'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { EActivitySectionType } from '~/shared/types/models/activity'
 import DescriptionSection from './description-section.vue'
@@ -36,9 +38,9 @@ const defaultColors = [
   '#FFC6FF',
 ]
 
-const editableTitle = ref((props.section as any).title || '')
-const editableIcon = ref((props.section as any).icon || 'mdi:map-marker')
-const editableColor = ref((props.section as any).color || defaultColors[0])
+const editableTitle = ref((props.section as CustomActivitySection).title || '')
+const editableIcon = ref((props.section as CustomActivitySection).icon || 'mdi:map-marker')
+const editableColor = ref((props.section as CustomActivitySection).color || defaultColors[0])
 
 function onUpdate(data: ActivitySection) {
   emit('updateSection', data)
@@ -47,20 +49,20 @@ function onUpdate(data: ActivitySection) {
 function toggleAttached() {
   const newSectionData = {
     ...props.section,
-    isAttached: !(props.section as any).isAttached,
-  }
-  if (!(newSectionData as any).isAttached) {
-    delete (newSectionData as any).title
-    delete (newSectionData as any).icon
-    delete (newSectionData as any).color
+    isAttached: !(props.section as CustomActivitySection).isAttached,
+  } as CustomActivitySection
+  if (!newSectionData.isAttached) {
+    delete newSectionData.title
+    delete newSectionData.icon
+    delete newSectionData.color
   }
   emit('updateSection', newSectionData)
 }
 
 function updatePinSettings() {
-  if (editableTitle.value !== ((props.section as any).title || '')
-    || editableIcon.value !== ((props.section as any).icon || 'mdi:map-marker')
-    || editableColor.value !== ((props.section as any).color || defaultColors[0])
+  if (editableTitle.value !== ((props.section as CustomActivitySection).title || '')
+    || editableIcon.value !== ((props.section as CustomActivitySection).icon || 'mdi:map-marker')
+    || editableColor.value !== ((props.section as CustomActivitySection).color || defaultColors[0])
   ) {
     emit('updateSection', {
       ...props.section,
@@ -80,15 +82,16 @@ watch(editableColor, () => {
 })
 
 watch(() => props.section, (newSection) => {
-  editableTitle.value = (newSection as any).title || ''
-  editableIcon.value = (newSection as any).icon || 'mdi:map-marker'
-  editableColor.value = (newSection as any).color || defaultColors[0]
+  const customSection = newSection as CustomActivitySection
+  editableTitle.value = customSection.title || ''
+  editableIcon.value = customSection.icon || 'mdi:map-marker'
+  editableColor.value = customSection.color || defaultColors[0]
 }, { deep: true, immediate: true })
 </script>
 
 <template>
-  <div class="activity-section-renderer" :class="{ 'is-attached': (section as any).isAttached }">
-    <div v-if="(section as any).isAttached && !isViewMode" class="pin-settings">
+  <div class="activity-section-renderer" :class="{ 'is-attached': (section as CustomActivitySection).isAttached }">
+    <div v-if="(section as CustomActivitySection).isAttached && !isViewMode" class="pin-settings">
       <div class="pin-main-settings">
         <KitInput
           v-model="editableTitle"
@@ -98,29 +101,42 @@ watch(() => props.section, (newSection) => {
           @blur="updatePinSettings"
           @keydown.enter="($event.target as HTMLInputElement).blur()"
         />
-        <IconPicker
-          v-model="editableIcon"
-          size="sm"
-          @update:model-value="updatePinSettings"
-        />
-      </div>
-      <div class="color-picker">
-        <div class="color-options">
-          <input
-            v-model="editableColor"
-            type="color"
-            class="color-input"
-            @input="updatePinSettings"
-          >
-          <button
-            v-for="color in defaultColors"
-            :key="color"
-            class="color-option"
-            :style="{ backgroundColor: color }"
-            :class="{ 'is-active': editableColor === color }"
-            @click="editableColor = color"
+        <div class="icon-picker-wrapper">
+          <IconPicker
+            v-model="editableIcon"
+            size="sm"
+            @update:model-value="updatePinSettings"
           />
         </div>
+        <KitDropdown :side-offset="8" align="end" class="color-picker-dropdown">
+          <template #trigger>
+            <button class="color-picker-trigger" type="button" title="Выбрать цвет">
+              <span class="color-preview" :style="{ backgroundColor: editableColor }" />
+            </button>
+          </template>
+
+          <div class="color-picker-content">
+            <div class="color-options">
+              <div class="color-input-wrapper" title="Свой цвет">
+                <input
+                  v-model="editableColor"
+                  type="color"
+                  class="color-input"
+                  @input="updatePinSettings"
+                >
+                <Icon icon="mdi:eyedropper-variant" />
+              </div>
+              <button
+                v-for="color in defaultColors"
+                :key="color"
+                class="color-option"
+                :style="{ backgroundColor: color }"
+                :class="{ 'is-active': editableColor === color }"
+                @click="editableColor = color"
+              />
+            </div>
+          </div>
+        </KitDropdown>
       </div>
     </div>
 
@@ -144,10 +160,10 @@ watch(() => props.section, (newSection) => {
     <div v-if="!isViewMode" class="section-controls">
       <button
         class="control-btn attach-btn"
-        :title="(section as any).isAttached ? 'Открепить секцию' : 'Прикрепить к предыдущей'"
+        :title="(section as CustomActivitySection).isAttached ? 'Открепить секцию' : 'Прикрепить к предыдущей'"
         @click="toggleAttached"
       >
-        <Icon :icon="(section as any).isAttached ? 'mdi:link-variant-off' : 'mdi:link-variant-plus'" />
+        <Icon :icon="(section as CustomActivitySection).isAttached ? 'mdi:link-variant-off' : 'mdi:link-variant-plus'" />
       </button>
       <button
         class="control-btn delete-btn"
@@ -184,6 +200,7 @@ watch(() => props.section, (newSection) => {
 .pin-main-settings {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .pin-input {
@@ -195,43 +212,95 @@ watch(() => props.section, (newSection) => {
   }
 }
 
-.color-options {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
+.icon-picker-wrapper {
+  flex-shrink: 0;
 }
+
+.color-picker-dropdown {
+  flex-shrink: 0;
+}
+
+.color-picker-trigger {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-s);
+  border: 1px solid var(--border-secondary-color);
+  background-color: var(--bg-secondary-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+
+  .color-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--r-2xs);
+    border: 1px solid var(--border-primary-color);
+  }
+}
+
+:deep(.kit-dropdown-content) {
+  min-width: auto;
+  padding: 8px;
+}
+
+.color-options {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.color-input-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-secondary-color);
+  background-color: var(--bg-tertiary-color);
+  cursor: pointer;
+  overflow: hidden;
+
+  .iconify {
+    position: absolute;
+    color: var(--fg-secondary-color);
+    pointer-events: none;
+  }
+}
+.color-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
+  opacity: 0;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  &::-webkit-color-swatch {
+    border: none;
+  }
+}
+
 .color-option {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 2px solid var(--bg-primary-color);
   outline: 1px solid var(--border-secondary-color);
   cursor: pointer;
   transition: all 0.2s;
   &.is-active {
     border-color: var(--fg-accent-color);
     transform: scale(1.1);
-  }
-}
-
-.color-input {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: none;
-  border-radius: 50%;
-  cursor: pointer;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  padding: 0;
-  &::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-  &::-webkit-color-swatch {
-    border: 1px solid var(--border-secondary-color);
-    border-radius: 50%;
   }
 }
 

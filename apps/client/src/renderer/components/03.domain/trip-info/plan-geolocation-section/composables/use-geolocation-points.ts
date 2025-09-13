@@ -35,7 +35,8 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
       address: addressInfo.address,
       comment: '',
     }
-    points.value.push(newPoint)
+    // ЗАМЕНА: Создаем новый массив для надежности реактивности
+    points.value = [...points.value, newPoint]
     mapApiRef.value.addOrUpdatePoint(newPoint)
   }
 
@@ -90,9 +91,8 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
     if (!mapApiRef.value)
       return
     mapApiRef.value.addOrUpdatePoint(point)
-    const index = points.value.findIndex(p => p.id === point.id)
-    if (index !== -1)
-      points.value.splice(index, 1, { ...point })
+    // ЗАМЕНА: Заменяем элемент, создавая новый массив, чтобы гарантировать срабатывание watcher'а
+    points.value = points.value.map(p => (p.id === point.id ? { ...point } : p))
   }
 
   function setInitialPoints(initialPoints: MapPoint[]) {

@@ -47,14 +47,17 @@ function toggleGroup(groupId: string) {
 function formatDistance(distance?: number): string {
   if (distance === undefined)
     return '...'
+
   if (distance > 1000)
     return `${(distance / 1000).toFixed(2)} км`
+
   return `${Math.round(distance)} м`
 }
 
 onMounted(() => {
   if (props.routes.length > 0)
     openRoutes.value.add(props.routes[0].id)
+
   if (props.drawnRoutes.length > 0)
     openRoutes.value.add(props.drawnRoutes[0].id)
 })
@@ -62,10 +65,6 @@ onMounted(() => {
 
 <template>
   <div class="route-list-wrapper">
-    <p v-if="routes.length === 0 && drawnRoutes.length === 0" class="no-routes-message">
-      Маршруты или маркеры не созданы.
-    </p>
-
     <!-- Маршруты по точкам -->
     <div v-if="routes.length > 0" class="route-group">
       <h4 class="group-title" @click="toggleGroup('points')">

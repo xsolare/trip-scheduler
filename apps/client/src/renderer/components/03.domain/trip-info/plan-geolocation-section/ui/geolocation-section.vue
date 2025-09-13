@@ -2,6 +2,7 @@
 import type { useGeolocationMap } from '../composables/use-geolocation-map'
 import type { ActivitySectionGeolocation, Coordinate, DrawnRoute, MapPoint, MapRoute } from '../models/types'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
+import { useDebounceFn } from '@vueuse/core'
 import { toLonLat } from 'ol/proj'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
@@ -24,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
   height: '450px',
 })
 
-const emit = defineEmits(['update:section'])
+const emit = defineEmits(['updateSection'])
 
 // --- Состояние компонента ---
 const sectionContainerRef = ref<HTMLElement | null>(null)
@@ -36,14 +37,48 @@ const isPanelVisible = ref(true)
 const routeIdForNewSegment = ref<string | null>(null)
 
 // --- Композиции ---
-const { points, isLoading: isPointsLoading, mode, pointToMoveId, addPoiPoint, deletePoiPoint, startMovePoint, movePoint: movePoiPoint, updatePointCoords, handlePointUpdate, setInitialPoints }
-  = useGeolocationPoints(mapController)
+const {
+  points,
+  isLoading: isPointsLoading,
+  mode,
+  pointToMoveId,
+  addPoiPoint,
+  deletePoiPoint,
+  startMovePoint,
+  movePoint: movePoiPoint,
+  updatePointCoords,
+  handlePointUpdate,
+  setInitialPoints,
+} = useGeolocationPoints(mapController)
 
-const { routes, drawnRoutes, isLoading: isRoutesLoading, createNewRoute, addPointToRoute, deleteRoute, deletePointFromRoute, updatePointInRoute, handlePointDataUpdate: handleRoutePointUpdate, setInitialRoutes, addDrawnRoute, addSegmentToDrawnRoute, deleteSegmentFromDrawnRoute }
-  = useGeolocationRoutes(mapController)
+const {
+  routes,
+  drawnRoutes,
+  isLoading: isRoutesLoading,
+  createNewRoute,
+  addPointToRoute,
+  deleteRoute,
+  deletePointFromRoute,
+  updatePointInRoute,
+  handlePointDataUpdate: handleRoutePointUpdate,
+  setInitialRoutes,
+  addDrawnRoute,
+  addSegmentToDrawnRoute,
+  deleteSegmentFromDrawnRoute,
+} = useGeolocationRoutes(mapController)
 
-const { startDrawing, stopDrawing }
-  = useGeolocationDrawing(mapController)
+const { startDrawing, stopDrawing } = useGeolocationDrawing(mapController)
+
+const debouncedUpdate = useDebounceFn(() => {
+  emit('updateSection', {
+    ...props.section,
+    points: toRaw(points.value),
+    routes: toRaw(routes.value),
+    drawnRoutes: toRaw(drawnRoutes.value),
+    center: props.section.center,
+    zoom: props.section.zoom,
+  })
+}, 1000)
 
 const isLoading = computed(() => isPointsLoading.value || isRoutesLoading.value)
 const poiPointsWithStyle = computed(() => points.value.map((point, index) => ({ ...point, style: { ...point.style, color: POI_COLORS[index % POI_COLORS.length] } })))
@@ -60,11 +95,20 @@ const allMapPoints = computed(() => {
 })
 
 // --- Вычисляемые свойства ---
+const areItemsEmpty = computed(() => {
+  return points.value.length === 0 && routes.value.length === 0 && drawnRoutes.value.length === 0
+})
+
 const mapCenter = computed<Coordinate>(() => {
+  if (props.section.center)
+    return props.section.center
+
   if (props.section.points?.length > 0)
     return props.section.points[0].coordinates
+
   if (props.section.routes?.length > 0 && props.section.routes[0].points.length > 0)
     return props.section.routes[0].points[0].coordinates
+
   return [37.6176, 55.7558] // Москва
 })
 
@@ -202,7 +246,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  stopDrawing() // Очищаем за собой при размонтировании
+  stopDrawing()
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 
@@ -211,9 +255,7 @@ watch(activeView, () => {
   activeRouteId.value = null
 })
 
-// FIX: Использование watchEffect для решения "гонки состояний"
 watchEffect(() => {
-  // Этот код выполнится только когда mapController станет доступен
   if (!mapController.value)
     return
 
@@ -230,18 +272,12 @@ watchEffect(() => {
     })
   }
   else {
-    // Если режим любой другой - гарантированно останавливаем рисование
     stopDrawing()
   }
 })
 
 watch([points, routes, drawnRoutes], () => {
-  emit('update:section', {
-    ...props.section,
-    points: toRaw(points.value),
-    routes: toRaw(routes.value),
-    drawnRoutes: toRaw(drawnRoutes.value),
-  })
+  debouncedUpdate()
 }, { deep: true })
 </script>
 
@@ -262,48 +298,53 @@ watch([points, routes, drawnRoutes], () => {
 
       <!-- СПИСКИ -->
       <div class="lists-container">
-        <template v-if="!readonly">
-          <GeolocationPoiList
-            v-if="activeView === 'points'"
-            :points="poiPointsWithStyle"
-            :readonly="readonly"
-            @focus-on-point="handleFocusOnPoint"
-            @update-point="handlePointUpdate"
-            @update-point-coords="updatePointCoords"
-            @start-move-point="handleStartMovePoint"
-            @delete-point="deletePoiPoint"
-          />
-          <GeolocationRouteList
-            v-if="activeView === 'routes'"
-            :routes="routes"
-            :drawn-routes="drawnRoutes"
-            :readonly="readonly"
-            :active-route-id="activeRouteId"
-            @focus-on-point="handleFocusOnPoint"
-            @update-point="handleRoutePointUpdate"
-            @update-route="handleRouteUpdate"
-            @update-point-coords="updatePointCoords"
-            @start-move-point="handleStartMovePoint"
-            @delete-point="deletePointFromRoute"
-            @delete-route="deleteRoute"
-            @set-active-route="setActiveRoute"
-            @add-segment="handleAddSegment"
-            @delete-segment="deleteSegmentFromDrawnRoute"
-          />
-        </template>
+        <p v-if="areItemsEmpty" class="no-items-message">
+          Маршруты или маркеры не созданы.
+        </p>
         <template v-else>
-          <GeolocationPoiList
-            :points="poiPointsWithStyle"
-            :readonly="readonly"
-            @focus-on-point="handleFocusOnPoint"
-          />
-          <GeolocationRouteList
-            :routes="routes"
-            :drawn-routes="drawnRoutes"
-            :readonly="readonly"
-            :active-route-id="activeRouteId"
-            @focus-on-point="handleFocusOnPoint"
-          />
+          <template v-if="!readonly">
+            <GeolocationPoiList
+              v-if="activeView === 'points'"
+              :points="poiPointsWithStyle"
+              :readonly="readonly"
+              @focus-on-point="handleFocusOnPoint"
+              @update-point="handlePointUpdate"
+              @update-point-coords="updatePointCoords"
+              @start-move-point="handleStartMovePoint"
+              @delete-point="deletePoiPoint"
+            />
+            <GeolocationRouteList
+              v-if="activeView === 'routes'"
+              :routes="routes"
+              :drawn-routes="drawnRoutes"
+              :readonly="readonly"
+              :active-route-id="activeRouteId"
+              @focus-on-point="handleFocusOnPoint"
+              @update-point="handleRoutePointUpdate"
+              @update-route="handleRouteUpdate"
+              @update-point-coords="updatePointCoords"
+              @start-move-point="handleStartMovePoint"
+              @delete-point="deletePointFromRoute"
+              @delete-route="deleteRoute"
+              @set-active-route="setActiveRoute"
+              @add-segment="handleAddSegment"
+              @delete-segment="deleteSegmentFromDrawnRoute"
+            />
+          </template>
+          <template v-else>
+            <GeolocationPoiList
+              :points="poiPointsWithStyle"
+              :readonly="readonly"
+              @focus-on-point="handleFocusOnPoint"
+            />
+            <GeolocationRouteList
+              :routes="routes"
+              :drawn-routes="drawnRoutes"
+              :readonly="readonly"
+              :active-route-id="activeRouteId"
+              @focus-on-point="handleFocusOnPoint"
+            />
+          </template>
         </template>
       </div>
     </div>
@@ -392,5 +433,12 @@ watch([points, routes, drawnRoutes], () => {
 .map-wrapper {
   min-width: 0;
   flex-grow: 1;
+}
+
+.no-items-message {
+  text-align: center;
+  padding: 16px 8px;
+  color: var(--fg-tertiary-color);
+  font-size: 0.9rem;
 }
 </style>

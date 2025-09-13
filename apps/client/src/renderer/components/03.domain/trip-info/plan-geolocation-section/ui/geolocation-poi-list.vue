@@ -234,7 +234,7 @@ const emit = defineEmits<{
   min-width: 0;
 
   .kit-input-group {
-    max-width: 150px;
+    max-width: 170px;
     font-family: var(--font-mono);
     font-size: 0.8rem;
   }

@@ -3,9 +3,9 @@ import { z } from 'zod'
 const ActivitySectionBaseSchema = z.object({
   id: z.string(),
   isAttached: z.boolean().optional(),
-  title: z.string().optional(),
-  icon: z.string().optional(),
-  color: z.string().optional(),
+  title: z.string().optional().nullable(),
+  icon: z.string().optional().nullable(),
+  color: z.string().optional().nullable(),
 })
 
 const ActivitySectionTextSchema = ActivitySectionBaseSchema.extend({
@@ -18,13 +18,52 @@ const ActivitySectionGallerySchema = ActivitySectionBaseSchema.extend({
   imageUrls: z.array(z.string()),
 })
 
+const CoordinateSchema = z.tuple([z.number(), z.number()])
+const PointTypeSchema = z.enum(['poi', 'start', 'via', 'end'])
+const MarkerStyleSchema = z.object({
+  iconUrl: z.string().optional(),
+  color: z.string().optional(),
+  scale: z.number().optional(),
+}).optional().nullable()
+
+const MapPointSchema = z.object({
+  id: z.string(),
+  coordinates: CoordinateSchema,
+  type: PointTypeSchema,
+  style: MarkerStyleSchema,
+  address: z.string().optional().nullable(),
+  comment: z.string().optional().nullable(),
+})
+
+const MapRouteSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  points: z.array(MapPointSchema),
+  color: z.string().optional(),
+  distance: z.number().optional(),
+  duration: z.number().optional(),
+  geometry: z.array(CoordinateSchema).optional(),
+  isVisible: z.boolean(),
+  isFetching: z.boolean().optional(),
+  isDirect: z.boolean().optional(),
+})
+
+const DrawnRouteSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  segments: z.array(z.array(CoordinateSchema)),
+  color: z.string().optional(),
+  distance: z.number().optional(),
+  isVisible: z.boolean(),
+})
+
 const ActivitySectionGeolocationSchema = ActivitySectionBaseSchema.extend({
   type: z.literal('geolocation'),
-  points: z.array(z.any()),
-  routes: z.array(z.any()),
-  drawnRoutes: z.array(z.any()),
-  center: z.array(z.number()).optional(),
-  zoom: z.number().optional(),
+  points: z.array(MapPointSchema),
+  routes: z.array(MapRouteSchema),
+  drawnRoutes: z.array(DrawnRouteSchema),
+  center: CoordinateSchema.optional().nullable(),
+  zoom: z.number().optional().nullable(),
 })
 
 export const ActivitySectionSchema = z.discriminatedUnion('type', [
@@ -38,8 +77,8 @@ export const ActivitySchema = z.object({
   startTime: z.string(),
   endTime: z.string(),
   title: z.string(),
-  sections: z.array(ActivitySectionSchema),
-  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).optional(),
+  sections: z.array(ActivitySectionSchema).optional().nullable(),
+  tag: z.enum(['transport', 'walk', 'food', 'attraction', 'relax']).optional().nullable(),
   dayId: z.string().uuid(),
   status: z.enum(['none', 'completed', 'skipped']).default('none').optional(),
   rating: z.number().min(0).max(5).nullable().optional(),

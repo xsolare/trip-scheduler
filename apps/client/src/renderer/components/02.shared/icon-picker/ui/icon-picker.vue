@@ -18,24 +18,6 @@ const isOpen = ref(false)
 const pickerButton = ref<HTMLButtonElement | null>(null)
 const dropdownPanel = ref<HTMLDivElement | null>(null)
 
-const iconList = [
-  'mdi:map-marker',
-  'mdi:camera',
-  'mdi:image-multiple',
-  'mdi:file-document-outline',
-  'mdi:format-list-bulleted',
-  'mdi:car',
-  'mdi:walk',
-  'mdi:train',
-  'mdi:airplane',
-  'mdi:food',
-  'mdi:fire',
-  'mdi:information-outline',
-  'mdi:check',
-  'mdi:close',
-  'mdi:flag',
-  'mdi:star',
-]
 
 const sizeClass = computed(() => `size-${props.size}`)
 
@@ -52,15 +34,12 @@ onClickOutside(dropdownPanel, () => {
   isOpen.value = false
 }, { ignore: [pickerButton] })
 
-// --- ЛОГИКА ПОЗИЦИОНИРОВАНИЯ ---
 async function updateDropdownPosition() {
-  // Убедимся, что DOM обновился и элемент dropdownPanel доступен
   await nextTick()
 
   if (!dropdownPanel.value)
     return
 
-  // Сбрасываем transform, чтобы получить реальные размеры и положение
   dropdownPanel.value.style.transform = 'translateX(-50%)'
 
   const dropdownRect = dropdownPanel.value.getBoundingClientRect()
@@ -68,22 +47,18 @@ async function updateDropdownPosition() {
 
   let shiftX = 0
 
-  // Проверка выхода за правый край
   if (dropdownRect.right > viewportWidth) {
-    shiftX = viewportWidth - dropdownRect.right - 8 // 8px отступ от края
+    shiftX = viewportWidth - dropdownRect.right - 8
   }
-  // Проверка выхода за левый край
   if (dropdownRect.left < 0) {
-    shiftX = -dropdownRect.left + 8 // 8px отступ от края
+    shiftX = -dropdownRect.left + 8
   }
 
-  // Если нужен сдвиг, применяем его
   if (shiftX !== 0) {
     dropdownPanel.value.style.transform = `translateX(calc(-50% + ${shiftX}px))`
   }
 }
 
-// Следим за состоянием isOpen. Когда оно становится true, обновляем позицию.
 watch(isOpen, (isNowOpen) => {
   if (isNowOpen) {
     updateDropdownPosition()
@@ -111,7 +86,7 @@ watch(isOpen, (isNowOpen) => {
       >
         <div class="icon-grid">
           <button
-            v-for="icon in iconList"
+            v-for="icon in sharedIconList"
             :key="icon"
             class="icon-option"
             :class="{ selected: icon === props.modelValue }"

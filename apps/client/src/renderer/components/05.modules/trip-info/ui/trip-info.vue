@@ -37,7 +37,6 @@ watch(
   },
 )
 
-// Logic for fixed navigation buttons
 const { mdAndUp } = useDisplay()
 const tripInfoWrapperRef = ref<HTMLElement | null>(null)
 const dayNavigationWrapperRef = ref<HTMLElement | null>(null)
@@ -131,7 +130,10 @@ onUnmounted(() => {
   </AsyncStateWrapper>
 
   <!-- Fixed Navigation Buttons -->
-  <Teleport to="body">
+  <Teleport
+    v-if="!section"
+    to="body"
+  >
     <Transition name="fade">
       <KitBtn
         v-if="showFixedNavButtons"
