@@ -79,6 +79,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
   position: fixed;
   top: 50%;
   left: 50%;
+  transform: translate(-50%, -50%);
   background-color: var(--bg-primary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: 8px;
@@ -150,6 +151,7 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
 
 .dialog-body {
   flex-grow: 1;
+  overflow-y: auto;
 }
 
 @keyframes overlay-show {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DayMetaBadgePreset } from '../lib/badge-presets'
+import type { Booking, BookingSectionContent } from '~/components/04.features/trip-info/trip-sections'
 import type { DayMetaInfo } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import {
@@ -23,6 +24,9 @@ import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitInput } from '~/components/01.kit/kit-input'
+import { DayBookingsModal } from '~/components/04.features/trip-info/trip-sections'
+import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
+import { TripSectionType } from '~/shared/types/models/trip'
 import { badgePresets } from '../lib/badge-presets'
 
 interface Props {
@@ -34,6 +38,8 @@ const props = defineProps<Props>()
 const emit = defineEmits(['update:meta'])
 
 const confirm = useConfirm()
+const store = useModuleStore(['plan', 'sections'])
+const { getSelectedDay } = storeToRefs(store.plan)
 
 // --- State ---
 const isEditorOpen = ref(false)
@@ -41,6 +47,7 @@ const isViewerOpen = ref(false)
 const currentItem = ref<DayMetaInfo | null>(null)
 const iconSearchQuery = ref('')
 const isAddMenuOpen = ref(false)
+const isBookingsModalOpen = ref(false)
 
 // --- Constants ---
 const defaultColors = [
@@ -55,54 +62,7 @@ const defaultColors = [
   '#BDB2FF',
   '#FFC6FF',
 ]
-const iconList = [
-  // Transport
-  'mdi:walk',
-  'mdi:car',
-  'mdi:train',
-  'mdi:airplane',
-  'mdi:bus',
-  'mdi:taxi',
-  'mdi:ferry',
-  'mdi:bike',
-  // Accommodation & Food
-  'mdi:bed',
-  'mdi:food-fork-drink',
-  'mdi:coffee-outline',
-  'mdi:store-outline',
-  'mdi:tent',
-  // Activities & Sights
-  'mdi:camera-outline',
-  'mdi:map-marker-outline',
-  'mdi:hiking',
-  'mdi:swim',
-  'mdi:beach',
-  'mdi:shopping-outline',
-  'mdi:music-note-outline',
-  'mdi:party-popper',
-  // General & Info
-  'mdi:currency-usd',
-  'mdi:ticket-confirmation-outline',
-  'mdi:weather-sunny',
-  'mdi:weather-night',
-  'mdi:flag-variant-outline',
-  'mdi:information-outline',
-  'mdi:run-fast',
-  'mdi:bank-outline',
-  'mdi:gas-station-outline',
-  'mdi:fire',
-  'mdi:heart-outline',
-  'mdi:star-outline',
-  'mdi:check-circle-outline',
-  'mdi:alert-circle-outline',
-  'mdi:help-circle-outline',
-  'mdi:account-group-outline',
-  'mdi:phone-outline',
-  'mdi:link-variant',
-  'mdi:calendar-blank-outline',
-]
 
-// --- Computed ---
 const currentItemContent = computed({
   get: () => currentItem.value?.content ?? '',
   set: (value) => {
@@ -113,8 +73,9 @@ const currentItemContent = computed({
 
 const filteredIcons = computed(() => {
   if (!iconSearchQuery.value)
-    return iconList
-  return iconList.filter(icon => icon.toLowerCase().includes(iconSearchQuery.value.toLowerCase()))
+    return sharedIconList
+
+  return sharedIconList.filter(icon => icon.toLowerCase().includes(iconSearchQuery.value.toLowerCase()))
 })
 
 const groupedPresets = computed(() => {
@@ -127,10 +88,54 @@ const groupedPresets = computed(() => {
   }, {} as Record<string, DayMetaBadgePreset[]>)
 })
 
-// --- Methods ---
+const bookingsForSelectedDay = computed(() => {
+  if (!getSelectedDay.value)
+    return []
+
+  const bookingSection = store.sections.sections.find(s => s.type === TripSectionType.BOOKINGS)
+  if (!bookingSection)
+    return []
+
+  const content = bookingSection.content as BookingSectionContent
+  if (!content || !Array.isArray(content.bookings))
+    return []
+
+  const selectedDateStr = getSelectedDay.value.date.split('T')[0]
+  const selectedDate = new Date(selectedDateStr)
+
+  return content.bookings.filter((booking: Booking) => {
+    switch (booking.type) {
+      case 'hotel': {
+        if (!booking.data.checkInDate || !booking.data.checkOutDate)
+          return false
+        const checkIn = new Date(booking.data.checkInDate.split('T')[0])
+        const checkOut = new Date(booking.data.checkOutDate.split('T')[0])
+        return selectedDate >= checkIn && selectedDate < checkOut
+      }
+      case 'flight': {
+        return booking.data.segments?.some(segment =>
+          segment.departureDateTime && segment.departureDateTime.startsWith(selectedDateStr),
+        )
+      }
+      case 'train': {
+        return booking.data.departureDateTime?.startsWith(selectedDateStr)
+      }
+      case 'attraction': {
+        return booking.data.dateTime?.startsWith(selectedDateStr)
+      }
+      default:
+        return false
+    }
+  })
+})
+
 function getContrastColor(hexcolor: string | undefined): string {
   if (!hexcolor)
     return '#000000'
+
+  if (hexcolor.startsWith('var(')) {
+    return 'var(--fg-primary-color)'
+  }
 
   hexcolor = hexcolor.replace('#', '')
   const r = Number.parseInt(hexcolor.substring(0, 2), 16)
@@ -212,6 +217,20 @@ function createBlankBadge() {
 <template>
   <div class="day-meta-badges-container">
     <div class="badges-wrapper">
+      <!-- Новый бейдж для бронирований -->
+      <div v-if="bookingsForSelectedDay.length > 0" class="badge-wrapper">
+        <button
+          class="badge booking-badge"
+          @click="isBookingsModalOpen = true"
+        >
+          <Icon icon="mdi:ticket-confirmation-outline" class="badge-icon" />
+          <div class="badge-text">
+            <span class="badge-title">Бронирования</span>
+            <span class="badge-subtitle">({{ bookingsForSelectedDay.length }})</span>
+          </div>
+        </button>
+      </div>
+
       <TooltipProvider :delay-duration="200">
         <template v-for="item in meta" :key="item.id">
           <TooltipRoot v-if="item.content">
@@ -392,6 +411,13 @@ function createBlankBadge() {
         </div>
       </div>
     </KitDialogWithClose>
+
+    <!-- Модальное окно с бронированиями -->
+    <DayBookingsModal
+      v-if="bookingsForSelectedDay.length > 0"
+      v-model:visible="isBookingsModalOpen"
+      :bookings="bookingsForSelectedDay"
+    />
   </div>
 </template>
 
@@ -435,6 +461,12 @@ function createBlankBadge() {
     transform: translateY(-2px);
     box-shadow: var(--s-m);
   }
+}
+
+.booking-badge {
+  background-color: rgba(var(--fg-accent-color-rgb), 0.15);
+  color: var(--fg-accent-color);
+  border-color: rgba(var(--fg-accent-color-rgb), 0.3);
 }
 
 .badge-icon {

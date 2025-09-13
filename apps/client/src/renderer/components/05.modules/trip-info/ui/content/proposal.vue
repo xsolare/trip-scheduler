@@ -6,7 +6,6 @@ import DayActivitiesList from '~/components/04.features/trip-info/trip-plan/ui/l
 import DayMetaBadges from '~/components/05.modules/trip-info/ui/day-meta-badges.vue'
 import { EActivityStatus } from '~/shared/types/models/activity'
 import { useModuleStore } from '../../composables/use-trip-info-module'
-import { minutesToTime, timeToMinutes } from '../../lib/helpers'
 import { EActivityTag } from '../../models/types'
 
 const store = useModuleStore(['plan', 'ui'])

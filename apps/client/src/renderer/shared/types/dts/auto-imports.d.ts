@@ -320,7 +320,6 @@ declare global {
   const watchTriggerable: typeof import('@vueuse/core')['watchTriggerable']
   const watchWithFilter: typeof import('@vueuse/core')['watchWithFilter']
   const whenever: typeof import('@vueuse/core')['whenever']
-  const {{{{{: typeof import('../../constants/icon-list')['{{{{{']
 }
 // for type re-export
 declare global {
