@@ -49,6 +49,7 @@ function useGeolocationMap() {
       })
 
       mapInstance.value.addInteraction(modifyInteraction)
+      modifyInteraction.setActive(options.interactive ?? true)
 
       mapInstance.value.once('postrender', () => {
         isMapLoaded.value = true
@@ -335,7 +336,7 @@ function useGeolocationMap() {
     mapInstance,
     isMapLoaded: readonly(isMapLoaded),
     modifyInteraction,
-    drawSource, // Экспортируем для нового хука
+    drawSource,
     initMap,
     addOrUpdatePoint,
     removePoint,

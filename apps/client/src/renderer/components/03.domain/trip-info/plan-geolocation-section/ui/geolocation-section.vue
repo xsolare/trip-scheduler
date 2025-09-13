@@ -35,39 +35,17 @@ const activeRouteId = ref<string | null>(null)
 const isMapFullscreen = ref(false)
 const isPanelVisible = ref(true)
 const routeIdForNewSegment = ref<string | null>(null)
+const isDataInitialized = ref(false)
 
 // --- Композиции ---
-const {
-  points,
-  isLoading: isPointsLoading,
-  mode,
-  pointToMoveId,
-  addPoiPoint,
-  deletePoiPoint,
-  startMovePoint,
-  movePoint: movePoiPoint,
-  updatePointCoords,
-  handlePointUpdate,
-  setInitialPoints,
-} = useGeolocationPoints(mapController)
+const { points, isLoading: isPointsLoading, mode, pointToMoveId, addPoiPoint, deletePoiPoint, startMovePoint, movePoint: movePoiPoint, updatePointCoords, handlePointUpdate, setInitialPoints }
+  = useGeolocationPoints(mapController)
 
-const {
-  routes,
-  drawnRoutes,
-  isLoading: isRoutesLoading,
-  createNewRoute,
-  addPointToRoute,
-  deleteRoute,
-  deletePointFromRoute,
-  updatePointInRoute,
-  handlePointDataUpdate: handleRoutePointUpdate,
-  setInitialRoutes,
-  addDrawnRoute,
-  addSegmentToDrawnRoute,
-  deleteSegmentFromDrawnRoute,
-} = useGeolocationRoutes(mapController)
+const { routes, drawnRoutes, isLoading: isRoutesLoading, createNewRoute, addPointToRoute, deleteRoute, deletePointFromRoute, updatePointInRoute, handlePointDataUpdate: handleRoutePointUpdate, setInitialRoutes, addDrawnRoute, addSegmentToDrawnRoute, deleteSegmentFromDrawnRoute }
+  = useGeolocationRoutes(mapController)
 
-const { startDrawing, stopDrawing } = useGeolocationDrawing(mapController)
+const { startDrawing, stopDrawing }
+  = useGeolocationDrawing(mapController)
 
 const debouncedUpdate = useDebounceFn(() => {
   emit('updateSection', {
@@ -239,6 +217,10 @@ function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
     else
       updatePointInRoute(pointId, newCoords)
   })
+
+  nextTick(() => {
+    isDataInitialized.value = true
+  })
 }
 
 onMounted(() => {
@@ -277,6 +259,8 @@ watchEffect(() => {
 })
 
 watch([points, routes, drawnRoutes], () => {
+  if (!isDataInitialized.value)
+    return
   debouncedUpdate()
 }, { deep: true })
 </script>

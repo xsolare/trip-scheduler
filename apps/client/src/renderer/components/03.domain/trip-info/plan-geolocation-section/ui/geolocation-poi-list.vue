@@ -59,11 +59,11 @@ const emit = defineEmits<{
           />
           <span v-else class="poi-text">{{ point.address || 'Адрес не найден' }}</span>
         </div>
-        <div class="poi-field">
+        <div v-if="point.comment || !readonly" class="poi-field">
           <Icon icon="mdi:comment-text-outline" class="field-icon" />
           <KitInlineMdEditorWrapper
             v-if="!readonly"
-            :model-value="point.comment!"
+            :model-value="point.comment || ''"
             class="poi-editor poi-comment"
             :features="{
               'block-edit': false,
@@ -79,7 +79,7 @@ const emit = defineEmits<{
             @update:model-value="point.comment = $event"
             @blur="emit('updatePoint', point)"
           />
-          <span v-else class="poi-text poi-text-comment">{{ point.comment || 'Нет комментария' }}</span>
+          <span v-else-if="point.comment" class="poi-text poi-text-comment">{{ point.comment }}</span>
         </div>
 
         <div v-if="!readonly" class="poi-controls">

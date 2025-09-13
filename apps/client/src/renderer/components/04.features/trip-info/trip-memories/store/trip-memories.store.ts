@@ -3,7 +3,6 @@ import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/type
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 import { useTripPlanStore } from '~/components/04.features/trip-info/trip-plan'
-import { getLocalDate } from '~/components/05.modules/trip-info/lib/helpers'
 import { useAbortRequest, useRequest, useRequestStatus } from '~/plugins/request'
 import { TripImagePlacement } from '~/shared/types/models/trip'
 

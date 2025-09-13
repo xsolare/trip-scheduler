@@ -20,7 +20,9 @@ interface Props {
   isFullscreen: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  readonly: true,
+})
 
 const emit = defineEmits<{
   (e: 'mapClick', coords: Coordinate): void
@@ -39,6 +41,7 @@ const {
   addOrUpdateRoute,
   addOrUpdateDrawnRoute,
   removeRoute,
+  modifyInteraction,
   ...restMapController
 } = useGeolocationMap()
 
@@ -110,6 +113,10 @@ watch(() => props.drawnRoutes, (newRoutes, oldRoutes = []) => {
   })
 }, { deep: true })
 
+watch(() => props.readonly, (isReadonly) => {
+  modifyInteraction.setActive(!isReadonly)
+})
+
 onClickOutside(contextMenuRef, () => {
   isContextMenuVisible.value = false
 })
@@ -133,7 +140,7 @@ onMounted(async () => {
     emit('mapClick', coords)
   })
 
-  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, ...restMapController })
+  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, modifyInteraction, ...restMapController })
 })
 </script>
 
@@ -170,7 +177,6 @@ onMounted(async () => {
 </template>
 
 <style>
-/* Глобальные стили для оверлеев карты */
 .ol-popup-comment {
   background-color: var(--bg-secondary-color);
   color: var(--fg-primary-color);

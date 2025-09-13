@@ -14,7 +14,6 @@ import { useToast } from '~/components/01.kit/kit-toast'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { ETripMemoriesKeys } from '~/components/04.features/trip-info/trip-memories/store/trip-memories.store'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
-import { getLocalDate } from '~/components/05.modules/trip-info/lib/helpers'
 import { useRequestStatus } from '~/plugins/request'
 
 const props = defineProps<{
