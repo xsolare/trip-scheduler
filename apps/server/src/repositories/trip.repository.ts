@@ -3,7 +3,7 @@ import type { CreateTripInputSchema, ListTripsInputSchema, UpdateTripInputSchema
 import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../../db'
-import { activities, days, tripParticipants, trips, tripSections } from '../../db/schema'
+import { activities, days,  tripParticipants, trips, tripSections } from '../../db/schema'
 
 const withParticipants = {
   participants: {

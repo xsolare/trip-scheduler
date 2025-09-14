@@ -47,4 +47,14 @@ export class FileRepository implements IFileRepository {
   async listImageByTrip(tripId: string, placement: TripImagePlacement): Promise<TripImage[]> {
     return await trpc.image.listByTrip.query({ tripId, placement }) as TripImage[]
   }
+
+  @throttle(500)
+  async getAllUserFiles(): Promise<TripImage[]> {
+    return await trpc.image.getAll.query() as TripImage[]
+  }
+
+  @throttle(500)
+  async deleteFile(id: string): Promise<void> {
+    await trpc.image.delete.mutate({ id })
+  }
 }

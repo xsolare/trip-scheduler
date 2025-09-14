@@ -4,6 +4,7 @@ import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDrawer } from '~/components/01.kit/kit-drawer'
 import { UserQuotaWidget } from '~/components/02.shared/user-quota-widget'
+import { AppRouteNames } from '~/shared/constants/routes'
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -42,11 +43,13 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
 
       <div v-if="user && user.plan" class="quota-section">
         <UserQuotaWidget
-          title="Путешествия"
+          title="Тариф и лимиты"
           icon="mdi:briefcase-outline"
           :current="user.currentTripsCount"
           :limit="user.plan.maxTrips"
           unit="items"
+          :to="{ name: AppRouteNames.AccountQuota }"
+          @click="open = false"
         />
         <UserQuotaWidget
           title="Хранилище"
@@ -54,6 +57,8 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
           :current="user.currentStorageBytes"
           :limit="user.plan.maxStorageBytes"
           unit="bytes"
+          :to="{ name: AppRouteNames.AccountStorage }"
+          @click="open = false"
         />
       </div>
 
@@ -142,6 +147,7 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
   flex-direction: column;
   gap: 12px;
   padding: 8px;
+  border-radius: var(--r-m);
 }
 
 .drawer-nav {

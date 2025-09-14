@@ -88,9 +88,11 @@ export interface ImageMetadata {
 export interface TripImage {
   id: string
   tripId: string
+  originalName: string
   url: string
   placement: TripImagePlacement
   createdAt: string // ISO string
+  sizeBytes: number
 
   // --- Ключевые, часто запрашиваемые данные ---
   takenAt?: string | null // ISO string
@@ -167,6 +169,14 @@ export interface Trip {
 
 export interface TripWithDays extends Trip {
   days: Day[]
+}
+
+export interface Plan {
+  id: number
+  name: string
+  maxTrips: number
+  maxStorageBytes: number
+  isDeveloping: boolean
 }
 
 export type CreateTripInput = RouterInput['trip']['create']

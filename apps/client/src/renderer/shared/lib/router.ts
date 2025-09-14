@@ -18,6 +18,10 @@ const ForgotPassword = () => import('~/pages/auth/forgot-password.vue')
 const TripList = () => import('~/pages/trip/list.vue')
 const TripInfo = () => import('~/pages/trip/[id]/index.vue')
 
+// --- Аккаунт ---
+const QuotaPage = () => import('~/pages/account/quota.vue')
+const StoragePage = () => import('~/pages/account/storage.vue')
+
 const routes: RouteRecordRaw[] = [
   {
     path: AppRoutePaths.Root,
@@ -68,6 +72,18 @@ const routes: RouteRecordRaw[] = [
     name: AppRouteNames.TripInfo,
     component: TripInfo,
     meta: { layout: 'trip-info' },
+  },
+  {
+    path: AppRoutePaths.Account.Quota,
+    name: AppRouteNames.AccountQuota,
+    component: QuotaPage,
+    meta: { layout: 'default', requiresAuth: true },
+  },
+  {
+    path: AppRoutePaths.Account.Storage,
+    name: AppRouteNames.AccountStorage,
+    component: StoragePage,
+    meta: { layout: 'default', requiresAuth: true },
   },
   // Секции
   // {

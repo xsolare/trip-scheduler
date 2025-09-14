@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import {
   bigint,
+  boolean,
   date,
   index,
   integer,
@@ -74,6 +75,7 @@ export const plans = pgTable('plans', {
   name: text('name').notNull().unique(), // e.g., "Free", "Pro"
   maxTrips: integer('max_trips').notNull().default(1),
   maxStorageBytes: bigint('max_storage_bytes', { mode: 'number' }).notNull().default(ONE_GIGABYTE_IN_BYTES),
+  isDeveloping: boolean('is_developing').default(false).notNull(),
 })
 
 export const users = pgTable('users', {
@@ -154,6 +156,7 @@ export const tripParticipants = pgTable('trip_participants', {
 export const tripImages = pgTable('trip_images', {
   id: uuid('id').defaultRandom().primaryKey(),
   tripId: uuid('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  originalName: text('original_name').notNull(),
   url: text('url').notNull(),
   placement: tripImagePlacementEnum('placement').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -232,7 +235,7 @@ export const tripSectionsRelations = relations(tripSections, ({ one }) => ({
 }))
 
 export const tripParticipantsRelations = relations(tripParticipants, ({ one }) => ({
-  trip: one(trips, {
+  trip: one(trips, { 
     fields: [tripParticipants.tripId],
     references: [trips.id],
   }),

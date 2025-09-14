@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
 interface Props {
@@ -7,9 +8,12 @@ interface Props {
   current: number
   limit: number
   unit: 'items' | 'bytes'
+  to?: RouteLocationRaw
 }
 
 const props = defineProps<Props>()
+
+const componentType = computed(() => (props.to ? 'router-link' : 'div'))
 
 const formattedCurrent = computed(() => {
   if (props.unit === 'bytes')
@@ -32,6 +36,7 @@ const percentage = computed(() => {
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0)
     return '0 Байт'
+
   const k = 1024
   const dm = decimals < 0 ? 0 : decimals
   const sizes = ['Байт', 'КБ', 'МБ', 'ГБ', 'ТБ']
@@ -41,7 +46,7 @@ function formatBytes(bytes: number, decimals = 2) {
 </script>
 
 <template>
-  <div class="quota-widget">
+  <component :is="componentType" :to="to" class="quota-widget">
     <div class="widget-header">
       <div class="title">
         <Icon :icon="icon" />
@@ -58,7 +63,7 @@ function formatBytes(bytes: number, decimals = 2) {
         :class="{ 'is-full': percentage >= 100, 'is-high': percentage > 80 && percentage < 100 }"
       />
     </div>
-  </div>
+  </component>
 </template>
 
 <style scoped lang="scss">
@@ -69,6 +74,17 @@ function formatBytes(bytes: number, decimals = 2) {
   background-color: var(--bg-secondary-color);
   padding: 12px;
   border-radius: var(--r-m);
+  text-decoration: none;
+
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    background-color: var(--bg-hover-color);
+    transform: translateY(-2px);
+  }
 }
 
 .widget-header {

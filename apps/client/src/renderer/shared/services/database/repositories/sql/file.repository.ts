@@ -15,4 +15,12 @@ export class FileRepository implements IFileRepository {
   async listImageByTrip(_tripId: string): Promise<TripImage[]> {
     return Promise.resolve([])
   }
+
+  async getAllUserFiles(): Promise<TripImage[]> {
+    return Promise.resolve([])
+  }
+
+  async deleteFile(_id: string): Promise<void> {
+    return Promise.resolve()
+  }
 }

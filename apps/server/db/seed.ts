@@ -83,14 +83,16 @@ async function seed() {
   await db.delete(days)
   await db.delete(tripSections)
   await db.delete(tripImages)
+  await db.delete(tripParticipants)
   await db.delete(trips)
   await db.delete(users)
   await db.delete(plans)
 
   console.log('⭐ Создание тарифных планов...')
   await db.insert(plans).values([
-    { id: FREE_PLAN_ID, name: 'Free', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES },
-    { id: 2, name: 'Pro', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES },
+    { id: FREE_PLAN_ID, name: 'Базовый', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES, isDeveloping: false },
+    { id: 2, name: 'Про', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES, isDeveloping: false },
+    { id: 3, name: 'Командный', maxTrips: 999, maxStorageBytes: 100 * ONE_GIGABYTE_IN_BYTES, isDeveloping: true },
   ])
 
   console.log('✈️  Подготовка данных для вставки...')
@@ -150,8 +152,14 @@ async function seed() {
       }
     }
 
-    if (mockImages)
-      imagesToInsert.push(...mockImages)
+    if (mockImages) {
+      const processedImages = mockImages.map((image: any) => ({
+        ...image,
+        // Если originalName не указан, извлекаем его из URL
+        originalName: image.originalName || image.url.split('/').pop(),
+      }))
+      imagesToInsert.push(...processedImages)
+    }
 
     if (mockMemories) {
       for (const mockMemory of mockMemories) {

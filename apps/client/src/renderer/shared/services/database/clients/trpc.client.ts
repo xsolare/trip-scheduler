@@ -1,4 +1,5 @@
 import type {
+  IAccountRepository,
   IActivityRepository,
   IAuthRepository,
   ICommentRepository,
@@ -9,6 +10,7 @@ import type {
   ITripRepository,
   ITripSectionRepository,
 } from '../model/types'
+import { AccountRepository } from '../repositories/trpc/account.repository'
 import { ActivityRepository } from '../repositories/trpc/activity.repository'
 import { AuthRepository } from '../repositories/trpc/auth.repository'
 import { CommentRepository } from '../repositories/trpc/comment.repository'
@@ -31,6 +33,7 @@ class TRPCDatabaseClient implements IDatabaseClient {
   auth: IAuthRepository = new AuthRepository()
   tripSections: ITripSectionRepository = new TripSectionRepository()
   comments: ICommentRepository = new CommentRepository()
+  account: IAccountRepository = new AccountRepository()
 
   /**
    * Инициализация клиента. Для tRPC не требуется специальных действий.

@@ -22,7 +22,8 @@ export const activityRepository = {
         status: data.status ?? 'none',
         rating: data.rating ?? null,
         id: uuidv4(),
-      } satisfies ActivityInsert)
+        sections: data.sections ?? [],
+      } as ActivityInsert)
       .returning()
 
     return newActivity
@@ -37,7 +38,7 @@ export const activityRepository = {
     const { id, ...updateData } = data
     const [updatedActivity] = await db
       .update(activities)
-      .set(updateData)
+      .set({ ...updateData, sections: updateData.sections ?? [] } as ActivityInsert)
       .where(eq(activities.id, id))
       .returning()
 

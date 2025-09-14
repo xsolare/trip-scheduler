@@ -1,4 +1,5 @@
-import type { IActivityRepository, IAuthRepository, ICommentRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import { AccountRepository } from '../repositories/sql/account.repository.ts'
 import { ActivityRepository } from '../repositories/sql/activity.repository.ts'
 import { AuthRepository } from '../repositories/sql/auth.repository.ts'
 import { CommentRepository } from '../repositories/sql/comment.repository.ts'
@@ -19,6 +20,7 @@ export interface IDatabaseWrapper {
 class SqlDatabaseClient implements IDatabaseClient {
   db!: IDatabaseWrapper
 
+  account!: IAccountRepository
   tripSections!: ITripSectionRepository
   files!: IFileRepository
   trips!: ITripRepository
@@ -50,6 +52,7 @@ class SqlDatabaseClient implements IDatabaseClient {
       },
     }
 
+    this.account = new AccountRepository()
     this.tripSections = new TripSectionRepository(this.db)
     this.trips = new TripRepository(this.db)
     this.days = new DayRepository(this.db)

@@ -1,7 +1,7 @@
 import type { tripImagePlacementEnum } from '../../db/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '../../db'
-import { tripImages } from '../../db/schema'
+import { tripImages, trips } from '../../db/schema'
 
 type Placement = (typeof tripImagePlacementEnum.enumValues)[number]
 
@@ -30,12 +30,13 @@ export interface ImageMetadata {
 }
 
 export const imageRepository = {
-  async create(tripId: string, url: string, placement: Placement, sizeBytes: number, metadata: ImageMetadata) {
+  async create(tripId: string, url: string, originalName: string, placement: Placement, sizeBytes: number, metadata: ImageMetadata) {
     const [newImage] = await db
       .insert(tripImages)
       .values({
         tripId,
         url,
+        originalName,
         placement,
         sizeBytes,
         takenAt: metadata.takenAt,
@@ -72,6 +73,7 @@ export const imageRepository = {
           id: tripImages.id,
           tripId: tripImages.tripId,
           url: tripImages.url,
+          originalName: tripImages.originalName,
           placement: tripImages.placement,
           createdAt: tripImages.createdAt,
         })
@@ -84,6 +86,46 @@ export const imageRepository = {
     return await db.query.tripImages.findMany({
       where: and(...conditions),
       orderBy: (images, { desc }) => [desc(images.createdAt)],
+    })
+  },
+
+  /**
+   * Получает все изображения для конкретного пользователя.
+   */
+  async getAllByUserId(userId: string) {
+    const userTrips = await db.select({ id: trips.id }).from(trips).where(eq(trips.userId, userId))
+    if (userTrips.length === 0) {
+      return []
+    }
+    const tripIds = userTrips.map(t => t.id)
+
+    return await db.query.tripImages.findMany({
+      where: inArray(tripImages.tripId, tripIds),
+      with: {
+        trip: {
+          columns: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: (images, { desc }) => [desc(images.createdAt)],
+    })
+  },
+
+  /**
+   * Получает одно изображение по ID.
+   */
+  async getById(id: string) {
+    return await db.query.tripImages.findFirst({
+      where: eq(tripImages.id, id),
+      with: {
+        trip: {
+          columns: {
+            userId: true,
+          },
+        },
+      },
     })
   },
 

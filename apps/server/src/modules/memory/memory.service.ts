@@ -1,11 +1,10 @@
 import type { z } from 'zod'
-import type { CreateMemoryInputSchema, UpdateMemoryInputSchema } from './memory.schemas'
-import fs from 'node:fs/promises'
-import path from 'node:path'
+import type { CreateMemoryInputSchema, UpdateMemoryInputSchema } from '~/modules/memory/memory.schemas'
 import { createTRPCError } from '~/lib/trpc'
 import { imageRepository } from '~/repositories/image.repository'
 import { memoryRepository } from '~/repositories/memory.repository'
 import { tripRepository } from '~/repositories/trip.repository'
+import { deleteFileWithVariants } from '~/services/file-storage.service'
 import { quotaService } from '~/services/quota.service'
 
 export const memoryService = {
@@ -46,39 +45,8 @@ export const memoryService = {
         // 2. Удаляем запись из таблицы trip_images
         await imageRepository.delete(deletedMemory.imageId)
 
-        // 3. Удаляем физические файлы
-        const getFilePathFromUrl = (url: string) => {
-          const staticRoot = process.env.STATIC_PATH
-          if (!staticRoot) {
-            console.error('Переменная окружения STATIC_PATH не установлена.')
-            return null
-          }
-          return path.join(process.cwd(), staticRoot, url)
-        }
-
-        const filesToDelete: string[] = []
-
-        if (imageToDelete.url) {
-          const mainImagePath = getFilePathFromUrl(imageToDelete.url)
-          if (mainImagePath)
-            filesToDelete.push(mainImagePath)
-        }
-
-        if (imageToDelete.variants) {
-          for (const variantPath of Object.values(imageToDelete.variants)) {
-            const fullVariantPath = getFilePathFromUrl(variantPath)
-            if (fullVariantPath)
-              filesToDelete.push(fullVariantPath)
-          }
-        }
-
-        await Promise.all(
-          filesToDelete.map(filePath =>
-            fs.unlink(filePath).catch(err =>
-              console.error(`Не удалось удалить файл: ${filePath}`, err),
-            ),
-          ),
-        )
+        // 3. Удаляем физические файлы с помощью нового сервиса
+        await deleteFileWithVariants(imageToDelete)
       }
       catch (error) {
         console.error(`Ошибка при удалении файлов изображения для воспоминания ${id}:`, error)

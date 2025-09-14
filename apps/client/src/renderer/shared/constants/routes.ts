@@ -11,6 +11,9 @@ export enum AppRouteNames {
   SignUp = 'sign-up',
   ForgotPassword = 'forgot-password',
   AuthCallback = 'auth-callback',
+
+  AccountQuota = 'account-quota',
+  AccountStorage = 'account-storage',
 }
 
 export const AppRoutePaths = {
@@ -29,5 +32,10 @@ export const AppRoutePaths = {
     SignUp: '/auth/sign-up',
     ForgotPassword: '/auth/forgot-password',
     Callback: '/auth/callback',
+  },
+
+  Account: {
+    Quota: '/account/quota',
+    Storage: '/account/storage',
   },
 }

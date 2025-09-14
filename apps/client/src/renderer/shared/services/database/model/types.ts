@@ -2,7 +2,7 @@ import type { Activity, Day } from '~/shared/types/models/activity'
 import type { SignInPayload, TokenPair, User } from '~/shared/types/models/auth'
 import type { CreateCommentInput, UpdateCommentInput } from '~/shared/types/models/comment'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
-import type { CreateTripInput, Trip, TripImage, TripImagePlacement, TripSection, TripSectionType, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
+import type { CreateTripInput, Plan, Trip, TripImage, TripImagePlacement, TripSection, TripSectionType, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 
 export interface TripListFilters {
   search?: string
@@ -39,6 +39,8 @@ export interface IActivityRepository {
 export interface IFileRepository {
   uploadFile: (file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null) => Promise<TripImage>
   listImageByTrip: (tripId: string, placement: TripImagePlacement) => Promise<TripImage[]>
+  getAllUserFiles: () => Promise<TripImage[]>
+  deleteFile: (id: string) => Promise<void>
 }
 
 export interface IAuthRepository {
@@ -61,6 +63,10 @@ export interface ICommentRepository {
   delete: (params: { commentId: string }) => Promise<Comment>
 }
 
+export interface IAccountRepository {
+  listPlans: () => Promise<Plan[]>
+}
+
 // Интерфейс для всей базы данных
 export interface IDatabaseClient {
   trips: ITripRepository
@@ -71,6 +77,7 @@ export interface IDatabaseClient {
   auth: IAuthRepository
   tripSections: ITripSectionRepository
   comments: ICommentRepository
+  account: IAccountRepository
 
   initDb: () => Promise<this>
 

@@ -3,7 +3,7 @@ import type { ImageMetadata } from '~/repositories/image.repository'
 import { tripImagePlacementEnum } from 'db/schema'
 import { HTTPException } from 'hono/http-exception'
 import { authUtils } from '~/lib/auth.utils'
-import { imageRepository } from '~/repositories/image.repository'
+import { imageService } from '~/modules/image/image.service'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
 import { extractAndStructureMetadata, generateImageVariants } from '~/services/image-metadata.service'
 import { quotaService } from '~/services/quota.service'
@@ -71,9 +71,10 @@ export async function uploadFileController(c: Context) {
 
     // 6. Сохранение записи в БД
     const totalSize = fileBuffer.length + variantsTotalSize
-    const newImageRecord = await imageRepository.create(
+    const newImageRecord = await imageService.create(
       tripId,
       paths.original.dbPath, // URL оригинала
+      file.name, // Сохраняем оригинальное имя
       placement,
       totalSize,
       {
