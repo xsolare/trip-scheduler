@@ -9,6 +9,7 @@ import { OSM, Vector as VectorSource } from 'ol/source'
 import { Icon as OlIcon, Stroke, Style } from 'ol/style'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
+const NOMINATIM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search'
 const OSRM_API_URL = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot'
 
 function useGeolocationMap() {
@@ -330,6 +331,29 @@ function useGeolocationMap() {
     })
   }
 
+  async function searchLocation(query: string): Promise<boolean> {
+    if (!query.trim())
+      return false
+    const url = `${NOMINATIM_SEARCH_URL}?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=ru`
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      if (data && data.length > 0) {
+        const result = data[0]
+        flyToLocation(Number.parseFloat(result.lon), Number.parseFloat(result.lat), 13)
+        return true
+      }
+      else {
+        console.warn('Location not found for query:', query)
+        return false
+      }
+    }
+    catch (error) {
+      console.error('Error searching location:', error)
+      return false
+    }
+  }
+
   onUnmounted(destroyMap)
 
   return {
@@ -343,6 +367,7 @@ function useGeolocationMap() {
     clearPoints,
     fetchAddress,
     flyToLocation,
+    searchLocation,
     showPopup,
     clearPopups,
     fetchRoute,

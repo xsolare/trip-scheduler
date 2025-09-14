@@ -12,7 +12,7 @@ interface Props {
   activeRouteId: string | null
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'focusOnPoint', point: MapPoint): void
@@ -25,6 +25,7 @@ const emit = defineEmits<{
   (e: 'setActiveRoute', routeId: string | null): void
   (e: 'addSegment', routeId: string): void
   (e: 'deleteSegment', routeId: string, segmentIndex: number): void
+  (e: 'refreshAddress', routeId: string, pointId: string): void
 }>()
 
 const openRoutes = ref<Set<string>>(new Set())
@@ -53,14 +54,6 @@ function formatDistance(distance?: number): string {
 
   return `${Math.round(distance)} м`
 }
-
-onMounted(() => {
-  if (props.routes.length > 0)
-    openRoutes.value.add(props.routes[0].id)
-
-  if (props.drawnRoutes.length > 0)
-    openRoutes.value.add(props.drawnRoutes[0].id)
-})
 </script>
 
 <template>
@@ -107,6 +100,7 @@ onMounted(() => {
               @update-point-coords="emit('updatePointCoords', $event)"
               @start-move-point="emit('startMovePoint', $event)"
               @delete-point="emit('deletePoint', route.id, $event)"
+              @refresh-address="emit('refreshAddress', route.id, $event)"
             />
           </div>
         </div>

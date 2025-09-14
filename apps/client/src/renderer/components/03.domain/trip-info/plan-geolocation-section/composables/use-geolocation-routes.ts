@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import type { Coordinate, DrawnRoute, MapPoint, MapRoute } from '../models/types'
 import type { useGeolocationMap } from './use-geolocation-map'
 import { v4 as uuidv4 } from 'uuid'
+import { useToast } from '~/components/01.kit/kit-toast'
 import { POI_COLORS } from '../constant'
 
 type GeolocationMapApi = ReturnType<typeof useGeolocationMap>
@@ -144,6 +145,19 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       await updateRouteGeometry(routeOfPoint.id)
   }
 
+  async function refreshRoutePointAddress(routeId: string, pointId: string) {
+    const route = routes.value.find(r => r.id === routeId)
+    if (!route)
+      return
+    const point = route.points.find(p => p.id === pointId)
+    if (!point)
+      return
+
+    // Эта функция уже содержит логику для обновления адреса
+    await updatePointInRoute(pointId, point.coordinates, true)
+    useToast().success('Адрес точки в маршруте обновлен.')
+  }
+
   function handlePointDataUpdate(routeId: string, point: MapPoint) {
     if (!mapApiRef.value)
       return
@@ -248,6 +262,7 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
     deleteRoute,
     deletePointFromRoute,
     updatePointInRoute,
+    refreshRoutePointAddress,
     handlePointDataUpdate,
     setInitialRoutes,
     addDrawnRoute,

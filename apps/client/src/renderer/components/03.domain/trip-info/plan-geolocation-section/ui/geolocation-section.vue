@@ -4,6 +4,8 @@ import type { ActivitySectionGeolocation, Coordinate, DrawnRoute, MapPoint, MapR
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import { useDebounceFn } from '@vueuse/core'
 import { toLonLat } from 'ol/proj'
+import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitInput } from '~/components/01.kit/kit-input'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
 import { useGeolocationDrawing } from '../composables/use-geolocation-drawing'
@@ -36,12 +38,13 @@ const isMapFullscreen = ref(false)
 const isPanelVisible = ref(true)
 const routeIdForNewSegment = ref<string | null>(null)
 const isDataInitialized = ref(false)
+const searchQuery = ref('')
 
 // --- Композиции ---
-const { points, isLoading: isPointsLoading, mode, pointToMoveId, addPoiPoint, deletePoiPoint, startMovePoint, movePoint: movePoiPoint, updatePointCoords, handlePointUpdate, setInitialPoints }
+const { points, isLoading: isPointsLoading, mode, pointToMoveId, addPoiPoint, deletePoiPoint, startMovePoint, movePoint: movePoiPoint, updatePointCoords, handlePointUpdate, refreshPointAddress, setInitialPoints }
   = useGeolocationPoints(mapController)
 
-const { routes, drawnRoutes, isLoading: isRoutesLoading, createNewRoute, addPointToRoute, deleteRoute, deletePointFromRoute, updatePointInRoute, handlePointDataUpdate: handleRoutePointUpdate, setInitialRoutes, addDrawnRoute, addSegmentToDrawnRoute, deleteSegmentFromDrawnRoute }
+const { routes, drawnRoutes, isLoading: isRoutesLoading, createNewRoute, addPointToRoute, deleteRoute, deletePointFromRoute, updatePointInRoute, handlePointDataUpdate: handleRoutePointUpdate, refreshRoutePointAddress, setInitialRoutes, addDrawnRoute, addSegmentToDrawnRoute, deleteSegmentFromDrawnRoute }
   = useGeolocationRoutes(mapController)
 
 const { startDrawing, stopDrawing }
@@ -148,6 +151,14 @@ async function handleContextMenuAction(actionId: string, coords: Coordinate) {
   }
 }
 
+async function handleSearch() {
+  if (!searchQuery.value.trim() || !mapController.value)
+    return
+  const found = await mapController.value.searchLocation(searchQuery.value)
+  if (!found)
+    useToast().error('Местоположение не найдено.')
+}
+
 function handleFocusOnPoint(point: MapPoint) {
   mapController.value?.flyToLocation(point.coordinates[0], point.coordinates[1], 16)
 }
@@ -215,7 +226,7 @@ function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
     if (points.value.some(p => p.id === pointId))
       movePoiPoint(pointId, newCoords)
     else
-      updatePointInRoute(pointId, newCoords)
+      updatePointInRoute(pointId, newCoords, false) // Не обновляем адрес при перетаскивании
   })
 
   nextTick(() => {
@@ -275,6 +286,10 @@ watch([points, routes, drawnRoutes], () => {
       <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
       <div v-if="!readonly">
         <div class="geolocation-controls-panel">
+          <div class="search-control">
+            <KitInput v-model="searchQuery" size="sm" placeholder="Найти место на карте..." @keydown.enter="handleSearch" />
+            <KitBtn icon="mdi:magnify" size="sm" @click="handleSearch" />
+          </div>
           <KitViewSwitcher v-model="activeView" :items="viewItems" />
           <KitViewSwitcher v-model="mode" :items="modeItems" />
         </div>
@@ -296,6 +311,7 @@ watch([points, routes, drawnRoutes], () => {
               @update-point-coords="updatePointCoords"
               @start-move-point="handleStartMovePoint"
               @delete-point="deletePoiPoint"
+              @refresh-address="refreshPointAddress"
             />
             <GeolocationRouteList
               v-if="activeView === 'routes'"
@@ -313,6 +329,7 @@ watch([points, routes, drawnRoutes], () => {
               @set-active-route="setActiveRoute"
               @add-segment="handleAddSegment"
               @delete-segment="deleteSegmentFromDrawnRoute"
+              @refresh-address="refreshRoutePointAddress"
             />
           </template>
           <template v-else>
@@ -407,6 +424,11 @@ watch([points, routes, drawnRoutes], () => {
   background-color: var(--bg-secondary-color);
   padding: 6px;
   border-radius: var(--r-xs);
+}
+
+.search-control {
+  display: flex;
+  gap: 4px;
 }
 
 .lists-container {

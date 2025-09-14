@@ -53,12 +53,11 @@ const { activeTab, bookingGroups, tabItems } = useBookingSection({
 
 <style scoped lang="scss">
 .day-bookings-content {
-  padding-top: 1rem;
+  padding-top: 8px;
 }
 .bookings-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 8px;
 }
 </style>

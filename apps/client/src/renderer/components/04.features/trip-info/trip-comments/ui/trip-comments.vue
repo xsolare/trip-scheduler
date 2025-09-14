@@ -166,7 +166,7 @@ watch(comments, async (newComments, oldComments) => {
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-m);
   color: var(--fg-secondary-color);
-  margin-top: 8px;
+  margin: 8px 0;
 
   .iconify {
     font-size: 1.8rem;

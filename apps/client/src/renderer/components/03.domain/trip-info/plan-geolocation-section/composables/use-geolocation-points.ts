@@ -95,6 +95,32 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
     points.value = points.value.map(p => (p.id === point.id ? { ...point } : p))
   }
 
+  async function refreshPointAddress(pointId: string) {
+    const pointIndex = points.value.findIndex(p => p.id === pointId)
+    if (pointIndex === -1 || !mapApiRef.value)
+      return
+
+    const point = points.value[pointIndex]
+    isLoading.value = true
+    const addressInfo = await mapApiRef.value.fetchAddress(point.coordinates)
+    isLoading.value = false
+
+    const updatedPoint = {
+      ...point,
+      address: addressInfo?.address || 'Адрес не найден',
+    }
+
+    // Создаем новый массив для запуска реактивности
+    points.value = [
+      ...points.value.slice(0, pointIndex),
+      updatedPoint,
+      ...points.value.slice(pointIndex + 1),
+    ]
+
+    mapApiRef.value.addOrUpdatePoint(updatedPoint)
+    useToast().success('Адрес точки обновлен.')
+  }
+
   function setInitialPoints(initialPoints: MapPoint[]) {
     if (!mapApiRef.value || !initialPoints)
       return
@@ -129,6 +155,7 @@ export function useGeolocationPoints(mapApiRef: Ref<GeolocationMapApi | undefine
     movePoint,
     updatePointCoords,
     handlePointUpdate,
+    refreshPointAddress,
     setInitialPoints,
   }
 }

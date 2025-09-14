@@ -66,6 +66,7 @@ const internalModel = computed({
   border-radius: var(--r-s);
   transition: all 0.2s ease;
   min-height: 36px;
+  line-height: 36px;
 
   &:focus-within {
     border-color: var(--border-focus-color);
