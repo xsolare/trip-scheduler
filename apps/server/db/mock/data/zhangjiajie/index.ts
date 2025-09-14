@@ -17,7 +17,6 @@ const MOCK_TRIP_ZHANGJIAJIE = {
   currency: 'RUB',
   tags: ['Китай', 'Чжанцзяцзе', 'Чунцин', 'Горы Аватара', 'природа', 'хайкинг', 'мегаполис', 'культура', 'история'],
   visibility: 'public' as const,
-  participantIds: [USER_ID],
 
   // --- Собираем все части вместе ---
   images: MOCK_IMAGES,

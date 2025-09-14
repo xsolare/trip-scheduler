@@ -120,7 +120,6 @@ useEditor((root) => {
       font-style: italic;
     }
     strong {
-      color: var(--fg-highlight-color);
       font-weight: bold;
     }
     code {
