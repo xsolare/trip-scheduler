@@ -2,6 +2,7 @@ import { router } from './lib/trpc'
 import { accountRouter } from './modules/account/account.router'
 import { activityRouter } from './modules/activity/activity.router'
 import { commentRouter } from './modules/comment/comment.router'
+import { communityRouter } from './modules/community/community.router'
 import { dayRouter } from './modules/day/day.router'
 import { imageRouter } from './modules/image/image.router'
 import { memoryRouter } from './modules/memory/memory.router'
@@ -19,6 +20,7 @@ export const appRouter = router({
   tripSection: tripSectionRouter,
   comment: commentRouter,
   account: accountRouter,
+  community: communityRouter,
 })
 
 export type AppRouter = typeof appRouter

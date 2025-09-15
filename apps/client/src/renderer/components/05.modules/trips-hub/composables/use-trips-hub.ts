@@ -3,6 +3,7 @@ import type { ITrip } from '../models/types'
 import { useDebounce } from '@vueuse/core'
 import { useToast } from '~/components/01.kit/kit-toast'
 import { useAbortRequest, useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
+import { useLastCounts } from '~/shared/composables/use-last-counts'
 import { TripStatus, TripVisibility } from '~/shared/types/models/trip'
 
 export type TripsHubTab = 'my' | 'public'
@@ -36,6 +37,7 @@ function getDefaultTripData() {
 }
 
 export function useTripsHub() {
+  const { setCount } = useLastCounts()
   const { abort } = useAbortRequest()
   const authStore = useAppStore('auth')
 
@@ -126,6 +128,7 @@ export function useTripsHub() {
         )
         isInitialized.value = true
         hasLoadedOnce.value = true
+        setCount('trip-list', trips.value.length)
       },
       onError: (error) => {
         trips.value = []

@@ -22,6 +22,27 @@
       "when": 1757891151794,
       "tag": "0002_smiling_expediter",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1757929615669,
+      "tag": "0003_fat_riptide",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1757934015128,
+      "tag": "0004_awesome_nomad",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1757937375893,
+      "tag": "0005_daffy_zuras",
+      "breakpoints": true
     }
   ]
 }

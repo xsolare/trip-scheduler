@@ -21,6 +21,12 @@ const TripInfo = () => import('~/pages/trip/[id]/index.vue')
 // --- Аккаунт ---
 const QuotaPage = () => import('~/pages/account/quota.vue')
 const StoragePage = () => import('~/pages/account/storage.vue')
+const ProfilePage = () => import('~/pages/account/profile.vue')
+const SettingsPage = () => import('~/pages/account/settings.vue')
+
+// --- Сообщества ---
+const CommunitiesList = () => import('~/pages/communities/index.vue')
+const CommunityInfo = () => import('~/pages/communities/[id].vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -83,6 +89,30 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.Account.Storage,
     name: AppRouteNames.AccountStorage,
     component: StoragePage,
+    meta: { layout: 'default', requiresAuth: true },
+  },
+  {
+    path: AppRoutePaths.Account.Profile,
+    name: AppRouteNames.AccountProfile,
+    component: ProfilePage,
+    meta: { layout: 'default', requiresAuth: true },
+  },
+  {
+    path: AppRoutePaths.Account.Settings,
+    name: AppRouteNames.AccountSettings,
+    component: SettingsPage,
+    meta: { layout: 'default', requiresAuth: true },
+  },
+  {
+    path: AppRoutePaths.Communities.List,
+    name: AppRouteNames.CommunitiesList,
+    component: CommunitiesList,
+    meta: { layout: 'default', requiresAuth: true },
+  },
+  {
+    path: AppRoutePaths.Communities.Info(':id'),
+    name: AppRouteNames.CommunityInfo,
+    component: CommunityInfo,
     meta: { layout: 'default', requiresAuth: true },
   },
   // Секции

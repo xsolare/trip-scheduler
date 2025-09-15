@@ -14,6 +14,11 @@ export enum AppRouteNames {
 
   AccountQuota = 'account-quota',
   AccountStorage = 'account-storage',
+  AccountProfile = 'account-profile',
+  AccountSettings = 'account-settings',
+
+  CommunitiesList = 'communities-list',
+  CommunityInfo = 'community-info',
 }
 
 export const AppRoutePaths = {
@@ -37,5 +42,12 @@ export const AppRoutePaths = {
   Account: {
     Quota: '/account/quota',
     Storage: '/account/storage',
+    Profile: '/account/profile',
+    Settings: '/account/settings',
+  },
+
+  Communities: {
+    List: '/communities',
+    Info: (id: string) => `/communities/${id}`,
   },
 }

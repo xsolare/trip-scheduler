@@ -22,3 +22,9 @@ export type TokenPair = RouterOutput['user']['signIn']['token']
  * @example RouterInput['user']['signIn']
  */
 export type SignInPayload = RouterInput['user']['signIn']
+
+/**
+ * Тип данных для регистрации, на основе tRPC-ввода.
+ * @example RouterInput['user']['signUp']
+ */
+export type SignUpPayload = RouterInput['user']['signUp']

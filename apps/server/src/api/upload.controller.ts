@@ -2,8 +2,10 @@ import type { Context } from 'hono'
 import type { ImageMetadata } from '~/repositories/image.repository'
 import { tripImagePlacementEnum } from 'db/schema'
 import { HTTPException } from 'hono/http-exception'
+import sharp from 'sharp'
 import { authUtils } from '~/lib/auth.utils'
 import { imageService } from '~/modules/image/image.service'
+import { userRepository } from '~/repositories/user.repository'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
 import { extractAndStructureMetadata, generateImageVariants } from '~/services/image-metadata.service'
 import { quotaService } from '~/services/quota.service'
@@ -98,5 +100,40 @@ export async function uploadFileController(c: Context) {
       }
     }
     throw new HTTPException(500, { message: 'Внутренняя ошибка при обработке файла.' })
+  }
+}
+
+export async function uploadAvatarController(c: Context) {
+  const authHeader = c.req.header('authorization')
+  const token = authHeader?.split(' ')[1]
+  if (!token)
+    throw new HTTPException(401, { message: 'Токен не предоставлен.' })
+
+  const payload = await authUtils.verifyToken(token)
+  if (!payload)
+    throw new HTTPException(401, { message: 'Невалидный токен.' })
+
+  const userId = payload.id
+  const formData = await c.req.formData()
+  const file = formData.get('file')
+
+  if (!file || !(file instanceof File))
+    throw new HTTPException(400, { message: 'Файл аватара не найден.' })
+
+  try {
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const paths = generateFilePaths(`avatars/${userId}`, file.name)
+
+    // Для аватаров создаем только один вариант
+    const avatarBuffer = await sharp(fileBuffer).resize(200, 200).webp({ quality: 85 }).toBuffer()
+    await saveFile(paths.original.diskPath, avatarBuffer)
+
+    const updatedUser = await userRepository.update(userId, { avatarUrl: paths.original.dbPath })
+
+    return c.json(updatedUser)
+  }
+  catch (error) {
+    console.error('Ошибка при загрузке аватара:', error)
+    throw new HTTPException(500, { message: 'Не удалось загрузить аватар.' })
   }
 }

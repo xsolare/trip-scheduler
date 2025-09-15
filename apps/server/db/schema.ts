@@ -61,6 +61,8 @@ export const activitySectionTypeEnum = pgEnum('activity_section_type', ['descrip
 export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed', 'skipped'])
 export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
+export const communityPrivacyEnum = pgEnum('community_privacy', ['public', 'private'])
+export const communityMemberRoleEnum = pgEnum('community_member_role', ['admin', 'moderator', 'member'])
 
 export const tripSectionTypeEnum = pgEnum('trip_section_type', [
   'bookings', // Бронирования (отели, авиа)
@@ -98,11 +100,27 @@ export const users = pgTable('users', {
   currentTripsCount: integer('current_trips_count').notNull().default(0),
   currentStorageBytes: bigint('current_storage_bytes', { mode: 'number' }).notNull().default(0),
 
+  // --- ПОЛЯ ДЛЯ СТАТУСА ---
+  statusText: text('status_text'),
+  statusEmoji: text('status_emoji'),
+
   // Таймстампы
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, t => ({
   emailIndex: index('email_idx').on(t.email),
+}))
+
+// Новая таблица для токенов верификации почты
+export const emailVerificationTokens = pgTable('email_verification_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  token: text('token').notNull(), // 6-значный код
+  email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  password: text('password').notNull(), // Хешированный пароль
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+}, t => ({
+  emailIndex: index('verification_email_idx').on(t.email),
 }))
 
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -214,6 +232,35 @@ export const memories = pgTable('memories', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// ===============================================
+// ================= СООБЩЕСТВА ==================
+// ===============================================
+
+export const communities = pgTable('communities', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description'),
+  coverImageUrl: text('cover_image_url'),
+  avatarUrl: text('avatar_url'),
+  privacyType: communityPrivacyEnum('privacy_type').notNull().default('public'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const communityMembers = pgTable('community_members', {
+  communityId: uuid('community_id').notNull().references(() => communities.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: communityMemberRoleEnum('role').notNull().default('member'),
+  joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => ({
+  pk: primaryKey({ columns: [t.communityId, t.userId] }),
+}))
+
+// ===============================================
+// =================== СВЯЗИ =====================
+// ===============================================
+
 // Отношения
 export const tripsRelations = relations(trips, ({ one, many }) => ({
   user: one(users, {
@@ -235,7 +282,7 @@ export const tripSectionsRelations = relations(tripSections, ({ one }) => ({
 }))
 
 export const tripParticipantsRelations = relations(tripParticipants, ({ one }) => ({
-  trip: one(trips, { 
+  trip: one(trips, {
     fields: [tripParticipants.tripId],
     references: [trips.id],
   }),
@@ -314,6 +361,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.planId],
     references: [plans.id],
   }),
+  communityMemberships: many(communityMembers), // Пользователь может состоять во многих сообществах
 }))
 
 export const plansRelations = relations(plans, ({ many }) => ({
@@ -323,6 +371,26 @@ export const plansRelations = relations(plans, ({ many }) => ({
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   user: one(users, {
     fields: [refreshTokens.userId],
+    references: [users.id],
+  }),
+}))
+
+// Связи для Сообществ
+export const communitiesRelations = relations(communities, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [communities.ownerId],
+    references: [users.id],
+  }),
+  members: many(communityMembers),
+}))
+
+export const communityMembersRelations = relations(communityMembers, ({ one }) => ({
+  community: one(communities, {
+    fields: [communityMembers.communityId],
+    references: [communities.id],
+  }),
+  user: one(users, {
+    fields: [communityMembers.userId],
     references: [users.id],
   }),
 }))

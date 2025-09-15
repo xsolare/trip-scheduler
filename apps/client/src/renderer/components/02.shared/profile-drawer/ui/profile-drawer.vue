@@ -3,31 +3,39 @@ import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDrawer } from '~/components/01.kit/kit-drawer'
+import { StatusEditorDialog } from '~/components/02.shared/status-editor-dialog'
 import { UserQuotaWidget } from '~/components/02.shared/user-quota-widget'
 import { AppRouteNames } from '~/shared/constants/routes'
 
 const open = defineModel<boolean>('open', { required: true })
+const router = useRouter()
 
 const store = useAppStore(['auth'])
 const user = computed(() => store.auth.user)
+const isStatusEditorOpen = ref(false)
 
 const menuItems = [
-  { label: 'Указать статус', icon: 'mdi:emoticon-happy-outline' },
+  { label: 'Указать статус', icon: 'mdi:emoticon-happy-outline', action: () => { isStatusEditorOpen.value = true } },
 ]
 
 const mainMenuItems = [
-  { label: 'Мой профиль', icon: 'mdi:account-circle-outline' },
-  { label: 'Мои путешествия', icon: 'mdi:briefcase-outline' },
-  { label: 'Мои друзья', icon: 'mdi:account-multiple-outline' },
-  { label: 'Сообщества', icon: 'mdi:star-outline' },
+  { label: 'Мой профиль', icon: 'mdi:account-circle-outline', action: () => { router.push({ name: AppRouteNames.AccountProfile }); open.value = false } },
+  { label: 'Мои путешествия', icon: 'mdi:briefcase-outline', action: () => { router.push({ name: AppRouteNames.TripList }); open.value = false } },
+  { label: 'Сообщества', icon: 'mdi:account-group-outline', action: () => { router.push({ name: AppRouteNames.CommunitiesList }); open.value = false } },
 ]
 
 const secondaryMenuItems = [
-  { label: 'Возможности', icon: 'mdi:flask-outline' },
-  { label: 'Настройки', icon: 'mdi:cog-outline' },
+  // { label: 'Возможности', icon: 'mdi:flask-outline', action: () => {} },
+  { label: 'Настройки', icon: 'mdi:cog-outline', action: () => { router.push({ name: AppRouteNames.AccountSettings }); open.value = false } },
 ]
 
-const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
+async function handleLogout() {
+  await store.auth.signOut()
+  open.value = false
+  await router.push({ path: AppRoutePaths.Auth.SignIn })
+}
+
+const logoutItem = { label: 'Выйти', icon: 'mdi:logout', action: () => handleLogout() }
 </script>
 
 <template>
@@ -36,19 +44,31 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
       <div v-if="user" class="profile-header">
         <KitAvatar :src="user.avatarUrl" :name="user.name" :size="40" />
         <div class="user-info">
-          <span class="user-nickname">injurka</span>
-          <span class="user-name">Иван Тайпскриптович</span>
+          <span class="user-nickname">{{ user.name }}</span>
+          <div
+            class="user-status"
+            :class="{ 'no-status': !user.statusEmoji && !user.statusText }"
+            @click="isStatusEditorOpen = true"
+          >
+            <template v-if="user.statusEmoji || user.statusText">
+              <span v-if="user.statusEmoji" class="status-emoji">{{ user.statusEmoji }}</span>
+              <span class="status-text">{{ user.statusText }}</span>
+            </template>
+            <template v-else>
+              <span class="status-placeholder">Указать статус</span>
+            </template>
+          </div>
         </div>
       </div>
 
       <div v-if="user && user.plan" class="quota-section">
         <UserQuotaWidget
-          title="Тариф и лимиты"
+          title="Путешествия"
           icon="mdi:briefcase-outline"
           :current="user.currentTripsCount"
           :limit="user.plan.maxTrips"
-          unit="items"
           :to="{ name: AppRouteNames.AccountQuota }"
+          unit="items"
           @click="open = false"
         />
         <UserQuotaWidget
@@ -65,18 +85,20 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
       <nav class="drawer-nav">
         <ul>
           <li v-for="item in menuItems" :key="item.label" class="nav-item">
-            <button class="nav-button">
+            <button class="nav-button" @click="item.action">
               <Icon :icon="item.icon" class="nav-icon" />
               <span>{{ item.label }}</span>
             </button>
           </li>
         </ul>
 
-        <KitDivider />
+        <KitDivider>
+          <Icon icon="mdi:line" />
+        </KitDivider>
 
         <ul>
           <li v-for="item in mainMenuItems" :key="item.label" class="nav-item">
-            <button class="nav-button">
+            <button class="nav-button" @click="item.action">
               <Icon :icon="item.icon" class="nav-icon" />
               <span>{{ item.label }}</span>
             </button>
@@ -87,7 +109,7 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
 
         <ul>
           <li v-for="item in secondaryMenuItems" :key="item.label" class="nav-item">
-            <button class="nav-button">
+            <button class="nav-button" @click="item.action">
               <Icon :icon="item.icon" class="nav-icon" />
               <span>{{ item.label }}</span>
             </button>
@@ -98,7 +120,7 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
 
         <ul>
           <li class="nav-item">
-            <button class="nav-button">
+            <button class="nav-button" @click="logoutItem.action">
               <Icon :icon="logoutItem.icon" class="nav-icon" />
               <span>{{ logoutItem.label }}</span>
             </button>
@@ -107,9 +129,11 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
       </nav>
     </div>
   </KitDrawer>
+  <StatusEditorDialog v-model:visible="isStatusEditorOpen" />
 </template>
 
 <style lang="scss" scoped>
+/* Стили остались без изменений */
 .profile-drawer {
   display: flex;
   flex-direction: column;
@@ -128,6 +152,7 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
   .user-info {
     display: flex;
     flex-direction: column;
+    gap: 2px;
   }
 
   .user-nickname {
@@ -136,9 +161,30 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout' }
     color: var(--fg-primary-color);
   }
 
-  .user-name {
+  .user-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.8rem;
     color: var(--fg-secondary-color);
+    padding: 2px 6px;
+    background-color: var(--bg-tertiary-color);
+    border-radius: var(--r-xs);
+    max-width: fit-content;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
+
+    &.no-status .status-placeholder {
+      font-style: italic;
+    }
+
+    .status-emoji {
+      font-size: 0.9rem;
+    }
   }
 }
 

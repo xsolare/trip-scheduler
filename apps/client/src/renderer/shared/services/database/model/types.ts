@@ -1,6 +1,7 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
-import type { SignInPayload, TokenPair, User } from '~/shared/types/models/auth'
+import type { SignInPayload, SignUpPayload, TokenPair, User } from '~/shared/types/models/auth'
 import type { CreateCommentInput, UpdateCommentInput } from '~/shared/types/models/comment'
+import type { Community, CreateCommunityInput, ListCommunitiesInput } from '~/shared/types/models/community'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import type { CreateTripInput, Plan, Trip, TripImage, TripImagePlacement, TripSection, TripSectionType, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
 
@@ -44,10 +45,15 @@ export interface IFileRepository {
 }
 
 export interface IAuthRepository {
+  signUp: (payload: SignUpPayload) => Promise<{ success: boolean, message: string }>
+  verifyEmail: (payload: { email: string, token: string }) => Promise<{ user: User, token: TokenPair }>
   signIn: (payload: SignInPayload) => Promise<{ user: User, token: TokenPair }>
   signOut: () => Promise<void>
   refresh: (refreshToken: string) => Promise<{ token: TokenPair }>
   me: () => Promise<User>
+  updateStatus: (data: { statusText?: string | null, statusEmoji?: string | null }) => Promise<User>
+  updateUser: (data: { name?: string, avatarUrl?: string }) => Promise<User>
+  uploadAvatar: (file: File) => Promise<User>
 }
 
 export interface ITripSectionRepository {
@@ -67,6 +73,12 @@ export interface IAccountRepository {
   listPlans: () => Promise<Plan[]>
 }
 
+export interface ICommunityRepository {
+  create: (data: CreateCommunityInput, ownerId: string) => Promise<Community>
+  list: (filters: ListCommunitiesInput) => Promise<Community[]>
+  getById: (id: string) => Promise<Community | null>
+}
+
 // Интерфейс для всей базы данных
 export interface IDatabaseClient {
   trips: ITripRepository
@@ -78,6 +90,7 @@ export interface IDatabaseClient {
   tripSections: ITripSectionRepository
   comments: ICommentRepository
   account: IAccountRepository
+  community: ICommunityRepository
 
   initDb: () => Promise<this>
 

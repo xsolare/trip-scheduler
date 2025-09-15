@@ -1,24 +1,37 @@
 import { protectedProcedure, publicProcedure } from '~/lib/trpc'
 import {
   AuthOutputSchema,
+  ChangePasswordInputSchema,
+  DeleteAccountInputSchema,
   RefreshOutputSchema,
   RefreshTokenInputSchema,
   SignInInputSchema,
   SignUpInputSchema,
   UpdateUserInputSchema,
+  UpdateUserStatusInputSchema,
   UserSchema,
+  VerifyEmailInputSchema,
 } from './user.schemas'
 import { userService } from './user.service'
 
 export const userProcedures = {
   /**
-   * Процедура регистрации.
+   * Процедура регистрации (отправка кода).
    */
   signUp: publicProcedure
     .input(SignUpInputSchema)
-    .output(AuthOutputSchema)
     .mutation(async ({ input }) => {
       return userService.signUp(input)
+    }),
+
+  /**
+   * Процедура верификации почты и завершения регистрации.
+   */
+  verifyEmail: publicProcedure
+    .input(VerifyEmailInputSchema)
+    .output(AuthOutputSchema)
+    .mutation(async ({ input }) => {
+      return userService.verifyEmail(input)
     }),
 
   /**
@@ -66,5 +79,32 @@ export const userProcedures = {
     .output(UserSchema)
     .mutation(async ({ ctx, input }) => {
       return userService.update(ctx.user.id, input)
+    }),
+
+  /**
+   * Процедура для обновления статуса пользователя.
+   */
+  updateStatus: protectedProcedure
+    .input(UpdateUserStatusInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      return userService.updateStatus(ctx.user.id, input)
+    }),
+
+  /**
+   * Процедура для смены пароля.
+   */
+  changePassword: protectedProcedure
+    .input(ChangePasswordInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      return userService.changePassword(ctx.user.id, input)
+    }),
+
+  /**
+   * Процедура для удаления аккаунта.
+   */
+  deleteAccount: protectedProcedure
+    .input(DeleteAccountInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      return userService.deleteAccount(ctx.user.id, input)
     }),
 }

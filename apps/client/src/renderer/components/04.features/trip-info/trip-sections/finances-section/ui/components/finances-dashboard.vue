@@ -3,7 +3,6 @@ import { Icon } from '@iconify/vue'
 import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js'
 import { Bar, Doughnut } from 'vue-chartjs'
 import { useCurrencyFormatter } from '../../composables/use-currency-formatter'
-import { useDateFormatter } from '../../composables/use-date-formatter'
 
 interface Props {
   mainCurrency: string
@@ -16,7 +15,6 @@ const props = defineProps<Props>()
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, BarElement, LinearScale)
 
 const { format: formatCurrency } = useCurrencyFormatter()
-const { formatDate } = useDateFormatter()
 
 const currentView = ref<'category' | 'day'>('category')
 const borderColor = ref('#E0E0E0')

@@ -1,6 +1,7 @@
-import type { SignInPayload, TokenPair, User } from '../types/models/auth'
+import type { SignInPayload, SignUpPayload, TokenPair, User } from '../types/models/auth'
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
+import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestStatus } from '~/plugins/request'
 
 export const TOKEN_KEY = 'auth_token'
@@ -10,7 +11,12 @@ export enum EAuthRequestKeys {
   ME = 'auth:me',
   REFRESH = 'auth:refresh',
   SIGN_IN = 'auth:sign-in',
+  SIGN_UP = 'auth:sign-up',
+  VERIFY_EMAIL = 'auth:verify-email',
   SIGN_OUT = 'auth:sign-out',
+  UPDATE_STATUS = 'auth:update-status',
+  UPDATE_USER = 'auth:update-user',
+  UPLOAD_AVATAR = 'auth:upload-avatar',
 }
 
 export interface IAuthState {
@@ -93,6 +99,23 @@ export const useAuthStore = defineStore('auth', {
     },
 
     /**
+     * Выход пользователя из системы через tRPC.
+     */
+    async signOut() {
+      return useRequest<void>({
+        key: EAuthRequestKeys.SIGN_OUT,
+        fn: db => db.auth.signOut(),
+        onSuccess: () => {
+          this.clearAuth()
+        },
+        onError: (error) => {
+          this.clearAuth()
+          throw error
+        },
+      })
+    },
+
+    /**
      * Авторизует пользователя по email и паролю через tRPC.
      */
     async signIn(payload: SignInPayload) {
@@ -111,17 +134,51 @@ export const useAuthStore = defineStore('auth', {
     },
 
     /**
-     * Выход пользователя из системы через tRPC.
+     * Регистрирует нового пользователя.
      */
-    async signOut() {
-      return useRequest<void>({
-        key: EAuthRequestKeys.SIGN_OUT,
-        fn: db => db.auth.signOut(),
-        onSuccess: () => {
-          this.clearAuth()
+    async signUp(payload: SignUpPayload) {
+      return useRequest({
+        key: EAuthRequestKeys.SIGN_UP,
+        fn: db => db.auth.signUp(payload),
+        onError: (error) => {
+          throw error
+        },
+      })
+    },
+
+    /**
+     * Подтверждает email и завершает регистрацию.
+     */
+    async verifyEmail(payload: { email: string, token: string }) {
+      return useRequest({
+        key: EAuthRequestKeys.VERIFY_EMAIL,
+        fn: db => db.auth.verifyEmail(payload),
+        onSuccess: (data) => {
+          this.user = data.user
+          this.saveTokens(data.token)
         },
         onError: (error) => {
           this.clearAuth()
+          throw error
+        },
+      })
+    },
+
+    /**
+     * Обновляет статус пользователя.
+     */
+    async updateStatus(data: { statusText?: string | null, statusEmoji?: string | null }) {
+      return useRequest<User>({
+        key: EAuthRequestKeys.UPDATE_STATUS,
+        fn: db => db.auth.updateStatus(data),
+        onSuccess: (updatedUser) => {
+          if (updatedUser) {
+            this.user = updatedUser
+            useToast().success('Статус обновлен')
+          }
+        },
+        onError: (error: any) => {
+          useToast().error(`Не удалось обновить статус: ${error.message || error}`)
           throw error
         },
       })
@@ -179,6 +236,42 @@ export const useAuthStore = defineStore('auth', {
       if (this.user) {
         this.user.currentStorageBytes += bytes
       }
+    },
+
+    /**
+     * Обновляет данные профиля пользователя (имя, аватар).
+     */
+    async updateUser(data: { name?: string, avatarUrl?: string }) {
+      return useRequest<User>({
+        key: EAuthRequestKeys.UPDATE_USER,
+        fn: db => db.auth.updateUser(data),
+        onSuccess: (updatedUser) => {
+          if (this.user && updatedUser) {
+            this.user = { ...this.user, ...updatedUser }
+          }
+        },
+        onError: (error) => {
+          throw error
+        },
+      })
+    },
+
+    /**
+     * Загружает аватар пользователя.
+     */
+    async uploadAvatar(file: File) {
+      await useRequest<User>({
+        key: EAuthRequestKeys.UPLOAD_AVATAR,
+        fn: db => db.auth.uploadAvatar(file),
+        onSuccess: (updatedUser) => {
+          if (this.user && updatedUser) {
+            this.user = { ...this.user, ...updatedUser }
+          }
+        },
+        onError: (error) => {
+          throw error
+        },
+      })
     },
 
     /**

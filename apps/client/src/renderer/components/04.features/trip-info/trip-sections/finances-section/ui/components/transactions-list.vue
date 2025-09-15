@@ -2,7 +2,6 @@
 import type { Category, Transaction } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { useCurrencyFormatter } from '../../composables/use-currency-formatter'
-import { useDateFormatter } from '../../composables/use-date-formatter'
 
 interface Props {
   transactions: Transaction[]
@@ -18,7 +17,6 @@ function getCategory(id: string | null, categories: Category[]) {
   return categories.find(c => c.id === id)
 }
 const { format: formatCurrency } = useCurrencyFormatter()
-const { formatDate } = useDateFormatter()
 </script>
 
 <template>

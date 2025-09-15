@@ -1,7 +1,8 @@
-import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types'
+import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types'
 import { AccountRepository } from '../repositories/mock/account.repository'
 import { AuthRepository } from '../repositories/mock/auth.repository'
 import { CommentRepository } from '../repositories/mock/comment.repository'
+import { CommunityRepository } from '../repositories/mock/community.repository'
 import { DayRepository } from '../repositories/mock/day.repository'
 import { FileRepository } from '../repositories/mock/file.repository'
 import { MemoryRepository } from '../repositories/mock/memory.repository'
@@ -19,6 +20,7 @@ class MockDatabaseClient implements IDatabaseClient {
   memories!: IMemoryRepository
   auth!: IAuthRepository
   comments!: ICommentRepository
+  community!: ICommunityRepository
 
   async initDb(): Promise<this> {
     this.account = new AccountRepository()
@@ -30,6 +32,7 @@ class MockDatabaseClient implements IDatabaseClient {
     this.memories = new MemoryRepository()
     this.auth = new AuthRepository()
     this.comments = new CommentRepository()
+    this.community = new CommunityRepository()
 
     return this
   }

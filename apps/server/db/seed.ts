@@ -7,6 +7,8 @@ import { FREE_PLAN_ID, ONE_GIGABYTE_IN_BYTES } from '~/lib/constants'
 import { db } from './index'
 import {
   activities,
+  communities,
+  communityMembers,
   days,
   memories,
   plans,
@@ -46,13 +48,15 @@ async function loadAllMockData() {
   const mockFiles = allFiles.filter(file => file.endsWith('.ts') && !file.startsWith('_')).sort()
 
   if (mockFiles.length === 0) {
-    return { users: [], trips: [] }
+    return { users: [], trips: [], communities: [], members: [] }
   }
 
   console.log(`🔍 Найдены файлы с моковыми данными: ${mockFiles.join(', ')}`)
 
   const allUsers: any[] = []
   const allTrips: any[] = []
+  const allCommunities: any[] = []
+  const allCommunityMembers: any[] = []
 
   for (const file of mockFiles) {
     const filePath = path.join(mockDir, file)
@@ -61,18 +65,22 @@ async function loadAllMockData() {
       allUsers.push(...module.MOCK_USER_DATA)
     if (module.MOCK_DATA)
       allTrips.push(...module.MOCK_DATA)
+    if (module.MOCK_COMMUNITIES_DATA)
+      allCommunities.push(...module.MOCK_COMMUNITIES_DATA)
+    if (module.MOCK_COMMUNITY_MEMBERS_DATA)
+      allCommunityMembers.push(...module.MOCK_COMMUNITY_MEMBERS_DATA)
   }
 
-  return { users: allUsers, trips: allTrips }
+  return { users: allUsers, trips: allTrips, communities: allCommunities, members: allCommunityMembers }
 }
 
 async function seed() {
   await copyStaticFiles()
   console.log('🌱 Начало заполнения базы данных...')
 
-  const { users: usersToInsert, trips: sourceTrips } = await loadAllMockData()
+  const { users: usersToInsert, trips: sourceTrips, communities: communitiesToInsert, members: membersToInsert } = await loadAllMockData()
 
-  if (usersToInsert.length === 0 && sourceTrips.length === 0) {
+  if (usersToInsert.length === 0 && sourceTrips.length === 0 && communitiesToInsert.length === 0) {
     console.warn('⚠️ Моковые данные не найдены. Заполнение базы данных пропущено.')
     process.exit(0)
   }
@@ -85,6 +93,8 @@ async function seed() {
   await db.delete(tripImages)
   await db.delete(tripParticipants)
   await db.delete(trips)
+  await db.delete(communityMembers)
+  await db.delete(communities)
   await db.delete(users)
   await db.delete(plans)
 
@@ -171,11 +181,17 @@ async function seed() {
     }
   }
 
-  console.log(`✈️  Вставка ${usersToInsert.length} пользователей, ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней, ${activitiesToInsert.length} активностей, ${imagesToInsert.length} изображений и ${memoriesToInsert.length} воспоминаний...`)
+  console.log(`✈️  Вставка ${usersToInsert.length} пользователей, ${tripsToInsert.length} путешествий, ${communitiesToInsert.length} сообществ...`)
 
   // Вставка в правильном порядке для соблюдения foreign key constraints
   if (usersToInsert.length > 0)
     await db.insert(users).values(usersToInsert.map(u => ({ ...u, planId: FREE_PLAN_ID })))
+
+  if (communitiesToInsert.length > 0) {
+    console.log(`🏘️  Вставка ${communitiesToInsert.length} сообществ и ${membersToInsert.length} участников...`)
+    await db.insert(communities).values(communitiesToInsert)
+    await db.insert(communityMembers).values(membersToInsert)
+  }
 
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)

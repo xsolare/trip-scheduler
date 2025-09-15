@@ -1,6 +1,5 @@
 import { createSelectSchema } from 'drizzle-zod'
 import { z } from 'zod'
-// 1. Импортируйте схему таблицы 'plans'
 import { plans, users } from '~/../db/schema'
 
 // --- Входящие данные (Input) ---
@@ -9,6 +8,11 @@ export const SignUpInputSchema = z.object({
   name: z.string().min(1, 'Имя не может быть пустым'),
   email: z.string().email('Некорректный формат email'),
   password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
+})
+
+export const VerifyEmailInputSchema = z.object({
+  email: z.string().email('Некорректный формат email'),
+  token: z.string().min(6, 'Код должен содержать 6 символов').max(6, 'Код должен содержать 6 символов'),
 })
 
 export const SignInInputSchema = z.object({
@@ -25,17 +29,32 @@ export const UpdateUserInputSchema = z.object({
   avatarUrl: z.string().url().optional(),
 }).strict()
 
+export const UpdateUserStatusInputSchema = z.object({
+  statusText: z.string().max(100).optional().nullable(),
+  statusEmoji: z.string().max(10).optional().nullable(),
+})
+
+export const ChangePasswordInputSchema = z.object({
+  currentPassword: z.string(),
+  newPassword: z.string().min(6, 'Новый пароль должен содержать минимум 6 символов'),
+})
+
+export const DeleteAccountInputSchema = z.object({
+  password: z.string(),
+})
+
 // --- Исходящие данные (Output) ---
 
-// 2. Создайте Zod-схему для тарифного плана
 export const PlanSchema = createSelectSchema(plans)
 
 // Безопасная схема пользователя (без пароля) для отправки на клиент
-// 3. Расширьте существующую схему UserSchema, добавив в нее объект plan
 export const UserSchema = createSelectSchema(users)
   .omit({ password: true })
   .extend({
     plan: PlanSchema.optional(),
+    _count: z.object({
+      communities: z.number(),
+    }).optional(),
   })
 
 // Схема для пары токенов

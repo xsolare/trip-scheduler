@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { db } from './index'
-import { activities, days, memories, plans, tripImages, trips, tripSections, users } from './schema'
+import { activities, communities, communityMembers, days, memories, plans, tripImages, trips, tripSections, users } from './schema'
 
 /**
  * Находит самый последний по времени создания файл дампа в директории db/dump.
@@ -71,6 +71,8 @@ async function seedFromJson() {
   await db.delete(tripSections)
   await db.delete(tripImages)
   await db.delete(trips)
+  await db.delete(communityMembers)
+  await db.delete(communities)
   await db.delete(users)
   await db.delete(plans)
 

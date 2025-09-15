@@ -4,6 +4,7 @@ import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { authController } from './api/auth.controller'
+import { avatarController } from './api/avatar.controller'
 import { uploadFileController } from './api/upload.controller'
 import { createContext } from './lib/trpc'
 import { appRouter } from './router'
@@ -28,6 +29,7 @@ app.use(
 // Определение API маршрутов
 const apiRoutes = new Hono()
   .post('/upload', uploadFileController)
+  .route('/avatar', avatarController)
   .route('/auth', authController)
 
 app.route('/api', apiRoutes)

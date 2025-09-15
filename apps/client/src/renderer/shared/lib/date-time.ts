@@ -25,3 +25,7 @@ export function minutesToTime(minutes: number): string {
 
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
 }
+
+export function formatDate(dateString: string, options: Intl.DateTimeFormatOptions = {}) {
+  return new Intl.DateTimeFormat('ru-RU', options).format(new Date(dateString))
+}

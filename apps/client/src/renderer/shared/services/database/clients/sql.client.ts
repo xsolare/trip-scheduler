@@ -1,8 +1,9 @@
-import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
 import { AccountRepository } from '../repositories/sql/account.repository.ts'
 import { ActivityRepository } from '../repositories/sql/activity.repository.ts'
 import { AuthRepository } from '../repositories/sql/auth.repository.ts'
 import { CommentRepository } from '../repositories/sql/comment.repository.ts'
+import { CommunityRepository } from '../repositories/sql/community.repository.ts'
 import { DayRepository } from '../repositories/sql/day.repository.ts'
 import { FileRepository } from '../repositories/sql/file.repository.ts'
 import { MemoryRepository } from '../repositories/sql/memory.repository.ts'
@@ -29,6 +30,7 @@ class SqlDatabaseClient implements IDatabaseClient {
   memories!: IMemoryRepository
   auth!: IAuthRepository
   comments!: ICommentRepository
+  community!: ICommunityRepository
 
   async initDb(): Promise<this> {
     if (!window.electronAPI) {
@@ -59,8 +61,9 @@ class SqlDatabaseClient implements IDatabaseClient {
     this.files = new FileRepository()
     this.activities = new ActivityRepository()
     this.memories = new MemoryRepository(this.db)
-    this.auth = new AuthRepository() // This is a mock, doesn't use the DB
+    this.auth = new AuthRepository()
     this.comments = new CommentRepository()
+    this.community = new CommunityRepository()
 
     return this
   }
@@ -77,7 +80,6 @@ class SqlDatabaseClient implements IDatabaseClient {
   }
 
   async getUnsyncedChanges(): Promise<any[]> {
-    // This logic needs to be implemented using the new DB wrapper if needed
     return this.db.select('SELECT * FROM sync_log WHERE synced = 0 ORDER BY timestamp ASC')
   }
 

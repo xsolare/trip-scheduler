@@ -1,5 +1,4 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRequest, useRequestStatus } from '~/plugins/request'
 
 export interface Plan {
@@ -33,7 +32,7 @@ export enum EAccountKeys {
   FETCH_PLANS = 'account:fetch-plans',
 }
 
-export const useAccountStore = defineStore('account', () => {
+export function useQuota() {
   const billingCycle = ref<'monthly' | 'yearly'>('monthly')
   const rawPlans = ref<Plan[]>([])
 
@@ -72,4 +71,4 @@ export const useAccountStore = defineStore('account', () => {
     fetchPlans,
     setBillingCycle,
   }
-})
+}

@@ -1,11 +1,11 @@
-// src/repositories/user.repository.ts
-
 import type { z } from 'zod'
 import type { SignUpInputSchema, UpdateUserInputSchema } from '~/modules/user/user.schemas'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { db } from '~/../db'
-import { users } from '~/../db/schema'
+import { communityMembers, users } from '~/../db/schema'
+import { authUtils } from '~/lib/auth.utils'
 import { FREE_PLAN_ID } from '~/lib/constants'
+import { createTRPCError } from '~/lib/trpc'
 
 interface OAuthInput {
   provider: 'google' | 'github'
@@ -15,7 +15,7 @@ interface OAuthInput {
   avatarUrl?: string
 }
 
-type UserForClient = Omit<typeof users.$inferSelect, 'password'> & { plan?: any }
+type UserForClient = Omit<typeof users.$inferSelect, 'password'> & { plan?: any, _count?: { communities: number } }
 
 function excludePassword<T extends { password?: string | null }>(user: T): Omit<T, 'password'> {
   const { password, ...rest } = user
@@ -118,7 +118,20 @@ export const userRepository = {
       },
     })
 
-    return user ? excludePassword(user) : null
+    if (!user)
+      return null
+
+    const [communityCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(communityMembers)
+      .where(eq(communityMembers.userId, id))
+
+    return {
+      ...excludePassword(user),
+      _count: {
+        communities: Number(communityCount.count),
+      },
+    }
   },
 
   /**
@@ -131,5 +144,53 @@ export const userRepository = {
       .where(eq(users.id, id))
 
     return await this.getById(id) as UserForClient
+  },
+
+  /**
+   * Обновляет статус пользователя.
+   */
+  async updateStatus(id: string, data: { statusText?: string | null, statusEmoji?: string | null }) {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning()
+
+    if (!updatedUser)
+      return null
+
+    return await this.getById(updatedUser.id)
+  },
+
+  /**
+   * Изменяет пароль пользователя после проверки текущего.
+   */
+  async changePassword(id: string, currentPassword: string, newPasswordHash: string) {
+    const user = await db.query.users.findFirst({ where: eq(users.id, id) })
+    if (!user || !user.password) {
+      throw createTRPCError('UNAUTHORIZED', 'Неверный текущий пароль.')
+    }
+    const isPasswordValid = await authUtils.passwords.verify(currentPassword, user.password)
+    if (!isPasswordValid) {
+      throw createTRPCError('UNAUTHORIZED', 'Неверный текущий пароль.')
+    }
+    await db.update(users).set({ password: newPasswordHash }).where(eq(users.id, id))
+    return true
+  },
+
+  /**
+   * Удаляет пользователя после проверки пароля.
+   */
+  async delete(id: string, password: string) {
+    const user = await db.query.users.findFirst({ where: eq(users.id, id) })
+    if (!user || !user.password) {
+      throw createTRPCError('UNAUTHORIZED', 'Неверный пароль.')
+    }
+    const isPasswordValid = await authUtils.passwords.verify(password, user.password)
+    if (!isPasswordValid) {
+      throw createTRPCError('UNAUTHORIZED', 'Неверный пароль.')
+    }
+    await db.delete(users).where(eq(users.id, id))
+    return true
   },
 }

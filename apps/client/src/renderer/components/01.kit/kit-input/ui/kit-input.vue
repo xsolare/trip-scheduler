@@ -4,7 +4,7 @@ import { Icon } from '@iconify/vue'
 interface Props {
   label?: string
   icon?: string
-  type?: 'text' | 'email' | 'password' | 'number'
+  type?: 'text' | 'email' | 'password' | 'number' | 'textarea'
   name?: string
   placeholder?: string
   disabled?: boolean
@@ -29,7 +29,7 @@ withDefaults(defineProps<Props>(), {
   size: 'md',
 })
 
-const model = defineModel<string | number>()
+const model = defineModel<string | number | null>()
 
 const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
 </script>
@@ -39,7 +39,23 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
     <label v-if="label" :for="id">{{ label }}</label>
     <div class="kit-input-wrapper">
       <Icon v-if="icon" :icon="icon" class="input-icon-prefix" />
+      <textarea
+        v-if="type === 'textarea'"
+        :id="id"
+        v-model="model"
+        :name="name"
+        :placeholder="placeholder"
+        :required="required"
+        :disabled="disabled"
+        :class="[
+          `kit-input-${size}`,
+          { 'has-prefix-icon': !!icon, 'has-append-icon': $slots.append },
+        ]"
+        v-bind="$attrs"
+        rows="3"
+      />
       <input
+        v-else
         :id="id"
         v-model="model"
         :type="type"
@@ -85,18 +101,22 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
   .input-icon-prefix {
     position: absolute;
     left: 12px;
+    top: 12px;
     color: var(--fg-tertiary-color);
     pointer-events: none;
     z-index: 1;
   }
 
-  input {
+  input,
+  textarea {
     width: 100%;
     background-color: var(--bg-secondary-color);
     border: 1px solid var(--border-secondary-color);
     border-radius: var(--r-s);
     color: var(--fg-primary-color);
     transition: border-color 0.2s;
+    font-family: inherit;
+    font-size: 1rem;
 
     &.has-prefix-icon {
       padding-left: 40px;
@@ -117,20 +137,26 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
     }
   }
 
+  textarea {
+    resize: vertical;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
   .kit-input-sm {
-    height: 38px;
+    min-height: 38px;
     padding: 10px;
     font-size: 0.875rem;
   }
 
   .kit-input-md {
-    height: 46px;
+    min-height: 46px;
     padding: 12px;
     font-size: 1rem;
   }
 
   .kit-input-lg {
-    height: 54px;
+    min-height: 54px;
     padding: 14px;
     font-size: 1.125rem;
   }
@@ -161,7 +187,8 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
   label {
     color: var(--fg-error-color);
   }
-  input {
+  input,
+  textarea {
     border-color: var(--border-error-color) !important;
   }
 }
