@@ -34,6 +34,7 @@ const mapProviders = [
   { name: 'Google Maps', urlTemplate: 'https://www.google.com/maps?q={lat},{lon}&output=embed' },
   { name: 'Yandex Maps', urlTemplate: 'https://yandex.ru/map-widget/v1/?ll={lon}%2C{lat}&z=15&pt={lon},{lat}' },
   { name: 'OpenStreetMap', urlTemplate: 'https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik&marker={lat},{lon}' },
+  { name: 'Baidu Maps', urlTemplate: 'http://api.map.baidu.com/marker?location={lat},{lon}&output=html' },
 ]
 
 function openMapChoice(point: MapPoint) {
