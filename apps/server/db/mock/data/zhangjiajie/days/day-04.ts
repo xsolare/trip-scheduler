@@ -26,8 +26,8 @@ export const MOCK_DAY_04 = {
   activities: [
     {
       id: 'b1c2d3e4-f5a6-4b7c-8d9e-a0b1c2d3e4f5',
-      startTime: '09:00',
-      endTime: '10:00',
+      startTime: '10:00',
+      endTime: '11:30',
       title: 'Неспешный подъем, завтрак и выселение из отеля',
       sections: [
         {
@@ -43,8 +43,8 @@ export const MOCK_DAY_04 = {
     },
     {
       id: 'e28aa61d-3ab6-4db9-b137-caa2d84a04d2',
-      startTime: '10:00',
-      endTime: '10:45',
+      startTime: '11:30',
+      endTime: '12:15',
       title: 'Дорога на Южный вокзал Чанши',
       sections: [
         {
@@ -60,8 +60,8 @@ export const MOCK_DAY_04 = {
     },
     {
       id: 'f5a6b7c8-d9e0-4f1a-b2b3-c4d5e6f7a8b9',
-      startTime: '10:45',
-      endTime: '11:30',
+      startTime: '12:15',
+      endTime: '13:05',
       title: 'Ожидание поезда',
       sections: [
         {
@@ -77,13 +77,13 @@ export const MOCK_DAY_04 = {
     },
     {
       id: 'b7c8d9e0-f1a2-4b3c-b4d5-e6f7a8b9c0d1',
-      startTime: '11:30',
-      endTime: '14:30',
+      startTime: '13:05',
+      endTime: '14:57',
       title: 'Поездка на скоростном поезде в Чжанцзяцзе',
       sections: [
         {
           id: 'c8d9e0f1-a2b3-4c4d-b5e6-f7a8b9c0d1e2',
-          text: 'Располагайтесь в комфортном кресле скоростного поезда. Поездка займет около 3 часов. За окном вы станете свидетелем символического перехода. Огни огромного Чанши постепенно сменятся темнотой сельских пейзажей провинции Хунань. По мере приближения к Чжанцзяцзе, ландшафт начнет меняться — вы едете в горы.\n\n*Прибытие*: Ваш поезд прибудет на **Западный вокзал Чжанцзяцзе (Zhangjiajie West Station / 张家界西站)**.\n\n*Ссылка на локацию*: <a href="https://j.map.baidu.com/5c/sQc">Baidu Map</a>',
+          text: 'Располагайтесь в комфортном кресле скоростного поезда. Поездка займет чуть меньше 2 часов. [6, 7] За окном вы станете свидетелем символического перехода. Огни огромного Чанши постепенно сменятся темнотой сельских пейзажей провинции Хунань. По мере приближения к Чжанцзяцзе, ландшафт начнет меняться — вы едете в горы.\n\n*Прибытие*: Ваш поезд прибудет на **Западный вокзал Чжанцзяцзе (Zhangjiajie West Station / 张家界西站)**.\n\n*Ссылка на локацию*: <a href="https://j.map.baidu.com/5c/sQc">Baidu Map</a>',
           type: 'description',
         },
       ],
@@ -94,8 +94,8 @@ export const MOCK_DAY_04 = {
     },
     {
       id: 'd9e0f1a2-b3c4-4d5e-b6f7-a8b9c0d1e2f3',
-      startTime: '14:30',
-      endTime: '15:15',
+      startTime: '14:57',
+      endTime: '15:45',
       title: 'Трансфер в отель в городе Чжанцзяцзе',
       sections: [
         {
@@ -111,8 +111,8 @@ export const MOCK_DAY_04 = {
     },
     {
       id: 'f1a2b3c4-d5e6-4f7a-b8b9-c0d1e2f3a4b5',
-      startTime: '15:15',
-      endTime: '16:30',
+      startTime: '15:45',
+      endTime: '17:00',
       title: 'Заселение в отель и отдых',
       sections: [
         {
@@ -128,7 +128,7 @@ export const MOCK_DAY_04 = {
     },
     {
       id: 'b3c4d5e6-f7a8-4b9c-b0d1-e2f3a4b5c6d7',
-      startTime: '16:30',
+      startTime: '17:00',
       endTime: '19:00',
       title: 'Прогулка и ужин в городе',
       sections: [

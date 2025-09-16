@@ -18,14 +18,19 @@ export const MOCK_SECTION_FINANCES = {
       { id: 'cat-other', name: 'Прочее', icon: 'mdi:dots-horizontal-circle-outline', isDefault: true },
     ],
     transactions: [
+      // --- Общие траты (без даты, будут вверху списка) ---
       { id: crypto.randomUUID(), title: 'Авиабилеты: Чунцин → Москва', amount: 40000, currency: 'RUB', categoryId: 'cat-flights', notes: 'Оплата картой' },
       { id: crypto.randomUUID(), title: 'Авиабилеты: Москва → Чанша', amount: 32600, currency: 'RUB', categoryId: 'cat-flights', notes: 'Примерная цена' },
       { id: crypto.randomUUID(), title: 'Авиабилеты: Ульяновск → Москва', amount: 4500, currency: 'RUB', categoryId: 'cat-flights', notes: 'Примерная цена' },
       { id: crypto.randomUUID(), title: 'Отель в Чунцине (Homeinn Plus)', amount: 16269.96, currency: 'RUB', categoryId: 'cat-housing', notes: 'Номер бронирования: 1539358965862331' },
       { id: crypto.randomUUID(), title: 'Отель в Чжанцзяцзе (Vienna 3)', amount: 10485, currency: 'RUB', categoryId: 'cat-housing' },
       { id: crypto.randomUUID(), title: 'Отель в Чанше (FUNGEE S)', amount: 8852.37, currency: 'RUB', categoryId: 'cat-housing', notes: 'Номер бронирования: 1539358980986251' },
-      { id: crypto.randomUUID(), title: 'Отель в Фэнхуане (Jinshuian)', amount: 2635.90, currency: 'RUB', categoryId: 'cat-housing' },
+      { id: crypto.randomUUID(), title: 'Отель в Фэнхуане (Tianqingshe)', amount: 2635.90, currency: 'RUB', categoryId: 'cat-housing' },
       { id: crypto.randomUUID(), title: 'Страховка на поездку', amount: 3500, currency: 'RUB', categoryId: 'cat-other', notes: 'Полис №123456789' },
+
+      // --- Траты по дням (с датой) ---
+      { id: crypto.randomUUID(), title: 'Билет на поезд: Чжанцзяцзе → Фэнхуан', amount: 1014.11, currency: 'RUB', categoryId: 'cat-transport', notes: 'Номер бронирования: 1539359259369506', date: '2025-10-26' },
+      { id: crypto.randomUUID(), title: 'Билет на поезд: Чанша → Чжанцзяцзе', amount: 2214.48, currency: 'RUB', categoryId: 'cat-transport', notes: 'Номер бронирования: 1539359259352082', date: '2025-10-22' },
     ],
   },
   order: 2,

@@ -1,3 +1,10 @@
+Конечно, я обновлю верстку для карточки авиаперелета, чтобы она корректно отображалась на мобильных устройствах, по аналогии с карточкой поезда.
+
+Центральный блок с визуализацией маршрута будет размещен между информацией об отправлении и прибытии на узких экранах.
+
+Вот обновленный код для файла `flight-card.vue`:
+
+```
 <script setup lang="ts">
 import type { Booking, FlightData, FlightSegment } from '../../models/types'
 import { Icon } from '@iconify/vue'
@@ -320,7 +327,7 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
 <style scoped lang="scss">
 .card-content {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1.5fr 1fr;
   align-items: center;
   gap: 1rem;
 }
@@ -479,10 +486,34 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
   }
 }
 
-@media (max-width: 600px) {
-  .details-grid {
+@include media-down(sm) {
+  .card-content {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+    text-align: center;
   }
+
+  .time-info {
+    order: 1;
+    text-align: center;
+
+    &.arrival {
+      order: 3;
+      text-align: center;
+    }
+  }
+
+  .route-visualizer {
+    order: 2;
+
+    background-color: var(--bg-primary-color);
+    border: 1px solid var(--border-secondary-color);
+    box-shadow: var(--s-l);
+    margin: 8px 0;
+    padding: 16px 16px 8px 8px;
+    border-radius: var(--r-l);
+  }
+
   .span-2 {
     grid-column: span 1 / span 1;
   }

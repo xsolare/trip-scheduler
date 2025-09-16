@@ -69,11 +69,17 @@ export interface HotelData {
 export interface TrainData {
   departureStation?: string
   arrivalStation?: string
+  departureStationLocation?: LocationCoords
+  arrivalStationLocation?: LocationCoords
   departureDateTime?: string // ISO 8601 format
   arrivalDateTime?: string // ISO 8601 format
+  departureTimeZone?: string // Timezone offset, e.g., "+03:00"
+  arrivalTimeZone?: string // Timezone offset, e.g., "+03:00"
   trainNumber?: string
   carriage?: string
   seat?: string
+  departurePlatform?: string
+  arrivalPlatform?: string
   bookingReference?: string
   notes?: string
 }
