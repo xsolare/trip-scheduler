@@ -39,7 +39,7 @@ function handleSubmit() {
 .comment-form {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 8px;
 }
 .input-wrapper {

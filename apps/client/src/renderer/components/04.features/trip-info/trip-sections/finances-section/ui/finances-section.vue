@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { FinancesSectionContent } from '../models/types'
 import { Icon } from '@iconify/vue'
+import { parseDate } from '@internationalized/date'
+import { onClickOutside } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitCalendarRange } from '~/components/01.kit/kit-calendar-range'
 import { useFinancesSection } from '../composables'
 import BudgetSettingsDialog from './components/budget-settings-dialog.vue'
 import CategoryManagerDialog from './components/category-manager-dialog.vue'
@@ -32,7 +35,9 @@ const {
   spendingByDay,
   filteredTransactions,
   filteredTotal,
-  selectedCategoryFilter,
+  selectedCategoryFilters,
+  dateFilter,
+  toggleCategoryFilter,
   openTransactionForm,
   saveTransaction,
   deleteTransaction,
@@ -63,6 +68,75 @@ watch(isCategoryManagerOpen, (isOpen) => {
     transactionFormVisibleBeforeCategoryManager.value = false
   }
 })
+
+const isDateFilterOpen = ref(false)
+const dateFilterWrapperRef = ref(null)
+onClickOutside(dateFilterWrapperRef, () => { isDateFilterOpen.value = false })
+
+const formattedDateFilter = computed(() => {
+  const { start, end } = dateFilter.value
+  if (!start && !end)
+    return 'За все время'
+
+  const format = (dateStr: string) => formatDate(dateStr, { month: 'short', day: 'numeric' })
+
+  if (start && end) {
+    if (start === end)
+      return format(start)
+    return `${format(start)} - ${format(end)}`
+  }
+  if (start)
+    return `С ${format(start)}`
+  if (end)
+    return `До ${format(end)}`
+  return 'За все время'
+})
+
+const calendarDateFilter = computed({
+  get() {
+    return {
+      start: dateFilter.value.start ? parseDate(dateFilter.value.start) : null,
+      end: dateFilter.value.end ? parseDate(dateFilter.value.end) : null,
+    }
+  },
+  set(range) {
+    dateFilter.value = {
+      start: range.start ? range.start.toString() : null,
+      end: range.end ? range.end.toString() : null,
+    }
+  },
+})
+
+const availableDateRange = computed(() => {
+  const transactions = props.section.content.transactions
+  if (!transactions || transactions.length === 0) {
+    return { minValue: undefined, maxValue: undefined }
+  }
+
+  const timestamps = transactions
+    .filter(t => !!t.date)
+    .map(t => new Date(t.date!).getTime())
+
+  if (timestamps.length === 0) {
+    return { minValue: undefined, maxValue: undefined }
+  }
+
+  const minTimestamp = Math.min(...timestamps)
+  const maxTimestamp = Math.max(...timestamps)
+
+  const minDateStr = new Date(minTimestamp).toISOString().split('T')[0]
+  const maxDateStr = new Date(maxTimestamp).toISOString().split('T')[0]
+
+  return {
+    minValue: parseDate(minDateStr),
+    maxValue: parseDate(maxDateStr),
+  }
+})
+
+function clearDateFilter() {
+  dateFilter.value = { start: null, end: null }
+  isDateFilterOpen.value = false
+}
 </script>
 
 <template>
@@ -79,13 +153,40 @@ watch(isCategoryManagerOpen, (isOpen) => {
           v-for="item in categoryFilterItems"
           :key="String(item.value)"
           class="filter-pill"
-          :class="{ active: selectedCategoryFilter === item.value }"
-          @click="selectedCategoryFilter = item.value"
+          :class="{ active: item.value === null ? selectedCategoryFilters.length === 0 : selectedCategoryFilters.includes(item.value) }"
+          @click="toggleCategoryFilter(item.value)"
         >
           <Icon :icon="item.icon" />
           <span>{{ item.label }}</span>
         </button>
       </div>
+
+      <div ref="dateFilterWrapperRef" class="date-filter-wrapper">
+        <KitBtn
+          icon="mdi:calendar-blank-outline"
+          variant="text"
+          @click="isDateFilterOpen = !isDateFilterOpen"
+        >
+          {{ formattedDateFilter }}
+        </KitBtn>
+        <div v-if="isDateFilterOpen" class="calendar-popover">
+          <KitCalendarRange
+            v-model="calendarDateFilter"
+            :min-value="availableDateRange.minValue"
+            :max-value="availableDateRange.maxValue"
+            :initial-focus-date="availableDateRange.maxValue"
+          />
+          <div class="popover-actions">
+            <KitBtn variant="text" size="sm" @click="clearDateFilter">
+              Сбросить
+            </KitBtn>
+            <KitBtn size="sm" @click="isDateFilterOpen = false">
+              Применить
+            </KitBtn>
+          </div>
+        </div>
+      </div>
+
       <div class="list-actions">
         <KitBtn v-if="!readonly" icon="mdi:plus" @click="openTransactionForm()">
           Добавить трату
@@ -109,7 +210,6 @@ watch(isCategoryManagerOpen, (isOpen) => {
       @delete-transaction="deleteTransaction"
     />
 
-    <!-- DIALOGS -->
     <TransactionFormDialog
       v-model:visible="isTransactionFormOpen"
       :transaction="transactionToEdit"
@@ -181,9 +281,54 @@ watch(isCategoryManagerOpen, (isOpen) => {
   }
 }
 
+.date-filter-wrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.calendar-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  z-index: 100;
+  background-color: var(--bg-primary-color);
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-m);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-l);
+}
+
+.popover-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-secondary-color);
+}
+
 .list-actions {
   display: flex;
   gap: 0.5rem;
-  margin-left: auto;
+}
+
+@include media-down(sm) {
+  .list-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .date-filter-wrapper {
+    margin-left: 0;
+    order: 1;
+  }
+  .list-actions {
+    order: 2;
+    justify-content: flex-end;
+  }
+  .category-filter-pills {
+    order: 0;
+  }
 }
 </style>

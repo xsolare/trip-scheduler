@@ -271,4 +271,19 @@ onMounted(() => {
     font-size: 0.9rem;
   }
 }
+
+@include media-down(sm) {
+  .categories-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .chart-container {
+    width: 100%;
+    height: 150px;
+  }
+  .legend {
+    width: 100%;
+  }
+}
 </style>

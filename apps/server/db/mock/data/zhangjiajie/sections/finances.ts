@@ -11,7 +11,7 @@ export const MOCK_SECTION_FINANCES = {
     categories: [
       { id: 'cat-housing', name: 'Жильё', icon: 'mdi:bed', isDefault: true },
       { id: 'cat-transport', name: 'Транспорт', icon: 'mdi:train-car', isDefault: true },
-      { id: 'cat-flights', name: 'Авиабилеты', icon: 'mdi:airplane' },
+      { id: 'cat-flights', name: 'Авиабилеты', icon: 'mdi:airplane', isDefault: true },
       { id: 'cat-food', name: 'Еда и напитки', icon: 'mdi:food-fork-drink', isDefault: true },
       { id: 'cat-entertainment', name: 'Развлечения', icon: 'mdi:party-popper', isDefault: true },
       { id: 'cat-shopping', name: 'Покупки', icon: 'mdi:shopping-outline', isDefault: true },

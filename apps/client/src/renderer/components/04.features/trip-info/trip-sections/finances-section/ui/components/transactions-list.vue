@@ -81,9 +81,11 @@ const { format: formatCurrency } = useCurrencyFormatter()
   align-items: center;
   margin-bottom: 1rem;
   height: 32px;
+
   h3 {
     margin: 0;
   }
+
   .total-amount {
     display: flex;
     align-items: center;
@@ -106,6 +108,7 @@ const { format: formatCurrency } = useCurrencyFormatter()
   align-items: center;
   padding: 0.75rem 0;
   border-bottom: 1px solid var(--border-secondary-color);
+
   &:hover .item-actions {
     opacity: 1;
   }
@@ -193,6 +196,23 @@ const { format: formatCurrency } = useCurrencyFormatter()
 
   span {
     padding: 0 0.5rem;
+  }
+}
+
+@include media-down(sm) {
+  .transaction-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .item-amount {
+    justify-content: space-between;
+    gap: 1rem;
+    padding-left: calc(40px + 1rem);
+  }
+  .item-actions {
+    opacity: 1;
+    gap: 1rem;
   }
 }
 </style>

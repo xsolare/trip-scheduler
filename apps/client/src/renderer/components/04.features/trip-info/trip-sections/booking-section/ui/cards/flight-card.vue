@@ -1,15 +1,8 @@
-Конечно, я обновлю верстку для карточки авиаперелета, чтобы она корректно отображалась на мобильных устройствах, по аналогии с карточкой поезда.
-
-Центральный блок с визуализацией маршрута будет размещен между информацией об отправлении и прибытии на узких экранах.
-
-Вот обновленный код для файла `flight-card.vue`:
-
-```
 <script setup lang="ts">
 import type { Booking, FlightData, FlightSegment } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { computed } from 'vue'
-import { KitAnimatedTooltip } from '~/components/01.kit/kit-animated-tooltip'
+import { KitTooltip } from '~/components/01.kit/kit-tooltip'
 import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
 import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
@@ -236,11 +229,9 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
         </div>
         <div class="route-line">
           <template v-for="(part, index) in journeySegments" :key="index">
-            <!-- Оборачиваем каждый сегмент в тултип -->
-            <KitAnimatedTooltip
+            <KitTooltip
               :name="part.tooltip"
               :style="{ width: `${part.widthPercent}%` }"
-              :offset="6"
             >
               <div
                 class="journey-part"
@@ -249,7 +240,7 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
                   'part-layover': part.type === 'layover',
                 }"
               />
-            </KitAnimatedTooltip>
+            </KitTooltip>
           </template>
         </div>
         <div class="airports">
@@ -512,10 +503,6 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
     margin: 8px 0;
     padding: 16px 16px 8px 8px;
     border-radius: var(--r-l);
-  }
-
-  .span-2 {
-    grid-column: span 1 / span 1;
   }
 }
 </style>

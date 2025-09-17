@@ -6,6 +6,7 @@ import { computed, ref, watch } from 'vue'
 const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-food', name: 'Еда и напитки', icon: 'mdi:food-fork-drink', isDefault: true },
   { id: 'cat-transport', name: 'Транспорт', icon: 'mdi:train-car', isDefault: true },
+  { id: 'cat-flights', name: 'Авиабилеты', icon: 'mdi:airplane', isDefault: true },
   { id: 'cat-housing', name: 'Жильё', icon: 'mdi:bed', isDefault: true },
   { id: 'cat-entertainment', name: 'Развлечения', icon: 'mdi:party-popper', isDefault: true },
   { id: 'cat-shopping', name: 'Покупки', icon: 'mdi:shopping-outline', isDefault: true },
@@ -40,7 +41,8 @@ export function useFinancesSection(
   const transactions = ref<Transaction[]>(JSON.parse(JSON.stringify(content.value?.transactions || [])))
   const categories = ref<Category[]>(JSON.parse(JSON.stringify(content.value?.categories || DEFAULT_CATEGORIES)))
   const settings = ref<FinancesSettings>(JSON.parse(JSON.stringify(content.value?.settings || DEFAULT_SETTINGS)))
-  const selectedCategoryFilter = ref<string | null>(null) // null означает 'все'
+  const selectedCategoryFilters = ref<string[]>([]) // Пустой массив означает 'все'
+  const dateFilter = ref<{ start: string | null, end: string | null }>({ start: null, end: null })
 
   // --- Состояние UI ---
   const isTransactionFormOpen = ref(false)
@@ -184,16 +186,53 @@ export function useFinancesSection(
   })
 
   const filteredTransactions = computed(() => {
-    if (!selectedCategoryFilter.value)
-      return sortedTransactions.value
+    let result = sortedTransactions.value
 
-    return sortedTransactions.value.filter(tx => tx.categoryId === selectedCategoryFilter.value)
+    // 1. Фильтр по дате
+    const { start, end } = dateFilter.value
+    if (start || end) {
+      result = result.filter((tx) => {
+        if (!tx.date)
+          return false // Исключаем траты без даты при активном фильтре по дате
+        const txDate = tx.date.split('T')[0]
+        const isAfterStart = start ? txDate >= start : true
+        const isBeforeEnd = end ? txDate <= end : true
+        return isAfterStart && isBeforeEnd
+      })
+    }
+
+    // 2. Фильтр по категориям
+    if (selectedCategoryFilters.value.length > 0) {
+      result = result.filter(tx =>
+        tx.categoryId && selectedCategoryFilters.value.includes(tx.categoryId),
+      )
+    }
+
+    return result
   })
 
   const filteredTotal = computed(() => {
     return filteredTransactions.value
       .reduce((sum, tx) => sum + convertToMainCurrency(tx.amount, tx.currency), 0)
   })
+
+  function toggleCategoryFilter(categoryId: string | null) {
+    // Клик по "Все категории"
+    if (categoryId === null) {
+      selectedCategoryFilters.value = []
+      return
+    }
+
+    const index = selectedCategoryFilters.value.indexOf(categoryId)
+    if (index > -1) {
+      // Категория уже выбрана, убираем ее
+      selectedCategoryFilters.value.splice(index, 1)
+    }
+    else {
+      // Категория не выбрана, добавляем ее
+      selectedCategoryFilters.value.push(categoryId)
+    }
+  }
 
   watch([transactions, categories, settings], debouncedUpdate, { deep: true })
 
@@ -206,7 +245,8 @@ export function useFinancesSection(
     isCategoryManagerOpen,
     isSettingsOpen,
     transactionToEdit,
-    selectedCategoryFilter,
+    selectedCategoryFilters,
+    dateFilter,
 
     // Computed
     totalSpending,
@@ -222,5 +262,6 @@ export function useFinancesSection(
     saveCategory,
     deleteCategory,
     saveSettings,
+    toggleCategoryFilter,
   }
 }

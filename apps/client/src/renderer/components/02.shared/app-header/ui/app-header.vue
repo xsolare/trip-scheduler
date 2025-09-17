@@ -220,6 +220,7 @@ onMounted(() => {
         font-size: 1rem;
         font-weight: 600;
         position: relative;
+        white-space: nowrap;
       }
     }
   }
@@ -380,6 +381,7 @@ onMounted(() => {
 
       .logo-text {
         display: none;
+        white-space: nowrap;
       }
     }
 
