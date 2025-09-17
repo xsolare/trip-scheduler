@@ -21,6 +21,7 @@ export const MOCK_SECTION_FINANCES = {
       // --- Общие траты (без даты, будут вверху списка) ---
       { id: crypto.randomUUID(), title: 'Авиабилеты: Чунцин → Москва', amount: 40000, currency: 'RUB', categoryId: 'cat-flights', notes: 'Оплата картой' },
       { id: crypto.randomUUID(), title: 'Авиабилеты: Москва → Чанша', amount: 32600, currency: 'RUB', categoryId: 'cat-flights', notes: 'Примерная цена' },
+      { id: crypto.randomUUID(), title: 'Авиабилеты: Москва → Ульяновск', amount: 9700, currency: 'RUB', categoryId: 'cat-flights' },
       { id: crypto.randomUUID(), title: 'Авиабилеты: Ульяновск → Москва', amount: 4500, currency: 'RUB', categoryId: 'cat-flights', notes: 'Примерная цена' },
       { id: crypto.randomUUID(), title: 'Отель в Чунцине (Homeinn Plus)', amount: 16269.96, currency: 'RUB', categoryId: 'cat-housing', notes: 'Номер бронирования: 1539358965862331' },
       { id: crypto.randomUUID(), title: 'Отель в Чжанцзяцзе (Vienna 3)', amount: 10485, currency: 'RUB', categoryId: 'cat-housing' },
