@@ -2,7 +2,6 @@ import type { ChecklistGroup, ChecklistItem, ChecklistSectionContent, ChecklistT
 import { useDebounceFn } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, ref, watch } from 'vue'
-import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 
 interface UseChecklistSectionProps {
   section: {

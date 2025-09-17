@@ -1,6 +1,5 @@
 import type { Comment, CommentParentType } from '~/shared/types/models/comment'
 import { defineStore } from 'pinia'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestStatusByPrefix } from '~/plugins/request'
 import { useAuthStore } from '~/shared/store/auth.store'
 

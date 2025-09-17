@@ -1,6 +1,5 @@
 import type { Community, CommunityPrivacy, ListCommunitiesInput } from '~/shared/types/models/community'
 import { defineStore } from 'pinia'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestStatusByPrefix } from '~/plugins/request'
 
 export type CommunitiesHubTab = 'my' | 'public'

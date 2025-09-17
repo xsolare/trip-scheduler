@@ -9,39 +9,49 @@ import {
   AlertDialogRoot,
   AlertDialogTitle,
 } from 'reka-ui'
-import { useConfirmDialogStore } from '~/shared/store/confirm-dialog.store'
 
-const confirmStore = useConfirmDialogStore()
+interface Props {
+  open: boolean
+  title: string
+  description: string
+  confirmText?: string
+  type?: 'default' | 'danger'
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  type: 'default',
+})
+
+const emit = defineEmits<{
+  (e: 'confirm'): void
+  (e: 'cancel'): void
+}>()
 </script>
 
 <template>
-  <AlertDialogRoot :open="confirmStore.isOpen">
+  <AlertDialogRoot :open="props.open">
     <AlertDialogPortal>
       <AlertDialogOverlay class="dialog-overlay" />
       <AlertDialogContent class="dialog-content-wrapper">
         <AlertDialogTitle class="dialog-title">
-          {{ confirmStore.title }}
+          {{ props.title }}
         </AlertDialogTitle>
         <AlertDialogDescription class="dialog-description">
-          {{ confirmStore.description }}
+          {{ props.description }}
         </AlertDialogDescription>
         <div class="dialog-actions">
           <AlertDialogCancel
             class="dialog-button cancel"
-            @click="confirmStore._cancel"
+            @click="emit('cancel')"
           >
             Отмена
           </AlertDialogCancel>
-          <!--
-            Динамически применяем класс в зависимости от типа
-            и используем текст из хранилища
-          -->
           <AlertDialogAction
             class="dialog-button confirm"
-            :class="{ danger: confirmStore.type === 'danger' }"
-            @click="confirmStore._confirm"
+            :class="{ danger: props.type === 'danger' }"
+            @click="emit('confirm')"
           >
-            {{ confirmStore.confirmText }}
+            {{ props.confirmText }}
           </AlertDialogAction>
         </div>
       </AlertDialogContent>

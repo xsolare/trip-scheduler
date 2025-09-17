@@ -2,7 +2,6 @@
 import type { IActivity, IDay } from '../models/types'
 import type { TripSection } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestError, useRequestStatus, useRequestStatusByPrefix, useRequestStore } from '~/plugins/request'
 
 export enum ETripPlanKeys {

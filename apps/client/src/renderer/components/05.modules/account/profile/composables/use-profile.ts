@@ -1,5 +1,3 @@
-import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { AppRouteNames } from '~/shared/constants/routes'
 import { trpc } from '~/shared/services/trpc/trpc.service'
 import { useAuthStore } from '~/shared/store/auth.store'
@@ -115,7 +113,7 @@ export function useProfile() {
       await authStore.uploadAvatar(file)
       toast.success('Аватар успешно обновлен')
     }
-    catch (e) {
+    catch {
       toast.error('Не удалось загрузить аватар.')
     }
     finally {

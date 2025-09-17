@@ -4,7 +4,6 @@ import type { Comment } from '~/shared/types/models/comment'
 import { Icon } from '@iconify/vue'
 import { useTimeAgo } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
-import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { useAuthStore } from '~/shared/store/auth.store'
 
 const props = defineProps<{ comment: Comment }>()

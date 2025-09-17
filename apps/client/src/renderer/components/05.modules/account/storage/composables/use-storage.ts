@@ -1,6 +1,5 @@
 import type { TripImage } from '~/shared/types/models/trip'
 import { computed, ref } from 'vue'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
 import { useAuthStore } from '~/shared/store/auth.store'
 import { TripImagePlacement } from '~/shared/types/models/trip'

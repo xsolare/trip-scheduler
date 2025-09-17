@@ -18,7 +18,6 @@ const isOpen = ref(false)
 const pickerButton = ref<HTMLButtonElement | null>(null)
 const dropdownPanel = ref<HTMLDivElement | null>(null)
 
-
 const sizeClass = computed(() => `size-${props.size}`)
 
 function selectIcon(icon: string) {

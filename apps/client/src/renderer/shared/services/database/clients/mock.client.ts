@@ -1,5 +1,6 @@
 import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types'
 import { AccountRepository } from '../repositories/mock/account.repository'
+import { ActivityRepository } from '../repositories/mock/activity.repository'
 import { AuthRepository } from '../repositories/mock/auth.repository'
 import { CommentRepository } from '../repositories/mock/comment.repository'
 import { CommunityRepository } from '../repositories/mock/community.repository'
@@ -8,7 +9,6 @@ import { FileRepository } from '../repositories/mock/file.repository'
 import { MemoryRepository } from '../repositories/mock/memory.repository'
 import { TripSectionRepository } from '../repositories/mock/trip-section.repository'
 import { TripRepository } from '../repositories/mock/trip.repository'
-import { ActivityRepository } from '../repositories/trpc/activity.repository'
 
 class MockDatabaseClient implements IDatabaseClient {
   account!: IAccountRepository

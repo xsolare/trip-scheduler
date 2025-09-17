@@ -3,7 +3,6 @@ import type { FinancesSectionContent } from '../models/types'
 import { Icon } from '@iconify/vue'
 import { computed, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { useFinancesSection } from '../composables'
 import BudgetSettingsDialog from './components/budget-settings-dialog.vue'
 import CategoryManagerDialog from './components/category-manager-dialog.vue'
@@ -68,8 +67,6 @@ watch(isCategoryManagerOpen, (isOpen) => {
 
 <template>
   <div class="finances-section">
-    <KitConfirmDialog />
-
     <FinancesDashboard
       :main-currency="settings.mainCurrency"
       :spending-by-category="spendingByCategory"

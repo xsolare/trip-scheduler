@@ -2,7 +2,6 @@ import type { Ref } from 'vue'
 import type { Coordinate, DrawnRoute, MapPoint, MapRoute } from '../models/types'
 import type { useGeolocationMap } from './use-geolocation-map'
 import { v4 as uuidv4 } from 'uuid'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { POI_COLORS } from '../constant'
 
 type GeolocationMapApi = ReturnType<typeof useGeolocationMap>

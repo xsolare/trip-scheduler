@@ -1,6 +1,5 @@
 import type { TripSection } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { useTripPlanStore } from '~/components/04.features/trip-info/trip-plan'
 import { useRequest } from '~/plugins/request'
 import { TripSectionType } from '~/shared/types/models/trip'

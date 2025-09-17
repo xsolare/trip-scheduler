@@ -5,7 +5,6 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitInput } from '~/components/01.kit/kit-input'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { AppRoutePaths } from '~/shared/constants/routes'
 
 enum OAuthProviders { GitHub = 'github', Google = 'google' }

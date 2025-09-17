@@ -20,7 +20,6 @@ import {
 } from 'reka-ui'
 import { v4 as uuidv4 } from 'uuid'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
 import { KitInput } from '~/components/01.kit/kit-input'

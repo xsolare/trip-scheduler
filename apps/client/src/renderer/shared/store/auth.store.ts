@@ -1,7 +1,6 @@
 import type { SignInPayload, SignUpPayload, TokenPair, User } from '../types/models/auth'
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { useToast } from '~/components/01.kit/kit-toast'
 import { useRequest, useRequestStatus } from '~/plugins/request'
 
 export const TOKEN_KEY = 'auth_token'

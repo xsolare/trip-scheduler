@@ -102,9 +102,9 @@ export interface AttractionData {
 
 export type Booking
   = | (BookingBase & { type: 'flight', data: FlightData })
-  | (BookingBase & { type: 'hotel', data: HotelData })
-  | (BookingBase & { type: 'train', data: TrainData })
-  | (BookingBase & { type: 'attraction', data: AttractionData })
+    | (BookingBase & { type: 'hotel', data: HotelData })
+    | (BookingBase & { type: 'train', data: TrainData })
+    | (BookingBase & { type: 'attraction', data: AttractionData })
 
 export type BookingType = Booking['type']
 

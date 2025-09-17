@@ -1,6 +1,7 @@
 <script setup>
-import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
-import { ToastContainer } from '~/components/01.kit/kit-toast'
+import { ConfirmDialogManager } from '~/components/02.shared/confirm-dialog-manager'
+import { ToastManager } from '~/components/02.shared/toast-manager'
+
 import { DefaultLayout } from '~/components/06.layouts/default'
 import { EmptyLayout } from '~/components/06.layouts/empty'
 import { TripInfoLayout } from '~/components/06.layouts/trip-info'
@@ -42,7 +43,8 @@ const layouts = {
     </router-view>
   </component>
 
-  <ToastContainer />
   <component :is="ReloadPrompt" v-if="ReloadPrompt" />
-  <KitConfirmDialog />
+
+  <ToastManager />
+  <ConfirmDialogManager />
 </template>

@@ -5,7 +5,6 @@ import { ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
-import { KitConfirmDialog } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
@@ -79,7 +78,6 @@ watch(activeTab, () => {
 
 <template>
   <div class="checklist-section">
-    <KitConfirmDialog />
     <KitTabs v-model="activeTab" :items="tabItems">
       <template #preparation>
         <div class="tab-content-wrapper">

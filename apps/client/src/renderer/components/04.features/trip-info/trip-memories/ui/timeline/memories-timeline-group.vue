@@ -2,7 +2,6 @@
 import type { ImageViewerImage } from '~/components/01.kit/kit-image-viewer'
 import type { Memory } from '~/shared/types/models/memory'
 import { Icon } from '@iconify/vue'
-import { useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { getTagInfo } from '~/components/05.modules/trip-info/lib/helpers'
 import MemoriesItem from './memories-timeline-item.vue'

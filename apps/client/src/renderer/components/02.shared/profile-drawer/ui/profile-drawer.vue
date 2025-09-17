@@ -19,14 +19,44 @@ const menuItems = [
 ]
 
 const mainMenuItems = [
-  { label: 'Мой профиль', icon: 'mdi:account-circle-outline', action: () => { router.push({ name: AppRouteNames.AccountProfile }); open.value = false } },
-  { label: 'Мои путешествия', icon: 'mdi:briefcase-outline', action: () => { router.push({ name: AppRouteNames.TripList }); open.value = false } },
-  { label: 'Сообщества', icon: 'mdi:account-group-outline', action: () => { router.push({ name: AppRouteNames.CommunitiesList }); open.value = false } },
+  {
+    label: 'Мой профиль',
+    icon: 'mdi:account-circle-outline',
+    action: () => {
+      router.push({ name: AppRouteNames.AccountProfile })
+      open.value = false
+    },
+  },
+  {
+    label: 'Мои путешествия',
+    icon: 'mdi:briefcase-outline',
+    action: () => {
+      router.push({ name: AppRouteNames.TripList })
+      open.value = false
+    },
+  },
+  {
+    label: 'Сообщества',
+    icon: 'mdi:account-group-outline',
+    action: () => {
+      router.push({ name: AppRouteNames.CommunitiesList })
+      open.value = false
+    },
+  },
 ]
 
 const secondaryMenuItems = [
   // { label: 'Возможности', icon: 'mdi:flask-outline', action: () => {} },
-  { label: 'Настройки', icon: 'mdi:cog-outline', action: () => { router.push({ name: AppRouteNames.AccountSettings }); open.value = false } },
+  {
+    label: 'Настройки',
+    icon: 'mdi:cog-outline',
+    action: () => {
+      router.push({
+        name: AppRouteNames.AccountSettings,
+      })
+      open.value = false
+    },
+  },
 ]
 
 async function handleLogout() {
@@ -133,7 +163,6 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout', action: () => hand
 </template>
 
 <style lang="scss" scoped>
-/* Стили остались без изменений */
 .profile-drawer {
   display: flex;
   flex-direction: column;
@@ -232,10 +261,6 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout', action: () => hand
       margin-right: 12px;
       color: var(--fg-secondary-color);
     }
-  }
-
-  .kit-divider {
-    margin: 4px 0;
   }
 }
 </style>

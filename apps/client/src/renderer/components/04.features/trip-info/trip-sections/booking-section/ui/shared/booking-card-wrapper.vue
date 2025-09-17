@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
-import { KitConfirmDialog, useConfirm } from '~/components/01.kit/kit-confirm-dialog'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitEditable } from '~/components/01.kit/kit-editable'
 
@@ -32,7 +31,6 @@ async function handleDelete() {
 
 <template>
   <div class="booking-card">
-    <KitConfirmDialog />
     <header class="card-header">
       <div class="title-container">
         <button v-if="!readonly" class="drag-handle" title="Перетащить">

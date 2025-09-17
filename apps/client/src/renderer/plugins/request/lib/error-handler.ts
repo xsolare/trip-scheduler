@@ -1,5 +1,4 @@
 import type { ToastMessage } from '~/shared/types/models/toast'
-import { useToast } from '~/components/01.kit/kit-toast'
 
 /**
  * Гибкий интерфейс ошибки, совместимый с форматом ошибок от tRPC и другими возможными форматами.
