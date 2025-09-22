@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
+import { useElementBounding } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { ProfileDrawer } from '~/components/02.shared/profile-drawer'
 import { AppRoutePaths } from '~/shared/constants/routes'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()
-const store = useAppStore(['auth', 'theme'])
+const appStore = useAppStore(['auth', 'theme', 'layout'])
 
 const isProfileDrawerOpen = ref(false)
 
@@ -14,6 +15,11 @@ const isScrolled = ref(false)
 const isHeaderVisible = ref(true)
 const lastScrollY = ref(0)
 const isSmallScreen = ref(false)
+
+const { height: headerHeight } = useElementBounding(headerEl)
+
+watch(headerHeight, newHeight => appStore.layout.setHeaderHeight(newHeight))
+watch(isHeaderVisible, isVisible => appStore.layout.setHeaderVisibility(isVisible))
 
 function checkScreenSize() {
   isSmallScreen.value = window.innerWidth < 1400
@@ -83,7 +89,7 @@ onMounted(() => {
       </div>
 
       <div class="header-right">
-        <button class="util-btn" title="Настроить тему" @click="store.theme.openCreator()">
+        <button class="util-btn" title="Настроить тему" @click="appStore.theme.openCreator()">
           <Icon icon="mdi:palette-outline" />
         </button>
 
@@ -91,8 +97,8 @@ onMounted(() => {
 
         <div class="profile" @click="isProfileDrawerOpen = true">
           <KitAvatar
-            v-if="store.auth.isAuthenticated"
-            :src="`${store.auth.user?.avatarUrl}`"
+            v-if="appStore.auth.isAuthenticated"
+            :src="`${appStore.auth.user?.avatarUrl}`"
           />
           <div
             v-else

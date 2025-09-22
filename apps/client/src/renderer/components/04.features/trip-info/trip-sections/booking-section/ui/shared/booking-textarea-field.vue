@@ -27,11 +27,7 @@ const internalModel = computed({
       {{ label }}
     </label>
     <div class="editor-wrapper" :class="{ 'is-readonly': readonly }">
-      <div v-if="props.readonly && !modelValue">
-        Нет заметок...
-      </div>
       <KitInlineMdEditorWrapper
-        v-else
         v-model="internalModel"
         :readonly="readonly"
         placeholder="Добавьте заметки..."

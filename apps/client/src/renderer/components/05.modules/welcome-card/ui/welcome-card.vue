@@ -1,41 +1,62 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useMouse, useWindowSize } from '@vueuse/core'
+import { useMouse } from '@vueuse/core'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { InteractiveGridPattern } from '~/components/02.shared/interactive-grid-pattern'
 
 const router = useRouter()
 
-function goToTrips() {
-  router.push(AppRoutePaths.Trip.List)
-}
-
 const cardRef = ref<HTMLElement | null>(null)
 const transformStyle = ref('')
-const { x, y } = useMouse({ touch: false })
-const { width, height } = useWindowSize()
+const isHovering = ref(false)
 
-const cardTransform = computed(() => {
+const { x, y } = useMouse({ touch: false })
+
+function goToTrips() {
+  router.push('/trips')
+}
+
+function onMouseMove() {
   if (!cardRef.value)
-    return ''
+    return
+
+  const rect = cardRef.value.getBoundingClientRect()
+  const mouseX = x.value - rect.left
+  const mouseY = y.value - rect.top
+  const xPercent = mouseX / rect.width
+  const yPercent = mouseY / rect.height
+  const rotateXFactor = (yPercent - 0.5) * 2
+  const rotateYFactor = (xPercent - 0.5) * 2
+
   const maxRotate = 8
   const perspective = 1000
-  const rotateX = ((y.value / height.value) * 2 - 1) * maxRotate * -1
-  const rotateY = ((x.value / width.value) * 2 - 1) * maxRotate
-  return `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`
-})
+  const rotateX = rotateXFactor * maxRotate * -1
+  const rotateY = rotateYFactor * maxRotate
+
+  transformStyle.value = `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`
+}
+
+function onMouseEnter() {
+  isHovering.value = true
+}
 
 function onMouseLeave() {
+  isHovering.value = false
   transformStyle.value = ''
-}
-function onMouseMove() {
-  transformStyle.value = cardTransform.value
 }
 </script>
 
 <template>
-  <div class="root-page" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
-    <div ref="cardRef" class="glass-card" :style="{ transform: transformStyle }">
+  <div class="root-page">
+    <div
+      ref="cardRef"
+      class="glass-card"
+      :class="{ 'is-transitioning': !isHovering }"
+      :style="{ transform: transformStyle }"
+      @mouseenter="onMouseEnter"
+      @mousemove="onMouseMove"
+      @mouseleave="onMouseLeave"
+    >
       <InteractiveGridPattern
         class="card-background-grid"
         :squares="[25, 25]"
@@ -70,7 +91,6 @@ function onMouseMove() {
   align-items: center;
   width: 100%;
   height: 100%;
-  perspective: 1000px;
   padding: 16px;
   animation: fadeIn 0.8s ease-out forwards;
 }
@@ -84,8 +104,13 @@ function onMouseMove() {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--s-xl);
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   max-width: 600px;
+  will-change: transform;
+}
+
+// Класс, который отвечает за плавное возвращение в исходное состояние
+.glass-card.is-transitioning {
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .card-background-grid {
@@ -93,7 +118,6 @@ function onMouseMove() {
   inset: 0;
   z-index: 1;
   transform: skewY(-12deg);
-
   mask-image: radial-gradient(circle 250px at center, white, transparent);
   -webkit-mask-image: radial-gradient(circle 250px at center, white, transparent);
 }
@@ -131,10 +155,6 @@ function onMouseMove() {
 
   .btn {
     border-radius: var(--r-xl);
-  }
-
-  @include media-down(sm) {
-    padding: 32px 24px;
   }
 }
 

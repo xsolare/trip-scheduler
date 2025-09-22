@@ -31,6 +31,7 @@ export interface FlightSegment {
   arrivalTimeZone?: string // Timezone offset, e.g., "+08:00"
   flightNumber?: string
   airline?: string
+  airlineIataCode?: string
   aircraft?: string
   terminalDeparture?: string
   terminalArrival?: string
@@ -43,6 +44,7 @@ export interface FlightData {
   bookingReference?: string
   notes?: string
   segments: FlightSegment[]
+  sourceUrl?: string
 }
 
 /**
@@ -61,6 +63,7 @@ export interface HotelData {
   email?: string
   website?: string
   notes?: string
+  sourceUrl?: string
 }
 
 /**
@@ -82,6 +85,7 @@ export interface TrainData {
   arrivalPlatform?: string
   bookingReference?: string
   notes?: string
+  sourceUrl?: string
 }
 
 /**
@@ -96,15 +100,16 @@ export interface AttractionData {
   guests?: string
   bookingReference?: string
   notes?: string
+  sourceUrl?: string
 }
 
 // --- Общий тип бронирования ---
 
 export type Booking
   = | (BookingBase & { type: 'flight', data: FlightData })
-    | (BookingBase & { type: 'hotel', data: HotelData })
-    | (BookingBase & { type: 'train', data: TrainData })
-    | (BookingBase & { type: 'attraction', data: AttractionData })
+  | (BookingBase & { type: 'hotel', data: HotelData })
+  | (BookingBase & { type: 'train', data: TrainData })
+  | (BookingBase & { type: 'attraction', data: AttractionData })
 
 export type BookingType = Booking['type']
 

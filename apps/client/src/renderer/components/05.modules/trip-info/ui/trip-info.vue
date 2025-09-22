@@ -101,7 +101,12 @@ onUnmounted(() => {
 
     <template #success>
       <template v-if="!section">
-        <DaysControls />
+        <DaysControls
+          :wrapper-bounding="{
+            left: wrapperLeft,
+            width: wrapperWidth,
+          }"
+        />
 
         <div :key="plan.currentDayId!" class="trip-info-day-view">
           <KitDivider :is-loading="plan.isLoadingUpdateDay">
@@ -238,14 +243,12 @@ onUnmounted(() => {
   backdrop-filter: blur(4px);
   padding: 10px 16px;
 
-  // Override hover to exactly match the original day-navigation buttons
   &:not(:disabled):hover {
     color: var(--fg-accent-color);
     border-color: var(--fg-accent-color);
     background-color: var(--bg-hover-color);
   }
 
-  // Adjust icon size to match
   :deep(.iconify) {
     font-size: 1.2rem;
   }

@@ -7,6 +7,8 @@ import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
 import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
 import BookingLocationField from '../shared/booking-location-field.vue'
+import BookingLocationViewer from '../shared/booking-location-viewer.vue'
+import BookingSourceLink from '../shared/booking-source-link.vue'
 import BookingTextareaField from '../shared/booking-textarea-field.vue'
 
 interface Props {
@@ -19,6 +21,9 @@ const emit = defineEmits(['delete', 'update:booking'])
 const isDepartureLocationPickerOpen = ref(false)
 const isArrivalLocationPickerOpen = ref(false)
 
+const isDepartureLocationViewerOpen = ref(false)
+const isArrivalLocationViewerOpen = ref(false)
+
 function updateDataField<K extends keyof TrainData>(key: K, value: TrainData[K]) {
   emit('update:booking', {
     ...props.booking,
@@ -30,9 +35,6 @@ function updateTitle(newTitle: string) {
   emit('update:booking', { ...props.booking, title: newTitle })
 }
 
-/**
- * Безопасно создает объект Date из локального времени и смещения часового пояса.
- */
 function createDateWithTimezone(dateTime?: string, timeZone?: string): Date | null {
   if (!dateTime)
     return null
@@ -49,9 +51,6 @@ function createDateWithTimezone(dateTime?: string, timeZone?: string): Date | nu
   return null
 }
 
-/**
- * Форматирует локальную дату и время для отображения.
- */
 function formatDisplayDateTime(localDateTime?: string) {
   if (!localDateTime)
     return { time: '', date: '' }
@@ -67,9 +66,6 @@ function formatDisplayDateTime(localDateTime?: string) {
   }
 }
 
-/**
- * Преобразует миллисекунды в строку "Чч Мм".
- */
 function formatDuration(ms: number) {
   if (ms < 0)
     return '---'
@@ -145,10 +141,12 @@ const totalDurationFormatted = computed(() => {
         <div class="address-field-wrapper span-2">
           <BookingField :model-value="booking.data.departureStation" label="Станция отправления" icon="mdi:map-marker-radius-outline" :readonly="readonly" @update:model-value="updateDataField('departureStation', $event)" />
           <KitBtn v-if="!readonly" icon="mdi:map-marker-outline" title="Указать на карте" @click="isDepartureLocationPickerOpen = true" />
+          <KitBtn v-if="readonly && booking.data.departureStationLocation" icon="mdi:map-search-outline" title="Посмотреть на карте" variant="text" @click="isDepartureLocationViewerOpen = true" />
         </div>
         <div class="address-field-wrapper span-2">
           <BookingField :model-value="booking.data.arrivalStation" label="Станция прибытия" icon="mdi:map-marker-radius-outline" :readonly="readonly" @update:model-value="updateDataField('arrivalStation', $event)" />
           <KitBtn v-if="!readonly" icon="mdi:map-marker-outline" title="Указать на карте" @click="isArrivalLocationPickerOpen = true" />
+          <KitBtn v-if="readonly && booking.data.arrivalStationLocation" icon="mdi:map-search-outline" title="Посмотреть на карте" variant="text" @click="isArrivalLocationViewerOpen = true" />
         </div>
 
         <BookingDateTimeField :model-value="booking.data.departureDateTime" label="Дата и время отправления" icon="mdi:clock-start" :readonly="readonly" type="datetime" @update:model-value="updateDataField('departureDateTime', $event)" />
@@ -168,7 +166,23 @@ const totalDurationFormatted = computed(() => {
 
         <BookingField :model-value="booking.data.bookingReference" label="Номер бронирования" icon="mdi:barcode-scan" :readonly="readonly" class="span-2" @update:model-value="updateDataField('bookingReference', $event)" />
 
+        <BookingField
+          v-if="!readonly"
+          :model-value="booking.data.sourceUrl"
+          label="Ссылка на бронирование"
+          icon="mdi:link-variant"
+          :readonly="readonly"
+          class="span-2"
+          placeholder="https://..."
+          @update:model-value="updateDataField('sourceUrl', $event)"
+        />
+        <BookingSourceLink
+          v-else
+          :url="booking.data.sourceUrl"
+          label="Ссылка на бронирование"
+        />
         <BookingTextareaField
+          v-if="!readonly || booking.data.notes"
           :model-value="booking.data.notes"
           label="Заметки"
           icon="mdi:note-text-outline"
@@ -195,6 +209,17 @@ const totalDurationFormatted = computed(() => {
     label="Локация станции прибытия"
     :readonly="readonly"
     @update:model-value="updateDataField('arrivalStationLocation', $event)"
+  />
+
+  <BookingLocationViewer
+    v-model:visible="isDepartureLocationViewerOpen"
+    :location="booking.data.departureStationLocation"
+    :title="booking.data.departureStation || 'Станция отправления'"
+  />
+  <BookingLocationViewer
+    v-model:visible="isArrivalLocationViewerOpen"
+    :location="booking.data.arrivalStationLocation"
+    :title="booking.data.arrivalStation || 'Станция прибытия'"
   />
 </template>
 

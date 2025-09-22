@@ -87,6 +87,14 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
   text-transform: uppercase;
   letter-spacing: 1px;
   height: 24px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    margin: 4px;
+    border-bottom: 1px solid var(--border-secondary-color);
+  }
 }
 
 .day-header-skeleton {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import { computed } from 'vue'
 import { KitInput } from '~/components/01.kit/kit-input'
 
 interface Props {
@@ -7,14 +8,37 @@ interface Props {
   icon?: string
   readonly: boolean
   placeholder?: string
+  linkType?: 'web' | 'email' | 'tel'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   icon: undefined,
   placeholder: '...',
+  linkType: undefined,
 })
 
 const modelValue = defineModel<string>()
+
+const href = computed(() => {
+  if (!props.linkType || !modelValue.value)
+    return undefined
+
+  switch (props.linkType) {
+    case 'web': {
+      if (modelValue.value.includes('.') && !modelValue.value.startsWith('http'))
+        return `https://${modelValue.value}`
+
+      return modelValue.value
+    }
+    case 'email':
+      return `mailto:${modelValue.value}`
+    case 'tel':
+      // eslint-disable-next-line regexp/strict
+      return `tel:${modelValue.value.replace(/[\s-()]/g, '')}`
+    default:
+      return undefined
+  }
+})
 </script>
 
 <template>
@@ -26,7 +50,8 @@ const modelValue = defineModel<string>()
       </label>
       <div class="readonly-content">
         <Icon v-if="icon" :icon="icon" class="field-icon" />
-        <span v-if="modelValue" class="readonly-value">{{ modelValue }}</span>
+        <a v-if="modelValue && linkType" :href="href" target="_blank" rel="noopener noreferrer" class="readonly-value link-value">{{ modelValue }}</a>
+        <span v-else-if="modelValue" class="readonly-value">{{ modelValue }}</span>
         <span v-else class="readonly-placeholder">{{ placeholder }}</span>
       </div>
     </div>
@@ -79,6 +104,18 @@ const modelValue = defineModel<string>()
   font-size: 0.9rem;
   white-space: pre-wrap;
   word-break: break-word;
+
+  &.link-value {
+    text-decoration: underline;
+    text-decoration-color: var(--border-secondary-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration-color: var(--fg-accent-color);
+      color: var(--fg-accent-color);
+    }
+  }
 }
 
 .readonly-placeholder {

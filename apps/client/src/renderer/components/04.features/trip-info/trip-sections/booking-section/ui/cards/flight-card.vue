@@ -6,6 +6,7 @@ import { KitTooltip } from '~/components/01.kit/kit-tooltip'
 import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
 import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
+import BookingSourceLink from '../shared/booking-source-link.vue'
 import BookingTextareaField from '../shared/booking-textarea-field.vue'
 
 interface Props {
@@ -18,6 +19,37 @@ const emit = defineEmits(['delete', 'update:booking'])
 const segments = computed(() => props.booking.data.segments || [])
 const firstSegment = computed(() => segments.value[0])
 const lastSegment = computed(() => segments.value[segments.value.length - 1])
+
+const uniqueAirlines = computed(() => {
+  if (!segments.value || segments.value.length === 0)
+    return []
+
+  const seen = new Set()
+  return segments.value
+    .map(segment => ({
+      iataCode: segment.airlineIataCode,
+      name: segment.airline,
+    }))
+    .filter((airline) => {
+      if (!airline.iataCode || seen.has(airline.iataCode))
+        return false
+
+      seen.add(airline.iataCode)
+      return true
+    })
+})
+
+/**
+ * Генерирует URL для логотипа авиакомпании по её IATA-коду.
+ * Использует правильный CDN Skyscanner.
+ * @param iataCode Двухбуквенный IATA-код (например, 'SU').
+ */
+function getAirlineLogoUrl(iataCode?: string): string | null {
+  if (!iataCode || iataCode.length < 2)
+    return null
+  // ИСПОЛЬЗУЕТСЯ ПРАВИЛЬНЫЙ ДОМЕН: www.skyscanner.net
+  return `https://www.skyscanner.net/images/airlines/favicon/${iataCode.toUpperCase()}.png`
+}
 
 /**
  * Безопасно создает объект Date из локального времени и смещения часового пояса.
@@ -245,6 +277,22 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
         </div>
         <div class="airports">
           <span>{{ firstSegment.departureAirport }}</span>
+          <div class="airline-logos-center">
+            <KitTooltip v-for="airline in uniqueAirlines" :key="airline.iataCode" :name="airline.name || airline.iataCode">
+              <div class="center-logo-wrapper">
+                <img
+                  v-if="getAirlineLogoUrl(airline.iataCode)"
+                  :src="getAirlineLogoUrl(airline.iataCode)!"
+                  class="center-logo-img"
+                  alt=""
+                  @error="($event.target as HTMLImageElement).style.display = 'none'"
+                >
+                <div class="center-logo-fallback">
+                  <Icon icon="mdi:airplane" />
+                </div>
+              </div>
+            </KitTooltip>
+          </div>
           <span>{{ lastSegment.arrivalAirport }}</span>
         </div>
       </div>
@@ -274,10 +322,24 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
 
           <!-- Segment Details -->
           <div class="segment-header span-2">
-            Рейс {{ index + 1 }}
+            <div class="segment-header-content">
+              <div class="airline-logo-container-small">
+                <img
+                  v-if="getAirlineLogoUrl(segment.airlineIataCode)"
+                  :src="getAirlineLogoUrl(segment.airlineIataCode)!"
+                  class="airline-logo-small"
+                  alt=""
+                  @error="($event.target as HTMLImageElement).style.display = 'none'"
+                >
+                <div class="airline-logo-fallback-small">
+                  <Icon icon="mdi:airplane" />
+                </div>
+              </div>
+              <span>Рейс {{ index + 1 }}</span>
+            </div>
           </div>
           <BookingField :model-value="segment.airline" label="Авиакомпания" icon="mdi:compass-rose" :readonly="readonly" @update:model-value="updateSegmentField(index, 'airline', $event)" />
-          <BookingField :model-value="segment.flightNumber" label="Номер рейса" icon="mdi:pound" :readonly="readonly" @update:model-value="updateSegmentField(index, 'flightNumber', $event)" />
+          <BookingField :model-value="segment.airlineIataCode" label="Код авиакомпании (IATA)" icon="mdi:barcode" :readonly="readonly" placeholder="SU" @update:model-value="updateSegmentField(index, 'airlineIataCode', $event)" />
           <BookingField :model-value="segment.departureCity" label="Город вылета" icon="mdi:city-variant-outline" :readonly="readonly" @update:model-value="updateSegmentField(index, 'departureCity', $event)" />
           <BookingField :model-value="segment.arrivalCity" label="Город прилета" icon="mdi:city-variant-outline" :readonly="readonly" @update:model-value="updateSegmentField(index, 'arrivalCity', $event)" />
           <BookingField :model-value="segment.departureAirport" label="Аэропорт вылета (IATA)" icon="mdi:airplane-takeoff" :readonly="readonly" @update:model-value="updateSegmentField(index, 'departureAirport', $event)" />
@@ -302,7 +364,23 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
           class="span-2"
           @update:model-value="updateDataField('bookingReference', $event)"
         />
+        <BookingField
+          v-if="!readonly"
+          :model-value="booking.data.sourceUrl"
+          label="Ссылка на бронирование"
+          icon="mdi:link-variant"
+          :readonly="readonly"
+          class="span-2"
+          placeholder="https://..."
+          @update:model-value="updateDataField('sourceUrl', $event)"
+        />
+        <BookingSourceLink
+          v-else
+          :url="booking.data.sourceUrl"
+          label="Ссылка на бронирование"
+        />
         <BookingTextareaField
+          v-if="!readonly || booking.data.notes"
           :model-value="booking.data.notes"
           label="Заметки"
           icon="mdi:note-text-outline"
@@ -438,11 +516,64 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
 
 .airports {
   width: 100%;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--fg-accent-color);
+
+  > span:first-child {
+    text-align: left;
+  }
+  > span:last-child {
+    text-align: right;
+  }
+}
+
+.airline-logos-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.center-logo-wrapper {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--bg-secondary-color);
+  background-color: var(--bg-tertiary-color);
+
+  &:not(:first-child) {
+    margin-left: -10px;
+  }
+}
+
+.center-logo-img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: white;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.center-logo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--fg-tertiary-color);
+  font-size: 0.8rem;
 }
 
 .details-grid {
@@ -456,10 +587,64 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
 }
 
 .segment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+
+  &::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    background-color: var(--border-secondary-color);
+  }
+}
+
+.segment-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
-  margin-top: 0.75rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border-secondary-color);
+  font-size: 0.95rem;
+  color: var(--fg-secondary-color);
+  flex-shrink: 0;
+}
+
+.airline-logo-container-small {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100%;
+  overflow: hidden;
+}
+
+.airline-logo-small {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.airline-logo-fallback-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-s);
+  background-color: var(--bg-tertiary-color);
+  color: var(--fg-tertiary-color);
+  font-size: 1rem;
 }
 
 .layover-details {
@@ -487,10 +672,12 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
   .time-info {
     order: 1;
     text-align: center;
+    align-items: center;
 
     &.arrival {
       order: 3;
       text-align: center;
+      align-items: center;
     }
   }
 

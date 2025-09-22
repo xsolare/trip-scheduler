@@ -6,6 +6,8 @@ import BookingCardWrapper from '../shared/booking-card-wrapper.vue'
 import BookingDateTimeField from '../shared/booking-date-time-field.vue'
 import BookingField from '../shared/booking-field.vue'
 import BookingLocationField from '../shared/booking-location-field.vue'
+import BookingLocationViewer from '../shared/booking-location-viewer.vue'
+import BookingSourceLink from '../shared/booking-source-link.vue'
 import BookingTextareaField from '../shared/booking-textarea-field.vue'
 
 interface Props {
@@ -16,6 +18,7 @@ const props = defineProps<Props>()
 const emit = defineEmits(['delete', 'update:booking'])
 
 const isLocationPickerOpen = ref(false)
+const isLocationViewerOpen = ref(false)
 
 function updateDataField<K extends keyof AttractionData>(key: K, value: AttractionData[K]) {
   emit('update:booking', {
@@ -42,6 +45,7 @@ function updateTitle(newTitle: string) {
       <div class="address-field-wrapper span-2">
         <BookingField :model-value="booking.data.address" label="Адрес (текстом)" icon="mdi:map-marker-radius-outline" :readonly="readonly" @update:model-value="updateDataField('address', $event)" />
         <KitBtn v-if="!readonly" icon="mdi:map-marker-outline" title="Указать на карте" @click="isLocationPickerOpen = true" />
+        <KitBtn v-if="readonly && booking.data.location" icon="mdi:map-search-outline" title="Посмотреть на карте" variant="text" @click="isLocationViewerOpen = true" />
       </div>
       <BookingDateTimeField :model-value="booking.data.dateTime" label="Дата и время" icon="mdi:calendar-clock" :readonly="readonly" type="datetime" @update:model-value="updateDataField('dateTime', $event)" />
     </div>
@@ -51,8 +55,23 @@ function updateTitle(newTitle: string) {
         <BookingField :model-value="booking.data.ticketType" label="Тип билета" icon="mdi:ticket-outline" :readonly="readonly" @update:model-value="updateDataField('ticketType', $event)" />
         <BookingField :model-value="booking.data.guests" label="Количество гостей" icon="mdi:account-group-outline" :readonly="readonly" @update:model-value="updateDataField('guests', $event)" />
         <BookingField :model-value="booking.data.bookingReference" label="Номер бронирования/билета" icon="mdi:barcode-scan" :readonly="readonly" class="span-2" @update:model-value="updateDataField('bookingReference', $event)" />
-
+        <BookingField
+          v-if="!readonly"
+          :model-value="booking.data.sourceUrl"
+          label="Ссылка на источник"
+          icon="mdi:link-variant"
+          :readonly="readonly"
+          class="span-2"
+          placeholder="https://..."
+          @update:model-value="updateDataField('sourceUrl', $event)"
+        />
+        <BookingSourceLink
+          v-else
+          :url="booking.data.sourceUrl"
+          label="Ссылка на источник"
+        />
         <BookingTextareaField
+          v-if="!readonly || booking.data.notes"
           :model-value="booking.data.notes"
           label="Заметки"
           icon="mdi:note-text-outline"
@@ -71,6 +90,12 @@ function updateTitle(newTitle: string) {
     label="Локация"
     :readonly="readonly"
     @update:model-value="updateDataField('location', $event)"
+  />
+
+  <BookingLocationViewer
+    v-model:visible="isLocationViewerOpen"
+    :location="booking.data.location"
+    :title="booking.data.attractionName || 'Просмотр локации'"
   />
 </template>
 

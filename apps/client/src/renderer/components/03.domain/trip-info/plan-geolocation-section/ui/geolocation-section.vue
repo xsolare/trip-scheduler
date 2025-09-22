@@ -36,18 +36,7 @@ const activeRouteId = ref<string | null>(null)
 const isMapFullscreen = ref(false)
 const isPanelVisible = ref(true)
 const routeIdForNewSegment = ref<string | null>(null)
-const isDataInitialized = ref(false)
 const searchQuery = ref('')
-
-// --- Композиции ---
-const { points, isLoading: isPointsLoading, mode, pointToMoveId, addPoiPoint, deletePoiPoint, startMovePoint, movePoint: movePoiPoint, updatePointCoords, handlePointUpdate, refreshPointAddress, setInitialPoints }
-  = useGeolocationPoints(mapController)
-
-const { routes, drawnRoutes, isLoading: isRoutesLoading, createNewRoute, addPointToRoute, deleteRoute, deletePointFromRoute, updatePointInRoute, handlePointDataUpdate: handleRoutePointUpdate, refreshRoutePointAddress, setInitialRoutes, addDrawnRoute, addSegmentToDrawnRoute, deleteSegmentFromDrawnRoute }
-  = useGeolocationRoutes(mapController)
-
-const { startDrawing, stopDrawing }
-  = useGeolocationDrawing(mapController)
 
 const debouncedUpdate = useDebounceFn(() => {
   emit('updateSection', {
@@ -59,6 +48,41 @@ const debouncedUpdate = useDebounceFn(() => {
     zoom: props.section.zoom,
   })
 }, 1000)
+
+// --- Композиции ---
+const {
+  points,
+  isLoading: isPointsLoading,
+  mode,
+  pointToMoveId,
+  addPoiPoint,
+  deletePoiPoint,
+  startMovePoint,
+  movePoint: movePoiPoint,
+  updatePointCoords,
+  handlePointUpdate,
+  refreshPointAddress,
+  setInitialPoints,
+} = useGeolocationPoints(mapController)
+
+const {
+  routes,
+  drawnRoutes,
+  isLoading: isRoutesLoading,
+  createNewRoute,
+  addPointToRoute,
+  deleteRoute,
+  deletePointFromRoute,
+  updatePointInRoute,
+  handlePointDataUpdate: handleRoutePointUpdate,
+  refreshRoutePointAddress,
+  setInitialRoutes,
+  addDrawnRoute,
+  addSegmentToDrawnRoute,
+  deleteSegmentFromDrawnRoute,
+} = useGeolocationRoutes(mapController)
+
+const { startDrawing, stopDrawing } = useGeolocationDrawing(mapController)
 
 const isLoading = computed(() => isPointsLoading.value || isRoutesLoading.value)
 const poiPointsWithStyle = computed(() => points.value.map((point, index) => ({ ...point, style: { ...point.style, color: POI_COLORS[index % POI_COLORS.length] } })))
@@ -227,10 +251,6 @@ function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
     else
       updatePointInRoute(pointId, newCoords, false) // Не обновляем адрес при перетаскивании
   })
-
-  nextTick(() => {
-    isDataInitialized.value = true
-  })
 }
 
 onMounted(() => {
@@ -267,12 +287,6 @@ watchEffect(() => {
     stopDrawing()
   }
 })
-
-watch([points, routes, drawnRoutes], () => {
-  if (!isDataInitialized.value)
-    return
-  debouncedUpdate()
-}, { deep: true })
 </script>
 
 <template>

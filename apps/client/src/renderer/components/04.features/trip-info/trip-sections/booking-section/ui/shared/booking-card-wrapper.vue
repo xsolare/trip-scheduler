@@ -59,7 +59,6 @@ async function handleDelete() {
       <template v-if="$slots.details">
         <Transition name="fade-height">
           <div v-if="isDetailsVisible" class="details-content">
-            <KitDivider />
             <slot name="details" />
           </div>
         </Transition>
@@ -134,8 +133,10 @@ async function handleDelete() {
   }
 }
 
-.delete-btn:hover {
-  color: var(--fg-error-color);
+.delete-btn {
+  svg {
+    color: var(--fg-error-color);
+  }
 }
 
 .drag-handle {

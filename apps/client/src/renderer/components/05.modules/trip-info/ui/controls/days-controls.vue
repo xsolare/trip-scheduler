@@ -3,16 +3,49 @@ import type { CalendarDate } from '@internationalized/date'
 import type { IDay } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { parseDate } from '@internationalized/date'
+import { useElementBounding, useIntersectionObserver, useWindowSize } from '@vueuse/core'
 import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
+import { useDisplay } from '~/shared/composables/use-display'
 import { useModuleStore } from '../../composables/use-trip-info-module'
 import DaysPanel from './days-panel.vue'
 import ViewSwitcher from './view-switcher.vue'
+
+interface Props {
+  wrapperBounding: {
+    left: number
+    width: number
+  }
+}
+
+const props = defineProps<Props>()
 
 const store = useModuleStore(['ui', 'plan'])
 const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView, isEditModeAllow } = storeToRefs(store.ui)
 const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.plan)
 const { setCurrentDay, updateDayDetails } = store.plan
+const appStore = useAppStore(['layout'])
+const { isHeaderVisible, headerHeight } = storeToRefs(appStore.layout)
+
+const controlsRef = ref<HTMLElement | null>(null)
+const fixedLeftControlsRef = ref<HTMLElement | null>(null)
+const fixedRightControlsRef = ref<HTMLElement | null>(null)
+
+const controlsAreVisible = ref(true)
+
+const { mdAndUp } = useDisplay()
+
+const { stop: stopIntersectionObserver } = useIntersectionObserver(
+  controlsRef,
+  ([{ isIntersecting }]) => {
+    controlsAreVisible.value = isIntersecting
+  },
+  { threshold: 0.9 },
+)
+
+const { width: windowWidth } = useWindowSize()
+const { width: leftControlsWidth } = useElementBounding(fixedLeftControlsRef)
+const { width: rightControlsWidth } = useElementBounding(fixedRightControlsRef)
 
 function handleAddNewDay() {
   store.plan.addNewDay()
@@ -59,61 +92,88 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     }
   },
 })
+
+const freeSpaceOnSide = computed(() => props.wrapperBounding.left)
+
+const showFixedControls = computed(() =>
+  mdAndUp.value
+  && freeSpaceOnSide.value >= (Math.max(leftControlsWidth.value, rightControlsWidth.value) + 20)
+  && !controlsAreVisible.value,
+)
+
+const topOffset = computed(() => (isHeaderVisible.value ? headerHeight.value : 0) + 20)
+
+const fixedLeftControlsStyle = computed(() => ({
+  top: `${topOffset.value}px`,
+  left: `${props.wrapperBounding.left - leftControlsWidth.value - 40}px`,
+}))
+
+const fixedRightControlsStyle = computed(() => ({
+  top: `${topOffset.value}px`,
+  right: `${windowWidth.value - (props.wrapperBounding.left + props.wrapperBounding.width) - rightControlsWidth.value - 20}px`,
+}))
+
+onUnmounted(() => {
+  stopIntersectionObserver()
+})
 </script>
 
 <template>
-  <div class="controls">
-    <div class="left-controls">
-      <button
-        v-if="!isDaysPanelPinned"
-        class="menu-btn" title="Открыть меню дней"
-        @click="isDaysPanelOpen = !isDaysPanelOpen"
-      >
-        <Icon icon="mdi:menu" />
-      </button>
+  <div>
+    <div ref="controlsRef" class="controls">
+      <div class="left-controls">
+        <button
+          v-if="!isDaysPanelPinned"
+          class="menu-btn"
+          title="Открыть меню дней"
+          @click="isDaysPanelOpen = !isDaysPanelOpen"
+        >
+          <Icon icon="mdi:menu" />
+        </button>
 
-      <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
-        <KitSkeleton width="100px" height="20px" border-radius="6px" type="wave" />
-        <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
+        <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
+          <KitSkeleton width="100px" height="20px" border-radius="6px" type="wave" />
+          <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
+        </div>
+        <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
+          <template #trigger>
+            <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
+              <h3 v-if="getSelectedDay">
+                {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
+              </h3>
+              <span v-if="getSelectedDay">
+                {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
+              </span>
+            </div>
+          </template>
+        </CalendarPopover>
       </div>
-      <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
-        <template #trigger>
-          <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
-            <h3 v-if="getSelectedDay">
-              {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
-            </h3>
-            <span v-if="getSelectedDay">
-              {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
-            </span>
-          </div>
-        </template>
-      </CalendarPopover>
-    </div>
-    <div class="spacer" />
-    <div v-if="!isDayInfoLoading" class="right-controls">
-      <TransitionGroup name="faded">
-        <button
-          v-if="!isViewMode"
-          key="delete"
-          class="delete-day-btn"
-          title="Удалить текущий день"
-          @click="handleDeleteDay"
-        >
-          <Icon icon="mdi:trash-can-outline" />
-        </button>
-      </TransitionGroup>
+      <div class="spacer" />
+      <div v-if="!isDayInfoLoading" class="right-controls">
+        <TransitionGroup name="faded">
+          <button
+            v-if="!isViewMode"
+            key="delete"
+            class="delete-day-btn"
+            title="Удалить текущий день"
+            @click="handleDeleteDay"
+          >
+            <Icon icon="mdi:trash-can-outline" />
+          </button>
+        </TransitionGroup>
 
-      <div class="view-controls">
-        <ViewSwitcher />
-        <button
-          v-if="isEditModeAllow"
-          class="split-view-btn"
-          title="Отобразить План и Воспоминания"
-          :class="{ 'is-active': activeView === 'split' }"
-          @click="store.ui.setActiveView('split')"
-        >
-          <Icon icon="mdi:view-split-vertical" />
-        </button>
+        <div class="view-controls">
+          <ViewSwitcher />
+          <button
+            v-if="isEditModeAllow"
+            class="split-view-btn"
+            title="Отобразить План и Воспоминания"
+            :class="{ 'is-active': activeView === 'split' }"
+            @click="store.ui.setActiveView('split')"
+          >
+            <Icon icon="mdi:view-split-vertical" />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -125,6 +185,80 @@ const selectedCalendarDate = computed<CalendarDate | null>({
       @select-day="setCurrentDay"
       @add-new-day="handleAddNewDay"
     />
+
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="showFixedControls"
+          ref="fixedLeftControlsRef"
+          class="fixed-controls-container"
+          :style="fixedLeftControlsStyle"
+        >
+          <div class="left-controls">
+            <button
+              v-if="!isDaysPanelPinned"
+              class="menu-btn"
+              title="Открыть меню дней"
+              @click="isDaysPanelOpen = !isDaysPanelOpen"
+            >
+              <Icon icon="mdi:menu" />
+            </button>
+
+            <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
+              <KitSkeleton width="100px" height="20px" border-radius="6px" type="wave" />
+              <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
+            </div>
+            <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
+              <template #trigger>
+                <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
+                  <h3 v-if="getSelectedDay">
+                    {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
+                  </h3>
+                  <span v-if="getSelectedDay">
+                    {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
+                  </span>
+                </div>
+              </template>
+            </CalendarPopover>
+          </div>
+        </div>
+      </Transition>
+      <Transition name="fade">
+        <div
+          v-if="showFixedControls && !isDayInfoLoading"
+          ref="fixedRightControlsRef"
+          class="fixed-controls-container"
+          :style="fixedRightControlsStyle"
+        >
+          <div class="right-controls">
+            <TransitionGroup name="faded">
+              <button
+                v-if="!isViewMode"
+                key="delete"
+                class="delete-day-btn"
+                title="Удалить текущий день"
+                @click="handleDeleteDay"
+              >
+                <Icon icon="mdi:trash-can-outline" />
+              </button>
+            </TransitionGroup>
+
+            <div class="view-controls">
+              <ViewSwitcher />
+              <button
+                v-if="isEditModeAllow"
+                class="split-view-btn"
+                title="Отобразить План и Воспоминания"
+                :class="{ 'is-active': activeView === 'split' }"
+                @click="store.ui.setActiveView('split')"
+              >
+                <Icon icon="mdi:view-split-vertical" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -190,7 +324,6 @@ const selectedCalendarDate = computed<CalendarDate | null>({
   }
 }
 
-/* --- Стили из mode-switcher --- */
 .mode-button {
   display: flex;
   align-items: center;
@@ -270,5 +403,27 @@ const selectedCalendarDate = computed<CalendarDate | null>({
     background-color: var(--bg-accent-color-translucent);
     color: var(--fg-accent-color);
   }
+}
+
+.fixed-controls-container {
+  position: fixed;
+  z-index: 5;
+  backdrop-filter: blur(4px);
+  border-radius: var(--r-xs);
+  padding: 8px;
+  transition: top 0.3s ease;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
