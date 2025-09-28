@@ -1,8 +1,9 @@
 /* eslint-disable no-console */
 import type { IActivity, IDay } from '../models/types'
-import type { Trip, TripSection } from '~/shared/types/models/trip'
+import type { Trip, TripSection, UpdateTripInput } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestError, useRequestStatus, useRequestStatusByPrefix, useRequestStore } from '~/plugins/request'
+import { AppRoutePaths } from '~/shared/constants/routes'
 
 export enum ETripPlanKeys {
   FETCH_TRIP_DETAILS = 'trip-plan:fetch-details',
@@ -12,6 +13,8 @@ export enum ETripPlanKeys {
   ADD_ACTIVITY = 'trip-plan:add-activity',
   UPDATE_ACTIVITY = 'trip-plan:update-activity',
   REMOVE_ACTIVITY = 'trip-plan:remove-activity',
+  UPDATE_TRIP = 'trip-plan:update-trip',
+  DELETE_TRIP = 'trip-plan:delete-trip',
 }
 
 export interface ITripPlanState {
@@ -129,10 +132,32 @@ export const useTripPlanStore = defineStore('tripPlan', {
           this.trip = null
           this.days = []
           this.currentDayId = null
-          onSectionsLoad([]) 
+          onSectionsLoad([])
 
           console.error(`Ошибка при загрузке данных для путешествия ${tripId}: `, error)
           useToast().error(`Ошибка при загрузке данных: ${error}`)
+        },
+      })
+    },
+
+    async updateTrip(details: UpdateTripInput) {
+      if (!this.trip)
+        return
+
+      const originalTrip = { ...this.trip }
+      Object.assign(this.trip, details) // Оптимистичное обновление
+
+      await useRequest({
+        key: `${ETripPlanKeys.UPDATE_TRIP}:${this.trip.id}`,
+        fn: db => db.trips.update(this.trip!.id, details),
+        onSuccess: (updatedTripFromServer) => {
+          if (this.trip)
+            this.trip = { ...this.trip, ...updatedTripFromServer }
+          useToast().success('Информация о путешествии обновлена.')
+        },
+        onError: (error) => {
+          this.trip = originalTrip // Откат
+          useToast().error(`Ошибка при обновлении путешествия: ${error}`)
         },
       })
     },
@@ -372,6 +397,27 @@ export const useTripPlanStore = defineStore('tripPlan', {
 
           console.error(`Ошибка при удалении дня ${dayIdToDelete}: `, error)
           useToast().error(`Ошибка при удалении дня: ${error}`)
+        },
+      })
+    },
+
+    async deleteCurrentTrip() {
+      if (!this.trip)
+        return
+
+      const tripId = this.trip.id
+      const router = useRouter()
+
+      return useRequest({
+        key: `${ETripPlanKeys.DELETE_TRIP}:${tripId}`,
+        fn: db => db.trips.delete(tripId),
+        onSuccess: () => {
+          useToast().success('Путешествие успешно удалено.')
+          router.push(AppRoutePaths.Trip.List)
+        },
+        onError: (error) => {
+          useToast().error(`Не удалось удалить путешествие: ${error}`)
+          throw error
         },
       })
     },

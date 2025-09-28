@@ -1,18 +1,26 @@
 <script setup lang="ts">
+import type { UpdateTripInput } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
+import { DropdownMenuItem } from 'reka-ui'
 import { KitAnimatedTooltip } from '~/components/01.kit/kit-animated-tooltip'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { TripStatus } from '~/shared/types/models/trip'
 import CountdownWidget from './content/countdown-widget.vue'
+import EditTripDialog from './content/edit-trip-dialog.vue'
 import StatsWidget from './content/stats-widget.vue'
 import WeatherWidget from './content/weather-widget.vue'
 
 const { plan, sections } = useModuleStore(['plan', 'sections'])
 const router = useRouter()
+const confirm = useConfirm()
+const toast = useToast()
 
 const trip = computed(() => plan.trip)
+const isMoreMenuOpen = ref(false)
+const isEditModalOpen = ref(false)
 
 const isTripUpcoming = computed(() => {
   if (!trip.value)
@@ -58,6 +66,32 @@ function navigateToDay(dayId: string) {
 function navigateToSection(sectionId: string) {
   router.push({ query: { section: sectionId } })
 }
+
+// --- Функции для контролов ---
+function handleEditTrip() {
+  isEditModalOpen.value = true
+}
+
+async function handleDeleteTrip() {
+  const isConfirmed = await confirm({
+    title: 'Удалить путешествие?',
+    description: 'Это действие необратимо. Все дни, планы и воспоминания будут удалены.',
+    type: 'danger',
+    confirmText: 'Удалить',
+  })
+  if (isConfirmed) {
+    await plan.deleteCurrentTrip()
+  }
+}
+
+function handleShareTrip() {
+  // TODO: Реализовать логику "Поделиться"
+  toast.info('Функция "Поделиться" находится в разработке.')
+}
+
+function handleSaveTripUpdate(updatedData: UpdateTripInput) {
+  plan.updateTrip(updatedData)
+}
 </script>
 
 <template>
@@ -74,6 +108,26 @@ function navigateToSection(sectionId: string) {
         <Icon icon="mdi:map-legend" />
       </div>
       <div class="banner-overlay" />
+
+      <div class="card-actions">
+        <button class="action-btn" title="Редактировать" @click.stop="handleEditTrip">
+          <Icon icon="mdi:pencil-outline" />
+        </button>
+        <KitDropdown v-model:open="isMoreMenuOpen" align="end">
+          <template #trigger>
+            <button class="action-btn" title="Еще" @click.stop.prevent>
+              <Icon icon="mdi:dots-vertical" />
+            </button>
+          </template>
+          <DropdownMenuItem class="kit-dropdown-item" @click="handleShareTrip">
+            <Icon icon="mdi:share-variant-outline" /><span>Поделиться</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem class="kit-dropdown-item is-destructive" @click="handleDeleteTrip">
+            <Icon icon="mdi:trash-can-outline" /><span>Удалить</span>
+          </DropdownMenuItem>
+        </KitDropdown>
+      </div>
+
       <div class="banner-content">
         <h1 class="trip-title">
           {{ trip.title }}
@@ -123,9 +177,12 @@ function navigateToSection(sectionId: string) {
       <StatsWidget
         :duration-days="tripDurationDays"
         :city-count="trip.cities.length"
+        :participant-count="trip.participants.length"
       />
       <WeatherWidget
-        :city="trip.cities[0] || '...'"
+        v-if="trip.cities.length > 0"
+        :cities="trip.cities"
+        :start-date="trip.startDate"
       />
     </div>
 
@@ -187,6 +244,13 @@ function navigateToSection(sectionId: string) {
       v-if="isTripUpcoming"
       :target-date="trip.startDate"
       class="countdown"
+    />
+
+    <EditTripDialog
+      v-if="trip"
+      v-model:visible="isEditModalOpen"
+      :trip="trip"
+      @save="handleSaveTripUpdate"
     />
   </div>
 </template>
@@ -302,6 +366,7 @@ function navigateToSection(sectionId: string) {
     font-weight: 700;
     margin: 0 0 0.5rem;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    z-index: 2;
   }
 
   .trip-meta {
@@ -310,6 +375,7 @@ function navigateToSection(sectionId: string) {
     flex-wrap: wrap;
     gap: 0.5rem 1.5rem;
     margin-bottom: 1.5rem;
+    z-index: 2;
 
     .meta-item {
       display: flex;
@@ -324,6 +390,7 @@ function navigateToSection(sectionId: string) {
   .trip-participants {
     animation-delay: 0.4s;
     display: flex;
+    z-index: 2;
 
     :deep(.kit-avatar) {
       margin-left: -12px;
@@ -337,6 +404,36 @@ function navigateToSection(sectionId: string) {
         transform: translateY(-4px);
         z-index: 10;
       }
+    }
+  }
+}
+
+.card-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 3;
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(var(--bg-primary-color-rgb), 0.7);
+    color: var(--fg-primary-color);
+    border: none;
+    border-radius: var(--r-full);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+      transform: scale(1.1);
+      color: var(--fg-accent-color);
     }
   }
 }
