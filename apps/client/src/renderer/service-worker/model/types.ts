@@ -24,6 +24,7 @@ const CACHE_CONFIG = {
     fonts: 'trip-scheduler-fonts',
     images: 'trip-scheduler-images',
     icons: 'trip-scheduler-icons',
+    airlineIcons: 'trip-scheduler-airline-favicons',
     hashedAssets: 'trip-scheduler-hashed-assets',
     vendorAssets: 'trip-scheduler-vendor-assets',
     regularAssets: 'trip-scheduler-regular-assets',
@@ -32,6 +33,7 @@ const CACHE_CONFIG = {
     images: 365 * 24 * 60 * 60,
     fonts: 365 * 24 * 60 * 60,
     icons: 30 * 24 * 60 * 60,
+    airlineIcons: 365 * 24 * 60 * 60,
     static: {
       hashed: 365 * 24 * 60 * 60,
       vendor: 30 * 24 * 60 * 60,
@@ -43,6 +45,7 @@ const CACHE_CONFIG = {
     fonts: 30,
     images: 1000,
     icons: 500,
+    airlineIcons: 200,
     hashedAssets: 200,
     vendorAssets: 100,
     regularAssets: 50,
@@ -74,9 +77,9 @@ const API_CACHE_RULES: ApiCacheRule[] = [
     maxEntries: 50,
   },
   {
-    path: 'trip.getById',
+    path: 'trip.getByIdWithDays',
     cacheName: 'trip-scheduler-api-trip-details',
-    strategy: 'StaleWhileRevalidate',
+    strategy: 'NetworkFirst',
     maxAgeSeconds: 1 * 60 * 60, // 1 час
     maxEntries: 20,
   },

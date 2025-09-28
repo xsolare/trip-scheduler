@@ -192,7 +192,6 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       route.distance = routeData.distance
       route.duration = routeData.duration
       route.isDirect = routeData.isDirect
-      // FIX: Принудительно обновляем маршрут на карте, чтобы применился новый стиль (например, пунктир)
       mapApiRef.value.addOrUpdateRoute(route)
     }
   }

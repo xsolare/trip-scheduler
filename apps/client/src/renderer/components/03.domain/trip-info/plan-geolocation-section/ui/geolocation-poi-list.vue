@@ -86,7 +86,7 @@ onClickOutside(mapIframeContainerRef, () => {
       :key="point.id"
       class="poi-item"
       :class="{ 'is-readonly': readonly }"
-      @click="props.readonly && emit('focusOnPoint', point)"
+      @click="emit('focusOnPoint', point)"
     >
       <div class="poi-marker-visual">
         <span class="poi-number" :style="{ backgroundColor: point.style?.color }">

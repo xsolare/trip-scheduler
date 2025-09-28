@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import type { IActivity, IDay } from '../models/types'
-import type { TripSection } from '~/shared/types/models/trip'
+import type { Trip, TripSection } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestError, useRequestStatus, useRequestStatusByPrefix, useRequestStore } from '~/plugins/request'
 
@@ -15,6 +15,7 @@ export enum ETripPlanKeys {
 }
 
 export interface ITripPlanState {
+  trip: Trip | null
   days: IDay[]
   currentTripId: string | null
   currentDayId: string | null
@@ -26,6 +27,7 @@ export interface ITripPlanState {
  */
 export const useTripPlanStore = defineStore('tripPlan', {
   state: (): ITripPlanState => ({
+    trip: null,
     days: [],
     currentTripId: null,
     currentDayId: null,
@@ -98,18 +100,20 @@ export const useTripPlanStore = defineStore('tripPlan', {
         fn: db => db.trips.getByIdWithDays(tripId),
         onSuccess: (result) => {
           if (!result) {
-            // Обработка случая, когда путешествие не найдено
+            this.trip = null
             this.days = []
             this.currentDayId = null
-            onSectionsLoad([]) // Передаем пустой массив секций
+            onSectionsLoad([])
             useToast().error('Путешествие не найдено.')
             return
           }
 
+          const { days, sections, ...tripData } = result
+          this.trip = tripData as Trip
+
           const sortedDays = result.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           this.days = sortedDays as IDay[]
 
-          // Вызываем колбэк для передачи секций на уровень выше (в модуль)
           onSectionsLoad(result.sections || [])
 
           const dayFromQueryIsValid = initialDayIdFromQuery && sortedDays.some(d => d.id === initialDayIdFromQuery)
@@ -118,13 +122,14 @@ export const useTripPlanStore = defineStore('tripPlan', {
             this.currentDayId = initialDayIdFromQuery
           }
           else {
-            this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+            this.currentDayId = null
           }
         },
         onError: (error) => {
+          this.trip = null
           this.days = []
           this.currentDayId = null
-          onSectionsLoad([]) // Передаем пустой массив секций при ошибке
+          onSectionsLoad([]) 
 
           console.error(`Ошибка при загрузке данных для путешествия ${tripId}: `, error)
           useToast().error(`Ошибка при загрузке данных: ${error}`)
@@ -409,6 +414,7 @@ export const useTripPlanStore = defineStore('tripPlan', {
     },
 
     reset() {
+      this.trip = null
       this.days = []
       this.currentTripId = null
       this.currentDayId = null

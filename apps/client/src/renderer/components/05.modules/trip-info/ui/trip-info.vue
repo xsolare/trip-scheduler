@@ -9,6 +9,7 @@ import { TripPlanView } from '~/components/04.features/trip-info/trip-plan'
 import { useDisplay } from '~/shared/composables/use-display'
 import { useModuleStore } from '../composables/use-trip-info-module'
 import SectionRenderer from './content/section-renderer.vue'
+import TripOverview from './content/trip-overview.vue'
 import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayHeader from './day-header.vue'
@@ -24,7 +25,7 @@ const { activeView } = storeToRefs(ui)
 
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
-const section = computed(() => route.query.section as string)
+const sectionId = computed(() => route.query.section as string)
 
 watch(
   () => plan.currentDayId,
@@ -32,10 +33,26 @@ watch(
     if (newDayId && newDayId !== oldDayId)
       ui.clearCollapsedState()
 
-    if (newDayId && newDayId !== route.query.day)
+    if (newDayId && newDayId !== route.query.day) {
       router.replace({ query: { ...route.query, day: newDayId, section: undefined } })
+    }
+    else if (!newDayId && route.query.day) {
+      // Handle case where day is deselected
+      const newQuery = { ...route.query }
+      delete newQuery.day
+      router.replace({ query: newQuery })
+    }
   },
 )
+
+watch(dayId, (newDayId) => {
+  if (newDayId && newDayId !== plan.currentDayId) {
+    plan.setCurrentDay(newDayId)
+  }
+  else if (!newDayId && plan.currentDayId) {
+    plan.setCurrentDay('') // or null
+  }
+}, { immediate: true })
 
 const { mdAndUp } = useDisplay()
 const tripInfoWrapperRef = ref<HTMLElement | null>(null)
@@ -86,62 +103,62 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <AsyncStateWrapper
-    ref="tripInfoWrapperRef"
-    :loading="isLoading || plan.isLoadingNewDay"
-    :error="fetchError"
-    :data="days"
-    :retry-handler="() => plan.fetchTripDetails(tripId, dayId, sections.setSections)"
-    transition="slide-up"
-    class="trip-info-wrapper"
-  >
-    <template #loading>
-      <TripInfoSkeleton />
-    </template>
-
-    <template #success>
-      <template v-if="!section">
-        <DaysControls
-          :wrapper-bounding="{
-            left: wrapperLeft,
-            width: wrapperWidth,
-          }"
-        />
-
-        <div :key="plan.currentDayId!" class="trip-info-day-view">
-          <KitDivider :is-loading="plan.isLoadingUpdateDay">
-            о дне
-          </KitDivider>
-          <DayHeader />
-
-          <div class="view-content" :class="`view-mode-${activeView}`">
-            <TripPlanView v-if="activeView === 'plan' || activeView === 'split'" />
-            <TripMemoriesView v-if="activeView === 'memories' || activeView === 'split'" />
-          </div>
-
-          <div ref="dayNavigationWrapperRef">
-            <DayNavigation v-if="!isLoading && days.length > 1" />
-          </div>
-        </div>
+  <div ref="tripInfoWrapperRef" class="trip-info-wrapper">
+    <AsyncStateWrapper
+      :loading="isLoading || plan.isLoadingNewDay"
+      :error="fetchError"
+      :data="days"
+      :retry-handler="() => plan.fetchTripDetails(tripId, dayId, sections.setSections)"
+      transition="slide-up"
+    >
+      <template #loading>
+        <TripInfoSkeleton />
       </template>
-      <template v-else>
-        <SectionRenderer />
-      </template>
-    </template>
 
-    <template #empty>
-      <TripInfoEmpty />
-    </template>
-  </AsyncStateWrapper>
+      <template #success>
+        <!-- Вид "Обзор" (Визитка) -->
+        <TripOverview v-if="!dayId && !sectionId" />
+
+        <!-- Вид "День" -->
+        <template v-else-if="dayId && !sectionId">
+          <DaysControls
+            :wrapper-bounding="{
+              left: wrapperLeft,
+              width: wrapperWidth,
+            }"
+          />
+          <div :key="plan.currentDayId!" class="trip-info-day-view">
+            <KitDivider :is-loading="plan.isLoadingUpdateDay">
+              о дне
+            </KitDivider>
+            <DayHeader />
+
+            <div class="view-content" :class="`view-mode-${activeView}`">
+              <TripPlanView v-if="activeView === 'plan' || activeView === 'split'" />
+              <TripMemoriesView v-if="activeView === 'memories' || activeView === 'split'" />
+            </div>
+
+            <div ref="dayNavigationWrapperRef">
+              <DayNavigation v-if="!isLoading && days.length > 1" />
+            </div>
+          </div>
+        </template>
+
+        <!-- Вид "Раздел" -->
+        <SectionRenderer v-else-if="sectionId" />
+      </template>
+
+      <template #empty>
+        <TripInfoEmpty />
+      </template>
+    </AsyncStateWrapper>
+  </div>
 
   <!-- Fixed Navigation Buttons -->
-  <Teleport
-    v-if="!section"
-    to="body"
-  >
+  <Teleport to="body">
     <Transition name="fade">
       <KitBtn
-        v-if="showFixedNavButtons"
+        v-if="showFixedNavButtons && dayId"
         variant="outlined"
         color="secondary"
         class="fixed-nav-btn prev"
@@ -155,7 +172,7 @@ onUnmounted(() => {
     </Transition>
     <Transition name="fade">
       <KitBtn
-        v-if="showFixedNavButtons"
+        v-if="showFixedNavButtons && dayId"
         variant="outlined"
         color="secondary"
         class="fixed-nav-btn next"

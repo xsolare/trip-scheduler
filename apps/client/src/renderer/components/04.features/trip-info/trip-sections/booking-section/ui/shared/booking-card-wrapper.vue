@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
-import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitEditable } from '~/components/01.kit/kit-editable'
 
 interface Props {

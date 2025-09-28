@@ -29,6 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits(['updateSection'])
 
 // --- Состояние компонента ---
+const isInitialized = ref(false) // Флаг для контроля инициализации
 const sectionContainerRef = ref<HTMLElement | null>(null)
 const mapController = ref<ReturnType<typeof useGeolocationMap>>()
 const activeView = ref<'points' | 'routes'>('points')
@@ -37,17 +38,6 @@ const isMapFullscreen = ref(false)
 const isPanelVisible = ref(true)
 const routeIdForNewSegment = ref<string | null>(null)
 const searchQuery = ref('')
-
-const debouncedUpdate = useDebounceFn(() => {
-  emit('updateSection', {
-    ...props.section,
-    points: toRaw(points.value),
-    routes: toRaw(routes.value),
-    drawnRoutes: toRaw(drawnRoutes.value),
-    center: props.section.center,
-    zoom: props.section.zoom,
-  })
-}, 1000)
 
 // --- Композиции ---
 const {
@@ -83,6 +73,25 @@ const {
 } = useGeolocationRoutes(mapController)
 
 const { startDrawing, stopDrawing } = useGeolocationDrawing(mapController)
+
+const debouncedUpdate = useDebounceFn(() => {
+  if (!isInitialized.value)
+    return
+
+  const currentCenter = mapController.value?.mapInstance.value?.getView().getCenter()
+  const currentZoom = mapController.value?.mapInstance.value?.getView().getZoom()
+
+  emit('updateSection', {
+    ...props.section,
+    points: toRaw(points.value),
+    routes: toRaw(routes.value),
+    drawnRoutes: toRaw(drawnRoutes.value),
+    center: currentCenter ? (toLonLat(currentCenter) as Coordinate) : props.section.center,
+    zoom: currentZoom ?? props.section.zoom,
+  })
+}, 1000)
+
+watch([points, routes, drawnRoutes], debouncedUpdate, { deep: true })
 
 const isLoading = computed(() => isPointsLoading.value || isRoutesLoading.value)
 const poiPointsWithStyle = computed(() => points.value.map((point, index) => ({ ...point, style: { ...point.style, color: POI_COLORS[index % POI_COLORS.length] } })))
@@ -251,6 +260,11 @@ function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
     else
       updatePointInRoute(pointId, newCoords, false) // Не обновляем адрес при перетаскивании
   })
+
+  // FIX: После инициализации карты разрешаем обновления
+  nextTick(() => {
+    isInitialized.value = true
+  })
 }
 
 onMounted(() => {
@@ -373,6 +387,7 @@ watchEffect(() => {
       :center="mapCenter"
       :height="height"
       :is-loading="isLoading"
+      :zoom="section.zoom"
       :readonly="readonly"
       :is-fullscreen="isMapFullscreen"
       @map-ready="onMapReady"
