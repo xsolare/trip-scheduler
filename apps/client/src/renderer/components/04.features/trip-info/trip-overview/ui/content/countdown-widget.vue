@@ -99,6 +99,8 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+@use '~/assets/scss/_setup.scss' as *;
+
 .countdown-container {
   display: flex;
   flex-direction: column;
@@ -188,7 +190,12 @@ onUnmounted(() => {
   transform: translateY(-0.8em) rotateX(90deg);
   opacity: 0;
 }
+
 @include media-down(sm) {
+  .countdown-widget {
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
   .time-segment {
     min-width: 45px;
   }

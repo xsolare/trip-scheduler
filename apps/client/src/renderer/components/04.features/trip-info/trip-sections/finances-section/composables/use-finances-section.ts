@@ -69,16 +69,16 @@ export function useFinancesSection(
     isTransactionFormOpen.value = true
   }
 
-  function saveTransaction(tx: Transaction) {
+  function saveTransaction(tx: Partial<Transaction>) {
     if (transactionToEdit.value) {
       // Обновление
       const index = transactions.value.findIndex(t => t.id === tx.id)
       if (index !== -1)
-        transactions.value.splice(index, 1, tx)
+        transactions.value.splice(index, 1, tx as Transaction)
     }
     else {
       // Создание
-      transactions.value.unshift({ ...tx, id: uuidv4() })
+      transactions.value.unshift({ ...tx, id: uuidv4() } as Transaction)
     }
     isTransactionFormOpen.value = false
   }
@@ -90,12 +90,14 @@ export function useFinancesSection(
   }
 
   // --- Методы для работы с категориями ---
-  function saveCategory(cat: Category) {
+  function saveCategory(cat: Partial<Category>) {
     const index = categories.value.findIndex(c => c.id === cat.id)
-    if (index !== -1)
-      categories.value[index] = cat
-    else
-      categories.value.push({ ...cat, id: uuidv4() })
+    if (index !== -1) {
+      categories.value[index] = { ...categories.value[index], ...cat } as Category
+    }
+    else {
+      categories.value.push({ ...cat, id: uuidv4() } as Category)
+    }
   }
 
   function deleteCategory(id: string) {

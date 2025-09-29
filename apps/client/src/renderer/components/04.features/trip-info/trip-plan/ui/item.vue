@@ -23,7 +23,13 @@ interface ActivityItemProps {
 }
 
 const props = defineProps<ActivityItemProps>()
-const emit = defineEmits(['update', 'delete', 'moveUp', 'moveDown', 'toggleCollapse'])
+const emit = defineEmits<{
+  (e: 'update', value: Activity): void
+  (e: 'delete', value: string): void
+  (e: 'moveUp'): void
+  (e: 'moveDown'): void
+  (e: 'toggleCollapse'): void
+}>()
 
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)

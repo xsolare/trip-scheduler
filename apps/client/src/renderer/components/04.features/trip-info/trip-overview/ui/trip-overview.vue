@@ -1,39 +1,49 @@
 <script setup lang="ts">
-import type { UpdateTripInput } from '~/shared/types/models/trip'
+import type { IDay } from '~/components/04.features/trip-info/trip-plan/models/types'
+import type { Trip, TripSection } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { DropdownMenuItem } from 'reka-ui'
 import { KitAnimatedTooltip } from '~/components/01.kit/kit-animated-tooltip'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
+import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
-import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { TripStatus } from '~/shared/types/models/trip'
 import CountdownWidget from './content/countdown-widget.vue'
-import EditTripDialog from './content/edit-trip-dialog.vue'
 import StatsWidget from './content/stats-widget.vue'
 import WeatherWidget from './content/weather-widget.vue'
 
-const { plan, sections } = useModuleStore(['plan', 'sections'])
+interface Props {
+  trip: Trip | null
+  sections: TripSection[]
+  days: IDay[]
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<{
+  (e: 'edit'): void
+  (e: 'delete'): void
+}>()
+
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
 
-const trip = computed(() => plan.trip)
 const isMoreMenuOpen = ref(false)
-const isEditModalOpen = ref(false)
 
 const isTripUpcoming = computed(() => {
-  if (!trip.value)
+  if (!props.trip)
     return false
 
-  return trip.value.status === TripStatus.PLANNED && new Date(trip.value.startDate) > new Date()
+  return props.trip.status === TripStatus.PLANNED && new Date(props.trip.startDate) > new Date()
 })
 
 const formattedDates = computed(() => {
-  if (!trip.value)
+  if (!props.trip)
     return ''
-  const start = new Date(trip.value.startDate)
-  const end = new Date(trip.value.endDate)
+
+  const start = new Date(props.trip.startDate)
+  const end = new Date(props.trip.endDate)
 
   const formatter = new Intl.DateTimeFormat('ru', {
     day: 'numeric',
@@ -47,17 +57,43 @@ const formattedDates = computed(() => {
 })
 
 const tripDurationDays = computed(() => {
-  if (!trip.value)
+  if (!props.trip)
     return 0
-  const start = new Date(trip.value.startDate)
-  const end = new Date(trip.value.endDate)
+  const start = new Date(props.trip.startDate)
+  const end = new Date(props.trip.endDate)
   const diffTime = Math.abs(end.getTime() - start.getTime())
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
   return diffDays
 })
 
-const visibleParticipants = computed(() => trip.value?.participants.slice(0, 5) || [])
-const hiddenParticipantsCount = computed(() => Math.max(0, (trip.value?.participants.length || 0) - 5))
+const visibleParticipants = computed(() => props.trip?.participants.slice(0, 5) || [])
+const hiddenParticipantsCount = computed(() => Math.max(0, (props.trip?.participants.length || 0) - 5))
+
+// Информация о статусе
+const statusInfo = computed(() => {
+  if (!props.trip)
+    return {}
+  switch (props.trip.status) {
+    case 'completed':
+      return { text: 'Завершено', class: 'completed', icon: 'mdi:check-circle-outline' }
+    case 'planned':
+      return { text: 'Запланировано', class: 'planned', icon: 'mdi:calendar-check-outline' }
+    default:
+      return { text: 'Черновик', class: 'draft', icon: 'mdi:pencil-circle-outline' }
+  }
+})
+
+// Форматирование бюджета
+const formattedBudget = computed(() => {
+  if (!props.trip || !props.trip.budget || !props.trip.currency)
+    return null
+
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: props.trip.currency,
+    minimumFractionDigits: 0,
+  }).format(props.trip.budget)
+})
 
 function navigateToDay(dayId: string) {
   router.push({ query: { day: dayId } })
@@ -69,7 +105,7 @@ function navigateToSection(sectionId: string) {
 
 // --- Функции для контролов ---
 function handleEditTrip() {
-  isEditModalOpen.value = true
+  emit('edit')
 }
 
 async function handleDeleteTrip() {
@@ -79,18 +115,13 @@ async function handleDeleteTrip() {
     type: 'danger',
     confirmText: 'Удалить',
   })
-  if (isConfirmed) {
-    await plan.deleteCurrentTrip()
-  }
+  if (isConfirmed)
+    await emit('delete')
 }
 
 function handleShareTrip() {
   // TODO: Реализовать логику "Поделиться"
   toast.info('Функция "Поделиться" находится в разработке.')
-}
-
-function handleSaveTripUpdate(updatedData: UpdateTripInput) {
-  plan.updateTrip(updatedData)
 }
 </script>
 
@@ -110,15 +141,15 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
       <div class="banner-overlay" />
 
       <div class="card-actions">
-        <button class="action-btn" title="Редактировать" @click.stop="handleEditTrip">
-          <Icon icon="mdi:pencil-outline" />
-        </button>
         <KitDropdown v-model:open="isMoreMenuOpen" align="end">
           <template #trigger>
             <button class="action-btn" title="Еще" @click.stop.prevent>
               <Icon icon="mdi:dots-vertical" />
             </button>
           </template>
+          <DropdownMenuItem class="kit-dropdown-item" @click="handleEditTrip">
+            <Icon icon="mdi:pencil-outline" /><span>Редактировать</span>
+          </DropdownMenuItem>
           <DropdownMenuItem class="kit-dropdown-item" @click="handleShareTrip">
             <Icon icon="mdi:share-variant-outline" /><span>Поделиться</span>
           </DropdownMenuItem>
@@ -142,27 +173,48 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
             <span>{{ trip.cities.join(', ') }}</span>
           </div>
         </div>
+      </div>
 
-        <div class="trip-participants">
-          <KitAnimatedTooltip
-            v-for="participant in visibleParticipants"
-            :key="participant.id"
-            :name="participant.name"
-            :offset="10"
-          >
-            <KitAvatar
+      <!-- Футер баннера с эффектом матового стекла -->
+      <div class="banner-footer">
+        <!-- Левая часть: мета-информация и теги -->
+        <div class="footer-meta-content">
+          <div class="trip-extra-meta">
+            <div class="meta-item meta-item--status" :class="statusInfo.class">
+              <Icon v-if="statusInfo.icon" :icon="statusInfo.icon" />
+              <span>{{ statusInfo.text }}</span>
+            </div>
+            <div v-if="formattedBudget" class="meta-item">
+              <Icon icon="mdi:wallet-outline" />
+              <span>{{ formattedBudget }}</span>
+            </div>
+          </div>
+
+          <div class="trip-participants">
+            <KitAnimatedTooltip
+              v-for="participant in visibleParticipants"
+              :key="participant.id"
               :name="participant.name"
-              :src="participant.avatarUrl"
+              :offset="10"
+            >
+              <KitAvatar
+                :name="participant.name"
+                :src="participant.avatarUrl"
+                :size="36"
+              />
+            </KitAnimatedTooltip>
+            <KitAvatar
+              v-if="hiddenParticipantsCount > 0"
+              is-more
               :size="36"
-            />
-          </KitAnimatedTooltip>
-          <KitAvatar
-            v-if="hiddenParticipantsCount > 0"
-            is-more
-            :size="36"
-          >
-            +{{ hiddenParticipantsCount }}
-          </KitAvatar>
+            >
+              +{{ hiddenParticipantsCount }}
+            </KitAvatar>
+          </div>
+        </div>
+
+        <div v-if="trip.tags?.length" class="trip-tags">
+          <span v-for="tag in trip.tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
       </div>
     </div>
@@ -193,9 +245,9 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
           <Icon icon="mdi:calendar-month-outline" />
           <span>Дни путешествия</span>
         </h2>
-        <ul v-if="plan.days.length" class="items-list">
+        <ul v-if="days.length" class="items-list">
           <li
-            v-for="(day, index) in plan.days"
+            v-for="(day, index) in days"
             :key="day.id"
             class="list-item day-item"
             :style="{ animationDelay: `${index * 50}ms` }"
@@ -219,9 +271,9 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
           <Icon icon="mdi:file-document-multiple-outline" />
           <span>Разделы</span>
         </h2>
-        <ul v-if="sections.sortedSections.length" class="items-list">
+        <ul v-if="sections.length" class="items-list">
           <li
-            v-for="(section, index) in sections.sortedSections"
+            v-for="(section, index) in sections"
             :key="section.id"
             class="list-item section-item"
             :style="{ animationDelay: `${index * 50}ms` }"
@@ -240,31 +292,27 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
       </div>
     </div>
 
+    <KitDivider
+      v-if="isTripUpcoming"
+    >
+      <Icon icon="mdi:star-four-points-outline" />
+    </KitDivider>
     <CountdownWidget
       v-if="isTripUpcoming"
       :target-date="trip.startDate"
       class="countdown"
     />
-
-    <EditTripDialog
-      v-if="trip"
-      v-model:visible="isEditModalOpen"
-      :trip="trip"
-      @save="handleSaveTripUpdate"
-    />
   </div>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .info-widget-card {
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-l);
   padding: 1rem;
 }
-</style>
 
-<style scoped lang="scss">
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -280,7 +328,7 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .overview-banner,
@@ -307,13 +355,12 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
 
 .overview-banner {
   position: relative;
-  height: 300px;
+  height: 380px;
   border-radius: var(--r-l);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 1.5rem;
   box-sizing: border-box;
 
   .banner-image {
@@ -346,14 +393,20 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
   .banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 60%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 70%);
     z-index: 1;
   }
 
   .banner-content {
     position: relative;
     z-index: 2;
-    color: white;
+    color: var(--fg-inverted-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 1.5rem;
+    padding-top: 48px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 
     & > * {
       animation: fadeInUp 0.6s 0.2s ease-out forwards;
@@ -362,11 +415,10 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
   }
 
   .trip-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    line-height: 1.2;
     font-weight: 700;
-    margin: 0 0 0.5rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    z-index: 2;
+    margin: 0;
   }
 
   .trip-meta {
@@ -374,8 +426,6 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 1.5rem;
-    margin-bottom: 1.5rem;
-    z-index: 2;
 
     .meta-item {
       display: flex;
@@ -383,27 +433,103 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
       gap: 0.5rem;
       font-size: 0.9rem;
       font-weight: 500;
-      backdrop-filter: blur(2px);
     }
   }
+}
 
-  .trip-participants {
-    animation-delay: 0.4s;
+.banner-footer {
+  position: relative;
+  z-index: 2;
+  background-color: rgba(var(--bg-primary-color-rgb), 0.4);
+  backdrop-filter: blur(10px);
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: fadeInUp 0.6s 0.4s ease-out forwards;
+  opacity: 0;
+
+  @include media-down(sm) {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.footer-meta-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.trip-extra-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  color: var(--fg-primary-color);
+
+  .meta-item {
     display: flex;
-    z-index: 2;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
 
-    :deep(.kit-avatar) {
-      margin-left: -12px;
-      transition: transform 0.2s ease;
+  .meta-item--status {
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--r-s);
 
-      &:first-child {
-        margin-left: 0;
-      }
+    &.completed {
+      background-color: rgba(var(--fg-success-color-rgb), 0.1);
+      color: var(--fg-success-color);
+    }
+    &.planned {
+      background-color: rgba(var(--fg-warning-color-rgb), 0.1);
+      color: var(--fg-warning-color);
+    }
+    &.draft {
+      background-color: rgba(var(--fg-secondary-color-rgb), 0.1);
+      color: var(--fg-secondary-color);
+    }
+  }
+}
 
-      &:hover {
-        transform: translateY(-4px);
-        z-index: 10;
-      }
+.trip-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .tag {
+    background-color: rgba(var(--bg-tertiary-color-rgb), 0.4);
+    color: var(--fg-secondary-color);
+    padding: 2px 8px;
+    border-radius: var(--r-full);
+    font-size: 0.7rem;
+    font-weight: 500;
+  }
+}
+
+.trip-participants {
+  display: flex;
+  flex-shrink: 0;
+  align-self: center;
+
+  :deep(.kit-avatar) {
+    transition: transform 0.2s ease;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      z-index: 10;
     }
   }
 }
@@ -422,7 +548,7 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
     justify-content: center;
     width: 36px;
     height: 36px;
-    background-color: rgba(var(--bg-primary-color-rgb), 0.7);
+    background-color: rgba(var(--bg-secondary-color-rgb), 0.5);
     color: var(--fg-primary-color);
     border: none;
     border-radius: var(--r-full);
@@ -450,13 +576,13 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
 .info-widgets {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: start;
 }
 
@@ -464,16 +590,16 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-l);
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
   font-size: 1.25rem;
   font-weight: 600;
-  margin: 0 0 1.5rem;
+  margin: 0.5rem 0.5rem 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-secondary-color);
   color: var(--fg-primary-color);
@@ -493,10 +619,11 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
 }
 
 .list-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 12px 8px;
   border-radius: var(--r-m);
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -515,8 +642,7 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
 .item-main-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex-grow: 1;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -553,7 +679,6 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
 
 .chevron-icon {
   color: var(--fg-tertiary-color);
-  flex-shrink: 0;
 }
 
 .empty-list-placeholder {
@@ -563,7 +688,56 @@ function handleSaveTripUpdate(updatedData: UpdateTripInput) {
   font-size: 0.9rem;
 }
 
-.countdown {
-  margin: 0 auto;
+@include media-down(sm) {
+  .trip-overview {
+    gap: 1rem;
+  }
+  .overview-banner {
+    height: auto;
+    min-height: 300px;
+  }
+  .banner-content {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .trip-title {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  .trip-meta {
+    gap: 0.5rem 1rem;
+    .meta-item {
+      font-size: 0.85rem;
+      gap: 0.25rem;
+    }
+  }
+  .footer-meta-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .trip-participants {
+    align-self: flex-start;
+  }
+  .info-widgets,
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .overview-section {
+    padding: 0.75rem;
+  }
+  .section-title {
+    font-size: 1.1rem;
+    margin: 0.25rem 0.25rem 1rem;
+    padding-bottom: 0.75rem;
+  }
+  .list-item {
+    padding: 10px 6px;
+    gap: 0.5rem;
+  }
+  .item-meta {
+    font-size: 0.8rem;
+  }
 }
 </style>

@@ -47,6 +47,7 @@ export const UpdateTripInputSchema = z.object({
     currency: true,
     tags: true,
     visibility: true,
+    imageUrl: true,
   }).partial().extend({
     participantIds: z.array(z.string().uuid()).optional(),
   }),

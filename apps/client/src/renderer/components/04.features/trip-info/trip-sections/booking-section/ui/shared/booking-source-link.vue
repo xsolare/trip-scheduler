@@ -40,7 +40,7 @@ const sourceInfo = computed(() => {
     // Generic fallback
     return { name: 'Перейти по ссылке', icon: 'mdi:open-in-new', color: 'var(--fg-secondary-color)' }
   }
-  catch (error) {
+  catch {
     console.error('Invalid URL:', props.url)
     return null // Don't render if URL is invalid
   }

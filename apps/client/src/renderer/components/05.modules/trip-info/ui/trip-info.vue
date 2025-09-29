@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import type { UpdateTripInput } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { useElementBounding, useIntersectionObserver, useWindowSize } from '@vueuse/core'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { TripEditInfoDialog } from '~/components/04.features/trip-info/trip-edit-info-dialog'
 import { TripMemoriesView } from '~/components/04.features/trip-info/trip-memories'
 import { TripPlanView } from '~/components/04.features/trip-info/trip-plan'
 import { useDisplay } from '~/shared/composables/use-display'
 import { useModuleStore } from '../composables/use-trip-info-module'
 import SectionRenderer from './content/section-renderer.vue'
-import TripOverview from './content/trip-overview.vue'
+import TripOverviewContent from './content/trip-overview.vue'
 import DayNavigation from './controls/day-navigation.vue'
 import DaysControls from './controls/days-controls.vue'
 import DayHeader from './day-header.vue'
@@ -26,6 +28,16 @@ const { activeView } = storeToRefs(ui)
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
 const sectionId = computed(() => route.query.section as string)
+
+const isEditModalOpen = ref(false)
+
+function handleEditTrip() {
+  isEditModalOpen.value = true
+}
+
+function handleSaveTrip(updatedData: UpdateTripInput) {
+  plan.updateTrip(updatedData)
+}
 
 watch(
   () => plan.currentDayId,
@@ -117,7 +129,7 @@ onUnmounted(() => {
 
       <template #success>
         <!-- Вид "Обзор" (Визитка) -->
-        <TripOverview v-if="!dayId && !sectionId" />
+        <TripOverviewContent v-if="!dayId && !sectionId" :plan="plan" :sections="sections" @edit="handleEditTrip" />
 
         <!-- Вид "День" -->
         <template v-else-if="dayId && !sectionId">
@@ -146,6 +158,13 @@ onUnmounted(() => {
 
         <!-- Вид "Раздел" -->
         <SectionRenderer v-else-if="sectionId" />
+
+        <TripEditInfoDialog
+          v-if="isEditModalOpen"
+          v-model:visible="isEditModalOpen"
+          :trip="plan.trip"
+          @save="handleSaveTrip"
+        />
       </template>
 
       <template #empty>

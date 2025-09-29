@@ -11,7 +11,10 @@ interface Props {
   settings: FinancesSettings
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['update:visible', 'save'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+  (e: 'save', value: FinancesSettings): void
+}>()
 
 const form = ref<FinancesSettings>({ ...props.settings })
 

@@ -21,6 +21,7 @@ function handleMouseEnter(event: MouseEvent) {
 function handleMouseMove(event: MouseEvent) {
   if (!isHovered.value)
     return
+
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   mouseX.value = event.clientX - rect.left - rect.width / 2
 }

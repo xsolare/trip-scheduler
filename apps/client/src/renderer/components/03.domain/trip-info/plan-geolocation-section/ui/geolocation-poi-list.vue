@@ -11,7 +11,7 @@ interface Props {
   readonly?: boolean
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'focusOnPoint', point: MapPoint): void

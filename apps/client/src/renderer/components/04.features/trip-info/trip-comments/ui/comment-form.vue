@@ -4,7 +4,9 @@ import { useTextareaAutosize } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { useAuthStore } from '~/shared/store/auth.store'
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits<{
+  (e: 'submit', value: string): void
+}>()
 
 const authStore = useAuthStore()
 const { textarea, input: newCommentText } = useTextareaAutosize()

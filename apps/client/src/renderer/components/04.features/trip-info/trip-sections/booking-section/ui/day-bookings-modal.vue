@@ -14,7 +14,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['update:visible'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+}>()
 
 const { activeTab, bookingGroups, tabItems } = useBookingSection({
   section: {

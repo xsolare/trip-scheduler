@@ -6,7 +6,10 @@ interface Props {
   message: ToastMessage
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['remove'])
+
+const emit = defineEmits<{
+  (e: 'remove'): void
+}>()
 
 const toastEl = ref<HTMLElement | null>(null)
 const itemClass = computed(() => `kit-toast-item kit-toast-item--${props.message.type}`)

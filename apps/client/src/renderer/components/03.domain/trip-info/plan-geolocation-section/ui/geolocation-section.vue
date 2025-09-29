@@ -26,7 +26,9 @@ const props = withDefaults(defineProps<Props>(), {
   height: '450px',
 })
 
-const emit = defineEmits(['updateSection'])
+const emit = defineEmits<{
+  (e: 'updateSection', value: ActivitySectionGeolocation): void
+}>()
 
 // --- Состояние компонента ---
 const isInitialized = ref(false) // Флаг для контроля инициализации

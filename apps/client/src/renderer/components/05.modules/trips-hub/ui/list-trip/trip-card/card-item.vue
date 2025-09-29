@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ITrip } from '../../../models/types'
+import type { UpdateTripInput } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
 import { DropdownMenuItem } from 'reka-ui'
 import { inject } from 'vue'
@@ -8,6 +9,7 @@ import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { TripCommentsWidget } from '~/components/04.features/trip-info/trip-comments'
+import { TripEditInfoDialog } from '~/components/04.features/trip-info/trip-edit-info-dialog'
 import { CommentParentType } from '~/shared/types/models/comment'
 import { TripsHubKey } from '../../../composables'
 
@@ -22,6 +24,7 @@ const router = useRouter()
 const tripsHub = inject(TripsHubKey)
 const confirm = useConfirm()
 const isMoreMenuOpen = ref(false)
+const isEditModalOpen = ref(false)
 
 function goTo() {
   router.push(AppRoutePaths.Trip.Info(`${props.id}`))
@@ -37,6 +40,16 @@ async function handleDelete() {
 
   if (isConfirmed && tripsHub) {
     tripsHub.deleteTrip(props.id)
+  }
+}
+
+function handleEdit() {
+  isEditModalOpen.value = true
+}
+
+function handleSave(updatedData: UpdateTripInput) {
+  if (tripsHub) {
+    tripsHub.updateTripInList({ id: props.id, ...updatedData })
   }
 }
 
@@ -121,16 +134,16 @@ const visibilityIcon = computed(() => {
         </span>
 
         <div class="card-actions">
-          <button class="action-btn" title="Редактировать" @click.stop>
-            <Icon icon="mdi:pencil-outline" />
-          </button>
           <KitDropdown v-model:open="isMoreMenuOpen" align="end">
             <template #trigger>
               <button class="action-btn" title="Еще" @click.stop.prevent>
                 <Icon icon="mdi:dots-vertical" />
               </button>
             </template>
-            <DropdownMenuItem class="kit-dropdown-item is-destructive" @click="handleDelete">
+            <DropdownMenuItem class="kit-dropdown-item" @click.stop="handleEdit">
+              <Icon icon="mdi:pencil-outline" /><span>Редактировать</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem class="kit-dropdown-item is-destructive" @click.stop="handleDelete">
               <Icon icon="mdi:trash-can-outline" /><span>Удалить</span>
             </DropdownMenuItem>
           </KitDropdown>
@@ -200,6 +213,13 @@ const visibilityIcon = computed(() => {
         </div>
       </div>
     </div>
+
+    <TripEditInfoDialog
+      v-if="isEditModalOpen"
+      v-model:visible="isEditModalOpen"
+      :trip="props"
+      @save="handleSave"
+    />
   </div>
 </template>
 

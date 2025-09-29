@@ -14,7 +14,10 @@ interface Props {
   readonly: boolean
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['delete', 'update:booking'])
+const emit = defineEmits<{
+  (e: 'delete'): void
+  (e: 'update:booking', value: Booking & { type: 'flight' }): void
+}>()
 
 const segments = computed(() => props.booking.data.segments || [])
 const firstSegment = computed(() => segments.value[0])

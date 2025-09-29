@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import type { PropType } from 'vue'
 import { Icon } from '@iconify/vue'
 import { computed, onMounted, ref, watch } from 'vue'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
+
+interface Props {
+  cities: string[]
+  startDate: string
+}
 
 interface WeatherData {
   average: number | null
@@ -9,21 +14,20 @@ interface WeatherData {
   max: number | null
 }
 
-const props = defineProps({
-  cities: {
-    type: Array as PropType<string[]>,
-    required: true,
-  },
-  startDate: {
-    type: String,
-    required: true,
-  },
-})
+const props = defineProps<Props>()
 
 const selectedCity = ref<string | null>(null)
 const weatherData = ref<WeatherData>({ average: null, min: null, max: null })
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+const isDropdownOpen = ref(false)
+
+const cityOptions = computed(() => {
+  return props.cities.map(city => ({
+    value: city,
+    label: city,
+  }))
+})
 
 const monthName = computed(() => {
   if (!props.startDate)
@@ -129,13 +133,23 @@ onMounted(() => {
     <h3 class="widget-title">
       Средняя погода в {{ monthName }}
     </h3>
-    <div v-if="cities.length > 1" class="city-selector-wrapper">
-      <Icon icon="mdi:city-variant-outline" />
-      <select v-model="selectedCity" class="city-selector">
-        <option v-for="city in cities" :key="city" :value="city">
-          {{ city }}
-        </option>
-      </select>
+    <div v-if="cities.length > 1" class="city-selector-container">
+      <KitDropdown
+        v-model="selectedCity"
+        v-model:open="isDropdownOpen"
+        :items="cityOptions"
+        align="start"
+      >
+        <template #trigger>
+          <button class="city-selector-wrapper">
+            <Icon icon="mdi:city-variant-outline" />
+            <span class="city-selector-text">
+              {{ selectedCity || 'Выберите город' }}
+            </span>
+            <Icon icon="mdi:chevron-down" class="chevron-icon" :class="{ 'is-open': isDropdownOpen }" />
+          </button>
+        </template>
+      </KitDropdown>
     </div>
     <div class="forecast-display">
       <div v-if="isLoading" class="state-info">
@@ -168,6 +182,8 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+@use '~/assets/scss/_setup.scss' as *;
+
 .weather-widget {
   display: flex;
   flex-direction: column;
@@ -178,26 +194,42 @@ onMounted(() => {
   color: var(--fg-primary-color);
   margin: 0 0 1rem;
 }
+.city-selector-container {
+  margin-bottom: 1rem;
+}
+
 .city-selector-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-m);
-  padding: 4px 12px;
-  margin-bottom: 1rem;
+  padding: 8px 12px;
   color: var(--fg-secondary-color);
-  flex-shrink: 0;
-}
-.city-selector {
   width: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
+  border: 1px solid var(--border-secondary-color);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+
+  &:hover {
+    border-color: var(--border-primary-color);
+  }
+}
+
+.city-selector-text {
+  flex-grow: 1;
+  text-align: left;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--fg-primary-color);
-  cursor: pointer;
+}
+
+.chevron-icon {
+  transition: transform 0.2s ease;
+  &.is-open {
+    transform: rotate(180deg);
+  }
 }
 .forecast-display {
   flex-grow: 1;
@@ -269,6 +301,17 @@ onMounted(() => {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@include media-down(sm) {
+  .weather-summary {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .summary-item.average .value {
+    font-size: 2.25rem;
   }
 }
 </style>

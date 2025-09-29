@@ -11,7 +11,10 @@ interface Props {
   filteredTotal: number
 }
 defineProps<Props>()
-defineEmits(['editTransaction', 'deleteTransaction'])
+const emit = defineEmits<{
+  (e: 'editTransaction', transaction: Transaction): void
+  (e: 'deleteTransaction', id: string): void
+}>()
 
 function getCategory(id: string | null, categories: Category[]) {
   return categories.find(c => c.id === id)
@@ -56,10 +59,10 @@ const { format: formatCurrency } = useCurrencyFormatter()
               -{{ formatCurrency(tx.amount, tx.currency) }}
             </span>
             <div v-if="!readonly" class="item-actions">
-              <button title="Редактировать" @click="$emit('editTransaction', tx)">
+              <button title="Редактировать" @click="emit('editTransaction', tx)">
                 <Icon icon="mdi:pencil-outline" />
               </button>
-              <button title="Удалить" @click="$emit('deleteTransaction', tx.id)">
+              <button title="Удалить" @click="emit('deleteTransaction', tx.id)">
                 <Icon icon="mdi:trash-can-outline" />
               </button>
             </div>

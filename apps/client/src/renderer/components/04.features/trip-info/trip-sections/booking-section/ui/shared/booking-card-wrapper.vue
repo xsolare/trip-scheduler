@@ -9,7 +9,7 @@ interface Props {
 }
 
 defineProps<Props>()
-const emit = defineEmits(['delete'])
+const emit = defineEmits<{ (e: 'delete'): void }>()
 const title = defineModel<string>('title', { required: true })
 const confirm = useConfirm()
 

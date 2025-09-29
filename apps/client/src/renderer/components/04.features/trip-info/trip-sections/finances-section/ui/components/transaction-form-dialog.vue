@@ -19,7 +19,11 @@ interface Props {
   mainCurrency: string
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['update:visible', 'save', 'openCategoryManager'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+  (e: 'save', transaction: Partial<Transaction>): void
+  (e: 'openCategoryManager'): void
+}>()
 
 const form = ref<Partial<Transaction>>({})
 const isTimeless = ref(false)

@@ -5,7 +5,9 @@ import { useModuleStore } from '~/components/05.modules/trip-info/composables/us
 import AddDayActivity from '~/components/05.modules/trip-info/ui/controls/add-day-activity.vue'
 import ActivityItem from './item.vue'
 
-const emit = defineEmits(['add'])
+const emit = defineEmits<{
+  (e: 'add'): void
+}>()
 
 const { plan: data, ui } = useModuleStore(['plan', 'ui'])
 

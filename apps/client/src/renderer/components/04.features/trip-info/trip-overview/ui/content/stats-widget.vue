@@ -43,6 +43,8 @@ defineProps<Props>()
 </template>
 
 <style scoped lang="scss">
+@use '~/assets/scss/_setup.scss' as *;
+
 .stats-widget {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -106,5 +108,12 @@ defineProps<Props>()
 .stat-label {
   font-size: 0.8rem;
   color: var(--fg-secondary-color);
+}
+
+@include media-down(sm) {
+  .stats-widget {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
 }
 </style>
