@@ -1,11 +1,7 @@
 import type { Ref } from 'vue'
 import { Map, View } from 'ol'
 import TileLayer from 'ol/layer/Tile'
-import { useGeographic } from 'ol/proj'
 import OSM from 'ol/source/OSM'
-import { nextTick, onUnmounted, readonly, ref } from 'vue'
-
-useGeographic()
 
 export interface KitMapOptions {
   center: [number, number]

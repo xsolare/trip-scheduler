@@ -9,14 +9,14 @@ import { useModuleStore } from '~/components/05.modules/trip-info/composables/us
 import { useIconPicker } from './use-icon-picker'
 
 export function useTripInfoLayout() {
-  const store = useModuleStore(['sections'])
+  const store = useModuleStore(['sections', 'plan'])
   const { sortedSections } = storeToRefs(store.sections)
   const confirm = useConfirm()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const router = useRouter()
   const route = useRoute()
 
-  const activeTabId = ref<string>((route.query.section as string) || 'daily-route')
+  const activeTabId = ref<string>((route.query.section as string) || 'overview')
   const isDrawerOpen = ref(false)
   const isLayoutDropdownOpen = ref(false)
   const isHeaderDropdownOpen = ref(false)
@@ -33,17 +33,17 @@ export function useTripInfoLayout() {
   } = useIconPicker()
 
   const tabItems = computed((): ViewSwitcherItem<string>[] => {
-    const dailyRouteTab: ViewSwitcherItem<string> = {
-      id: 'daily-route',
-      label: 'Маршрут по дням',
-      icon: 'mdi:calendar-month-outline',
+    const overviewTab: ViewSwitcherItem<string> = {
+      id: 'overview',
+      label: 'Обзор',
+      icon: 'mdi:view-dashboard-outline',
     }
     const sectionTabs: ViewSwitcherItem<string>[] = sortedSections.value.map((section: TripSection) => ({
       id: section.id,
       label: section.title,
       icon: section.icon || 'mdi:file-document-outline',
     }))
-    return [dailyRouteTab, ...sectionTabs]
+    return [overviewTab, ...sectionTabs]
   })
 
   watchEffect(() => {
@@ -53,20 +53,25 @@ export function useTripInfoLayout() {
         activeTabId.value = sectionIdFromQuery
       }
     }
-    else if (!sectionIdFromQuery && activeTabId.value !== 'daily-route') {
-      activeTabId.value = 'daily-route'
+    else if (!sectionIdFromQuery && activeTabId.value !== 'overview') {
+      activeTabId.value = 'overview'
     }
   })
 
-  const activeTab = computed(() => tabItems.value.find(item => item.id === activeTabId.value))
+  const activeTab = computed(() => {
+    if (route.query.day) {
+      return { id: 'daily-route', label: 'Маршрут по дням', icon: 'mdi:calendar-month-outline' }
+    }
+    return tabItems.value.find(item => item.id === activeTabId.value)
+  })
 
   const menuItems = computed((): KitDropdownItem[] => {
     const baseItems: KitDropdownItem[] = [
       { value: 'share', label: 'Поделиться', icon: 'mdi:share-variant-outline' },
     ]
 
-    // Если выбрана какая-либо секция (а не "Маршрут по дням")
-    if (activeTab.value && activeTab.value.id !== 'daily-route') {
+    // Если выбрана какая-либо секция (а не "Маршрут по дням" или "Обзор")
+    if (activeTab.value && !['daily-route', 'overview'].includes(activeTab.value.id)) {
       const sectionActions: KitDropdownItem[] = [
         { value: 'edit', label: 'Редактировать', icon: 'mdi:pencil-outline' },
         { value: 'clear', label: 'Очистить', icon: 'mdi:broom' },
@@ -86,14 +91,15 @@ export function useTripInfoLayout() {
     isHeaderDropdownOpen.value = false
 
     const currentQuery = { ...route.query }
+    delete currentQuery.day // Всегда убираем день при смене раздела
 
-    if (activeTabId.value === 'daily-route') {
+    if (activeTabId.value === 'overview') {
       delete currentQuery.section
-      router.push({ query: currentQuery })
     }
     else {
-      router.push({ query: { ...currentQuery, section: activeTabId.value } })
+      currentQuery.section = activeTabId.value
     }
+    router.push({ query: currentQuery })
   }
 
   function handleCurrentSectionClick() {
@@ -111,7 +117,7 @@ export function useTripInfoLayout() {
   }
 
   function openEditDialog() {
-    if (!activeTab.value || activeTab.value.id === 'daily-route')
+    if (!activeTab.value || ['daily-route', 'overview'].includes(activeTab.value.id))
       return
     const section = sortedSections.value.find((s: TripSection) => s.id === activeTab.value!.id)
     if (!section)
@@ -140,7 +146,7 @@ export function useTripInfoLayout() {
   }
 
   async function handleClearSection() {
-    if (!activeTab.value || activeTab.value.id === 'daily-route')
+    if (!activeTab.value || ['daily-route', 'overview'].includes(activeTab.value.id))
       return
 
     const isConfirmed = await confirm({
@@ -154,7 +160,7 @@ export function useTripInfoLayout() {
   }
 
   async function handleDeleteSection() {
-    if (!activeTab.value || activeTab.value.id === 'daily-route')
+    if (!activeTab.value || ['daily-route', 'overview'].includes(activeTab.value.id))
       return
     const isConfirmed = await confirm({
       title: `Удалить раздел "${activeTab.value.label}"?`,
@@ -164,7 +170,7 @@ export function useTripInfoLayout() {
     })
     if (isConfirmed) {
       const sectionIdToDelete = activeTab.value.id
-      selectSection('daily-route')
+      selectSection('overview')
       await store.sections.deleteSection(sectionIdToDelete)
     }
   }

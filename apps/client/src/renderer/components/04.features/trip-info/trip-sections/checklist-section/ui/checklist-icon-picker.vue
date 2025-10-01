@@ -10,7 +10,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['update:visible', 'select'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+  (e: 'select', icon: string): void
+}>()
 
 const { iconSearchQuery, filteredIcons } = useChecklistIconPicker()
 

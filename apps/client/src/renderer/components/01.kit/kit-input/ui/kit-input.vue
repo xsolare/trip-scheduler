@@ -101,7 +101,8 @@ const id = `kit-input-${Math.random().toString(36).substring(2, 9)}`
   .input-icon-prefix {
     position: absolute;
     left: 12px;
-    top: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--fg-tertiary-color);
     pointer-events: none;
     z-index: 1;

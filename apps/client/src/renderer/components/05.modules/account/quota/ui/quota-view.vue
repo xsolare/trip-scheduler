@@ -23,6 +23,7 @@ const user = computed(() => authStore.user)
 function formatPrice(price: number) {
   if (price === 0)
     return 'Бесплатно'
+  
   return `${price.toLocaleString('ru-RU')} ₽`
 }
 

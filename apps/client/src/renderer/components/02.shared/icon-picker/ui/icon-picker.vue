@@ -3,16 +3,15 @@ import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 
-interface Props {
-  modelValue: string
-  size?: 'sm' | 'md' | 'lg'
-}
-
 const props = withDefaults(defineProps<Props>(), {
   size: 'md',
 })
 
-const emit = defineEmits(['update:modelValue'])
+const modelValue = defineModel<string>({ required: true })
+
+interface Props {
+  size?: 'sm' | 'md' | 'lg'
+}
 
 const isOpen = ref(false)
 const pickerButton = ref<HTMLButtonElement | null>(null)
@@ -21,17 +20,13 @@ const dropdownPanel = ref<HTMLDivElement | null>(null)
 const sizeClass = computed(() => `size-${props.size}`)
 
 function selectIcon(icon: string) {
-  emit('update:modelValue', icon)
+  modelValue.value = icon
   isOpen.value = false
 }
 
 function togglePicker() {
   isOpen.value = !isOpen.value
 }
-
-onClickOutside(dropdownPanel, () => {
-  isOpen.value = false
-}, { ignore: [pickerButton] })
 
 async function updateDropdownPosition() {
   await nextTick()
@@ -63,6 +58,10 @@ watch(isOpen, (isNowOpen) => {
     updateDropdownPosition()
   }
 })
+
+onClickOutside(dropdownPanel, () => {
+  isOpen.value = false
+}, { ignore: [pickerButton] })
 </script>
 
 <template>
@@ -73,7 +72,8 @@ watch(isOpen, (isNowOpen) => {
       :class="sizeClass"
       @click="togglePicker"
     >
-      <Icon width="20" height="20" :icon="props.modelValue || 'mdi:image-off-outline'" class="main-icon" />
+      <!-- 5. Используем modelValue напрямую, без props. -->
+      <Icon width="20" height="20" :icon="modelValue || 'mdi:image-off-outline'" class="main-icon" />
       <Icon icon="mdi:chevron-down" class="chevron" :class="{ rotated: isOpen }" />
     </button>
 
@@ -88,7 +88,7 @@ watch(isOpen, (isNowOpen) => {
             v-for="icon in sharedIconList"
             :key="icon"
             class="icon-option"
-            :class="{ selected: icon === props.modelValue }"
+            :class="{ selected: icon === modelValue }"
             @click="selectIcon(icon)"
           >
             <Icon :icon="icon" />
@@ -100,6 +100,7 @@ watch(isOpen, (isNowOpen) => {
 </template>
 
 <style scoped lang="scss">
+/* Стили остаются без изменений */
 .icon-picker-wrapper {
   position: relative;
 }
@@ -159,12 +160,10 @@ watch(isOpen, (isNowOpen) => {
 }
 
 .icon-dropdown {
-  // --- CSS для базового центрирования ---
   position: absolute;
-  top: calc(100% + 4px); // Отступ 4px снизу от кнопки
-  left: 50%; // Центрируем по горизонтали
-  transform: translateX(-50%); // Компенсируем сдвиг влево на 50% своей ширины
-
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
   min-width: 184px;
   padding: 8px;
   background-color: var(--bg-tertiary-color);

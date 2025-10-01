@@ -3,14 +3,18 @@ import type { Map } from 'ol'
 import { fromLonLat } from 'ol/proj'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  (e: 'togglePanel'): void
+  (e: 'toggleFullscreen'): void
+}>()
+
 interface Props {
   mapInstance: Map | null
   centerCoordinates: [number, number]
   isFullscreen: boolean
 }
-
-const props = defineProps<Props>()
-const emit = defineEmits(['update:isFullscreen', 'togglePanel', 'toggleFullscreen'])
 
 function zoomIn() {
   const view = props.mapInstance?.getView()
@@ -37,10 +41,6 @@ function centerOnMarker() {
       duration: 1000,
     })
   }
-}
-
-function toggleFullscreen() {
-  emit('toggleFullscreen')
 }
 </script>
 
@@ -74,7 +74,7 @@ function toggleFullscreen() {
       color="secondary"
       :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'"
       aria-label="Во весь экран"
-      @click="toggleFullscreen"
+      @click="emit('toggleFullscreen')"
     />
     <KitBtn
       v-if="isFullscreen"
@@ -82,7 +82,7 @@ function toggleFullscreen() {
       color="secondary"
       icon="mdi:view-list"
       aria-label="Показать/скрыть панель"
-      @click="$emit('togglePanel')"
+      @click="emit('togglePanel')"
     />
   </div>
 </template>
@@ -95,7 +95,7 @@ function toggleFullscreen() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 1000;
+  z-index: 10;
 
   .kit-btn {
     padding: 0;

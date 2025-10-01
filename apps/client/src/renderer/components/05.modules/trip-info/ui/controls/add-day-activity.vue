@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 
-const emit = defineEmits(['add'])
+const emit = defineEmits<{
+  (e: 'add'): void
+}>()
 </script>
 
 <template>

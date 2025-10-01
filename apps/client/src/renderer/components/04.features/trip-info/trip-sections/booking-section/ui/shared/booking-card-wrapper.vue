@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
-import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitEditable } from '~/components/01.kit/kit-editable'
 
 interface Props {
@@ -10,7 +9,7 @@ interface Props {
 }
 
 defineProps<Props>()
-const emit = defineEmits(['delete'])
+const emit = defineEmits<{ (e: 'delete'): void }>()
 const title = defineModel<string>('title', { required: true })
 const confirm = useConfirm()
 
@@ -53,7 +52,7 @@ async function handleDelete() {
         </button>
       </div>
     </header>
-    <div class="card-body">
+    <div class="card-body" @click="isDetailsVisible = !isDetailsVisible">
       <slot />
 
       <template v-if="$slots.details">

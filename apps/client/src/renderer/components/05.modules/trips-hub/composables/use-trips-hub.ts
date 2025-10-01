@@ -1,5 +1,6 @@
 import type { InjectionKey } from 'vue'
 import type { ITrip } from '../models/types'
+import type { UpdateTripInput } from '~/shared/types/models/trip'
 import { useDebounce } from '@vueuse/core'
 import { useAbortRequest, useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
 import { useLastCounts } from '~/shared/composables/use-last-counts'
@@ -21,6 +22,7 @@ enum ETripHubKeys {
   FETCH_CITIES = 'trips:fetch-cities',
   FETCH_TAGS = 'trips:fetch-tags',
   CREATE = 'trips:create',
+  UPDATE = 'trips:update',
   DELETE = 'trips:delete',
 }
 
@@ -183,6 +185,35 @@ export function useTripsHub() {
     })
   }
 
+  function updateTripInList(updatedData: UpdateTripInput & { id: string }) {
+    const tripIndex = trips.value.findIndex(t => t.id === updatedData.id)
+    if (tripIndex === -1)
+      return
+
+    const originalTrip = { ...trips.value[tripIndex] }
+    // Оптимистичное обновление
+    trips.value[tripIndex] = { ...originalTrip, ...updatedData }
+
+    useRequest({
+      key: `${ETripHubKeys.UPDATE}:${updatedData.id}`,
+      fn: db => db.trips.update(updatedData.id, updatedData),
+      onSuccess: (updatedFromServer) => {
+        const finalIndex = trips.value.findIndex(t => t.id === updatedData.id)
+        if (finalIndex !== -1) {
+          trips.value[finalIndex] = { ...trips.value[finalIndex], ...updatedFromServer }
+        }
+        useToast().success('Путешествие обновлено.')
+      },
+      onError: (error) => {
+        const revertIndex = trips.value.findIndex(t => t.id === updatedData.id)
+        if (revertIndex !== -1) {
+          trips.value[revertIndex] = originalTrip
+        }
+        useToast().error(`Не удалось обновить путешествие: ${error}`)
+      },
+    })
+  }
+
   function setActiveTab(tab: TripsHubTab) {
     if (activeTab.value === tab)
       return
@@ -249,6 +280,7 @@ export function useTripsHub() {
     searchTags,
     createTrip,
     deleteTrip,
+    updateTripInList,
     setActiveTab,
     setDisplayMode,
     openCreateModal,

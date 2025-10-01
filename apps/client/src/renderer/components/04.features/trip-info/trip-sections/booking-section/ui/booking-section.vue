@@ -20,7 +20,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['updateSection'])
+const emit = defineEmits<{
+  (e: 'updateSection', value: { id: string, type: 'booking', content: BookingSectionContent }): void
+}>()
 
 const {
   activeTab,

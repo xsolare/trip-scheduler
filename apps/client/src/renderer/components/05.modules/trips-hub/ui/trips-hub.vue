@@ -10,7 +10,9 @@ import TripsFilters from './controls/trips-filters.vue'
 import TripList from './list-trip/list.vue'
 import CreateTripFlow from './new-trip/create-trip-flow.vue'
 
-const emit = defineEmits(['update:hasError'])
+const emit = defineEmits<{
+  (e: 'update:hasError', value: boolean): void
+}>()
 
 const tripsHub = useTripsHub()
 const { mdAndUp } = useDisplay()

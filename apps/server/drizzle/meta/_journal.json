@@ -36,13 +36,6 @@
       "when": 1757934015128,
       "tag": "0004_awesome_nomad",
       "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1757937375893,
-      "tag": "0005_daffy_zuras",
-      "breakpoints": true
     }
   ]
 }

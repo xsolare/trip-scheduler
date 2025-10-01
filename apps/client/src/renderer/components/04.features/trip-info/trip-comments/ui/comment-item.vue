@@ -6,8 +6,14 @@ import { useTimeAgo } from '@vueuse/core'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { useAuthStore } from '~/shared/store/auth.store'
 
-const props = defineProps<{ comment: Comment }>()
-const emit = defineEmits(['delete'])
+interface Props {
+  comment: Comment
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<{
+  (e: 'delete'): void
+}>()
 
 const authStore = useAuthStore()
 const confirm = useConfirm()

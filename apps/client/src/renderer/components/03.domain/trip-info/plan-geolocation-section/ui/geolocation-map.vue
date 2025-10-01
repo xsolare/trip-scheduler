@@ -17,11 +17,13 @@ interface Props {
   height: string
   isLoading: boolean
   readonly?: boolean
+  zoom?: number
   isFullscreen: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: true,
+  zoom: 14,
 })
 
 const emit = defineEmits<{
@@ -71,8 +73,9 @@ function handleContextMenuAction(actionId: string) {
 
 // --- Синхронизация с состоянием ---
 watch(() => props.points, (newPoints, oldPoints = []) => {
-  if (!mapInstance.value)
+  if (!isMapLoaded.value)
     return
+
   const newPointIds = new Set(newPoints.map(p => p.id))
   oldPoints.forEach((point) => {
     if (!newPointIds.has(point.id))
@@ -82,7 +85,7 @@ watch(() => props.points, (newPoints, oldPoints = []) => {
 }, { deep: true })
 
 watch(() => props.routes, (newRoutes, oldRoutes = []) => {
-  if (!mapInstance.value)
+  if (!isMapLoaded.value)
     return
   const newRouteIds = new Set(newRoutes.map(r => r.id))
   oldRoutes.forEach((route) => {
@@ -98,7 +101,7 @@ watch(() => props.routes, (newRoutes, oldRoutes = []) => {
 }, { deep: true })
 
 watch(() => props.drawnRoutes, (newRoutes, oldRoutes = []) => {
-  if (!mapInstance.value)
+  if (!isMapLoaded.value)
     return
   const newRouteIds = new Set(newRoutes.map(r => r.id))
   oldRoutes.forEach((route) => {
@@ -127,13 +130,9 @@ onMounted(async () => {
   await initMap({
     container: mapContainerRef.value,
     center: props.center,
-    zoom: 14,
+    zoom: props.zoom,
     interactive: !props.readonly,
   })
-
-  props.points.forEach(addOrUpdatePoint)
-  props.routes.forEach(addOrUpdateRoute)
-  props.drawnRoutes.forEach(addOrUpdateDrawnRoute)
 
   mapInstance.value?.on('click', (event) => {
     const coords = toLonLat(event.coordinate) as Coordinate

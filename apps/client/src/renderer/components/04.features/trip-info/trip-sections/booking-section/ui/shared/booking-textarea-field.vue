@@ -9,7 +9,7 @@ interface Props {
   readonly: boolean
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const modelValue = defineModel<string>()
 
 const internalModel = computed({

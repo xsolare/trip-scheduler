@@ -64,6 +64,20 @@ if (import.meta.env.PROD) {
       },
     ),
   )
+
+  // AIRLINE ICONS (skyscanner)
+  registerRoute(
+    ({ url }) =>
+      url.hostname === 'www.skyscanner.net'
+      && url.pathname.startsWith('/images/airlines/favicon/'),
+    CacheStrategyFactory.createCacheFirst(
+      CACHE_CONFIG.names.airlineIcons,
+      {
+        maxEntries: CACHE_CONFIG.limits.airlineIcons,
+        maxAgeSeconds: CACHE_CONFIG.durations.airlineIcons,
+      },
+    ),
+  )
 }
 
 registerRoute(

@@ -192,25 +192,25 @@ export function useGeolocationRoutes(mapApiRef: Ref<GeolocationMapApi | undefine
       route.distance = routeData.distance
       route.duration = routeData.duration
       route.isDirect = routeData.isDirect
-      // FIX: Принудительно обновляем маршрут на карте, чтобы применился новый стиль (например, пунктир)
       mapApiRef.value.addOrUpdateRoute(route)
     }
   }
 
-  function setInitialRoutes(initialData: { routes?: MapRoute[], drawnRoutes?: DrawnRoute[] }) {
+  async function setInitialRoutes(initialData: { routes?: MapRoute[], drawnRoutes?: DrawnRoute[] }) {
     if (!mapApiRef.value)
       return
 
     routes.value = JSON.parse(JSON.stringify(initialData.routes || []))
     drawnRoutes.value = JSON.parse(JSON.stringify(initialData.drawnRoutes || []))
 
-    routes.value.forEach((route) => {
+    const routeUpdatePromises = routes.value.map((route) => {
       route.points.forEach(point => mapApiRef.value!.addOrUpdatePoint(point))
-      updateRouteGeometry(route.id)
+      return updateRouteGeometry(route.id)
     })
     drawnRoutes.value.forEach((route) => {
       mapApiRef.value!.addOrUpdateDrawnRoute(route)
     })
+    await Promise.all(routeUpdatePromises)
   }
 
   // --- Управление нарисованными маршрутами ---

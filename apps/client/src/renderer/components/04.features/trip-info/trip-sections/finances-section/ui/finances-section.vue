@@ -46,12 +46,8 @@ const {
   saveSettings,
 } = useFinancesSection(props, emit)
 
-const categoryFilterItems = computed(() => {
-  const items = categories.value.map(c => ({ value: c.id, label: c.name, icon: c.icon }))
-  items.unshift({ value: null, label: 'Все категории', icon: 'mdi:format-list-bulleted' } as any)
-  return items
-})
-
+const isDateFilterOpen = ref(false)
+const dateFilterWrapperRef = ref(null)
 const transactionFormVisibleBeforeCategoryManager = ref(false)
 
 function handleOpenCategoryManager() {
@@ -62,16 +58,16 @@ function handleOpenCategoryManager() {
   isCategoryManagerOpen.value = true
 }
 
-watch(isCategoryManagerOpen, (isOpen) => {
-  if (!isOpen && transactionFormVisibleBeforeCategoryManager.value) {
-    isTransactionFormOpen.value = true
-    transactionFormVisibleBeforeCategoryManager.value = false
-  }
-})
+function clearDateFilter() {
+  dateFilter.value = { start: null, end: null }
+  isDateFilterOpen.value = false
+}
 
-const isDateFilterOpen = ref(false)
-const dateFilterWrapperRef = ref(null)
-onClickOutside(dateFilterWrapperRef, () => { isDateFilterOpen.value = false })
+const categoryFilterItems = computed(() => {
+  const items = categories.value.map(c => ({ value: c.id, label: c.name, icon: c.icon }))
+  items.unshift({ value: null, label: 'Все категории', icon: 'mdi:format-list-bulleted' } as any)
+  return items
+})
 
 const formattedDateFilter = computed(() => {
   const { start, end } = dateFilter.value
@@ -133,10 +129,16 @@ const availableDateRange = computed(() => {
   }
 })
 
-function clearDateFilter() {
-  dateFilter.value = { start: null, end: null }
+watch(isCategoryManagerOpen, (isOpen) => {
+  if (!isOpen && transactionFormVisibleBeforeCategoryManager.value) {
+    isTransactionFormOpen.value = true
+    transactionFormVisibleBeforeCategoryManager.value = false
+  }
+})
+
+onClickOutside(dateFilterWrapperRef, () => {
   isDateFilterOpen.value = false
-}
+})
 </script>
 
 <template>

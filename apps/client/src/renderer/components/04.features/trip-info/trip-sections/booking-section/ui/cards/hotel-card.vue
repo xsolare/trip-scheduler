@@ -17,7 +17,10 @@ interface Props {
   readonly: boolean
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['delete', 'update:booking'])
+const emit = defineEmits<{
+  (e: 'delete'): void
+  (e: 'update:booking', value: Booking & { type: 'hotel' }): void
+}>()
 
 const isLocationPickerOpen = ref(false)
 const isLocationViewerOpen = ref(false)

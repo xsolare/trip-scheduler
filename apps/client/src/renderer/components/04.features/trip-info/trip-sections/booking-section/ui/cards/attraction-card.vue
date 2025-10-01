@@ -15,7 +15,10 @@ interface Props {
   readonly: boolean
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['delete', 'update:booking'])
+const emit = defineEmits<{
+  (e: 'delete'): void
+  (e: 'update:booking', value: Booking & { type: 'attraction' }): void
+}>()
 
 const isLocationPickerOpen = ref(false)
 const isLocationViewerOpen = ref(false)
@@ -37,7 +40,7 @@ function updateTitle(newTitle: string) {
     :title="booking.title"
     :icon="booking.icon"
     :readonly="readonly"
-    @delete="$emit('delete')"
+    @delete="emit('delete')"
     @update:title="updateTitle"
   >
     <div class="card-content">

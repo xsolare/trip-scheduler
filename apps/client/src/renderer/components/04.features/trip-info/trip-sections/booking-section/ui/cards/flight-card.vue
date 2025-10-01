@@ -14,7 +14,10 @@ interface Props {
   readonly: boolean
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['delete', 'update:booking'])
+const emit = defineEmits<{
+  (e: 'delete'): void
+  (e: 'update:booking', value: Booking & { type: 'flight' }): void
+}>()
 
 const segments = computed(() => props.booking.data.segments || [])
 const firstSegment = computed(() => segments.value[0])
@@ -260,7 +263,7 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
           В пути: {{ totalDurationFormatted }}
         </div>
         <div class="route-line">
-          <template v-for="(part, index) in journeySegments" :key="index">
+          <template v-for="(part) in journeySegments" :key="part">
             <KitTooltip
               :name="part.tooltip"
               :style="{ width: `${part.widthPercent}%` }"
@@ -278,7 +281,11 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
         <div class="airports">
           <span>{{ firstSegment.departureAirport }}</span>
           <div class="airline-logos-center">
-            <KitTooltip v-for="airline in uniqueAirlines" :key="airline.iataCode" :name="airline.name || airline.iataCode">
+            <KitTooltip
+              v-for="airline in uniqueAirlines"
+              :key="airline.iataCode"
+              :name="`${airline.name || airline.iataCode}`"
+            >
               <div class="center-logo-wrapper">
                 <img
                   v-if="getAirlineLogoUrl(airline.iataCode)"

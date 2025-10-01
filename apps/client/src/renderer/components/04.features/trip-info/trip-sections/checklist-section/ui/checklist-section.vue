@@ -23,7 +23,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['updateSection'])
+const emit = defineEmits<{
+  (e: 'updateSection', value: { id: string, type: 'checklist', content: ChecklistSectionContent }): void
+}>()
 
 // --- Логика из хука ---
 const {

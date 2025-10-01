@@ -1,8 +1,9 @@
 /* eslint-disable no-console */
 import type { IActivity, IDay } from '../models/types'
-import type { TripSection } from '~/shared/types/models/trip'
+import type { Trip, TripSection, UpdateTripInput } from '~/shared/types/models/trip'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestError, useRequestStatus, useRequestStatusByPrefix, useRequestStore } from '~/plugins/request'
+import { AppRoutePaths } from '~/shared/constants/routes'
 
 export enum ETripPlanKeys {
   FETCH_TRIP_DETAILS = 'trip-plan:fetch-details',
@@ -12,9 +13,12 @@ export enum ETripPlanKeys {
   ADD_ACTIVITY = 'trip-plan:add-activity',
   UPDATE_ACTIVITY = 'trip-plan:update-activity',
   REMOVE_ACTIVITY = 'trip-plan:remove-activity',
+  UPDATE_TRIP = 'trip-plan:update-trip',
+  DELETE_TRIP = 'trip-plan:delete-trip',
 }
 
 export interface ITripPlanState {
+  trip: Trip | null
   days: IDay[]
   currentTripId: string | null
   currentDayId: string | null
@@ -26,6 +30,7 @@ export interface ITripPlanState {
  */
 export const useTripPlanStore = defineStore('tripPlan', {
   state: (): ITripPlanState => ({
+    trip: null,
     days: [],
     currentTripId: null,
     currentDayId: null,
@@ -98,18 +103,20 @@ export const useTripPlanStore = defineStore('tripPlan', {
         fn: db => db.trips.getByIdWithDays(tripId),
         onSuccess: (result) => {
           if (!result) {
-            // Обработка случая, когда путешествие не найдено
+            this.trip = null
             this.days = []
             this.currentDayId = null
-            onSectionsLoad([]) // Передаем пустой массив секций
+            onSectionsLoad([])
             useToast().error('Путешествие не найдено.')
             return
           }
 
+          const { days, sections, ...tripData } = result
+          this.trip = tripData as Trip
+
           const sortedDays = result.days.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           this.days = sortedDays as IDay[]
 
-          // Вызываем колбэк для передачи секций на уровень выше (в модуль)
           onSectionsLoad(result.sections || [])
 
           const dayFromQueryIsValid = initialDayIdFromQuery && sortedDays.some(d => d.id === initialDayIdFromQuery)
@@ -118,16 +125,39 @@ export const useTripPlanStore = defineStore('tripPlan', {
             this.currentDayId = initialDayIdFromQuery
           }
           else {
-            this.currentDayId = sortedDays.length > 0 ? sortedDays[0].id : null
+            this.currentDayId = null
           }
         },
         onError: (error) => {
+          this.trip = null
           this.days = []
           this.currentDayId = null
-          onSectionsLoad([]) // Передаем пустой массив секций при ошибке
+          onSectionsLoad([])
 
           console.error(`Ошибка при загрузке данных для путешествия ${tripId}: `, error)
           useToast().error(`Ошибка при загрузке данных: ${error}`)
+        },
+      })
+    },
+
+    async updateTrip(details: UpdateTripInput) {
+      if (!this.trip)
+        return
+
+      const originalTrip = { ...this.trip }
+      Object.assign(this.trip, details) // Оптимистичное обновление
+
+      await useRequest({
+        key: `${ETripPlanKeys.UPDATE_TRIP}:${this.trip.id}`,
+        fn: db => db.trips.update(this.trip!.id, details),
+        onSuccess: (updatedTripFromServer) => {
+          if (this.trip)
+            this.trip = { ...this.trip, ...updatedTripFromServer }
+          useToast().success('Информация о путешествии обновлена.')
+        },
+        onError: (error) => {
+          this.trip = originalTrip // Откат
+          useToast().error(`Ошибка при обновлении путешествия: ${error}`)
         },
       })
     },
@@ -241,8 +271,6 @@ export const useTripPlanStore = defineStore('tripPlan', {
     },
 
     updateActivity(dayId: string, updatedActivity: IActivity) {
-      console.log('> updateActivity', updatedActivity)
-
       const day = this.days.find(d => d.id === dayId)
       if (!day)
         return
@@ -371,6 +399,27 @@ export const useTripPlanStore = defineStore('tripPlan', {
       })
     },
 
+    async deleteCurrentTrip() {
+      if (!this.trip)
+        return
+
+      const tripId = this.trip.id
+      const router = useRouter()
+
+      return useRequest({
+        key: `${ETripPlanKeys.DELETE_TRIP}:${tripId}`,
+        fn: db => db.trips.delete(tripId),
+        onSuccess: () => {
+          useToast().success('Путешествие успешно удалено.')
+          router.push(AppRoutePaths.Trip.List)
+        },
+        onError: (error) => {
+          useToast().error(`Не удалось удалить путешествие: ${error}`)
+          throw error
+        },
+      })
+    },
+
     reorderActivities(newOrder: IActivity[]) {
       const day = this.days.find(d => d.id === this.currentDayId)
       if (!day)
@@ -409,6 +458,7 @@ export const useTripPlanStore = defineStore('tripPlan', {
     },
 
     reset() {
+      this.trip = null
       this.days = []
       this.currentTripId = null
       this.currentDayId = null

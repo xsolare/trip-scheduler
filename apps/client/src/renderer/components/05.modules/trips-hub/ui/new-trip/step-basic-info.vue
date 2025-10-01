@@ -72,7 +72,7 @@ const startDate = computed({
   width: 100%;
   padding: 12px;
   background-color: var(--bg-secondary-color);
-  border: 1px solid var(--border-primary-color);
+  border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);
   color: var(--fg-primary-color);
   font-size: 1rem;

@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<{
   clearable?: boolean
   loading?: boolean
   multiple?: boolean
+  creatable?: boolean
   icon?: string
 }>(), {
   label: '',
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<{
   clearable: true,
   loading: false,
   multiple: false,
+  creatable: false,
   icon: undefined,
 })
 
@@ -37,13 +39,21 @@ const searchQuery = ref('')
 const selectedItems = computed(() => {
   if (!props.modelValue)
     return []
-  const model = Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue]
-  return props.items.filter(item => model.includes(item.value))
+
+  const modelValues = (Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue]) as any[]
+
+  return modelValues
+    .map((value) => {
+      const existingItem = props.items.find(item => item.value === value)
+      return existingItem || { value, label: String(value) }
+    })
+    .filter(item => item.label)
 })
 
 const singleSelectedItemLabel = computed(() => {
   if (props.multiple || !props.modelValue)
     return ''
+
   return props.items.find(item => item.value === props.modelValue)?.label || ''
 })
 
@@ -55,6 +65,7 @@ watch(singleSelectedItemLabel, (newLabel) => {
 const filteredItems = computed(() => {
   if (!searchQuery.value)
     return props.items
+
   return props.items.filter(item =>
     item.label.toLowerCase().includes(searchQuery.value.toLowerCase()),
   )
@@ -63,11 +74,12 @@ const filteredItems = computed(() => {
 function handleOpen() {
   if (props.disabled || isOpen.value)
     return
+
   isOpen.value = true
+
   if (!props.multiple)
     searchQuery.value = ''
 
-  // Ждем следующего тика, чтобы input появился в DOM, и затем фокусируемся на нем
   nextTick(() => {
     ;(searchInputRef.value?.$el as HTMLInputElement)?.focus()
   })
@@ -76,20 +88,26 @@ function handleOpen() {
 function handleClose() {
   if (!isOpen.value)
     return
+
   isOpen.value = false
+
   if (!props.multiple)
     searchQuery.value = singleSelectedItemLabel.value
   else
     searchQuery.value = ''
 }
 
-onClickOutside(wrapperRef, handleClose)
+function toggleDropdown() {
+  if (isOpen.value)
+    handleClose()
+  else
+    handleOpen()
+}
 
 function selectItem(item: KitDropdownItem<T>) {
   if (props.multiple) {
     const model = Array.isArray(props.modelValue) ? [...props.modelValue] : []
     const index = model.findIndex(v => v === item.value)
-    // Добавляем только если еще не выбран
     if (index === -1)
       model.push(item.value)
 
@@ -112,22 +130,44 @@ function removeItem(itemValue: T) {
 function clearSelection() {
   emit('update:modelValue', props.multiple ? [] : null)
   searchQuery.value = ''
-  handleOpen() // Открываем для нового выбора
+  handleOpen()
 }
 
 function isSelected(item: KitDropdownItem<T>): boolean {
   if (props.multiple)
     return Array.isArray(props.modelValue) && props.modelValue.includes(item.value)
+
   return props.modelValue === item.value
 }
+
+function handleAddNewItem() {
+  if (!props.creatable || !props.multiple || !searchQuery.value.trim())
+    return
+
+  const newValue = searchQuery.value.trim()
+  const model = (Array.isArray(props.modelValue) ? [...props.modelValue] : []) as string[]
+
+  if (!model.some(v => String(v).toLowerCase() === newValue.toLowerCase())) {
+    model.push(newValue)
+    emit('update:modelValue', model as any)
+  }
+  searchQuery.value = ''
+}
+
+onClickOutside(wrapperRef, handleClose)
 </script>
 
 <template>
   <div ref="wrapperRef" class="kit-select-with-search" :class="{ 'is-disabled': disabled }">
-    <label v-if="label">{{ label }}</label>
+    <label v-if="label" @click="toggleDropdown">{{ label }}</label>
 
     <!-- Режим с чипами (multiple) -->
-    <div v-if="multiple" class="chip-input-wrapper" :class="{ 'is-focused': isOpen }" @click="handleOpen">
+    <div
+      v-if="multiple"
+      class="chip-input-wrapper"
+      :class="{ 'is-focused': isOpen, 'has-icon': !!icon }"
+      @click="handleOpen"
+    >
       <Icon v-if="icon" :icon="icon" class="main-icon" />
       <div v-for="item in selectedItems" :key="String(item.value)" class="chip">
         <span>{{ item.label }}</span>
@@ -143,6 +183,7 @@ function isSelected(item: KitDropdownItem<T>): boolean {
         autocomplete="off"
         @focus="handleOpen"
         @click.stop="handleOpen"
+        @keydown.enter.prevent="handleAddNewItem"
       >
       <button
         v-if="clearable && selectedItems.length > 0 && !disabled"
@@ -204,7 +245,6 @@ function isSelected(item: KitDropdownItem<T>): boolean {
 </template>
 
 <style scoped lang="scss">
-// ... (общие стили)
 .kit-select-with-search {
   position: relative;
   width: 100%;
@@ -217,6 +257,7 @@ function isSelected(item: KitDropdownItem<T>): boolean {
     font-weight: 500;
     color: var(--fg-secondary-color);
     padding-left: 4px;
+    cursor: pointer; // [ИЗМЕНЕНИЕ] 3. Добавлен курсор
   }
 }
 
@@ -308,7 +349,6 @@ function isSelected(item: KitDropdownItem<T>): boolean {
   color: var(--fg-secondary-color);
 }
 
-// Стили для чипов
 .chip-input-wrapper {
   display: flex;
   align-items: center;
@@ -317,11 +357,15 @@ function isSelected(item: KitDropdownItem<T>): boolean {
   padding: 6px 40px 6px 12px;
   min-height: 46px;
   background-color: var(--bg-secondary-color);
-  border: 1px solid var(--border-primary-color);
+  border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);
   cursor: text;
   transition: border-color 0.2s;
   position: relative;
+
+  &.has-icon {
+    padding-left: 40px;
+  }
 
   &.is-focused {
     border-color: var(--border-focus-color);
@@ -334,15 +378,6 @@ function isSelected(item: KitDropdownItem<T>): boolean {
     transform: translateY(-50%);
     color: var(--fg-tertiary-color);
     font-size: 1.25rem;
-  }
-
-  // Сдвигаем все, если есть иконка
-  & > *:not(.main-icon) {
-    margin-left: 32px;
-  }
-  // Убираем сдвиг для первого элемента
-  & > *:first-child:not(.main-icon) {
-    margin-left: 0;
   }
 
   .search-input {

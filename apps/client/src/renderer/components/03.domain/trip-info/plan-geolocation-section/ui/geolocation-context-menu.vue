@@ -13,7 +13,9 @@ defineProps<{
   left: number
 }>()
 
-const emit = defineEmits(['action'])
+const emit = defineEmits<{
+  (e: 'action', value: string): void
+}>()
 
 const menuItems: MenuItem[] = [
   { id: 'route-from', label: 'Маршрут отсюда', icon: 'mdi:directions-fork' },

@@ -7,7 +7,11 @@ defineProps<{
   memory: IProcessingMemory
 }>()
 
-const emit = defineEmits(['cancel', 'retry', 'remove'])
+const emit = defineEmits<{
+  (e: 'cancel'): void
+  (e: 'retry'): void
+  (e: 'remove'): void
+}>()
 </script>
 
 <template>

@@ -8,7 +8,9 @@ const props = defineProps<{
   visible: boolean
 }>()
 
-const emit = defineEmits(['update:visible'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+}>()
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)

@@ -13,7 +13,11 @@ interface Props {
   categories: Category[]
 }
 defineProps<Props>()
-const emit = defineEmits(['update:visible', 'save', 'delete'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+  (e: 'save', category: Partial<Category>): void
+  (e: 'delete', id: string): void
+}>()
 
 const newCategoryName = ref('')
 const newCategoryIcon = ref('mdi:tag-outline')

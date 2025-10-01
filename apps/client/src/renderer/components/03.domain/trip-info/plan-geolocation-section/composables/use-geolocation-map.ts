@@ -11,6 +11,7 @@ import { Icon as OlIcon, Stroke, Style } from 'ol/style'
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
 const NOMINATIM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search'
 const OSRM_API_URL = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot'
+const SEARCH_RESULT_OVERLAY_ID = 'search-result-overlay'
 
 function useGeolocationMap() {
   const mapInstance: Ref<Map | null> = ref(null)
@@ -20,10 +21,12 @@ function useGeolocationMap() {
   const pointSource = new VectorSource()
   const routeSource = new VectorSource()
   const drawSource = new VectorSource()
+  const searchResultSource = new VectorSource() // Для результатов поиска
 
   const pointLayer = new VectorLayer({ source: pointSource, zIndex: 10 })
   const routeLayer = new VectorLayer({ source: routeSource, zIndex: 5 })
   const drawLayer = new VectorLayer({ source: drawSource, zIndex: 6 })
+  const searchResultLayer = new VectorLayer({ source: searchResultSource, zIndex: 11 }) // Слой для результатов поиска
 
   // --- Взаимодействия (Interactions) ---
   const modifyInteraction = new Modify({ source: pointSource })
@@ -41,7 +44,7 @@ function useGeolocationMap() {
     try {
       mapInstance.value = new Map({
         target: options.container,
-        layers: [new TileLayer({ source: new OSM() }), routeLayer, drawLayer, pointLayer],
+        layers: [new TileLayer({ source: new OSM() }), routeLayer, drawLayer, pointLayer, searchResultLayer],
         view: new View({
           center: fromLonLat(options.center),
           zoom: options.zoom || 12,
@@ -321,9 +324,10 @@ function useGeolocationMap() {
     popups.value = []
   }
 
-  function flyToLocation(longitude: number, latitude: number, zoom = 14) {
+  function flyToLocation(longitude: number, latitude: number, zoom = 13) {
     if (!mapInstance.value)
       return
+
     mapInstance.value.getView().animate({
       center: fromLonLat([longitude, latitude]),
       zoom,
@@ -331,16 +335,60 @@ function useGeolocationMap() {
     })
   }
 
+  const clearSearchResult = () => {
+    searchResultSource.clear()
+    if (mapInstance.value) {
+      const overlay = mapInstance.value.getOverlayById(SEARCH_RESULT_OVERLAY_ID)
+      if (overlay)
+        mapInstance.value.removeOverlay(overlay)
+    }
+  }
+
   async function searchLocation(query: string): Promise<boolean> {
+    clearSearchResult()
     if (!query.trim())
       return false
+
     const url = `${NOMINATIM_SEARCH_URL}?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=ru`
+
     try {
       const response = await fetch(url)
       const data = await response.json()
       if (data && data.length > 0) {
         const result = data[0]
-        flyToLocation(Number.parseFloat(result.lon), Number.parseFloat(result.lat), 13)
+        const lon = Number.parseFloat(result.lon)
+        const lat = Number.parseFloat(result.lat)
+        const coordinates = fromLonLat([lon, lat])
+        flyToLocation(lon, lat, 15)
+
+        const feature = new Feature({ geometry: new Point(coordinates) })
+        const style = new Style({
+          image: new OlIcon({
+            anchor: [0.5, 1],
+            scale: 1.5,
+            src: `data:image/svg+xml;base64,${btoa(`
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#E74C3C"/>
+                <circle cx="12" cy="9" r="2.5" fill="white"/>
+              </svg>
+            `)}`,
+          }),
+        })
+        feature.setStyle(style)
+        searchResultSource.addFeature(feature)
+
+        const popupElement = document.createElement('div')
+        popupElement.className = 'ol-popup-comment'
+        popupElement.innerHTML = result.display_name
+        const searchOverlay = new Overlay({
+          element: popupElement,
+          position: coordinates,
+          positioning: 'bottom-center',
+          offset: [0, -42],
+          id: SEARCH_RESULT_OVERLAY_ID,
+        })
+        mapInstance.value?.addOverlay(searchOverlay)
+
         return true
       }
       else {
@@ -368,6 +416,7 @@ function useGeolocationMap() {
     fetchAddress,
     flyToLocation,
     searchLocation,
+    clearSearchResult,
     showPopup,
     clearPopups,
     fetchRoute,

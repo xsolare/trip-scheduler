@@ -7,7 +7,10 @@ interface Props {
 }
 
 defineProps<Props>()
-const emit = defineEmits(['zoomIn', 'zoomOut'])
+const emit = defineEmits<{
+  (e: 'zoomIn'): void
+  (e: 'zoomOut'): void
+}>()
 </script>
 
 <template>
@@ -17,14 +20,14 @@ const emit = defineEmits(['zoomIn', 'zoomOut'])
       color="secondary"
       icon="mdi:plus"
       aria-label="Приблизить"
-      @click="$emit('zoomIn')"
+      @click="emit('zoomIn')"
     />
     <KitBtn
       variant="outlined"
       color="secondary"
       icon="mdi:minus"
       aria-label="Отдалить"
-      @click="$emit('zoomOut')"
+      @click="emit('zoomOut')"
     />
   </div>
 </template>

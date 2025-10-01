@@ -11,7 +11,10 @@ interface Props {
   filteredTotal: number
 }
 defineProps<Props>()
-defineEmits(['editTransaction', 'deleteTransaction'])
+const emit = defineEmits<{
+  (e: 'editTransaction', transaction: Transaction): void
+  (e: 'deleteTransaction', id: string): void
+}>()
 
 function getCategory(id: string | null, categories: Category[]) {
   return categories.find(c => c.id === id)
@@ -56,10 +59,10 @@ const { format: formatCurrency } = useCurrencyFormatter()
               -{{ formatCurrency(tx.amount, tx.currency) }}
             </span>
             <div v-if="!readonly" class="item-actions">
-              <button title="Редактировать" @click="$emit('editTransaction', tx)">
+              <button title="Редактировать" @click="emit('editTransaction', tx)">
                 <Icon icon="mdi:pencil-outline" />
               </button>
-              <button title="Удалить" @click="$emit('deleteTransaction', tx.id)">
+              <button title="Удалить" @click="emit('deleteTransaction', tx.id)">
                 <Icon icon="mdi:trash-can-outline" />
               </button>
             </div>
@@ -107,7 +110,7 @@ const { format: formatCurrency } = useCurrencyFormatter()
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-secondary-color);
+  border-top: 1px solid var(--border-secondary-color);
 
   &:hover .item-actions {
     opacity: 1;
@@ -182,7 +185,7 @@ const { format: formatCurrency } = useCurrencyFormatter()
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 1rem 0 0.5rem;
+  margin: 1rem 0 1.5rem;
   color: var(--fg-tertiary-color);
   font-size: 0.8rem;
   font-weight: 500;
