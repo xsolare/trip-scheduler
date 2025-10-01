@@ -110,6 +110,7 @@ onClickOutside(mapIframeContainerRef, () => {
           />
           <span v-else class="poi-text">{{ point.address || 'Адрес не найден' }}</span>
           <KitBtn v-if="!readonly" icon="mdi:refresh" variant="subtle" size="xs" aria-label="Обновить адрес" @click.stop="emit('refreshAddress', point.id)" />
+          <KitBtn icon="mdi:map-search-outline" variant="subtle" size="xs" aria-label="Показать на карте" @click.stop="openMapChoice(point)" />
         </div>
         <div v-if="point.comment || !readonly" class="poi-field">
           <Icon icon="mdi:comment-text-outline" class="field-icon" />
@@ -151,9 +152,6 @@ onClickOutside(mapIframeContainerRef, () => {
             <KitBtn icon="mdi:delete-outline" variant="solid" size="sm" aria-label="Удалить точку" @click="emit('deletePoint', point.id)" />
           </div>
         </div>
-      </div>
-      <div class="poi-item-menu">
-        <KitBtn icon="mdi:map-search-outline" variant="subtle" size="xs" aria-label="Показать на карте" @click.stop="openMapChoice(point)" />
       </div>
     </div>
   </div>
@@ -334,10 +332,6 @@ onClickOutside(mapIframeContainerRef, () => {
 .poi-actions {
   display: flex;
   gap: 4px;
-}
-
-.poi-item-menu {
-  flex-shrink: 0;
 }
 </style>
 

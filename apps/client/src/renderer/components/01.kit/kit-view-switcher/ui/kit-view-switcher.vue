@@ -29,6 +29,14 @@ const gliderStyle = ref({
   transition: 'none',
 })
 
+function handleItemClick(itemId: T) {
+  if (props.disabled)
+    return
+
+  model.value = itemId
+  emit('change', itemId)
+}
+
 function updateGliderPosition() {
   const switcherEl = switcherRef.value
   if (!switcherEl)
@@ -67,6 +75,7 @@ useResizeObserver(switcherRef, () => {
 
 onMounted(() => {
   updateGliderPosition()
+
   nextTick(() => {
     setTimeout(() => {
       if (gliderStyle.value) {
@@ -75,14 +84,6 @@ onMounted(() => {
     }, 50)
   })
 })
-
-function handleItemClick(itemId: T) {
-  if (props.disabled)
-    return
-
-  model.value = itemId
-  emit('change', itemId)
-}
 </script>
 
 <template>

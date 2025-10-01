@@ -7,13 +7,13 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'togglePanel'): void
+  (e: 'toggleFullscreen'): void
 }>()
-
-const isFullscreen = defineModel<boolean>('isFullscreen', { required: true })
 
 interface Props {
   mapInstance: Map | null
   centerCoordinates: [number, number]
+  isFullscreen: boolean
 }
 
 function zoomIn() {
@@ -41,10 +41,6 @@ function centerOnMarker() {
       duration: 1000,
     })
   }
-}
-
-function toggleFullscreen() {
-  isFullscreen.value = !isFullscreen.value
 }
 </script>
 
@@ -78,7 +74,7 @@ function toggleFullscreen() {
       color="secondary"
       :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'"
       aria-label="Во весь экран"
-      @click="toggleFullscreen"
+      @click="emit('toggleFullscreen')"
     />
     <KitBtn
       v-if="isFullscreen"

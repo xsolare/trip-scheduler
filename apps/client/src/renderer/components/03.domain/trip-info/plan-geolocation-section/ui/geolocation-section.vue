@@ -31,7 +31,8 @@ const emit = defineEmits<{
 }>()
 
 // --- Состояние компонента ---
-const isInitialized = ref(false) // Флаг для контроля инициализации
+const isInitialized = ref(false)
+
 const sectionContainerRef = ref<HTMLElement | null>(null)
 const mapController = ref<ReturnType<typeof useGeolocationMap>>()
 const activeView = ref<'points' | 'routes'>('points')
@@ -93,19 +94,33 @@ const debouncedUpdate = useDebounceFn(() => {
   })
 }, 1000)
 
-watch([points, routes, drawnRoutes], debouncedUpdate, { deep: true })
-
 const isLoading = computed(() => isPointsLoading.value || isRoutesLoading.value)
-const poiPointsWithStyle = computed(() => points.value.map((point, index) => ({ ...point, style: { ...point.style, color: POI_COLORS[index % POI_COLORS.length] } })))
+const poiPointsWithStyle = computed(() => points.value.map((point, index) => ({
+  ...point,
+  style: {
+    ...point.style,
+    color: POI_COLORS[index % POI_COLORS.length],
+  },
+})))
 const allMapPoints = computed(() => {
   const routePoints = routes.value.flatMap(r => r.points.map((p, index) => {
     let type: MapPoint['type'] = 'via'
+
     if (index === 0)
       type = 'start'
     if (index === r.points.length - 1 && r.points.length > 1)
       type = 'end'
-    return { ...p, type, style: { ...p.style, color: r.color } }
+
+    return {
+      ...p,
+      type,
+      style: {
+        ...p.style,
+        color: r.color,
+      },
+    }
   }))
+
   return [...poiPointsWithStyle.value, ...routePoints]
 })
 
@@ -141,7 +156,7 @@ const modeItems = computed((): ViewSwitcherItem[] => {
   return [
     { id: 'pan', icon: 'mdi:cursor-move', label: 'Панорама' },
     { id: 'add_route_point', icon: 'mdi:source-commit-start-next-local', label: 'Добавить в маршрут' },
-    { id: 'draw_route', icon: 'mdi:draw', label: 'Нарисовать' },
+    // { id: 'draw_route', icon: 'mdi:draw', label: 'Нарисовать' },
   ]
 })
 
@@ -149,6 +164,7 @@ const modeItems = computed((): ViewSwitcherItem[] => {
 async function handleMapClick(coords: Coordinate) {
   if (props.readonly)
     return
+
   if (mode.value === 'add_point') {
     await addPoiPoint(coords)
     mode.value = 'pan'
@@ -165,6 +181,7 @@ async function handleMapClick(coords: Coordinate) {
       await movePoiPoint(pointToMoveId.value, coords)
     else
       await updatePointInRoute(pointToMoveId.value, coords)
+
     pointToMoveId.value = null
     mode.value = 'pan'
   }
@@ -193,8 +210,17 @@ async function handleSearch() {
     useToast().error('Местоположение не найдено.')
 }
 
+function clearSearch() {
+  searchQuery.value = ''
+}
+
+watch(searchQuery, (newQuery) => {
+  if (newQuery.trim() === '')
+    mapController.value?.clearSearchResult()
+})
+
 function handleFocusOnPoint(point: MapPoint) {
-  mapController.value?.flyToLocation(point.coordinates[0], point.coordinates[1], 16)
+  mapController.value?.flyToLocation(point.coordinates[0], point.coordinates[1], 17)
 }
 
 function handleStartMovePoint(pointId: string) {
@@ -246,10 +272,10 @@ function handleFullscreenChange() {
 }
 
 // --- Инициализация и синхронизация ---
-function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
+async function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
   mapController.value = controller
   setInitialPoints(props.section.points)
-  setInitialRoutes({ routes: props.section.routes, drawnRoutes: props.section.drawnRoutes })
+  await setInitialRoutes({ routes: props.section.routes, drawnRoutes: props.section.drawnRoutes })
 
   controller.modifyInteraction.on('modifyend', (event) => {
     const feature = event.features.getArray()[0]
@@ -260,28 +286,24 @@ function onMapReady(controller: ReturnType<typeof useGeolocationMap>) {
     if (points.value.some(p => p.id === pointId))
       movePoiPoint(pointId, newCoords)
     else
-      updatePointInRoute(pointId, newCoords, false) // Не обновляем адрес при перетаскивании
+      updatePointInRoute(pointId, newCoords, false)
   })
 
-  // FIX: После инициализации карты разрешаем обновления
-  nextTick(() => {
-    isInitialized.value = true
-  })
+  isInitialized.value = true
+  watch(
+    [points, routes, drawnRoutes],
+    debouncedUpdate,
+    { deep: true },
+  )
 }
 
-onMounted(() => {
-  document.addEventListener('fullscreenchange', handleFullscreenChange)
-})
-
-onUnmounted(() => {
-  stopDrawing()
-  document.removeEventListener('fullscreenchange', handleFullscreenChange)
-})
-
-watch(activeView, () => {
-  mode.value = 'pan'
-  activeRouteId.value = null
-})
+watch(
+  activeView,
+  () => {
+    mode.value = 'pan'
+    activeRouteId.value = null
+  },
+)
 
 watchEffect(() => {
   if (!mapController.value)
@@ -303,6 +325,15 @@ watchEffect(() => {
     stopDrawing()
   }
 })
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+onUnmounted(() => {
+  stopDrawing()
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+})
 </script>
 
 <template>
@@ -318,6 +349,7 @@ watchEffect(() => {
           <div class="search-control">
             <KitInput v-model="searchQuery" size="sm" placeholder="Найти место на карте..." @keydown.enter="handleSearch" />
             <KitBtn icon="mdi:magnify" size="sm" @click="handleSearch" />
+            <KitBtn v-if="searchQuery" icon="mdi:close" size="sm" variant="subtle" @click="clearSearch" />
           </div>
           <KitViewSwitcher v-model="activeView" :items="viewItems" />
           <KitViewSwitcher v-model="mode" :items="modeItems" />
@@ -454,6 +486,13 @@ watchEffect(() => {
   background-color: var(--bg-secondary-color);
   padding: 6px;
   border-radius: var(--r-xs);
+
+  .kit-view-switcher {
+    display: flex;
+    :deep(> *) {
+      flex: 1 1 0;
+    }
+  }
 }
 
 .search-control {

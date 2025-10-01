@@ -8,10 +8,17 @@ import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
+import { EActivityTag } from '~/shared/types/models/activity'
 import { TripStatus } from '~/shared/types/models/trip'
 import CountdownWidget from './content/countdown-widget.vue'
 import StatsWidget from './content/stats-widget.vue'
 import WeatherWidget from './content/weather-widget.vue'
+import {
+  AttractionsListDialog,
+  CitiesListDialog,
+  DaysListDialog,
+  ParticipantsListDialog,
+} from './dialogs'
 
 interface Props {
   trip: Trip | null
@@ -30,6 +37,11 @@ const confirm = useConfirm()
 const toast = useToast()
 
 const isMoreMenuOpen = ref(false)
+
+const isDaysDialogVisible = ref(false)
+const isCitiesDialogVisible = ref(false)
+const isParticipantsDialogVisible = ref(false)
+const isAttractionsDialogVisible = ref(false)
 
 const isTripUpcoming = computed(() => {
   if (!props.trip)
@@ -64,6 +76,14 @@ const tripDurationDays = computed(() => {
   const diffTime = Math.abs(end.getTime() - start.getTime())
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
   return diffDays
+})
+
+const attractionCount = computed(() => {
+  if (!props.days)
+    return 0
+  return props.days.reduce((total, day) => {
+    return total + day.activities.filter(activity => activity.tag === EActivityTag.ATTRACTION).length
+  }, 0)
 })
 
 const visibleParticipants = computed(() => props.trip?.participants.slice(0, 5) || [])
@@ -230,6 +250,11 @@ function handleShareTrip() {
         :duration-days="tripDurationDays"
         :city-count="trip.cities.length"
         :participant-count="trip.participants.length"
+        :attraction-count="attractionCount"
+        @show-days="isDaysDialogVisible = true"
+        @show-cities="isCitiesDialogVisible = true"
+        @show-participants="isParticipantsDialogVisible = true"
+        @show-attractions="isAttractionsDialogVisible = true"
       />
       <WeatherWidget
         v-if="trip.cities.length > 0"
@@ -302,6 +327,12 @@ function handleShareTrip() {
       :target-date="trip.startDate"
       class="countdown"
     />
+
+    <!-- Dialogs -->
+    <DaysListDialog v-model:visible="isDaysDialogVisible" :days="days" @navigate="navigateToDay" />
+    <CitiesListDialog v-model:visible="isCitiesDialogVisible" :cities="trip.cities" />
+    <ParticipantsListDialog v-model:visible="isParticipantsDialogVisible" :participants="trip.participants" />
+    <AttractionsListDialog v-model:visible="isAttractionsDialogVisible" :days="days" @navigate="navigateToDay" />
   </div>
 </template>
 
@@ -581,7 +612,6 @@ function handleShareTrip() {
 
 .overview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
   align-items: start;
 }
@@ -688,7 +718,7 @@ function handleShareTrip() {
   font-size: 0.9rem;
 }
 
-@include media-down(sm) {
+@include media-down(md) {
   .trip-overview {
     gap: 1rem;
   }

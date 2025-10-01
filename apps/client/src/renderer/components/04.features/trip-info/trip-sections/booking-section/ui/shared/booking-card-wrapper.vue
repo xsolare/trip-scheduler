@@ -52,7 +52,7 @@ async function handleDelete() {
         </button>
       </div>
     </header>
-    <div class="card-body">
+    <div class="card-body" @click="isDetailsVisible = !isDetailsVisible">
       <slot />
 
       <template v-if="$slots.details">

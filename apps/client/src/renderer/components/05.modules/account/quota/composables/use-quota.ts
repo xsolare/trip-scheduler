@@ -12,8 +12,8 @@ export interface Plan {
 // Mock-данные для price, т.к. их нет в схеме БД
 const planPrices: Record<number, { monthly: number, yearly: number }> = {
   1: { monthly: 0, yearly: 0 },
-  2: { monthly: 499, yearly: 4990 },
-  3: { monthly: 1299, yearly: 12990 },
+  2: { monthly: 0, yearly: 0 },
+  3: { monthly: 0, yearly: 0 },
 }
 
 const planDescriptions: Record<number, string> = {

@@ -1,4 +1,4 @@
-import { MOCK_USER_ID_1, MOCK_USER_ID_2 } from '../mock/00.user'
+import { MOCK_USER_ID_1, MOCK_USER_ID_2 } from './00.user'
 
 const TRIP_CHINA_ID = '3e8e2c7c-7a7b-4d43-9f5b-1a2c3d4e5f6a'
 

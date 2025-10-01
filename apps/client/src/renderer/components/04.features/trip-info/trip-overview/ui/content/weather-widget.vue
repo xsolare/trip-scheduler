@@ -273,6 +273,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   padding: 0 1rem;
+  gap: 10px;
 
   .label {
     font-size: 0.8rem;
@@ -284,9 +285,11 @@ onMounted(() => {
     font-weight: 600;
     color: var(--fg-primary-color);
   }
+
   &.average {
     .value {
       font-size: 2.5rem;
+      line-height: 32px;
       color: var(--fg-accent-color);
     }
     .label {

@@ -53,11 +53,12 @@ function handleAddNewDay() {
     store.ui.closeDaysPanel()
 }
 
-function handleDeleteDay() {
-  if (!getSelectedDay.value)
-    return
+function toggleMode() {
+  const newMode = isViewMode.value ? 'edit' : 'view'
+  if (newMode === 'edit')
+    store.ui.clearCollapsedState()
 
-  store.plan.deleteDay()
+  store.ui.setInteractionMode(newMode)
 }
 
 const isDayInfoLoading = computed(() => isLoading.value || isLoadingNewDay.value)
@@ -150,17 +151,14 @@ onUnmounted(() => {
       </div>
       <div class="spacer" />
       <div v-if="!isDayInfoLoading" class="right-controls">
-        <TransitionGroup name="faded">
-          <button
-            v-if="!isViewMode"
-            key="delete"
-            class="delete-day-btn"
-            title="Удалить текущий день"
-            @click="handleDeleteDay"
-          >
-            <Icon icon="mdi:trash-can-outline" />
-          </button>
-        </TransitionGroup>
+        <button
+          v-if="isEditModeAllow"
+          class="mode-button"
+          :title="isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
+          @click="toggleMode"
+        >
+          <Icon :icon="isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
+        </button>
 
         <div class="view-controls">
           <ViewSwitcher />
@@ -231,17 +229,14 @@ onUnmounted(() => {
           :style="fixedRightControlsStyle"
         >
           <div class="right-controls">
-            <TransitionGroup name="faded">
-              <button
-                v-if="!isViewMode"
-                key="delete"
-                class="delete-day-btn"
-                title="Удалить текущий день"
-                @click="handleDeleteDay"
-              >
-                <Icon icon="mdi:trash-can-outline" />
-              </button>
-            </TransitionGroup>
+            <button
+              v-if="isEditModeAllow"
+              class="mode-button"
+              :title="isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
+              @click="toggleMode"
+            >
+              <Icon :icon="isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
+            </button>
 
             <div class="view-controls">
               <ViewSwitcher />

@@ -271,8 +271,6 @@ export const useTripPlanStore = defineStore('tripPlan', {
     },
 
     updateActivity(dayId: string, updatedActivity: IActivity) {
-      console.log('> updateActivity', updatedActivity)
-
       const day = this.days.find(d => d.id === dayId)
       if (!day)
         return

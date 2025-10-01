@@ -16,7 +16,7 @@ export const MOCK_USER_DATA = [
     email: 'dev@dev.dev',
     emailVerified: new Date(),
     name: 'Иван',
-    avatarUrl: '/static/images/avatars/ghoul.gif',
+    avatarUrl: '/avatars/ghoul.gif',
     password: '$argon2id$v=19$m=65536,t=2,p=1$5dk/3wyofRTLJmAMfC1LD5c92Ci4fGkqYkEUBOTfWy8$TBGnUdaGFaHKevxIvvIg8FgdPSl1F4h5b5Zo73rOn3M',
   },
   {
@@ -25,7 +25,7 @@ export const MOCK_USER_DATA = [
     email: 'dev2@dev.dev',
     emailVerified: new Date(),
     name: 'Артем',
-    avatarUrl: '/static/images/avatars/magic-girl.png',
+    avatarUrl: '/avatars/magic-girl.png',
     password: '$argon2id$v=19$m=65536,t=2,p=1$5dk/3wyofRTLJmAMfC1LD5c92Ci4fGkqYkEUBOTfWy8$TBGnUdaGFaHKevxIvvIg8FgdPSl1F4h5b5Zo73rOn3M',
   },
   {
@@ -34,7 +34,7 @@ export const MOCK_USER_DATA = [
     email: 'dev3@dev.dev',
     emailVerified: new Date(),
     name: 'Максим',
-    avatarUrl: '/static/images/avatars/maxim.png',
+    avatarUrl: '/avatars/maxim.png',
     password: '$argon2id$v=19$m=65536,t=2,p=1$5dk/3wyofRTLJmAMfC1LD5c92Ci4fGkqYkEUBOTfWy8$TBGnUdaGFaHKevxIvvIg8FgdPSl1F4h5b5Zo73rOn3M',
   },
 ]

@@ -53,6 +53,7 @@ const selectedItems = computed(() => {
 const singleSelectedItemLabel = computed(() => {
   if (props.multiple || !props.modelValue)
     return ''
+
   return props.items.find(item => item.value === props.modelValue)?.label || ''
 })
 
@@ -73,7 +74,9 @@ const filteredItems = computed(() => {
 function handleOpen() {
   if (props.disabled || isOpen.value)
     return
+
   isOpen.value = true
+
   if (!props.multiple)
     searchQuery.value = ''
 
@@ -85,14 +88,21 @@ function handleOpen() {
 function handleClose() {
   if (!isOpen.value)
     return
+
   isOpen.value = false
+
   if (!props.multiple)
     searchQuery.value = singleSelectedItemLabel.value
   else
     searchQuery.value = ''
 }
 
-onClickOutside(wrapperRef, handleClose)
+function toggleDropdown() {
+  if (isOpen.value)
+    handleClose()
+  else
+    handleOpen()
+}
 
 function selectItem(item: KitDropdownItem<T>) {
   if (props.multiple) {
@@ -143,14 +153,21 @@ function handleAddNewItem() {
   }
   searchQuery.value = ''
 }
+
+onClickOutside(wrapperRef, handleClose)
 </script>
 
 <template>
   <div ref="wrapperRef" class="kit-select-with-search" :class="{ 'is-disabled': disabled }">
-    <label v-if="label">{{ label }}</label>
+    <label v-if="label" @click="toggleDropdown">{{ label }}</label>
 
     <!-- Режим с чипами (multiple) -->
-    <div v-if="multiple" class="chip-input-wrapper" :class="{ 'is-focused': isOpen, 'has-icon': !!icon }" @click="handleOpen">
+    <div
+      v-if="multiple"
+      class="chip-input-wrapper"
+      :class="{ 'is-focused': isOpen, 'has-icon': !!icon }"
+      @click="handleOpen"
+    >
       <Icon v-if="icon" :icon="icon" class="main-icon" />
       <div v-for="item in selectedItems" :key="String(item.value)" class="chip">
         <span>{{ item.label }}</span>
@@ -228,7 +245,6 @@ function handleAddNewItem() {
 </template>
 
 <style scoped lang="scss">
-// ... (общие стили)
 .kit-select-with-search {
   position: relative;
   width: 100%;
@@ -241,6 +257,7 @@ function handleAddNewItem() {
     font-weight: 500;
     color: var(--fg-secondary-color);
     padding-left: 4px;
+    cursor: pointer; // [ИЗМЕНЕНИЕ] 3. Добавлен курсор
   }
 }
 

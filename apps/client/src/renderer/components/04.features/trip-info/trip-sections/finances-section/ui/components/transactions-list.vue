@@ -110,7 +110,7 @@ const { format: formatCurrency } = useCurrencyFormatter()
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-secondary-color);
+  border-top: 1px solid var(--border-secondary-color);
 
   &:hover .item-actions {
     opacity: 1;
@@ -185,7 +185,7 @@ const { format: formatCurrency } = useCurrencyFormatter()
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 1rem 0 0.5rem;
+  margin: 1rem 0 1.5rem;
   color: var(--fg-tertiary-color);
   font-size: 0.8rem;
   font-weight: 500;

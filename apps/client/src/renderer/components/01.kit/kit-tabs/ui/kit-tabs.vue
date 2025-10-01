@@ -44,7 +44,7 @@ function onAfterEnter() {
 </script>
 
 <template>
-  <div class="kit-tabs">
+  <div class="kit-tabs" :class="{ single: items.length === 1 }">
     <KitViewSwitcher v-model="model" :items="items" full-width />
 
     <div ref="contentWrapperRef" class="kit-tabs-content-wrapper">
@@ -68,6 +68,12 @@ function onAfterEnter() {
   flex-direction: column;
   gap: 20px;
   width: 100%;
+
+  &.single {
+    :deep(.kit-view-switcher-glider) {
+      opacity: 0 !important;
+    }
+  }
 }
 
 .kit-tabs-content-wrapper {
