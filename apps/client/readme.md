@@ -148,6 +148,7 @@ docker build -t trip-scheduler-client . \
   --build-arg VITE_APP_TRPC_MODE=true \
   --build-arg VITE_APP_SERVER_STATIC_PATH=static/images \
   --build-arg VITE_APP_MOCK_MODE=false
+  --build-arg VITE_MAPTILER_KEY=key
 ```
 
 ### Запуск контейнера

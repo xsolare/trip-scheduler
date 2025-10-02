@@ -245,10 +245,10 @@ docker run -d \
 mkdir -p static-data
 
 docker run -d \
-  --name trip-scheduler-api \
+  --name trip-scheduler-server \
   -p 8080:8080 \
   --env-file .env \
   -v "~/static-data:/app/static" \
   --restart always \
-  trip-scheduler-api:latest
+  trip-scheduler-server:latest
 ```

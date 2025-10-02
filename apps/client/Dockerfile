@@ -15,15 +15,15 @@ ARG VITE_MAPTILER_KEY
 COPY . .
 
 RUN bun install --ignore-scripts
-RUN bun --cwd=apps/client run build
+RUN bun run build
 
 # =================================================================
 # Этап 2: "release" - Создание финального образа с Nginx
 # =================================================================
 FROM nginx:stable-alpine
 
-COPY --from=builder /usr/src/app/apps/client/dist /usr/share/nginx/html
-COPY apps/client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
