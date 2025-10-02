@@ -7,7 +7,7 @@ interface Props {
   cities: string[]
 }
 defineProps<Props>()
-const emit = defineEmits< { (e: 'update:visible', value: boolean): void }>()
+const emit = defineEmits<{ (e: 'update:visible', value: boolean): void }>()
 </script>
 
 <template>

@@ -28,7 +28,9 @@ function handleNavigate(dayId: string) {
   >
     <ul class="days-list">
       <li v-for="(day, index) in days" :key="day.id" @click="handleNavigate(day.id)">
-        <div class="day-number">{{ index + 1 }}</div>
+        <div class="day-number">
+          {{ index + 1 }}
+        </div>
         <div class="day-info">
           <span class="day-title">{{ day.title || `День ${index + 1}` }}</span>
           <span class="day-date">{{ new Date(day.date).toLocaleDateString('ru-RU', { month: 'long', day: 'numeric', weekday: 'short' }) }}</span>
