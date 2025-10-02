@@ -1,3 +1,5 @@
+import type { OSM, XYZ } from 'ol/source'
+import type { TileSourceId } from '../constant/map-styles'
 import type { Coordinate, DrawnRoute, GeolocationMapOptions, MapPoint, MapRoute, OSRMResponse } from '../models/types'
 import Polyline from '@mapbox/polyline'
 import { Feature, Map, Overlay, View } from 'ol'
@@ -5,8 +7,9 @@ import { LineString, MultiLineString, Point } from 'ol/geom'
 import { Modify } from 'ol/interaction'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
 import { fromLonLat } from 'ol/proj'
-import { OSM, Vector as VectorSource } from 'ol/source'
+import { Vector as VectorSource } from 'ol/source'
 import { Icon as OlIcon, Stroke, Style } from 'ol/style'
+import { TILE_SOURCES } from '../constant/map-styles'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
 const NOMINATIM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search'
@@ -18,6 +21,7 @@ function useGeolocationMap() {
   const isMapLoaded = ref(false)
 
   // --- Источники и слои ---
+  const tileLayerRef = ref<TileLayer<OSM | XYZ> | null>(null)
   const pointSource = new VectorSource()
   const routeSource = new VectorSource()
   const drawSource = new VectorSource()
@@ -42,9 +46,14 @@ function useGeolocationMap() {
     }
     await nextTick()
     try {
+      const initialTileLayer = new TileLayer({
+        source: TILE_SOURCES.maptilerStreets.source,
+      })
+      tileLayerRef.value = initialTileLayer
+
       mapInstance.value = new Map({
         target: options.container,
-        layers: [new TileLayer({ source: new OSM() }), routeLayer, drawLayer, pointLayer, searchResultLayer],
+        layers: [initialTileLayer, routeLayer, drawLayer, pointLayer, searchResultLayer],
         view: new View({
           center: fromLonLat(options.center),
           zoom: options.zoom || 12,
@@ -85,6 +94,12 @@ function useGeolocationMap() {
       mapInstance.value.setTarget(undefined)
       mapInstance.value = null
       isMapLoaded.value = false
+    }
+  }
+
+  const setTileSource = (sourceId: TileSourceId) => {
+    if (tileLayerRef.value && TILE_SOURCES[sourceId]) {
+      tileLayerRef.value.setSource(TILE_SOURCES[sourceId].source)
     }
   }
 
@@ -410,6 +425,7 @@ function useGeolocationMap() {
     modifyInteraction,
     drawSource,
     initMap,
+    setTileSource,
     addOrUpdatePoint,
     removePoint,
     clearPoints,

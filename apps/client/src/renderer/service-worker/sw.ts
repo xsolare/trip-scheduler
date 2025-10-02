@@ -78,6 +78,18 @@ if (import.meta.env.PROD) {
       },
     ),
   )
+
+  // MAPTILER TILES
+  registerRoute(
+    ({ url }) => url.hostname === 'api.maptiler.com',
+    CacheStrategyFactory.createCacheFirst(
+      CACHE_CONFIG.names.maptiler,
+      {
+        maxEntries: CACHE_CONFIG.limits.maptiler,
+        maxAgeSeconds: CACHE_CONFIG.durations.maptiler,
+      },
+    ),
+  )
 }
 
 registerRoute(

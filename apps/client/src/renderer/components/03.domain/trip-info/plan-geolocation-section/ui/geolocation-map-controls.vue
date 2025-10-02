@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import type { Map } from 'ol'
+import type { TileSourceId } from '../constant/map-styles'
 import { fromLonLat } from 'ol/proj'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
+import { TILE_SOURCES } from '../constant/map-styles'
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'togglePanel'): void
   (e: 'toggleFullscreen'): void
+  (e: 'setTileSource', sourceId: TileSourceId): void
 }>()
 
 interface Props {
@@ -15,6 +19,12 @@ interface Props {
   centerCoordinates: [number, number]
   isFullscreen: boolean
 }
+
+const tillerItems = computed(() => Object.entries(TILE_SOURCES).map(([id, { label, icon }]) => ({
+  value: id as TileSourceId,
+  label,
+  icon,
+})))
 
 function zoomIn() {
   const view = props.mapInstance?.getView()
@@ -69,6 +79,16 @@ function centerOnMarker() {
         @click="zoomOut"
       />
     </div>
+    <KitDropdown :items="tillerItems" @update:model-value="emit('setTileSource', $event as TileSourceId)">
+      <template #trigger>
+        <KitBtn
+          variant="outlined"
+          color="secondary"
+          icon="mdi:layers-outline"
+          aria-label="Слои карты"
+        />
+      </template>
+    </KitDropdown>
     <KitBtn
       variant="outlined"
       color="secondary"
@@ -97,7 +117,8 @@ function centerOnMarker() {
   gap: 8px;
   z-index: 10;
 
-  .kit-btn {
+  .kit-btn,
+  :deep(.kit-btn) {
     padding: 0;
     width: 26px;
     height: 26px;

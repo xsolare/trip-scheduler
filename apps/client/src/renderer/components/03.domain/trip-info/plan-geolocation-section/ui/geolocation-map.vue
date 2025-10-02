@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TileSourceId } from '../constant/map-styles'
 import type { Coordinate, DrawnRoute, MapPoint, MapRoute } from '../models/types'
 import { onClickOutside } from '@vueuse/core'
 import { toLonLat } from 'ol/proj'
@@ -44,6 +45,7 @@ const {
   addOrUpdateDrawnRoute,
   removeRoute,
   modifyInteraction,
+  setTileSource,
   ...restMapController
 } = useGeolocationMap()
 
@@ -53,6 +55,10 @@ const mapContainerRef = ref<HTMLElement>()
 const contextMenuRef = ref<HTMLElement | null>(null)
 const isContextMenuVisible = ref(false)
 const contextMenuPosition = reactive({ top: 0, left: 0, coords: [0, 0] as Coordinate })
+
+function handleSetTileSource(sourceId: TileSourceId) {
+  setTileSource(sourceId)
+}
 
 function openContextMenu(event: MouseEvent) {
   if (props.readonly || !mapInstance.value)
@@ -139,7 +145,7 @@ onMounted(async () => {
     emit('mapClick', coords)
   })
 
-  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, modifyInteraction, ...restMapController })
+  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, modifyInteraction, setTileSource, ...restMapController })
 })
 </script>
 
@@ -161,6 +167,7 @@ onMounted(async () => {
         :is-fullscreen="isFullscreen"
         @toggle-panel="$emit('togglePanel')"
         @toggle-fullscreen="$emit('toggleFullscreen')"
+        @set-tile-source="handleSetTileSource"
       />
     </slot>
     <div ref="contextMenuRef">

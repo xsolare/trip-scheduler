@@ -15,11 +15,11 @@ export const DAY_IDS = {
   DAY_08: 'f4e3d2c5-b6a7-4f8e-a0d1-2e3f4a5b6c7d',
   DAY_09: 'a5f4e3d6-c7b8-4a9f-b1e2-3f4a5b6c7d8e',
   DAY_10: '32bcabf2-fa72-43f5-8a45-269dc59dea0b',
-  DAY_11: 'c7b6a5f8-e9da-4cb1-d304-5b6c7d8e9f0a',
-  DAY_12: 'd8c7b6a9-f0eb-4dc2-e415-6c7d8e9f0a1b',
-  DAY_13: 'e9d8c7ba-a1fc-4ed3-f526-7d8e9f0a1b2c',
-  DAY_14: 'f0e9d8cb-b2ad-4fe4-0637-8e9f0a1b2c3d',
-  DAY_15: 'a1f0e9dc-c3be-40f5-1748-9f0a1b2c3d4e',
+  DAY_11: 'd2e50cb1-8a59-41bc-a015-d06f260c62b0',
+  DAY_12: '0e320e56-ff56-47d2-86d4-b4e2eb6a0f20',
+  DAY_13: '4c333329-34a9-408e-b9b0-eda1979e5aba',
+  DAY_14: '7a269a77-6621-4518-a819-c85de6d1f009',
+  DAY_15: 'a8e8ea55-a1f4-4bab-9ae3-e05557860e09',
 }
 
 // Хелпер для формирования путей к изображениям

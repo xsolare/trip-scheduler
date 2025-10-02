@@ -23,7 +23,7 @@ const user = computed(() => authStore.user)
 function formatPrice(price: number) {
   if (price === 0)
     return 'Бесплатно'
-  
+
   return `${price.toLocaleString('ru-RU')} ₽`
 }
 
@@ -125,7 +125,8 @@ onMounted(() => {
                   Ваш текущий тариф
                 </KitBtn>
                 <KitBtn v-else color="primary" style="width: 100%;" :disabled="plan.isDeveloping">
-                  Перейти на {{ plan.name }}
+                  Лень делать
+                  <!-- Перейти на {{ plan.name }} -->
                 </KitBtn>
               </div>
             </div>

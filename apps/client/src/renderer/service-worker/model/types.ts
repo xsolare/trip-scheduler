@@ -28,6 +28,7 @@ const CACHE_CONFIG = {
     hashedAssets: 'trip-scheduler-hashed-assets',
     vendorAssets: 'trip-scheduler-vendor-assets',
     regularAssets: 'trip-scheduler-regular-assets',
+    maptiler: 'trip-scheduler-maptiler-tiles',
   },
   durations: {
     images: 365 * 24 * 60 * 60,
@@ -40,6 +41,7 @@ const CACHE_CONFIG = {
       regular: 2 * 60 * 60,
     },
     manifests: 7 * 24 * 60 * 60,
+    maptiler: 30 * 24 * 60 * 60, // 30 дней
   },
   limits: {
     fonts: 30,
@@ -50,6 +52,7 @@ const CACHE_CONFIG = {
     vendorAssets: 100,
     regularAssets: 50,
     manifests: 100,
+    maptiler: 1000,
   },
 } as const
 
