@@ -240,7 +240,7 @@ docker run -d \
 
 **Пример команды с подключенным volume:**
 
-````bash
+```bash
 # Создаем папку на хосте, если она не существует
 mkdir -p static-data
 
@@ -248,10 +248,7 @@ docker run -d \
   --name trip-scheduler-api \
   -p 8080:8080 \
   --env-file .env \
-  -v "$(pwd)/static-data:/app/static" \
+  -v "~/static-data:/app/static" \
   --restart always \
   trip-scheduler-api:latest
 ```
-
-Теперь все файлы, загруженные через API, будут сохраняться в папке `static-data` в корне вашего проекта на хост-машине и останутся там даже после остановки или удаления контейнера.
-````

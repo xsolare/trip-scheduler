@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 RUN bun install
-RUN bun --cwd=apps/server run build
+RUN bun run build
 
 # =================================================================
 # Этап 2: "release" - Создание финального образа для production
@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends libvips-dev && 
 
 WORKDIR /usr/src/app
 
-COPY --from=builder /usr/src/app/apps/server/dist ./dist
-COPY apps/server/package.json  .
+COPY --from=builder /usr/src/app/dist ./dist
+COPY package.json  .
 
 RUN bun i --production --ignore-scripts 
 
