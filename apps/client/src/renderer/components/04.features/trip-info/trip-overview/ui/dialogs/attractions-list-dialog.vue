@@ -34,7 +34,7 @@ function handleNavigate(dayId: string) {
     :visible="visible"
     title="Запланированные достопримечательности"
     icon="mdi:camera"
-    :max-width="600"
+    :max-width="800"
     @update:visible="emit('update:visible', $event)"
   >
     <div class="dialog-content">

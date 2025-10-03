@@ -23,7 +23,7 @@ function handleNavigate(dayId: string) {
     :visible="visible"
     title="Дни путешествия"
     icon="mdi:calendar-range"
-    :max-width="500"
+    :max-width="800"
     @update:visible="emit('update:visible', $event)"
   >
     <ul class="days-list">
