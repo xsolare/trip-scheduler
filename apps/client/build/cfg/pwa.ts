@@ -33,16 +33,6 @@ export const pwaCfg: Parameters<typeof VitePWA>[0] = {
       purpose: 'maskable',
     }],
   },
-  workbox: {
-    skipWaiting: true,
-    clientsClaim: true,
-    cleanupOutdatedCaches: true,
-    runtimeCaching: [],
-    navigateFallback: null,
-    globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-    navigateFallbackDenylist: [/^\/api\//],
-    sourcemap: true,
-  },
   injectManifest: {
     globPatterns: ['**/*.{js,json,css,html,txt,svg,png,ico,webp,woff,woff2,ttf,eot,otf,wasm}'],
     globIgnores: ['emojis/**', 'manifest**.webmanifest'],

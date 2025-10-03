@@ -1,5 +1,6 @@
 <script setup>
 import { ConfirmDialogManager } from '~/components/02.shared/confirm-dialog-manager'
+import { ReloadPrompt } from '~/components/02.shared/reload-prompt'
 import { ToastManager } from '~/components/02.shared/toast-manager'
 
 import { DefaultLayout } from '~/components/06.layouts/default'
@@ -19,12 +20,6 @@ const route = useRoute()
 const layout = computed(() => route.meta.layout || 'empty')
 const transition = computed(() => route.meta.transition)
 
-const isStandaloneApp = import.meta.env.VITE_IS_STANDALONE === 'true'
-
-const ReloadPrompt = isStandaloneApp
-  ? null
-  : defineAsyncComponent(() => import('~/components/02.shared/reload-prompt/ui/reload-prompt.vue'))
-
 const layouts = {
   'default': DefaultLayout,
   'empty': EmptyLayout,
@@ -43,8 +38,7 @@ const layouts = {
     </router-view>
   </component>
 
-  <component :is="ReloadPrompt" v-if="ReloadPrompt" />
-
+  <ReloadPrompt />
   <ToastManager />
   <ConfirmDialogManager />
 </template>

@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import type { ServiceWorkerMessage } from './model/types'
+import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { messageHandlers } from './lib/message-handlers'
@@ -7,6 +8,8 @@ import { AssetAnalyzer, CacheStrategyFactory } from './lib/utils'
 import { API_CACHE_RULES, CACHE_CONFIG } from './model/types'
 
 declare let self: ServiceWorkerGlobalScope
+
+clientsClaim()
 
 cleanupOutdatedCaches()
 

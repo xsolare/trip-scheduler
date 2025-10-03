@@ -122,7 +122,6 @@ const visibilityIcon = computed(() => {
         </div>
         <div class="image-overlay" />
         <div class="card-header">
-          <!-- Блок статуса удален отсюда -->
         </div>
 
         <h3 class="card-title">
@@ -156,7 +155,6 @@ const visibilityIcon = computed(() => {
         </div>
 
         <div class="card-meta">
-          <!-- Добавляем статус сюда -->
           <div class="meta-item meta-item--status" :class="statusInfo.class">
             <Icon :icon="statusInfo.icon" />
             <span>{{ statusInfo.text }}</span>

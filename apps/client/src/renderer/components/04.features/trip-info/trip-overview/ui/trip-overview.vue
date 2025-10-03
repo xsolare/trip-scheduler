@@ -517,16 +517,16 @@ function handleShareTrip() {
     border-radius: var(--r-s);
 
     &.completed {
-      background-color: rgba(var(--fg-success-color-rgb), 0.1);
-      color: var(--fg-success-color);
+      color: #28a745;
+      background-color: rgba(40, 167, 69, 0.15);
     }
     &.planned {
-      background-color: rgba(var(--fg-warning-color-rgb), 0.1);
-      color: var(--fg-warning-color);
+      color: #d97706;
+      background-color: rgba(217, 119, 6, 0.15);
     }
     &.draft {
-      background-color: rgba(var(--fg-secondary-color-rgb), 0.1);
-      color: var(--fg-secondary-color);
+      color: #6c757d;
+      background-color: rgba(108, 117, 125, 0.15);
     }
   }
 }
