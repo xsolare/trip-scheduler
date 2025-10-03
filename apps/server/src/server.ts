@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { sql } from 'drizzle-orm'
 import { db } from '../db'
-import app from './index'
+import app from './app'
 
 const port = Number(process.env.PORT) || 8080
 const host = process.env.HOST || '0.0.0.0'

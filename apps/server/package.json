@@ -7,12 +7,13 @@
     "bun": ">=1.1.30"
   },
   "scripts": {
-    "start": "bun --bun run dist/index.js",
+    "start": "bun --bun run dist/server.js",
     "--------------------------------<      DEV       >--------------------------------": "",
     "dev": "bun run --hot --watch src/server.ts",
     "dev:debug": "bun --inspect run --hot --watch src/server.ts",
     "--------------------------------<      BUILD     >--------------------------------": "",
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun --no-minify",
+    "build:bun": "bun build ./src/index.ts --outdir ./dist --target bun --no-minify",
+    "build": "tsup",
     "--------------------------------<   DATABASE    >---------------------------------": "",
     "db:migrate": "bun run db/migrate.ts",
     "db:generate": "bunx drizzle-kit generate",
@@ -38,6 +39,7 @@
     "pg": "^8.16.3",
     "resend": "^6.1.2",
     "sharp": "^0.34.4",
+    "tsup": "^8.5.0",
     "uuid": "^13.0.0",
     "zod": "^4.1.11"
   },
