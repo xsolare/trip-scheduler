@@ -13,6 +13,7 @@ const jsonInput = ref<HTMLInputElement | null>(null)
 
 function selectTheme(themeName: ThemeType) {
   store.theme.setTheme(themeName)
+
   if (themeName !== 'custom') {
     showCustomizer.value = false
   }

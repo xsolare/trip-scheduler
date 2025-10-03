@@ -8,7 +8,7 @@ import { useThemeStore } from '~/shared/store/theme.store'
 function hexToRgbString(hex: string): string | null {
   // Разворачиваем сокращенный формат (например, #03F -> #0033FF)
   const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i
-  hex = hex.replace(shorthandRegex, (m, r, g, b) => {
+  hex = hex.replace(shorthandRegex, (_, r, g, b) => {
     return r + r + g + g + b + b
   })
 

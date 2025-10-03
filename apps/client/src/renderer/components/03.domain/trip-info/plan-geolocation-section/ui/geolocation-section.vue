@@ -38,7 +38,7 @@ const mapController = ref<ReturnType<typeof useGeolocationMap>>()
 const activeView = ref<'points' | 'routes'>('points')
 const activeRouteId = ref<string | null>(null)
 const isMapFullscreen = ref(false)
-const isPanelVisible = ref(true)
+const isPanelVisible = ref(false)
 const routeIdForNewSegment = ref<string | null>(null)
 const searchQuery = ref('')
 
