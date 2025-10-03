@@ -19,7 +19,6 @@ const drawerTitle = computed(() => props.parentType === 'day' ? 'Обсужде�
 
 watch(isPanelOpen, (isOpen) => {
   if (isOpen) {
-    // Загружаем комментарии только при первом открытии панели
     const collection = commentsStore.getCommentCollectionByParentId(props.parentId)
     if (!collection || collection.comments.length === 0) {
       commentsStore.fetchComments(props.parentId)
@@ -36,6 +35,7 @@ watch(isPanelOpen, (isOpen) => {
 
     <KitDrawer
       v-model:open="isPanelOpen"
+      width="500px"
       side="right"
       class="comments-widget-drawer"
     >
@@ -61,6 +61,7 @@ watch(isPanelOpen, (isOpen) => {
     font-weight: 600;
     margin: 0 0 16px;
     border-bottom: 1px solid var(--border-secondary-color);
+
     h2 {
       margin: 0;
       font-size: 1.25rem;

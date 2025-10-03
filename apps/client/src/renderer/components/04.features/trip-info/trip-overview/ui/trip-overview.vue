@@ -431,39 +431,48 @@ function handleShareTrip() {
   .banner-content {
     position: relative;
     z-index: 2;
-    color: var(--fg-inverted-color);
+    color: rgba(var(--fg-secondary-color-rgb), 0.85);
+    background: linear-gradient(0deg, rgba(var(--bg-secondary-color-rgb), 0.7) 0%, transparent 100%);
+
+    text-shadow:
+      1px 1px 0 rgba(var(--bg-tertiary-color-rgb), 0.5),
+      -1px -1px 0 rgba(var(--bg-tertiary-color-rgb), 0.5),
+      1px -1px 0 rgba(var(--bg-tertiary-color-rgb), 0.5),
+      -1px 1px 0 rgba(var(--bg-tertiary-color-rgb), 0.5),
+      0 2px 8px rgba(0, 0, 0, 0.7);
+
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 1.5rem;
+    padding: 24px;
     padding-top: 48px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    padding-bottom: 8px;
 
     & > * {
       animation: fadeInUp 0.6s 0.2s ease-out forwards;
       opacity: 0;
     }
-  }
 
-  .trip-title {
-    font-size: 2rem;
-    line-height: 1.2;
-    font-weight: 700;
-    margin: 0;
-  }
+    .trip-title {
+      font-size: 2rem;
+      line-height: 1.2;
+      font-weight: 700;
+      margin: 0;
+    }
 
-  .trip-meta {
-    animation-delay: 0.3s;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.5rem;
-
-    .meta-item {
+    .trip-meta {
+      animation-delay: 0.3s;
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-      font-weight: 500;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
     }
   }
 }

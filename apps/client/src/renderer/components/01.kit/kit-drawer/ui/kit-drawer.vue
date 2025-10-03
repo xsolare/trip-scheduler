@@ -11,12 +11,17 @@ import {
 interface Props {
   side?: 'left' | 'right' | 'top' | 'bottom'
   class?: string
+  width?: string
 }
 
 defineOptions({
   inheritAttrs: false,
 })
-const props = withDefaults(defineProps<Props>(), { side: 'left' })
+
+const props = withDefaults(defineProps<Props>(), {
+  side: 'left',
+  width: '340px',
+})
 const visible = defineModel<boolean>('open', { required: true })
 </script>
 
@@ -27,6 +32,7 @@ const visible = defineModel<boolean>('open', { required: true })
       <DialogContent
         class="drawer-content-wrapper"
         :class="[`drawer--${side}`, props.class]"
+        :style="{ width: props.width }"
         @pointer-down-outside="(event) => {
           const originalEvent = event.detail.originalEvent
           const target = originalEvent.target as HTMLElement
@@ -80,7 +86,6 @@ const visible = defineModel<boolean>('open', { required: true })
     top: 0;
     bottom: 0;
     left: 0;
-    width: 340px;
     max-width: 80vw;
     border-right: 1px solid var(--border-secondary-color);
     &[data-state='open'] {
@@ -95,7 +100,6 @@ const visible = defineModel<boolean>('open', { required: true })
     top: 0;
     bottom: 0;
     right: 0;
-    width: 340px;
     max-width: 80vw;
     border-left: 1px solid var(--border-secondary-color);
     &[data-state='open'] {

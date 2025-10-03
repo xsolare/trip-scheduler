@@ -126,13 +126,14 @@ onBeforeUnmount(() => {
           >
             <Icon width="18" height="18" :icon="ui.isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
           </button>
-          <KitDropdown :items="layout.menuItems.value" @update:model-value="layout.handleMenuAction">
+          <!-- TODO Later -->
+          <!-- <KitDropdown :items="layout.menuItems.value" @update:model-value="layout.handleMenuAction">
             <template #trigger>
               <button class="nav-button" title="Меню">
                 <Icon icon="mdi:dots-vertical" />
               </button>
             </template>
-          </KitDropdown>
+          </KitDropdown> -->
         </div>
       </div>
       <KitDivider class="trip-info-divider">

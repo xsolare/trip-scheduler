@@ -1,15 +1,21 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
+import TripOverviewSkeleton from './trip-overview-skeleton.vue'
+
+const route = useRoute()
+const dayQuery = computed(() => route.query.day)
 </script>
 
 <template>
-  <div class="trip-info-skeleton">
+  <TripOverviewSkeleton v-if="!dayQuery" />
+  <div v-else class="trip-info-day-skeleton">
     <!-- Divider "о дне" -->
     <div class="divider-skeleton">
       <KitSkeleton width="80px" height="12px" border-radius="4px" type="wave" />
     </div>
 
-    <!-- Day Header Skeleton (this was okay) -->
+    <!-- Day Header Skeleton -->
     <div class="day-header-skeleton">
       <KitSkeleton width="60%" height="32px" border-radius="6px" type="wave" style="margin-bottom: 16px;" />
       <KitSkeleton width="85%" height="18px" border-radius="6px" type="wave" />
@@ -20,7 +26,7 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
       <KitSkeleton width="120px" height="12px" border-radius="4px" type="wave" />
     </div>
 
-    <!-- Corrected Activities List Skeleton -->
+    <!-- Activities List Skeleton -->
     <div class="activities-list-skeleton">
       <div v-for="i in 4" :key="i" class="activity-item-skeleton">
         <!-- Diamond marker is handled by pseudo-element in styles -->
@@ -29,11 +35,9 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
         </div>
         <div class="activity-body-skeleton">
           <KitSkeleton width="65%" height="24px" border-radius="6px" type="wave" />
-          <!-- Conditionally add the description block to match the image -->
           <div v-if="i === 3" class="description-block-skeleton">
             <KitSkeleton width="90%" height="18px" border-radius="4px" type="wave" />
           </div>
-          <!-- Skeleton for "Добавить блок" -->
           <div class="add-block-skeleton-wrapper">
             <KitSkeleton width="120px" height="17px" border-radius="4px" type="wave" />
           </div>
@@ -41,7 +45,7 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
       </div>
     </div>
 
-    <!-- Corrected Add Activity Button Skeleton -->
+    <!-- Add Activity Button Skeleton -->
     <div class="add-activity-skeleton">
       <KitSkeleton width="180px" height="20px" border-radius="4px" type="wave" />
     </div>
@@ -49,7 +53,7 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 </template>
 
 <style scoped lang="scss">
-.trip-info-skeleton {
+.trip-info-day-skeleton {
   display: flex;
   flex-direction: column;
   width: 100%;

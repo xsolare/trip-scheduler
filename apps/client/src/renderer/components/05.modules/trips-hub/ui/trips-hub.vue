@@ -92,8 +92,13 @@ provide(TripsHubKey, tripsHub)
         <h1>Путешествия</h1>
         <p>Ваши планы и приключения в одном месте.</p>
       </div>
-      <KitBtn icon="mdi:plus" @click="tripsHub.openCreateModal">
-        Создать
+      <KitBtn
+        icon="mdi:plus"
+        @click="tripsHub.openCreateModal"
+      >
+        <template v-if="mdAndUp">
+          Создать
+        </template>
       </KitBtn>
     </div>
 
