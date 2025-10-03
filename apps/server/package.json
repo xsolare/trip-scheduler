@@ -12,7 +12,7 @@
     "dev": "bun run --hot --watch src/server.ts",
     "dev:debug": "bun --inspect run --hot --watch src/server.ts",
     "--------------------------------<      BUILD     >--------------------------------": "",
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --no-minify",
     "--------------------------------<   DATABASE    >---------------------------------": "",
     "db:migrate": "bun run db/migrate.ts",
     "db:generate": "bunx drizzle-kit generate",

@@ -1,5 +1,8 @@
 /* eslint-disable no-console */
 import type { Pinia } from 'pinia'
+// highlight-start
+import { registerSW } from 'virtual:pwa-register'
+// highlight-end
 import { usePwaStore } from '~/shared/store/pwa.store'
 
 /**
@@ -20,30 +23,19 @@ export async function initializePwaUpdater(pinia: Pinia): Promise<void> {
   }
 
   try {
-    const moduleName = 'virtual:pwa-register'
-    const pwaModule = await import(/* @vite-ignore */ moduleName).catch(() => null)
-
-    if (!pwaModule) {
-      console.log('PWA module not available, skipping PWA initialization.')
-      return
-    }
-
-    const { registerSW } = pwaModule
     const pwaStore = usePwaStore(pinia)
     const intervalMS = 60 * 1 * 1000 // 1 минута
 
     const updateServiceWorker = registerSW({
-      // Когда SW готов к работе в оффлайне
       onOfflineReady() {
         console.log('App ready to work offline.')
         pwaStore.setOfflineReady(true)
       },
-      // Когда доступно обновление
       onNeedRefresh() {
         console.log('New content available, show refresh prompt.')
         pwaStore.setNeedRefresh(true)
       },
-      // @ts-expect-error dynamic module
+      // @ts-expect-error dвщсynamic module - эта ошибка может уйти после смены импорта
       onRegisteredSW(swUrl, r) {
         if (r) {
           setInterval(async () => {
@@ -75,5 +67,6 @@ export async function initializePwaUpdater(pinia: Pinia): Promise<void> {
   }
   catch (e) {
     console.error('Failed to initialize PWA updater:', e)
+    console.log('PWA module not available, skipping PWA initialization.')
   }
 }
