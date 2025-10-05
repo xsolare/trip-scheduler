@@ -424,6 +424,7 @@ onUnmounted(() => {
       :zoom="section.zoom"
       :readonly="readonly"
       :is-fullscreen="isMapFullscreen"
+      :interactive-on-click="true"
       @map-ready="onMapReady"
       @map-click="handleMapClick"
       @context-menu-action="handleContextMenuAction"

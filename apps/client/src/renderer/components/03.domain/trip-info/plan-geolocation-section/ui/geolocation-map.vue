@@ -20,11 +20,13 @@ interface Props {
   readonly?: boolean
   zoom?: number
   isFullscreen: boolean
+  interactiveOnClick?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: true,
   zoom: 14,
+  interactiveOnClick: false,
 })
 
 const emit = defineEmits<{
@@ -51,6 +53,21 @@ const {
 
 const mapContainerRef = ref<HTMLElement>()
 
+// --- Логика активации карты по клику ---
+const isMapActive = ref(!props.interactiveOnClick)
+const showActivateMessage = ref(false)
+
+function activateMap() {
+  if (isMapActive.value || !mapInstance.value)
+    return
+
+  isMapActive.value = true
+  mapInstance.value.getInteractions().forEach((interaction) => {
+    interaction.setActive(true)
+  })
+  modifyInteraction.setActive(!props.readonly)
+}
+
 // --- Контекстное меню ---
 const contextMenuRef = ref<HTMLElement | null>(null)
 const isContextMenuVisible = ref(false)
@@ -61,7 +78,7 @@ function handleSetTileSource(sourceId: TileSourceId) {
 }
 
 function openContextMenu(event: MouseEvent) {
-  if (props.readonly || !mapInstance.value)
+  if (props.readonly || !mapInstance.value || !isMapActive.value)
     return
   const mapContainer = mapInstance.value.getTargetElement() as HTMLElement
   const mapRect = mapContainer.getBoundingClientRect()
@@ -123,7 +140,8 @@ watch(() => props.drawnRoutes, (newRoutes, oldRoutes = []) => {
 }, { deep: true })
 
 watch(() => props.readonly, (isReadonly) => {
-  modifyInteraction.setActive(!isReadonly)
+  if (isMapActive.value)
+    modifyInteraction.setActive(!isReadonly)
 })
 
 onClickOutside(contextMenuRef, () => {
@@ -137,10 +155,12 @@ onMounted(async () => {
     container: mapContainerRef.value,
     center: props.center,
     zoom: props.zoom,
-    interactive: !props.readonly,
+    interactive: !props.interactiveOnClick,
   })
 
   mapInstance.value?.on('click', (event) => {
+    if (!isMapActive.value)
+      return
     const coords = toLonLat(event.coordinate) as Coordinate
     emit('mapClick', coords)
   })
@@ -154,9 +174,22 @@ onMounted(async () => {
     ref="mapContainerRef"
     class="geolocation-map-container"
     :style="{ height }"
-    :class="{ 'cursor-crosshair': mode === 'add_point' || mode === 'add_route_point' || mode === 'draw_route', 'cursor-grab': mode === 'pan', 'cursor-move': mode === 'move_point' }"
+    :class="{ 'cursor-crosshair': mode === 'add_point' || mode === 'add_route_point' || mode === 'draw_route', 'cursor-grab': mode === 'pan' && isMapActive, 'cursor-move': mode === 'move_point' }"
     @contextmenu.prevent="openContextMenu"
   >
+    <div
+      v-if="interactiveOnClick && !isMapActive"
+      class="map-activation-overlay"
+      @click="activateMap"
+      @mouseenter="showActivateMessage = true"
+      @mouseleave="showActivateMessage = false"
+    >
+      <Transition name="fade">
+        <div v-if="showActivateMessage" class="overlay-message">
+          Нажмите, чтобы активировать карту
+        </div>
+      </Transition>
+    </div>
     <div v-if="!isMapLoaded || isLoading" class="loading-overlay">
       <span>{{ isLoading ? 'Загрузка...' : 'Инициализация карты...' }}</span>
     </div>
@@ -214,6 +247,30 @@ onMounted(async () => {
   }
 }
 
+.map-activation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9; /* Below controls (z-index: 10) */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .overlay-message {
+    padding: 8px 16px;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    border-radius: var(--r-s);
+    font-size: 0.9rem;
+    font-weight: 500;
+    pointer-events: none;
+    box-shadow: var(--s-m);
+  }
+}
+
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -227,5 +284,15 @@ onMounted(async () => {
   justify-content: center;
   z-index: 100;
   font-weight: 500;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

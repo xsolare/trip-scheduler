@@ -280,9 +280,11 @@ function handleShareTrip() {
           >
             <div class="item-main-info">
               <span class="day-number">{{ index + 1 }}</span>
-              <span class="item-title">{{ day.title || `День ${index + 1}` }}</span>
+              <div class="item-content">
+                <span class="item-title">{{ day.title || `День ${index + 1}` }}</span>
+                <span class="item-meta">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}</span>
+              </div>
             </div>
-            <span class="item-meta">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}</span>
             <Icon icon="mdi:chevron-right" class="chevron-icon" />
           </li>
         </ul>
@@ -445,7 +447,7 @@ function handleShareTrip() {
     flex-direction: column;
     gap: 12px;
     padding: 24px;
-    padding-top: 48px;
+    padding-top: 64px;
     padding-bottom: 8px;
 
     & > * {
@@ -488,8 +490,6 @@ function handleShareTrip() {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  animation: fadeInUp 0.6s 0.4s ease-out forwards;
-  opacity: 0;
 
   @include media-down(sm) {
     padding: 1rem;
@@ -659,7 +659,7 @@ function handleShareTrip() {
 
 .list-item {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 1rem;
   padding: 12px 8px;
@@ -682,6 +682,13 @@ function handleShareTrip() {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+}
+
+.item-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
   min-width: 0;
 }
 
@@ -709,6 +716,9 @@ function handleShareTrip() {
   font-size: 0.85rem;
   color: var(--fg-secondary-color);
   white-space: nowrap;
+  margin-left: auto;
+  padding-left: 1rem;
+  flex-shrink: 0;
 }
 
 .section-icon {
@@ -775,8 +785,18 @@ function handleShareTrip() {
     padding: 10px 6px;
     gap: 0.5rem;
   }
+  .item-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .item-title {
+    width: 100%;
+  }
   .item-meta {
     font-size: 0.8rem;
+    margin-left: 0;
+    padding-left: 0;
   }
 }
 </style>

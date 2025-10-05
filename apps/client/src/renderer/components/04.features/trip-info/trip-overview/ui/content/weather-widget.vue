@@ -39,6 +39,7 @@ const monthName = computed(() => {
 async function fetchWeatherForCity(city: string) {
   if (!city || !props.startDate)
     return
+
   isLoading.value = true
   error.value = null
   weatherData.value = { average: null, min: null, max: null }
