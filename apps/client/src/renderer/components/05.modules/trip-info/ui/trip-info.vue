@@ -42,8 +42,12 @@ function handleSaveTrip(updatedData: UpdateTripInput) {
 watch(
   () => plan.currentDayId,
   (newDayId, oldDayId) => {
-    if (newDayId && newDayId !== oldDayId)
+    if (newDayId && newDayId !== oldDayId) {
       ui.clearCollapsedState()
+      nextTick(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' })
+      })
+    }
 
     if (newDayId && newDayId !== route.query.day) {
       router.replace({ query: { ...route.query, day: newDayId, section: undefined } })
@@ -97,16 +101,12 @@ const fixedNavNextBtnStyle = computed(() => ({
   right: `${windowWidth.value - (wrapperLeft.value + wrapperWidth.value) - 240}px`,
 }))
 
-async function handleSelectPreviousDay() {
+function handleSelectPreviousDay() {
   plan.selectPreviousDay()
-  await nextTick()
-  window.scrollTo({ top: 0, behavior: 'instant' })
 }
 
-async function handleSelectNextDay() {
+function handleSelectNextDay() {
   plan.selectNextDay()
-  await nextTick()
-  window.scrollTo({ top: 0, behavior: 'instant' })
 }
 
 onUnmounted(() => {

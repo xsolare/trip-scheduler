@@ -8,7 +8,7 @@ import { Modify } from 'ol/interaction'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
 import { fromLonLat } from 'ol/proj'
 import { Vector as VectorSource } from 'ol/source'
-import { Icon as OlIcon, Stroke, Style } from 'ol/style'
+import { Circle as CircleStyle, Fill, Icon as OlIcon, Stroke, Style } from 'ol/style'
 import { TILE_SOURCES } from '../constant/map-styles'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
@@ -26,11 +26,13 @@ function useGeolocationMap() {
   const routeSource = new VectorSource()
   const drawSource = new VectorSource()
   const searchResultSource = new VectorSource() // Для результатов поиска
+  const currentLocationSource = new VectorSource() // Для местоположения пользователя
 
   const pointLayer = new VectorLayer({ source: pointSource, zIndex: 10 })
   const routeLayer = new VectorLayer({ source: routeSource, zIndex: 5 })
   const drawLayer = new VectorLayer({ source: drawSource, zIndex: 6 })
   const searchResultLayer = new VectorLayer({ source: searchResultSource, zIndex: 11 }) // Слой для результатов поиска
+  const currentLocationLayer = new VectorLayer({ source: currentLocationSource, zIndex: 12 }) // Слой для местоположения
 
   // --- Взаимодействия (Interactions) ---
   const modifyInteraction = new Modify({ source: pointSource })
@@ -53,7 +55,7 @@ function useGeolocationMap() {
 
       mapInstance.value = new Map({
         target: options.container,
-        layers: [initialTileLayer, routeLayer, drawLayer, pointLayer, searchResultLayer],
+        layers: [initialTileLayer, routeLayer, drawLayer, pointLayer, searchResultLayer, currentLocationLayer],
         view: new View({
           center: fromLonLat(options.center),
           zoom: options.zoom || 12,
@@ -417,6 +419,62 @@ function useGeolocationMap() {
     }
   }
 
+  const showCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      useToast().error('Геолокация не поддерживается вашим браузером.')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (!mapInstance.value)
+          return
+
+        const { longitude, latitude } = position.coords
+        flyToLocation(longitude, latitude, 16)
+
+        currentLocationSource.clear()
+
+        const locationFeature = new Feature({
+          geometry: new Point(fromLonLat([longitude, latitude])),
+        })
+
+        locationFeature.setStyle(new Style({
+          image: new CircleStyle({
+            radius: 8,
+            fill: new Fill({
+              color: '#3498db',
+            }),
+            stroke: new Stroke({
+              color: '#ffffff',
+              width: 2,
+            }),
+          }),
+        }))
+
+        currentLocationSource.addFeature(locationFeature)
+      },
+      (error) => {
+        let message = 'Не удалось определить ваше местоположение.'
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = 'Вы запретили доступ к своему местоположению.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            message = 'Информация о местоположении недоступна.'
+            break
+          case error.TIMEOUT:
+            message = 'Время ожидания запроса местоположения истекло.'
+            break
+        }
+        useToast().error(message)
+      },
+      {
+        enableHighAccuracy: true,
+      },
+    )
+  }
+
   onUnmounted(destroyMap)
 
   return {
@@ -440,6 +498,7 @@ function useGeolocationMap() {
     addOrUpdateDrawnRoute,
     removeRoute,
     clearRoutes,
+    showCurrentLocation,
   }
 }
 

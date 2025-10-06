@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Map } from 'ol'
 import type { TileSourceId } from '../constant/map-styles'
-import { fromLonLat } from 'ol/proj'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { TILE_SOURCES } from '../constant/map-styles'
@@ -12,11 +11,11 @@ const emit = defineEmits<{
   (e: 'togglePanel'): void
   (e: 'toggleFullscreen'): void
   (e: 'setTileSource', sourceId: TileSourceId): void
+  (e: 'centerOnMyLocation'): void
 }>()
 
 interface Props {
   mapInstance: Map | null
-  centerCoordinates: [number, number]
   isFullscreen: boolean
 }
 
@@ -41,17 +40,6 @@ function zoomOut() {
     view.animate({ zoom: currentZoom - 1, duration: 250 })
   }
 }
-
-function centerOnMarker() {
-  const view = props.mapInstance?.getView()
-  if (view) {
-    view.animate({
-      center: fromLonLat(props.centerCoordinates),
-      zoom: 16,
-      duration: 1000,
-    })
-  }
-}
 </script>
 
 <template>
@@ -60,8 +48,8 @@ function centerOnMarker() {
       variant="outlined"
       color="secondary"
       icon="mdi:crosshairs-gps"
-      aria-label="Центрировать на маркере"
-      @click="centerOnMarker"
+      aria-label="Мое местоположение"
+      @click="$emit('centerOnMyLocation')"
     />
     <div class="zoom-controls">
       <KitBtn

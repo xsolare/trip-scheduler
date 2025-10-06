@@ -8,16 +8,26 @@ interface Props {
   startDate: string
 }
 
+// Убрали solarIndex
 interface WeatherData {
   average: number | null
   min: number | null
   max: number | null
+  rainyDays: number | null
+  windSpeed: number | null
 }
 
 const props = defineProps<Props>()
 
 const selectedCity = ref<string | null>(null)
-const weatherData = ref<WeatherData>({ average: null, min: null, max: null })
+// Убрали solarIndex
+const weatherData = ref<WeatherData>({
+  average: null,
+  min: null,
+  max: null,
+  rainyDays: null,
+  windSpeed: null,
+})
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const isDropdownOpen = ref(false)
@@ -36,13 +46,50 @@ const monthName = computed(() => {
   return date.toLocaleString('ru-RU', { month: 'long' })
 })
 
+function getAverage(arr: (number | null)[]): number | null {
+  const validNumbers = arr.filter(n => n !== null) as number[]
+  if (validNumbers.length === 0)
+    return null
+  const sum = validNumbers.reduce((a, b) => a + b, 0)
+  return Math.round(sum / validNumbers.length)
+}
+
+// Убрали функцию getSolarIndex
+
+function processDailyData(daily: any): Partial<WeatherData> {
+  const temperatures = daily.temperature_2m_mean || []
+  const tempMin = daily.temperature_2m_min || temperatures
+  const tempMax = daily.temperature_2m_max || temperatures
+
+  const precipitations = daily.precipitation_sum || []
+  const windSpeeds = (daily.windspeed_10m_mean || daily.wind_speed_10m_mean || []).filter((w: number | null) => w !== null) as number[]
+  // Убрали solarRadiations
+
+  const result: Partial<WeatherData> = {}
+
+  result.average = getAverage(temperatures)
+  result.min = getAverage(tempMin)
+  result.max = getAverage(tempMax)
+
+  const rainyDaysThreshold = 1.0
+  result.rainyDays = precipitations.filter((p: number | null) => p !== null && p > rainyDaysThreshold).length
+
+  if (windSpeeds.length > 0)
+    result.windSpeed = Math.round(windSpeeds.reduce((a, b) => a + b, 0) / windSpeeds.length)
+
+  // Убрали логику расчета solarIndex
+
+  return result
+}
+
 async function fetchWeatherForCity(city: string) {
   if (!city || !props.startDate)
     return
 
   isLoading.value = true
   error.value = null
-  weatherData.value = { average: null, min: null, max: null }
+  // Убрали solarIndex
+  weatherData.value = { average: null, min: null, max: null, rainyDays: null, windSpeed: null }
 
   try {
     const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru&format=json`)
@@ -54,57 +101,41 @@ async function fetchWeatherForCity(city: string) {
     const { latitude, longitude } = geoData.results[0]
 
     const tripDate = new Date(props.startDate)
-    const currentDate = new Date()
-    currentDate.setHours(0, 0, 0, 0)
-    const isFutureTrip = tripDate > currentDate
-
     const year = tripDate.getFullYear()
     const month = tripDate.getMonth()
     const startDateOfMonth = new Date(Date.UTC(year, month, 1)).toISOString().split('T')[0]
     const endDateOfMonth = new Date(Date.UTC(year, month + 1, 0)).toISOString().split('T')[0]
 
-    let weatherApiData
+    const currentDate = new Date()
+    currentDate.setHours(0, 0, 0, 0)
+    const isFutureTrip = tripDate > currentDate
+
+    let apiUrl: string
+    let dailyParams: string
 
     if (isFutureTrip) {
-      const climateResponse = await fetch(`https://climate-api.open-meteo.com/v1/climate?latitude=${latitude}&longitude=${longitude}&start_date=${startDateOfMonth}&end_date=${endDateOfMonth}&daily=temperature_2m_mean&models=FGOALS_f3_H`)
-      if (!climateResponse.ok)
-        throw new Error('Не удалось загрузить климатический прогноз.')
-      weatherApiData = await climateResponse.json()
-
-      if (weatherApiData.daily && weatherApiData.daily.temperature_2m_mean) {
-        const temperatures = weatherApiData.daily.temperature_2m_mean.filter((t: number | null) => t !== null) as number[]
-        if (temperatures.length > 0) {
-          const sum = temperatures.reduce((a, b) => a + b, 0)
-          weatherData.value = {
-            average: Math.round(sum / temperatures.length),
-            min: Math.round(Math.min(...temperatures)),
-            max: Math.round(Math.max(...temperatures)),
-          }
-        }
-        else {
-          throw new Error('Нет данных о средней температуре.')
-        }
-      }
-      else {
-        throw new Error('Данные о температуре отсутствуют в ответе API.')
-      }
+      apiUrl = 'https://climate-api.open-meteo.com/v1/climate'
+      // Убрали shortwave_radiation_sum из запроса
+      dailyParams = 'temperature_2m_mean,precipitation_sum,wind_speed_10m_mean'
     }
     else {
-      const archiveResponse = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${startDateOfMonth}&end_date=${endDateOfMonth}&monthly=temperature_2m_mean,temperature_2m_max,temperature_2m_min&timezone=auto`)
-      if (!archiveResponse.ok)
-        throw new Error('Не удалось загрузить архив погоды.')
-      weatherApiData = await archiveResponse.json()
+      apiUrl = 'https://archive-api.open-meteo.com/v1/archive'
+      // Убрали shortwave_radiation_sum из запроса
+      dailyParams = 'temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_mean'
+    }
 
-      if (weatherApiData.monthly) {
-        weatherData.value = {
-          average: weatherApiData.monthly.temperature_2m_mean?.[0] !== null ? Math.round(weatherApiData.monthly.temperature_2m_mean[0]) : null,
-          min: weatherApiData.monthly.temperature_2m_min?.[0] !== null ? Math.round(weatherApiData.monthly.temperature_2m_min[0]) : null,
-          max: weatherApiData.monthly.temperature_2m_max?.[0] !== null ? Math.round(weatherApiData.monthly.temperature_2m_max[0]) : null,
-        }
-      }
-      else {
-        throw new Error('Данные о температуре отсутствуют в ответе API.')
-      }
+    const weatherResponse = await fetch(`${apiUrl}?latitude=${latitude}&longitude=${longitude}&start_date=${startDateOfMonth}&end_date=${endDateOfMonth}&daily=${dailyParams}&timezone=auto`)
+    if (!weatherResponse.ok)
+      throw new Error(`Не удалось загрузить ${isFutureTrip ? 'климатический прогноз' : 'архив погоды'}.`)
+
+    const weatherApiData = await weatherResponse.json()
+
+    if (weatherApiData.daily) {
+      const processed = processDailyData(weatherApiData.daily)
+      weatherData.value = { ...weatherData.value, ...processed }
+    }
+    else {
+      throw new Error('Данные о погоде отсутствуют в ответе API.')
     }
   }
   catch (e: any) {
@@ -161,18 +192,33 @@ onMounted(() => {
         <Icon icon="mdi:alert-circle-outline" />
         <span>{{ error }}</span>
       </div>
-      <div v-else-if="weatherData.average !== null" class="weather-summary">
-        <div class="summary-item">
-          <span class="label">Мин.</span>
-          <span class="value">{{ weatherData.min }}°C</span>
+      <div v-else-if="weatherData.average !== null" class="weather-content">
+        <div class="weather-summary">
+          <div class="summary-item">
+            <span class="label">Мин.</span>
+            <span class="value">{{ weatherData.min }}°C</span>
+          </div>
+          <div class="summary-item average">
+            <span class="label">Сред.</span>
+            <span class="value">{{ weatherData.average }}°C</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Макс.</span>
+            <span class="value">{{ weatherData.max }}°C</span>
+          </div>
         </div>
-        <div class="summary-item average">
-          <span class="label">Сред.</span>
-          <span class="value">{{ weatherData.average }}°C</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">Макс.</span>
-          <span class="value">{{ weatherData.max }}°C</span>
+        <div class="weather-details">
+          <!-- УДАЛЕНО: Блок с солнечной активностью -->
+          <div v-if="weatherData.rainyDays !== null" class="detail-item">
+            <Icon icon="mdi:weather-rainy" />
+            <span class="detail-value">{{ weatherData.rainyDays }} дн.</span>
+            <span class="detail-label">в месяц</span>
+          </div>
+          <div v-if="weatherData.windSpeed !== null" class="detail-item">
+            <Icon icon="mdi:weather-windy" />
+            <span class="detail-value">{{ weatherData.windSpeed }} км/ч</span>
+            <span class="detail-label">сред.</span>
+          </div>
         </div>
       </div>
       <div v-else class="state-info">
@@ -241,6 +287,7 @@ onMounted(() => {
   background-color: var(--bg-tertiary-color);
   border-radius: var(--r-m);
   padding: 1rem;
+  min-height: 230px;
 }
 .state-info {
   display: flex;
@@ -259,6 +306,13 @@ onMounted(() => {
   .spin {
     animation: spin 1s linear infinite;
   }
+}
+
+.weather-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .weather-summary {
@@ -299,6 +353,37 @@ onMounted(() => {
   }
 }
 
+.weather-details {
+  display: grid;
+  // Изменено на 2 колонки
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-secondary-color);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  color: var(--fg-secondary-color);
+  font-size: 0.8rem;
+
+  .iconify {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+    color: var(--fg-tertiary-color);
+  }
+
+  .detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--fg-primary-color);
+  }
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -316,6 +401,17 @@ onMounted(() => {
   }
   .summary-item.average .value {
     font-size: 2.25rem;
+  }
+  .weather-details {
+    gap: 0.5rem;
+  }
+  .detail-item {
+    .iconify {
+      font-size: 1.25rem;
+    }
+    .detail-value {
+      font-size: 0.9rem;
+    }
   }
 }
 </style>

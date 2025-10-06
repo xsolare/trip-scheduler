@@ -91,15 +91,17 @@ export async function uploadFileController(c: Context) {
     // 7. Отправка ответа
     return c.json(newImageRecord)
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Ошибка при обработке загруженного файла:', error)
-    // Перехватываем ошибки от tRPC и преобразуем их в HTTPException
-    if (error && typeof error === 'object' && 'message' in error && 'code' in error) {
-      if (error.code === 'FORBIDDEN') {
-        throw new HTTPException(403, { message: String(error.message) })
-      }
+
+    if (error instanceof HTTPException) {
+      throw error
     }
-    throw new HTTPException(500, { message: 'Внутренняя ошибка при обработке файла.' })
+
+    return c.json(
+      { message: error.message || 'Внутренняя ошибка при обработке файла.' },
+      500,
+    )
   }
 }
 
@@ -132,8 +134,16 @@ export async function uploadAvatarController(c: Context) {
 
     return c.json(updatedUser)
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Ошибка при загрузке аватара:', error)
-    throw new HTTPException(500, { message: 'Не удалось загрузить аватар.' })
+
+    if (error instanceof HTTPException) {
+      throw error
+    }
+
+    return c.json(
+      { message: error.message || 'Не удалось загрузить аватар.' },
+      500,
+    )
   }
 }

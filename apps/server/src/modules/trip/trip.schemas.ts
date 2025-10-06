@@ -62,6 +62,7 @@ export const CreateTripInputSchema = TripSchema.pick({
 })
 
 export const ListTripsInputSchema = z.object({
+  tab: z.enum(['my', 'public']).optional(),
   search: z.string().optional(),
   statuses: z.array(z.enum(['completed', 'planned', 'draft'])).optional(),
   tags: z.array(z.string()).optional(),

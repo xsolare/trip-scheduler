@@ -90,14 +90,16 @@ const attractionLabel = computed(() => getRussianPlural(props.attractionCount, [
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 1rem;
+  height: 100%;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  gap: 0.75rem;
+  gap: 24px;
   padding: 1rem 0.5rem;
   border-radius: var(--r-m);
   background-color: var(--bg-tertiary-color);

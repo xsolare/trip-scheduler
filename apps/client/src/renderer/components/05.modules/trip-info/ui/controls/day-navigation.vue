@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { nextTick } from 'vue'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 
 const store = useModuleStore(['plan'])
@@ -8,16 +7,12 @@ const store = useModuleStore(['plan'])
 const { getPreviousDayId, getNextDayId } = storeToRefs(store.plan)
 const { selectPreviousDay, selectNextDay } = store.plan
 
-async function handleSelectPreviousDay() {
+function handleSelectPreviousDay() {
   selectPreviousDay()
-  await nextTick()
-  window.scrollTo({ top: 0, behavior: 'instant' })
 }
 
-async function handleSelectNextDay() {
+function handleSelectNextDay() {
   selectNextDay()
-  await nextTick()
-  window.scrollTo({ top: 0, behavior: 'instant' })
 }
 </script>
 

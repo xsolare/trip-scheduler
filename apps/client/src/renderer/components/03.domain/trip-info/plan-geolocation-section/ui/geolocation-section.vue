@@ -200,6 +200,19 @@ async function handleContextMenuAction(actionId: string, coords: Coordinate) {
     activeView.value = 'routes'
     mode.value = 'draw_route'
   }
+  else if (actionId === 'show-current-location') {
+    mapController.value?.showCurrentLocation()
+  }
+  else if (actionId === 'center-map') {
+    mapController.value?.flyToLocation(coords[0], coords[1])
+  }
+  else if (actionId === 'show-address') {
+    const addressInfo = await mapController.value?.fetchAddress(coords)
+    if (addressInfo?.address)
+      mapController.value?.showPopup(coords, addressInfo.address)
+    else
+      mapController.value?.showPopup(coords, 'Адрес не найден')
+  }
 }
 
 async function handleSearch() {

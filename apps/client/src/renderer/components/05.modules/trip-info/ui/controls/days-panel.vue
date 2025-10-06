@@ -26,10 +26,6 @@ function onSelectDay(dayId: string) {
   emit('selectDay', dayId)
   if (!isDaysPanelPinned.value)
     emit('close')
-
-  nextTick(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
-  })
 }
 
 function getShortWeekday(date: string): string {

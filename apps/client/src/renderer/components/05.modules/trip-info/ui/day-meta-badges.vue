@@ -433,6 +433,17 @@ function createBlankBadge() {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+
+  @include media-down(sm) {
+    > div {
+      flex-grow: 1;
+
+      > button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
 }
 
 .badge-wrapper {

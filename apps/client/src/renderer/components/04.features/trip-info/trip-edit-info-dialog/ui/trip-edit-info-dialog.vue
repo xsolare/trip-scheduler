@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
 import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
-import type { Trip, TripImage, UpdateTripInput } from '~/shared/types/models/trip'
+import type { Trip, UpdateTripInput } from '~/shared/types/models/trip'
 import { parseDate } from '@internationalized/date'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
@@ -10,7 +10,7 @@ import { KitInput } from '~/components/01.kit/kit-input'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { useRequest, useRequestStatus } from '~/plugins/request'
-import { TripImagePlacement, TripStatus } from '~/shared/types/models/trip'
+import { TripImagePlacement, TripStatus, TripVisibility } from '~/shared/types/models/trip'
 
 const props = defineProps<Props>()
 
@@ -41,12 +41,18 @@ const fieldsToCompare: (keyof UpdateTripInput)[] = [
   'currency',
   'tags',
   'imageUrl',
+  'visibility',
 ]
 
 const statusOptions = [
   { value: TripStatus.PLANNED, label: 'Запланировано' },
   { value: TripStatus.COMPLETED, label: 'Завершено' },
   { value: TripStatus.DRAFT, label: 'Черновик' },
+]
+
+const visibilityOptions: KitDropdownItem<TripVisibility>[] = [
+  { value: TripVisibility.PRIVATE, label: 'Приватное', icon: 'mdi:lock-outline' },
+  { value: TripVisibility.PUBLIC, label: 'Публичное', icon: 'mdi:earth' },
 ]
 
 // --- Data Fetching ---
@@ -156,6 +162,7 @@ watch(() => props.visible, (isVisible) => {
       currency: props.trip.currency,
       tags: props.trip.tags ?? [],
       imageUrl: props.trip.imageUrl,
+      visibility: props.trip.visibility,
     }
     fetchDialogData()
   }
@@ -211,6 +218,13 @@ watch(() => props.visible, (isVisible) => {
         v-model="editableTrip.status!"
         :items="statusOptions"
         label="Статус"
+      />
+
+      <KitSelectWithSearch
+        v-model="editableTrip.visibility!"
+        :items="visibilityOptions"
+        label="Видимость"
+        :clearable="false"
       />
 
       <div class="budget-fields">

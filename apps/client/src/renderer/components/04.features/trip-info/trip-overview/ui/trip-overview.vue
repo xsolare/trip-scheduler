@@ -282,7 +282,7 @@ function handleShareTrip() {
               <span class="day-number">{{ index + 1 }}</span>
               <div class="item-content">
                 <span class="item-title">{{ day.title || `День ${index + 1}` }}</span>
-                <span class="item-meta">{{ new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}</span>
+                <span class="item-meta">{{ new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' }) }}</span>
               </div>
             </div>
             <Icon icon="mdi:chevron-right" class="chevron-icon" />

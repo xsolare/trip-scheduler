@@ -388,7 +388,6 @@ onClickOutside(commentEditorRef, saveViewerComment)
   background-color: var(--bg-secondary-color);
   overflow: hidden;
 
-  // Hide activity-only memories from the grid, as their title is in the group header
   &.is-activity:not(.is-photo) {
     display: none;
   }
@@ -493,10 +492,6 @@ onClickOutside(commentEditorRef, saveViewerComment)
       linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 30%);
     opacity: 0;
     transition: opacity 0.3s ease;
-  }
-
-  .photo-wrapper:hover &::before {
-    opacity: 1;
   }
 }
 
@@ -638,6 +633,10 @@ onClickOutside(commentEditorRef, saveViewerComment)
     opacity: 0;
     transition: opacity 0.2s ease;
 
+    @include media-down(sm) {
+      opacity: 1;
+    }
+
     .memory-item:hover & {
       opacity: 1;
     }
@@ -670,6 +669,14 @@ onClickOutside(commentEditorRef, saveViewerComment)
   button[title='Убрать временную метку'] {
     color: var(--fg-accent-color);
     border-color: var(--fg-accent-color);
+  }
+
+  @include media-down(sm) {
+    opacity: 1;
+
+    .photo-wrapper {
+      opacity: 1;
+    }
   }
 }
 

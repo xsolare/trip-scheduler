@@ -48,6 +48,7 @@ const {
   removeRoute,
   modifyInteraction,
   setTileSource,
+  showCurrentLocation,
   ...restMapController
 } = useGeolocationMap()
 
@@ -165,7 +166,7 @@ onMounted(async () => {
     emit('mapClick', coords)
   })
 
-  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, modifyInteraction, setTileSource, ...restMapController })
+  emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, modifyInteraction, setTileSource, showCurrentLocation, ...restMapController })
 })
 </script>
 
@@ -193,14 +194,14 @@ onMounted(async () => {
     <div v-if="!isMapLoaded || isLoading" class="loading-overlay">
       <span>{{ isLoading ? 'Загрузка...' : 'Инициализация карты...' }}</span>
     </div>
-    <slot name="controls" :map-instance="mapInstance" :center-coordinates="center">
+    <slot name="controls" :map-instance="mapInstance">
       <GeolocationMapControls
         :map-instance="mapInstance"
-        :center-coordinates="center"
         :is-fullscreen="isFullscreen"
         @toggle-panel="$emit('togglePanel')"
         @toggle-fullscreen="$emit('toggleFullscreen')"
         @set-tile-source="handleSetTileSource"
+        @center-on-my-location="showCurrentLocation"
       />
     </slot>
     <div ref="contextMenuRef">

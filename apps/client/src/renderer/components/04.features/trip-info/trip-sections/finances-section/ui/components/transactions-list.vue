@@ -111,10 +111,6 @@ const { format: formatCurrency } = useCurrencyFormatter()
   align-items: center;
   padding: 0.75rem 0;
   border-top: 1px solid var(--border-secondary-color);
-
-  &:hover .item-actions {
-    opacity: 1;
-  }
 }
 
 .item-main {
@@ -161,7 +157,6 @@ const { format: formatCurrency } = useCurrencyFormatter()
 .item-actions {
   display: flex;
   gap: 0.5rem;
-  opacity: 0;
   transition: opacity 0.2s;
   button {
     color: var(--fg-tertiary-color);

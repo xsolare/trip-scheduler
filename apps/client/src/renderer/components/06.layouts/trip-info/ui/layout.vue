@@ -5,7 +5,6 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDrawer } from '~/components/01.kit/kit-drawer'
-import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { AppFooter } from '~/components/02.shared/app-footer'
 import { AppHeader } from '~/components/02.shared/app-header'
@@ -20,6 +19,7 @@ import { useTripInfoLayout } from '../composables'
 const layout = useTripInfoLayout()
 const route = useRoute()
 const router = useRouter()
+const { smAndDown } = useDisplay()
 
 const { mainNavigationRef, navigationWrapperRef } = layout
 const { plan, ui, routeGallery, memories, sections } = useModuleStore(['plan', 'ui', 'routeGallery', 'memories', 'sections'])
@@ -154,9 +154,13 @@ onBeforeUnmount(() => {
     v-model:open="layout.isDrawerOpen.value"
     side="right"
     class="sections-drawer"
+    :width="smAndDown ? '100%' : '400px'"
   >
     <div class="drawer-header">
-      <h2>Разделы</h2>
+      <h2>
+        <Icon icon="mdi:view-dashboard-outline" />
+        <span>Разделы</span>
+      </h2>
     </div>
     <ul class="drawer-list">
       <li v-for="item in layout.tabItems.value" :key="item.id" @click="layout.selectSection(item.id)">

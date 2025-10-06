@@ -1,3 +1,4 @@
+<!-- /home/evai/my/trip-scheduler/apps/client/src/renderer/components/05.modules/trip-info/ui/controls/days-controls.vue -->
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
 import type { IDay } from '../../models/types'
@@ -151,19 +152,10 @@ onUnmounted(() => {
       </div>
       <div class="spacer" />
       <div v-if="!isDayInfoLoading" class="right-controls">
-        <button
-          v-if="isEditModeAllow"
-          class="mode-button"
-          :title="isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
-          @click="toggleMode"
-        >
-          <Icon :icon="isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
-        </button>
-
         <div class="view-controls">
           <ViewSwitcher />
           <button
-            v-if="isEditModeAllow"
+            v-if="isEditModeAllow && mdAndUp"
             class="split-view-btn"
             title="Отобразить План и Воспоминания"
             :class="{ 'is-active': activeView === 'split' }"
@@ -241,7 +233,7 @@ onUnmounted(() => {
             <div class="view-controls">
               <ViewSwitcher />
               <button
-                v-if="isEditModeAllow"
+                v-if="isEditModeAllow && mdAndUp"
                 class="split-view-btn"
                 title="Отобразить План и Воспоминания"
                 :class="{ 'is-active': activeView === 'split' }"

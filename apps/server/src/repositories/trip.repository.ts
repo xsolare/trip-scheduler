@@ -3,7 +3,7 @@ import type { CreateTripInputSchema, ListTripsInputSchema, UpdateTripInputSchema
 import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../../db'
-import { activities, days,  tripParticipants, trips, tripSections } from '../../db/schema'
+import { activities, days, tripParticipants, trips, tripSections } from '../../db/schema'
 
 const withParticipants = {
   participants: {
@@ -39,8 +39,20 @@ export const tripRepository = {
   /**
    * Получает все путешествия с применением фильтров.
    */
-  async getAll(filters?: z.infer<typeof ListTripsInputSchema>, _userId?: string) {
+  async getAll(filters?: z.infer<typeof ListTripsInputSchema>, userId?: string) {
     const conditions = []
+
+    if (filters?.tab === 'public') {
+      conditions.push(eq(trips.visibility, 'public'))
+    }
+    else if (filters?.tab === 'my' && userId) {
+      // Ищем все путешествия, где пользователь является участником
+      const userTripsSubquery = db
+        .select({ tripId: tripParticipants.tripId })
+        .from(tripParticipants)
+        .where(eq(tripParticipants.userId, userId))
+      conditions.push(inArray(trips.id, userTripsSubquery))
+    }
 
     if (filters?.search) {
       const searchPattern = `%${filters.search}%`

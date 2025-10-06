@@ -285,14 +285,14 @@ onClickOutside(timeEditorRef, saveTimeChanges)
           <template #trigger>
             <button class="tag-chip" :style="{ backgroundColor: tagInfo?.color }">
               <Icon v-if="tagInfo" :icon="tagInfo.icon" />
-              <span>{{ tagInfo ? tagInfo.label : 'Выбрать тег' }}</span>
+              <span class="tag-chip-label">{{ tagInfo ? tagInfo.label : 'Выбрать тег' }}</span>
               <Icon icon="mdi:chevron-down" class="chevron" />
             </button>
           </template>
         </KitDropdown>
         <div v-else-if="tagInfo" class="tag-chip view-only" :style="{ backgroundColor: tagInfo.color }">
           <Icon :icon="tagInfo.icon" />
-          <span>{{ tagInfo.label }}</span>
+          <span class="tag-chip-label">{{ tagInfo.label }}</span>
         </div>
       </div>
 
@@ -860,6 +860,19 @@ onClickOutside(timeEditorRef, saveTimeChanges)
 }
 
 @include media-down(sm) {
+  .activity-item:not(.view-mode) .activity-tag-wrapper .tag-chip {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+
+    .tag-chip-label,
+    .chevron {
+      display: none;
+    }
+  }
+
   .activity-item {
     .activity-sections {
       padding-left: 0;

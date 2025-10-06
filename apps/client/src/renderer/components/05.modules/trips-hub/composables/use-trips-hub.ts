@@ -110,6 +110,7 @@ export function useTripsHub() {
     }
 
     const apiFilters = {
+      tab: activeTab.value,
       search: filters.value.search || undefined,
       cities: filters.value.cities.length > 0 ? filters.value.cities : undefined,
       tags: filters.value.tags.length > 0 ? filters.value.tags : undefined,

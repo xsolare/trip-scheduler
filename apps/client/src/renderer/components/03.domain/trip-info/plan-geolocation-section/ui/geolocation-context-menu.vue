@@ -21,6 +21,7 @@ const menuItems: MenuItem[] = [
   { id: 'route-from', label: 'Маршрут отсюда', icon: 'mdi:directions-fork' },
   { id: 'draw-new-route', label: 'Рисовать новый маршрут', icon: 'mdi:draw-pen' },
   { id: 'show-address', label: 'Показать адрес', icon: 'mdi:map-marker-question-outline' },
+  { id: 'show-current-location', label: 'Мое местоположение', icon: 'mdi:crosshairs-gps' },
   { id: 'center-map', label: 'Центрировать карту', icon: 'mdi:crosshairs' },
 ]
 
