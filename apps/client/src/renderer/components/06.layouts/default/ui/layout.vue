@@ -24,7 +24,6 @@ import { ThemeManager } from '~/components/02.shared/theme-manager'
 
 <style scoped lang="scss">
 .main {
-  padding-top: env(safe-area-inset-top);
   display: flex;
   flex-direction: column;
   flex: 1;

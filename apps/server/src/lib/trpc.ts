@@ -3,6 +3,7 @@ import type { users } from 'db/schema'
 import type { Context } from 'hono'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { db } from '~/../db'
+import { trpcRequestCounter, trpcRequestDurationHistogram } from '~/services/metrics.service'
 import { authUtils } from './auth.utils'
 
 export async function createContext(_: FetchCreateContextFnOptions, c: Context) {
@@ -44,7 +45,6 @@ const t = initTRPC
     },
   })
 
-// Middleware для проверки авторизации
 const isAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' })
@@ -58,11 +58,25 @@ const isAuthed = t.middleware(({ ctx, next }) => {
   })
 })
 
+// Middleware для сбора метрик
+const metricsMiddleware = t.middleware(async ({ path, type, next }) => {
+  const start = Date.now()
+  const result = await next()
+  const duration = (Date.now() - start) / 1000
+
+  const status = result.ok ? 'success' : 'error'
+
+  trpcRequestDurationHistogram.observe({ path, type, status }, duration)
+  trpcRequestCounter.inc({ path, type, status })
+
+  return result
+})
+
 // Экспорт роутеров и процедур
 export const router = t.router
 export const mergeRouters = t.mergeRouters
-export const publicProcedure = t.procedure
-export const protectedProcedure = t.procedure.use(isAuthed)
+export const publicProcedure = t.procedure.use(metricsMiddleware)
+export const protectedProcedure = t.procedure.use(isAuthed).use(metricsMiddleware)
 
 // Вспомогательная функция для создания tRPC ошибок
 export function createTRPCError(code: 'NOT_FOUND' | 'BAD_REQUEST' | 'INTERNAL_SERVER_ERROR' | 'CONFLICT' | 'UNAUTHORIZED' | 'FORBIDDEN', message: string) {

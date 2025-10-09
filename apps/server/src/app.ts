@@ -8,6 +8,7 @@ import { avatarController } from './api/avatar.controller'
 import { uploadFileController } from './api/upload.controller'
 import { createContext } from './lib/trpc'
 import { appRouter } from './router'
+import { httpRequestCounter, httpRequestDurationHistogram, register } from './services/metrics.service'
 
 const app = new Hono()
 
@@ -22,6 +23,33 @@ const allowedOrigins = [
   'http://trip-scheduler.ru', // Production-домен
   'https://trip-scheduler.ru', // Production-домен с https
 ]
+
+app.use('*', async (c, next) => {
+  const start = Date.now()
+  try {
+    await next()
+  }
+  finally {
+    const duration = (Date.now() - start) / 1000
+    const path = new URL(c.req.url).pathname
+
+    if (path !== '/metrics') {
+      httpRequestDurationHistogram.observe(
+        {
+          method: c.req.method,
+          path,
+          status_code: c.res.status,
+        },
+        duration,
+      )
+      httpRequestCounter.inc({
+        method: c.req.method,
+        path,
+        status_code: c.res.status,
+      })
+    }
+  }
+})
 
 app.use(
   '*',
@@ -56,6 +84,11 @@ app.use(
     },
   }),
 )
+
+app.get('/metrics', async (c) => {
+  c.header('Content-Type', register.contentType)
+  return c.body(await register.metrics())
+})
 
 // 404 handler
 app.notFound(c => c.json({ error: 'Not Found' }, 404))
