@@ -1,8 +1,6 @@
 import { resolve } from 'node:path'
-import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
 import Vue from '@vitejs/plugin-vue'
-import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import Icons from 'unplugin-icons/vite'
 import { defineConfig } from 'vite'
@@ -10,10 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { autoImportOptionsCfg } from './cfg/auto-import'
 import { iconsCfg } from './cfg/icons'
 import { pwaCfg } from './cfg/pwa'
-
-function visualizerPlugin(type: 'renderer' | 'main') {
-  return process.env[`VISUALIZER_${type.toUpperCase()}`] ? [visualizer({ open: true })] : []
-}
+import { visualizerPlugin } from './lib/helpers'
 
 // Конфигурация для Web и PWA
 export default defineConfig({

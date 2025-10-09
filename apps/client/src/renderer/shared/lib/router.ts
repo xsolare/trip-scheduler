@@ -1,7 +1,9 @@
 import type { Router, RouteRecordRaw } from 'vue-router'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import { AppRouteNames, AppRoutePaths } from '~/shared/constants/routes'
 import { useAuthStore } from '~/shared/store/auth.store'
+
+const isElectron = !!window.electronAPI
 
 // --- Компоненты страниц ---
 const Root = () => import('~/pages/root.vue')
@@ -129,7 +131,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router: Router = createRouter({
-  history: createWebHistory('/'),
+  history: isElectron ? createWebHashHistory() : createWebHistory('/'),
   routes,
 })
 

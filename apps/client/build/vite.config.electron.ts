@@ -2,19 +2,21 @@ import { resolve } from 'node:path'
 import process from 'node:process'
 import Vue from '@vitejs/plugin-vue'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import Icons from 'unplugin-icons/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { autoImportOptionsCfg } from './cfg/auto-import'
 import { iconsCfg } from './cfg/icons'
+import { pwaCfg } from './cfg/pwa'
+import { visualizerPlugin } from './lib/helpers'
 
-function visualizerPlugin(type: 'renderer' | 'main') {
-  return process.env[`VISUALIZER_${type.toUpperCase()}`] ? [visualizer({ open: true })] : []
-}
-
+// Конфигурация для Electron
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin(), ...visualizerPlugin('main')],
+    plugins: [
+      externalizeDepsPlugin(),
+      ...visualizerPlugin('main'),
+    ],
     build: {
       sourcemap: process.env.NODE_ENV === 'development',
       rollupOptions: {
@@ -25,8 +27,8 @@ export default defineConfig({
     },
     resolve: {
       alias: {
-        '#main': resolve('src/main'),
-        '#renderer': resolve('src/renderer'),
+        '~main': resolve('src/main'),
+        '~renderer': resolve('src/renderer'),
       },
     },
   },
@@ -51,6 +53,8 @@ export default defineConfig({
       Vue(),
       AutoImport(autoImportOptionsCfg),
       Icons(iconsCfg),
+      VitePWA(pwaCfg),
+      ...visualizerPlugin('renderer'),
     ],
     worker: {
       format: 'es',

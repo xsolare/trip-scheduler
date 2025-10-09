@@ -7,6 +7,8 @@ export default antfu({
   ignores: [
     '**/.vitestcache/**',
     '**/e2e-**/**',
+    '**/assets/**',
+    '**/public/**',
     'auto-imports.d.ts',
     'bun.lock',
   ],

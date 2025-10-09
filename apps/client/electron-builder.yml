@@ -2,6 +2,8 @@ appId: com.example
 productName: TripScheduler
 copyright: Copyright © 2025 ${author}
 
+npmRebuild: false
+
 electronLanguages:
   - ru
 
@@ -60,7 +62,7 @@ files:
       - '!node_modules/rollup-plugin-visualizer'
 
 win:
-  # icon: build/icon.ico
+  icon: ./public/logo.png
   target:
     - target: nsis
       arch:
@@ -80,7 +82,7 @@ portable:
   artifactName: ${productName}-portable-${version}-${arch}.${ext}
 
 mac:
-  # icon: build/icon.icns
+  icon: ./public/logo.png
   category: public.app-category.utilities
   target:
     - target: dmg
@@ -93,6 +95,7 @@ mac:
         - arm64
 
 linux:
+  icon: ./public/logo.png
   artifactName: ${productName}-${version}-${arch}.${ext}
   category: Utility
   maintainer: electronjs.org

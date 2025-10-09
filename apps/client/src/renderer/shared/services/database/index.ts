@@ -8,31 +8,31 @@ function getEnvVar(name: string): string {
 
 let databaseServicePromise: Promise<IDatabaseClient>
 
-const isStandalone = !!(window as any)?.electronAPI
+const isApiMode = getEnvVar('VITE_APP_API_MODE')
 
-// --- ЛОGIКА ДЛЯ STANDALONE ---
-if (isStandalone) {
-  console.log('DB Service: Using SqlDatabaseClient for Electron build.')
+switch (isApiMode) {
+  case 'mock':
+    console.log('DB Service: Web build is using MOCK client.')
+    databaseServicePromise = import('./clients/mock.client').then(
+      ({ MockDatabaseClient }) => new MockDatabaseClient().initDb(),
+    )
+    break
 
-  databaseServicePromise = import('./clients/sql.client').then(
-    ({ SqlDatabaseClient }) => new SqlDatabaseClient().initDb(),
-  )
-}
+  case 'sql':
+    console.log('DB Service: Using SqlDatabaseClient for Electron build.')
 
-// --- ЛОGIКА ДЛЯ WEB ---
-const isMockMode = getEnvVar('VITE_APP_MOCK_MODE') === 'true'
+    databaseServicePromise = import('./clients/sql.client').then(
+      ({ SqlDatabaseClient }) => new SqlDatabaseClient().initDb(),
+    )
+    break
 
-if (isMockMode) {
-  console.log('DB Service: Web build is using MOCK client.')
-  databaseServicePromise = import('./clients/mock.client').then(
-    ({ MockDatabaseClient }) => new MockDatabaseClient().initDb(),
-  )
-}
-else {
-  console.log('DB Service: Web build is using TRPC client.')
-  databaseServicePromise = import('./clients/trpc.client').then(
-    ({ TRPCDatabaseClient }) => new TRPCDatabaseClient().initDb(),
-  )
+  case 'trpc':
+  default:
+    console.log('DB Service: Web build is using TRPC client.')
+    databaseServicePromise = import('./clients/trpc.client').then(
+      ({ TRPCDatabaseClient }) => new TRPCDatabaseClient().initDb(),
+    )
+    break
 }
 
 export default databaseServicePromise

@@ -7,18 +7,6 @@ import { usePwaStore } from '~/shared/store/pwa.store'
  * Инициализирует PWA и периодическую проверку обновлений.
  */
 export function initializePwaUpdater(pinia: Pinia): void {
-  // const isStandaloneApp = !!(window as any)?.electronAPI || import.meta.env.VITE_IS_STANDALONE === 'true'
-  // const isDisabled = isStandaloneApp || import.meta.env.VITE_DISABLE_PWA
-
-  // if (isDisabled) {
-  //   console.log('PWA updater is disabled.')
-  //   return
-  // }
-
-  // if (import.meta.env.DEV || !('serviceWorker' in navigator)) {
-  //   return
-  // }
-
   const pwaStore = usePwaStore(pinia)
   const intervalMS = 60 * 1 * 1000
 

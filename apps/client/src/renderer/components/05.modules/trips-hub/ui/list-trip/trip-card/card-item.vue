@@ -121,8 +121,7 @@ const visibilityIcon = computed(() => {
           <Icon icon="mdi:map-legend" />
         </div>
         <div class="image-overlay" />
-        <div class="card-header">
-        </div>
+        <div class="card-header" />
 
         <h3 class="card-title">
           {{ title }}

@@ -145,9 +145,8 @@ bun install
 ````bash
 docker build -t trip-scheduler-client . \
   --build-arg VITE_APP_SERVER_URL=https://api.yourdomain.com \
-  --build-arg VITE_APP_TRPC_MODE=true \
   --build-arg VITE_APP_SERVER_STATIC_PATH=static/images \
-  --build-arg VITE_APP_MOCK_MODE=false
+  --build-arg VITE_APP_API_MODE=trpc
   --build-arg VITE_MAPTILER_KEY=key
 ```
 

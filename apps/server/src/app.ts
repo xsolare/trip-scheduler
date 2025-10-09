@@ -11,16 +11,25 @@ import { appRouter } from './router'
 
 const app = new Hono()
 
+// Список разрешенных источников
+const allowedOrigins = [
+  'http://localhost:5173', // Vite dev server для веб-разработки
+  'http://localhost:1420', // Vite preview
+  'capacitor://localhost', // Android Capacitor
+  'http://localhost', // iOS Capacitor
+  'http://trip-scheduler.ru', // Production-домен
+  'https://trip-scheduler.ru', // Production-домен с https
+]
+
 app.use(
   '*',
   cors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:1420',
-      'tauri://localhost',
-      'http://trip-scheduler.ru',
-      'https://trip-scheduler.ru',
-    ],
+    origin: (origin) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return origin
+      }
+      return null
+    },
     credentials: true,
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   }),
