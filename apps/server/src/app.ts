@@ -16,7 +16,9 @@ const allowedOrigins = [
   'http://localhost:5173', // Vite dev server для веб-разработки
   'http://localhost:1420', // Vite preview
   'capacitor://localhost', // Android Capacitor
-  'http://localhost', // iOS Capacitor
+  'http://localhost', // Capacitor
+  'https://localhost', // Capacitor
+  'capacitor://localhost', // Capacitor
   'http://trip-scheduler.ru', // Production-домен
   'https://trip-scheduler.ru', // Production-домен с https
 ]

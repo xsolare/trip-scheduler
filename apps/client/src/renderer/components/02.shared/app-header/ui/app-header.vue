@@ -133,6 +133,7 @@ onMounted(() => {
     background-color 0.3s ease,
     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.3s ease;
+  padding-top: env(safe-area-inset-top);
 
   &--scrolled {
     backdrop-filter: blur(8px);
