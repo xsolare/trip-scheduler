@@ -10,17 +10,12 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'add', type: BookingType): void;
-  (e: 'createWithAI'): void;
 }>();
 
 const visible = defineModel<boolean>('visible', { required: true });
 
 function handleAddClick(type: BookingType) {
   emit('add', type);
-}
-
-function handleAiClick() {
-  emit('createWithAI');
 }
 
 function formatAddButtonLabel(label: string): string {
@@ -57,15 +52,6 @@ function formatAddButtonLabel(label: string): string {
           {{ formatAddButtonLabel(config.label) }}
         </KitBtn>
       </div>
-      <div class="ai-option">
-        <KitBtn
-          icon="mdi:magic-staff"
-          color="secondary"
-          @click="handleAiClick"
-        >
-          Создать с помощью ИИ
-        </KitBtn>
-      </div>
     </div>
   </KitDialogWithClose>
 </template>
@@ -89,13 +75,5 @@ function formatAddButtonLabel(label: string): string {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
-}
-
-.ai-option {
-  padding-top: 1rem;
-  margin-top: 0.5rem;
-  border-top: 1px solid var(--border-secondary-color);
-  display: flex;
-  justify-content: center;
 }
 </style>

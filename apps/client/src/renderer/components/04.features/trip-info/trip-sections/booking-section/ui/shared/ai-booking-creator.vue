@@ -2,9 +2,8 @@
 import type { Booking, BookingType } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { useFileDialog } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
 import { useRequest, useRequestStatus } from '~/plugins/request'
@@ -18,8 +17,8 @@ type CreatorState = 'upload' | 'loading' | 'preview' | 'error'
 
 const emit = defineEmits<{
   (e: 'save', booking: Omit<Booking, 'id'>): void
+  (e: 'close'): void
 }>()
-const visible = defineModel<boolean>('visible', { required: true })
 
 const state = ref<CreatorState>('upload')
 const error = ref<string | null>(null)
@@ -117,97 +116,88 @@ function updatePreviewBooking(updatedBooking: Booking) {
   generatedBooking.value = updatedBooking
 }
 
-watch(visible, (newVal) => {
-  if (!newVal) {
-    setTimeout(resetState, 300)
-  }
+onUnmounted(() => {
+  resetState()
 })
 </script>
 
 <template>
-  <KitDialogWithClose
-    v-model:visible="visible"
-    title="Создать бронирование с помощью ИИ"
-    icon="mdi:magic-staff"
-    :max-width="800"
-  >
-    <div class="ai-creator-content">
-      <!-- UPLOAD STATE -->
-      <div v-if="state === 'upload' || state === 'error'" class="upload-view">
-        <p class="description">
-          Выберите тип бронирования, прикрепите файл (билет, ваучер в .pdf, .png, .jpg) и добавьте заметки.
-          ИИ постарается автоматически заполнить все поля.
+  <div class="ai-creator-content">
+    <!-- UPLOAD STATE -->
+    <div v-if="state === 'upload' || state === 'error'" class="upload-view">
+      <p class="description">
+        Выберите тип бронирования, прикрепите файл (билет, ваучер в .pdf, .png, .jpg) и добавьте заметки.
+        ИИ постарается автоматически заполнить все поля.
+      </p>
+      <KitSelectWithSearch
+        v-model="selectedType"
+        label="Тип бронирования"
+        :items="bookingTypeOptions"
+        :icon="selectedTypeIcon"
+        :clearable="false"
+        placeholder="Выберите тип бронирования"
+      />
+      <div class="file-input-area" @click="open()">
+        <Icon icon="mdi:cloud-upload-outline" />
+        <p v-if="!uploadedFile">
+          Нажмите, чтобы выбрать файл, или перетащите его сюда
         </p>
-        <KitSelectWithSearch
-          v-model="selectedType"
-          label="Тип бронирования"
-          :items="bookingTypeOptions"
-          :icon="selectedTypeIcon"
-          :clearable="false"
-          placeholder="Выберите тип бронирования"
-        />
-        <div class="file-input-area" @click="open()">
-          <Icon icon="mdi:cloud-upload-outline" />
-          <p v-if="!uploadedFile">
-            Нажмите, чтобы выбрать файл, или перетащите его сюда
-          </p>
-          <p v-else class="file-name">
-            {{ uploadedFile.name }} ({{ (uploadedFile.size / 1024).toFixed(1) }} KB)
-          </p>
-          <span>Поддерживаются: .png, .jpg, .jpeg, .pdf</span>
-        </div>
-        <KitInput
-          v-model="notes"
-          type="textarea"
-          label="Дополнительная информация"
-          placeholder="Например: 'Это билет для Ивана, место у окна' или 'Отель для двоих'"
-          :rows="3"
-        />
-        <div v-if="state === 'error' && error" class="error-message">
-          <Icon icon="mdi:alert-circle-outline" />
-          <span>{{ error }}</span>
-        </div>
-        <div class="dialog-actions">
-          <KitBtn variant="text" @click="visible = false">
-            Отмена
-          </KitBtn>
-          <KitBtn :disabled="!uploadedFile || isLoading" :loading="isLoading" @click="handleGenerate">
-            Сгенерировать
-          </KitBtn>
-        </div>
-      </div>
-
-      <!-- LOADING STATE -->
-      <div v-if="state === 'loading'" class="loading-view">
-        <Icon icon="svg-spinners:3-dots-fade" />
-        <p>Анализирую документ...</p>
-        <span>Это может занять до 30 секунд.</span>
-      </div>
-
-      <!-- PREVIEW STATE -->
-      <div v-if="state === 'preview' && generatedBooking && previewCardComponent" class="preview-view">
-        <p class="description">
-          Проверьте и при необходимости исправьте данные, которые удалось распознать.
+        <p v-else class="file-name">
+          {{ uploadedFile.name }} ({{ (uploadedFile.size / 1024).toFixed(1) }} KB)
         </p>
-        <div class="preview-card-wrapper">
-          <Component
-            :is="previewCardComponent"
-            :booking="generatedBooking"
-            :readonly="false"
-            @update:booking="updatePreviewBooking"
-          />
-        </div>
-        <div class="dialog-actions">
-          <KitBtn variant="outlined" @click="resetState">
-            Назад
-          </KitBtn>
-          <KitBtn @click="handleSave">
-            Сохранить бронирование
-          </KitBtn>
-        </div>
+        <span>Поддерживаются: .png, .jpg, .jpeg, .pdf</span>
+      </div>
+      <KitInput
+        v-model="notes"
+        type="textarea"
+        label="Дополнительная информация"
+        placeholder="Например: 'Это билет для Ивана, место у окна' или 'Отель для двоих'"
+        :rows="3"
+      />
+      <div v-if="state === 'error' && error" class="error-message">
+        <Icon icon="mdi:alert-circle-outline" />
+        <span>{{ error }}</span>
+      </div>
+      <div class="dialog-actions">
+        <KitBtn variant="text" @click="$emit('close')">
+          Отмена
+        </KitBtn>
+        <KitBtn :disabled="!uploadedFile || isLoading" :loading="isLoading" @click="handleGenerate">
+          Сгенерировать
+        </KitBtn>
       </div>
     </div>
-  </KitDialogWithClose>
+
+    <!-- LOADING STATE -->
+    <div v-if="state === 'loading'" class="loading-view">
+      <Icon icon="svg-spinners:3-dots-fade" />
+      <p>Анализирую документ...</p>
+      <span>Это может занять до 30 секунд.</span>
+    </div>
+
+    <!-- PREVIEW STATE -->
+    <div v-if="state === 'preview' && generatedBooking && previewCardComponent" class="preview-view">
+      <p class="description">
+        Проверьте и при необходимости исправьте данные, которые удалось распознать.
+      </p>
+      <div class="preview-card-wrapper">
+        <Component
+          :is="previewCardComponent"
+          :booking="generatedBooking"
+          :readonly="false"
+          @update:booking="updatePreviewBooking"
+        />
+      </div>
+      <div class="dialog-actions">
+        <KitBtn variant="outlined" @click="resetState">
+          Назад
+        </KitBtn>
+        <KitBtn @click="handleSave">
+          Сохранить бронирование
+        </KitBtn>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">

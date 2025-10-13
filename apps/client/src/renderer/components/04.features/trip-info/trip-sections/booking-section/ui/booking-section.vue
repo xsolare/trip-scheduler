@@ -6,12 +6,12 @@ import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
 import { useBookingSection } from '../composables'
+import AiBookingCreator from './shared/ai-booking-creator.vue'
 import AttractionCard from './cards/attraction-card.vue'
 import FlightCard from './cards/flight-card.vue'
 import HotelCard from './cards/hotel-card.vue'
 import TrainCard from './cards/train-card.vue'
 import AddBookingDialog from './dialogs/add-booking-dialog.vue'
-import AiBookingCreatorDialog from './dialogs/ai-booking-creator-dialog.vue'
 
 interface Props {
   section: {
@@ -41,7 +41,7 @@ const {
   bookingTypeConfigs,
 } = useBookingSection(props, emit)
 
-const isAiCreatorOpen = ref(false)
+const isAiCreatorViewOpen = ref(false)
 const isAddDialogOpen = ref(false)
 
 const cardComponents = {
@@ -53,17 +53,12 @@ const cardComponents = {
 
 function onAiSave(booking: Omit<Booking, 'id'>) {
   addCompletedBooking(booking)
-  isAiCreatorOpen.value = false
+  isAiCreatorViewOpen.value = false
 }
 
 function handleAddBooking(type: BookingType) {
   addBooking(type)
   isAddDialogOpen.value = false
-}
-
-function handleCreateWithAI() {
-  isAddDialogOpen.value = false
-  isAiCreatorOpen.value = true
 }
 
 function getCardComponent(type: Booking['type']) {
@@ -80,6 +75,16 @@ function getCardComponent(type: Booking['type']) {
       >
         Добавить бронирование
       </KitBtn>
+      <KitBtn
+        icon="mdi:magic-staff"
+        variant="outlined"
+        title="Создать с помощью ИИ"
+        @click="isAiCreatorViewOpen = !isAiCreatorViewOpen"
+      >AI</KitBtn>
+    </div>
+
+    <div v-show="isAiCreatorViewOpen" v-if="!readonly" class="ai-creator-wrapper">
+      <AiBookingCreator @save="onAiSave" @close="isAiCreatorViewOpen = false" />
     </div>
 
     <div v-if="bookings.length > 0 && tabItems.length > 0" class="tabs-container">
@@ -122,7 +127,7 @@ function getCardComponent(type: Booking['type']) {
       </KitTabs>
     </div>
 
-    <div v-else class="empty-state">
+    <div v-else-if="!isAiCreatorViewOpen" class="empty-state">
       <Icon icon="mdi:ticket-confirmation-outline" class="empty-icon" />
       <p>Пока нет ни одного бронирования.</p>
       <p v-if="!readonly">
@@ -135,12 +140,6 @@ function getCardComponent(type: Booking['type']) {
       v-model:visible="isAddDialogOpen"
       :booking-type-configs="bookingTypeConfigs"
       @add="handleAddBooking"
-      @create-with-a-i="handleCreateWithAI"
-    />
-    <AiBookingCreatorDialog
-      v-if="!readonly"
-      v-model:visible="isAiCreatorOpen"
-      @save="onAiSave"
     />
   </div>
 </template>
@@ -156,6 +155,16 @@ function getCardComponent(type: Booking['type']) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-creator-wrapper {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-m);
+  background-color: var(--bg-secondary-color);
 }
 
 .bookings-grid {
