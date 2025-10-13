@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { useMouse } from '@vueuse/core'
+import { computed, onMounted, ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { InteractiveGridPattern } from '~/components/02.shared/interactive-grid-pattern'
 
@@ -9,15 +10,26 @@ const router = useRouter()
 const cardRef = ref<HTMLElement | null>(null)
 const transformStyle = ref('')
 const isHovering = ref(false)
+const isMobile = ref(false)
 
 const { x, y } = useMouse({ touch: false })
+
+function detectMobile() {
+  if (typeof window !== 'undefined') {
+    isMobile.value = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+  }
+}
+
+onMounted(() => {
+  detectMobile()
+})
 
 function goToTrips() {
   router.push('/trips')
 }
 
 function onMouseMove() {
-  if (!cardRef.value)
+  if (!cardRef.value || isMobile.value)
     return
 
   const rect = cardRef.value.getBoundingClientRect()
@@ -37,25 +49,38 @@ function onMouseMove() {
 }
 
 function onMouseEnter() {
+  if (isMobile.value)
+    return
   isHovering.value = true
 }
 
 function onMouseLeave() {
+  if (isMobile.value)
+    return
   isHovering.value = false
   transformStyle.value = ''
 }
+
+const cardEventListeners = computed(() => {
+  if (isMobile.value) {
+    return {}
+  }
+  return {
+    mouseenter: onMouseEnter,
+    mousemove: onMouseMove,
+    mouseleave: onMouseLeave,
+  }
+})
 </script>
 
 <template>
   <div class="root-page">
     <div
       ref="cardRef"
-      class="glass-card"
+      class="welcome-card"
       :class="{ 'is-transitioning': !isHovering }"
       :style="{ transform: transformStyle }"
-      @mouseenter="onMouseEnter"
-      @mousemove="onMouseMove"
-      @mouseleave="onMouseLeave"
+      v-on="cardEventListeners"
     >
       <InteractiveGridPattern
         class="card-background-grid"
@@ -85,6 +110,12 @@ function onMouseLeave() {
 </template>
 
 <style scoped lang="scss">
+@media (hover: none) and (pointer: coarse) {
+  .welcome-card {
+    transform: none !important;
+  }
+}
+
 .root-page {
   display: flex;
   justify-content: center;
@@ -95,7 +126,7 @@ function onMouseLeave() {
   animation: fadeIn 0.8s ease-out forwards;
 }
 
-.glass-card {
+.welcome-card {
   position: relative;
   overflow: hidden;
   border-radius: var(--r-xl);
@@ -108,8 +139,7 @@ function onMouseLeave() {
   will-change: transform;
 }
 
-// Класс, который отвечает за плавное возвращение в исходное состояние
-.glass-card.is-transitioning {
+.welcome-card.is-transitioning {
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 

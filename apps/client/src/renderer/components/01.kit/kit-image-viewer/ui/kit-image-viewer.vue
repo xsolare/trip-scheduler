@@ -390,7 +390,6 @@ onUnmounted(() => {
 
 .viewer-header {
   position: absolute;
-  top: 0;
   left: 0;
   right: 0;
   display: flex;
@@ -420,18 +419,18 @@ onUnmounted(() => {
 .header-left {
   position: absolute;
   left: 20px;
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
 }
 .header-center {
   position: absolute;
   left: 50%;
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
   transform: translateX(-50%);
 }
 .header-right {
   position: absolute;
   right: 20px;
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
 }
 
 .viewer-counter,
@@ -690,7 +689,7 @@ onUnmounted(() => {
   .header-right {
     display: flex;
     justify-content: flex-end;
-    top: 0;
+    top: env(safe-area-inset-top);
     left: 0px;
     right: 0px;
     padding: 16px 0;

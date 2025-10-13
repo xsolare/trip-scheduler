@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { Booking, BookingSectionContent } from '../models/types'
+import type { Booking, BookingSectionContent, BookingType } from '../models/types'
 import { Icon } from '@iconify/vue'
+import { ref } from 'vue'
 import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
@@ -9,6 +10,8 @@ import AttractionCard from './cards/attraction-card.vue'
 import FlightCard from './cards/flight-card.vue'
 import HotelCard from './cards/hotel-card.vue'
 import TrainCard from './cards/train-card.vue'
+import AddBookingDialog from './dialogs/add-booking-dialog.vue'
+import AiBookingCreatorDialog from './dialogs/ai-booking-creator-dialog.vue'
 
 interface Props {
   section: {
@@ -28,13 +31,18 @@ const {
   activeTab,
   bookingGroups,
   tabItems,
+  allBookingsSorted,
   addBooking,
+  addCompletedBooking,
   deleteBooking,
   bookings,
   updateBooking,
   updateBookingsForGroup,
   bookingTypeConfigs,
 } = useBookingSection(props, emit)
+
+const isAiCreatorOpen = ref(false)
+const isAddDialogOpen = ref(false)
 
 const cardComponents = {
   flight: FlightCard,
@@ -43,22 +51,23 @@ const cardComponents = {
   attraction: AttractionCard,
 }
 
-function getCardComponent(type: Booking['type']) {
-  return cardComponents[type]
+function onAiSave(booking: Omit<Booking, 'id'>) {
+  addCompletedBooking(booking)
+  isAiCreatorOpen.value = false
 }
 
-function formatAddButtonLabel(label: string): string {
-  const words = label.toLowerCase().split(' ')
-  const lastWord = words[words.length - 1]
+function handleAddBooking(type: BookingType) {
+  addBooking(type)
+  isAddDialogOpen.value = false
+}
 
-  // Простое правило для единственного числа
-  if (lastWord.endsWith('ы')) {
-    words[words.length - 1] = lastWord.slice(0, -1)
-  }
-  else if (lastWord.endsWith('а')) {
-    words[words.length - 1] = `${lastWord.slice(0, -1)}о`
-  }
-  return `Добавить ${words.join(' ')}`
+function handleCreateWithAI() {
+  isAddDialogOpen.value = false
+  isAiCreatorOpen.value = true
+}
+
+function getCardComponent(type: Booking['type']) {
+  return cardComponents[type]
 }
 </script>
 
@@ -66,19 +75,30 @@ function formatAddButtonLabel(label: string): string {
   <div class="booking-section">
     <div v-if="!readonly" class="actions-panel">
       <KitBtn
-        v-for="(config, type) in bookingTypeConfigs"
-        :key="type"
-        :icon="config.icon"
-        color="secondary"
-        @click="addBooking(type)"
+        icon="mdi:plus-circle-outline"
+        @click="isAddDialogOpen = true"
       >
-        {{ formatAddButtonLabel(config.label) }}
+        Добавить бронирование
       </KitBtn>
     </div>
 
     <div v-if="bookings.length > 0 && tabItems.length > 0" class="tabs-container">
       <KitTabs v-model="activeTab" :items="tabItems">
-        <template v-for="tab in tabItems" :key="tab.id" #[tab.id]>
+        <template #timeline>
+          <div class="bookings-grid">
+            <div v-for="booking in allBookingsSorted" :key="booking.id">
+              <Component
+                :is="getCardComponent(booking.type)"
+                :booking="booking"
+                :readonly="readonly"
+                @delete="deleteBooking(booking.id)"
+                @update:booking="updateBooking"
+              />
+            </div>
+          </div>
+        </template>
+
+        <template v-for="tab in tabItems.filter(t => t.id !== 'timeline')" :key="tab.id" #[tab.id]>
           <draggable
             :model-value="bookingGroups[tab.id] || []"
             item-key="id"
@@ -106,9 +126,22 @@ function formatAddButtonLabel(label: string): string {
       <Icon icon="mdi:ticket-confirmation-outline" class="empty-icon" />
       <p>Пока нет ни одного бронирования.</p>
       <p v-if="!readonly">
-        Нажмите на кнопки выше, чтобы добавить информацию.
+        Нажмите на кнопку выше, чтобы добавить информацию.
       </p>
     </div>
+
+    <AddBookingDialog
+      v-if="!readonly"
+      v-model:visible="isAddDialogOpen"
+      :booking-type-configs="bookingTypeConfigs"
+      @add="handleAddBooking"
+      @create-with-a-i="handleCreateWithAI"
+    />
+    <AiBookingCreatorDialog
+      v-if="!readonly"
+      v-model:visible="isAiCreatorOpen"
+      @save="onAiSave"
+    />
   </div>
 </template>
 

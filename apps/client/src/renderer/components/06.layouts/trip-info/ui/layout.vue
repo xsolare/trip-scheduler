@@ -158,7 +158,6 @@ onBeforeUnmount(() => {
   >
     <div class="drawer-header">
       <h2>
-        <Icon icon="mdi:view-dashboard-outline" />
         <span>Разделы</span>
       </h2>
     </div>

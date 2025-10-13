@@ -483,7 +483,7 @@ onUnmounted(() => {
   &.fullscreen-panel {
     position: absolute;
     left: 12px;
-    top: 12px;
+    top: calc(12px + env(safe-area-inset-top));
     bottom: 12px;
     z-index: 1001;
     width: 380px;

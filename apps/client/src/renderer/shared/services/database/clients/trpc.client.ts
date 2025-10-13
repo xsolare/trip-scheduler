@@ -7,6 +7,7 @@ import type {
   IDatabaseClient,
   IDayRepository,
   IFileRepository,
+  ILLMRepository,
   IMemoryRepository,
   ITripRepository,
   ITripSectionRepository,
@@ -18,6 +19,7 @@ import { CommentRepository } from '../repositories/trpc/comment.repository'
 import { CommunityRepository } from '../repositories/trpc/community.repository'
 import { DayRepository } from '../repositories/trpc/day.repository'
 import { FileRepository } from '../repositories/trpc/file.repository'
+import { LLMRepository } from '../repositories/trpc/llm.repository'
 import { MemoryRepository } from '../repositories/trpc/memory.repository'
 import { TripSectionRepository } from '../repositories/trpc/trip-section.repository'
 import { TripRepository } from '../repositories/trpc/trip.repository'
@@ -37,6 +39,7 @@ class TRPCDatabaseClient implements IDatabaseClient {
   comments: ICommentRepository = new CommentRepository()
   account: IAccountRepository = new AccountRepository()
   community: ICommunityRepository = new CommunityRepository()
+  llm: ILLMRepository = new LLMRepository()
 
   /**
    * Инициализация клиента. Для tRPC не требуется специальных действий.

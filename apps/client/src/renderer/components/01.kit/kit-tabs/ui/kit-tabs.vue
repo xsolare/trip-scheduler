@@ -1,7 +1,8 @@
 <script setup lang="ts" generic="T extends string | number">
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
+import { KitDivider } from '../../kit-divider'
 
 const props = defineProps<{
   items: ViewSwitcherItem<T>[]
@@ -9,8 +10,14 @@ const props = defineProps<{
 
 const model = defineModel<T>({ required: true })
 
+const { smAndDown } = useDisplay()
+
 const transitionName = ref('slide-left')
 const contentWrapperRef = ref<HTMLElement | null>(null)
+
+const currentTab = computed(() => {
+  return props.items.find(item => item.id === model.value)
+})
 
 watch(model, (newVal, oldVal) => {
   const newIndex = props.items.findIndex(item => item.id === newVal)
@@ -47,6 +54,12 @@ function onAfterEnter() {
   <div class="kit-tabs" :class="{ single: items.length === 1 }">
     <KitViewSwitcher v-model="model" :items="items" full-width />
 
+    <div v-if="smAndDown && currentTab" class="mobile-tab-info">
+      <KitDivider>
+        <span class="mobile-tab-label">{{ currentTab.label }}</span>
+      </KitDivider>
+    </div>
+
     <div ref="contentWrapperRef" class="kit-tabs-content-wrapper">
       <Transition
         :name="transitionName"
@@ -73,6 +86,33 @@ function onAfterEnter() {
     :deep(.kit-view-switcher-glider) {
       opacity: 0 !important;
     }
+  }
+}
+
+.mobile-tab-info {
+  text-align: center;
+  animation: fade-in 0.3s ease;
+
+  .mobile-tab-label {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fg-accent-color);
+    border-radius: var(--r-full);
+    text-transform: none;
+    letter-spacing: 1px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

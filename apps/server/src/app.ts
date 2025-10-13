@@ -3,106 +3,148 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
+import { Logger } from '~/lib/logger'
 import { authController } from './api/auth.controller'
 import { avatarController } from './api/avatar.controller'
+import { bookingController } from './api/booking.controller'
 import { uploadFileController } from './api/upload.controller'
 import { createContext } from './lib/trpc'
 import { appRouter } from './router'
 import { httpRequestCounter, httpRequestDurationHistogram, register } from './services/metrics.service'
 
-const app = new Hono()
+const logger = new Logger()
 
-// Список разрешенных источников
-const allowedOrigins = [
-  'http://localhost:5173', // Vite dev server для веб-разработки
-  'http://localhost:1420', // Vite preview
-  'capacitor://localhost', // Android Capacitor
-  'http://localhost', // Capacitor
-  'https://localhost', // Capacitor
-  'capacitor://localhost', // Capacitor
-  'http://trip-scheduler.ru', // Production-домен
-  'https://trip-scheduler.ru', // Production-домен с https
-]
+class Server {
+  private app: Hono
 
-app.use('*', async (c, next) => {
-  const start = Date.now()
-  try {
-    await next()
+  // Список разрешенных источников перенесен внутрь класса для инкапсуляции
+  private allowedOrigins = [
+    'http://localhost:5173', // Vite dev server для веб-разработки
+    'http://localhost:1420', // Vite preview
+    'capacitor://localhost', // Android Capacitor
+    'http://localhost', // Capacitor
+    'https://localhost', // Capacitor
+    'http://trip-scheduler.ru', // Production-домен
+    'https://trip-scheduler.ru', // Production-домен с https
+  ]
+
+  constructor() {
+    this.app = new Hono()
+
+    this.initializeMiddlewares()
+    this.initializeRoutes()
+    this.initializeStaticFileRoutes()
+    this.initializeErrorHandlers()
   }
-  finally {
-    const duration = (Date.now() - start) / 1000
-    const path = new URL(c.req.url).pathname
 
-    if (path !== '/metrics') {
-      httpRequestDurationHistogram.observe(
-        {
-          method: c.req.method,
-          path,
-          status_code: c.res.status,
-        },
-        duration,
-      )
-      httpRequestCounter.inc({
-        method: c.req.method,
-        path,
-        status_code: c.res.status,
-      })
-    }
+  public getApp() {
+    return this.app
   }
-})
 
-app.use(
-  '*',
-  cors({
-    origin: (origin) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return origin
+  private initializeMiddlewares() {
+    // Middleware для метрик Prometheus
+    this.app.use('*', async (c, next) => {
+      const start = Date.now()
+      try {
+        await next()
       }
-      return null
-    },
-    credentials: true,
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  }),
-)
+      finally {
+        const duration = (Date.now() - start) / 1000
+        const path = new URL(c.req.url).pathname
 
-// Определение API маршрутов
-const apiRoutes = new Hono()
-  .post('/upload', uploadFileController)
-  .route('/avatar', avatarController)
-  .route('/auth', authController)
+        if (path !== '/metrics') {
+          httpRequestDurationHistogram.observe(
+            { method: c.req.method, path, status_code: c.res.status },
+            duration,
+          )
+          httpRequestCounter.inc({
+            method: c.req.method,
+            path,
+            status_code: c.res.status,
+          })
+        }
+      }
+    })
 
-app.route('/api', apiRoutes)
-app.use('/static/*', serveStatic({ root: './' }))
+    // Middleware для CORS
+    this.app.use(
+      '*',
+      cors({
+        origin: (origin) => {
+          if (!origin || this.allowedOrigins.includes(origin)) {
+            return origin
+          }
+          return null
+        },
+        credentials: true,
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      }),
+    )
 
-app.use(
-  '/trpc/*',
-  trpcServer({
-    router: appRouter,
-    createContext,
-    onError: ({ error, path }) => {
-      console.error(`tRPC Error on ${path}:`, error)
-    },
-  }),
-)
-
-app.get('/metrics', async (c) => {
-  c.header('Content-Type', register.contentType)
-  return c.body(await register.metrics())
-})
-
-// 404 handler
-app.notFound(c => c.json({ error: 'Not Found' }, 404))
-
-// Error handler
-app.onError((error, c) => {
-  if (error instanceof HTTPException) {
-    return error.getResponse()
+    logger.log('Middlewares initialized')
   }
-  console.error('Application error:', error)
-  return c.json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
-  }, 500)
-})
 
-export default app
+  private initializeRoutes() {
+    // Определение API маршрутов
+    const apiRoutes = new Hono()
+      .post('/upload', uploadFileController)
+      .route('/avatar', avatarController)
+      .route('/auth', authController)
+      .route('/booking', bookingController)
+
+    this.app.route('/api', apiRoutes)
+
+    // Маршрут для tRPC
+    this.app.use(
+      '/trpc/*',
+      trpcServer({
+        router: appRouter,
+        createContext,
+        onError: ({ error, path }) => {
+          console.error(`tRPC Error on ${path}:`, error)
+        },
+      }),
+    )
+
+    // Маршрут для метрик
+    this.app.get('/metrics', async (c) => {
+      c.header('Content-Type', register.contentType)
+      return c.body(await register.metrics())
+    })
+
+    logger.log('Routes initialized')
+  }
+
+  private initializeStaticFileRoutes() {
+    this.app.use('/static/*', serveStatic({ root: './' }))
+    logger.log('Static file routes initialized')
+  }
+
+  private initializeErrorHandlers() {
+    // Обработчик 404
+    this.app.notFound(c => c.json({ error: 'Not Found' }, 404))
+
+    // Глобальный обработчик ошибок
+    this.app.onError((error, c) => {
+      if (error instanceof HTTPException) {
+        return error.getResponse()
+      }
+      console.error('Application error:', error)
+      return c.json(
+        {
+          error: 'Internal Server Error',
+          message: process.env.NODE_ENV === 'development'
+            ? error.message
+            : 'Something went wrong',
+        },
+        500,
+      )
+    })
+
+    logger.log('Error handlers initialized')
+  }
+}
+
+const server = new Server()
+
+export default server

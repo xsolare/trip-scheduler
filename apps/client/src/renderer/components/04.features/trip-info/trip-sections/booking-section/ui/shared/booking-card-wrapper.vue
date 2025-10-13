@@ -15,6 +15,11 @@ const confirm = useConfirm()
 
 const isDetailsVisible = ref(false)
 
+const showVisibleIfClose=()=>{
+  if(!isDetailsVisible.value)
+     isDetailsVisible.value = !isDetailsVisible.value
+}
+
 async function handleDelete() {
   const isConfirmed = await confirm({
     title: 'Подтвердите удаление',
@@ -52,7 +57,7 @@ async function handleDelete() {
         </button>
       </div>
     </header>
-    <div class="card-body" @click="isDetailsVisible = !isDetailsVisible">
+    <div class="card-body" @click="showVisibleIfClose">
       <slot />
 
       <template v-if="$slots.details">

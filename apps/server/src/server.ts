@@ -1,9 +1,11 @@
 /* eslint-disable antfu/no-top-level-await */
 /* eslint-disable no-console */
+import type { Hono } from 'hono'
 import { sql } from 'drizzle-orm'
 import { db } from '../db'
-import app from './app'
+import Server from './app'
 
+const app: Hono = Server.getApp()
 const port = Number(process.env.PORT) || 8080
 const host = process.env.HOST || '0.0.0.0'
 

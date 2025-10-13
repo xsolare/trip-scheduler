@@ -309,7 +309,6 @@ watch(activeTab, () => {
   margin: 16px 0 8px;
 }
 
-/* ИСПРАВЛЕННЫЕ СТИЛИ ПАНЕЛИ ДЕЙСТВИЙ */
 .actions-panel {
   display: flex;
   flex-wrap: wrap;
@@ -318,7 +317,7 @@ watch(activeTab, () => {
 }
 
 .search-input {
-  flex: 1 1 250px; /* Позволяет инпуту расти и сжиматься */
+  flex: 1 1 250px; 
 }
 
 .action-controls {

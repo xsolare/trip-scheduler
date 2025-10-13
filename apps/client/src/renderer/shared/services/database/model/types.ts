@@ -13,6 +13,19 @@ export interface TripListFilters {
   userIds?: string[]
 }
 
+/**
+ * Структура объекта бронирования, возвращаемая сервисом генерации ИИ.
+ */
+export interface GeneratedBooking {
+  type: 'flight' | 'hotel' | 'train' | 'attraction'
+  title: string
+  data: any // Структура данных зависит от типа
+}
+
+export interface ILLMRepository {
+  generateBookingFromData: (formData: FormData) => Promise<GeneratedBooking>
+}
+
 export interface ITripRepository {
   getAll: (filters?: TripListFilters) => Promise<Trip[]>
   getById: (id: string) => Promise<Trip | null>
@@ -91,6 +104,7 @@ export interface IDatabaseClient {
   comments: ICommentRepository
   account: IAccountRepository
   community: ICommunityRepository
+  llm: ILLMRepository
 
   initDb: () => Promise<this>
 

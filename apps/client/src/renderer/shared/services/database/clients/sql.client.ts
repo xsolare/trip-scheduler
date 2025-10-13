@@ -1,4 +1,4 @@
-import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, ILLMRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
 import { AccountRepository } from '../repositories/sql/account.repository.ts'
 import { ActivityRepository } from '../repositories/sql/activity.repository.ts'
 import { AuthRepository } from '../repositories/sql/auth.repository.ts'
@@ -6,6 +6,7 @@ import { CommentRepository } from '../repositories/sql/comment.repository.ts'
 import { CommunityRepository } from '../repositories/sql/community.repository.ts'
 import { DayRepository } from '../repositories/sql/day.repository.ts'
 import { FileRepository } from '../repositories/sql/file.repository.ts'
+import { LLMRepository } from '../repositories/sql/llm.repository.ts'
 import { MemoryRepository } from '../repositories/sql/memory.repository.ts'
 import { TripSectionRepository } from '../repositories/sql/trip-section.repository.ts'
 import { TripRepository } from '../repositories/sql/trip.repository.ts'
@@ -31,6 +32,7 @@ class SqlDatabaseClient implements IDatabaseClient {
   auth!: IAuthRepository
   comments!: ICommentRepository
   community!: ICommunityRepository
+  llm!: ILLMRepository
 
   async initDb(): Promise<this> {
     if (!window.electronAPI) {
@@ -64,6 +66,7 @@ class SqlDatabaseClient implements IDatabaseClient {
     this.auth = new AuthRepository()
     this.comments = new CommentRepository()
     this.community = new CommunityRepository()
+    this.llm = new LLMRepository()
 
     return this
   }
