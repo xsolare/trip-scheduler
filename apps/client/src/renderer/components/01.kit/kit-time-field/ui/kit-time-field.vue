@@ -10,7 +10,7 @@ interface Props {
   hourCycle?: '12' | '24'
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   placeholder: '--:--',
   hourCycle: '24',
 })
@@ -30,8 +30,8 @@ watch(model, (newValue) => {
       v-slot="{ segments }"
       v-model="model"
       granularity="minute"
-      :disabled="disabled"
-      :readonly="readonly"
+      :disabled="props.disabled"
+      :readonly="props.readonly"
       class="kit-time-field"
       :hour-cycle="24"
       part="dayPeriod"

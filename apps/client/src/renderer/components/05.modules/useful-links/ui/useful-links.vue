@@ -21,7 +21,7 @@ function getFaviconUrl(url: string) {
     const domain = new URL(url).hostname
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
   }
-  catch (error) {
+  catch {
     return '' // Возвращаем пустую строку, если URL некорректен
   }
 }

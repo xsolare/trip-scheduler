@@ -48,6 +48,7 @@ export function useFinancesSection(
   const isTransactionFormOpen = ref(false)
   const isCategoryManagerOpen = ref(false)
   const isSettingsOpen = ref(false)
+  const isAiCreatorOpen = ref(false)
   const transactionToEdit = ref<Transaction | null>(null)
 
   const debouncedUpdate = useDebounceFn(() => {
@@ -78,9 +79,24 @@ export function useFinancesSection(
     }
     else {
       // Создание
-      transactions.value.unshift({ ...tx, id: uuidv4() } as Transaction)
+      transactions.value.unshift({ ...tx, id: uuidv4(), categoryId: tx.categoryId || null } as Transaction)
     }
     isTransactionFormOpen.value = false
+  }
+
+  /**
+   * Новый метод для добавления нескольких транзакций от AI
+   */
+  function addMultipleTransactions(newTransactions: Partial<Transaction>[]) {
+    const transactionsToAdd = newTransactions.map(tx => ({
+      ...tx,
+      id: uuidv4(),
+      categoryId: tx.categoryId || null,
+      currency: tx.currency || settings.value.mainCurrency,
+    } as Transaction))
+
+    transactions.value.unshift(...transactionsToAdd)
+    isAiCreatorOpen.value = false
   }
 
   async function deleteTransaction(id: string) {
@@ -246,6 +262,7 @@ export function useFinancesSection(
     isTransactionFormOpen,
     isCategoryManagerOpen,
     isSettingsOpen,
+    isAiCreatorOpen,
     transactionToEdit,
     selectedCategoryFilters,
     dateFilter,
@@ -260,6 +277,7 @@ export function useFinancesSection(
     // Methods
     openTransactionForm,
     saveTransaction,
+    addMultipleTransactions,
     deleteTransaction,
     saveCategory,
     deleteCategory,

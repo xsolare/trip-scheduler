@@ -6,6 +6,7 @@ import { authUtils } from '~/lib/auth.utils'
 import { userRepository } from '~/repositories/user.repository'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
 import { generateImageVariants } from '~/services/image-metadata.service'
+import { fileUploadsCounter, fileUploadSizeBytesHistogram } from '~/services/metrics.service'
 
 const avatarController = new Hono()
 
@@ -38,6 +39,10 @@ async function uploadAvatarController(c: Context) {
     await saveFile(paths.original.diskPath, avatarBuffer)
 
     const updatedUser = await userRepository.update(userId, { avatarUrl: paths.original.dbPath })
+
+    const placement = 'avatar'
+    fileUploadsCounter.inc({ placement })
+    fileUploadSizeBytesHistogram.observe({ placement }, file.size)
 
     return c.json(updatedUser)
   }

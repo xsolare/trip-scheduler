@@ -6,7 +6,7 @@ import { HTTPException } from 'hono/http-exception'
 import { Logger } from '~/lib/logger'
 import { authController } from './api/auth.controller'
 import { avatarController } from './api/avatar.controller'
-import { bookingController } from './api/llm/booking.controller'
+import { llmController } from './api/llm.controller'
 import { uploadFileController } from './api/upload.controller'
 import { createContext } from './lib/trpc'
 import { appRouter } from './router'
@@ -90,7 +90,7 @@ class Server {
       .post('/upload', uploadFileController)
       .route('/avatar', avatarController)
       .route('/auth', authController)
-      .route('/booking', bookingController)
+      .route('/llm', llmController)
 
     this.app.route('/api', apiRoutes)
 

@@ -6,20 +6,31 @@ import {
   PopoverRoot,
   PopoverTrigger,
 } from 'reka-ui'
+import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCalendar } from '~/components/01.kit/kit-calendar'
 import { useCalendarPopover } from '../composables/use-calendar-popover'
 
 interface Props {
   disabled?: boolean
+  clearable?: boolean
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  disabled: false,
+  clearable: true,
+})
 
 const model = defineModel<CalendarDate | null>({ required: true })
 const { isOpen, handleDateSelect } = useCalendarPopover()
 
 function handleUpdateValue(value: CalendarDate | null) {
-  handleDateSelect(value, v => model.value = v)
+  handleDateSelect(value, (v) => {
+    model.value = v
+  })
+}
+
+function clearDate() {
+  handleUpdateValue(null)
 }
 </script>
 
@@ -45,6 +56,11 @@ function handleUpdateValue(value: CalendarDate | null) {
           @update:model-value="handleUpdateValue"
         >
           <template #footer>
+            <div v-if="props.clearable" class="calendar-footer">
+              <KitBtn variant="text" size="sm" @click="clearDate">
+                Очистить дату
+              </KitBtn>
+            </div>
             <slot name="footer" />
           </template>
         </KitCalendar>
@@ -70,6 +86,14 @@ function handleUpdateValue(value: CalendarDate | null) {
 }
 .date-picker-trigger {
   cursor: pointer;
+}
+
+.calendar-footer {
+  padding: 8px 8px 0;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-secondary-color);
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
 

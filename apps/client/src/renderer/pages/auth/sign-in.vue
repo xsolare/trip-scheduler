@@ -53,7 +53,8 @@ async function submitSignIn() {
 
   try {
     await store.auth.signIn({ email: email.value, password: password.value })
-    await router.push(AppRoutePaths.Trip.List)
+    const returnUrl = route.query.returnUrl as string
+    await router.push(returnUrl || AppRoutePaths.Trip.List)
   }
   catch (error: any) {
     toast.error(error.message || 'Произошла ошибка при авторизации.')
@@ -62,7 +63,8 @@ async function submitSignIn() {
 
 async function handleOAuth(_provider: OAuthProviders) {
   toast.warn(`В процессе разработки :)`)
-  await router.push(AppRoutePaths.Trip.List)
+  const returnUrl = route.query.returnUrl as string
+  await router.push(returnUrl || AppRoutePaths.Trip.List)
 
   // const targetUrl = `${import.meta.env.VITE_APP_SERVER_URL}/v1/auth/${provider}`
   // await router.push(targetUrl)
@@ -156,7 +158,7 @@ onMounted(() => {
         <router-link :to="AppRoutePaths.Auth.ForgotPassword" class="util-link">
           Забыли пароль?
         </router-link>
-        <router-link :to="AppRoutePaths.Auth.SignUp" class="util-link">
+        <router-link :to="{ path: AppRoutePaths.Auth.SignUp, query: route.query }" class="util-link">
           Создать аккаунт
         </router-link>
       </div>

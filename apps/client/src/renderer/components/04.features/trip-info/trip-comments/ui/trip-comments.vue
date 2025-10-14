@@ -18,6 +18,7 @@ const props = defineProps<Props>()
 
 const commentsStore = useTripCommentsStore()
 const authStore = useAuthStore()
+const route = useRoute()
 
 const comments = computed(() => commentsStore.getCommentsByParentId(props.parentId))
 const collection = computed(() => commentsStore.getCommentCollectionByParentId(props.parentId))
@@ -91,7 +92,7 @@ watch(comments, async (newComments, oldComments) => {
     <div v-else class="unauthorized-placeholder">
       <Icon icon="mdi:lock-outline" />
       <p>
-        <router-link :to="AppRoutePaths.Auth.SignIn">
+        <router-link :to="{ path: AppRoutePaths.Auth.SignIn, query: { returnUrl: route.fullPath } }">
           Войдите
         </router-link>
         , чтобы оставлять комментарии.

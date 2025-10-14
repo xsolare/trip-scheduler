@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
 import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
-import type { Trip, UpdateTripInput } from '~/shared/types/models/trip'
+import type { Trip, TripImage, UpdateTripInput } from '~/shared/types/models/trip'
 import { parseDate } from '@internationalized/date'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'

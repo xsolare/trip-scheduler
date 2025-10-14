@@ -94,7 +94,7 @@ function formatDistance(distance?: number): string {
           <div v-if="openRoutes.has(route.id)" class="route-points">
             <GeolocationPoiList
               :points="route.points.map(p => ({ ...p, style: { ...p.style, color: route.color } }))"
-              :readonly="readonly"
+              :readonly="!!readonly"
               @focus-on-point="emit('focusOnPoint', $event)"
               @update-point="emit('updatePoint', route.id, $event)"
               @update-point-coords="emit('updatePointCoords', $event)"

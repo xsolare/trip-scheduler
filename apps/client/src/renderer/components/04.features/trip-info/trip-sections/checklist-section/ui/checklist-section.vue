@@ -317,7 +317,7 @@ watch(activeTab, () => {
 }
 
 .search-input {
-  flex: 1 1 250px; 
+  flex: 1 1 250px;
 }
 
 .action-controls {

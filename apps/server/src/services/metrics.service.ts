@@ -1,9 +1,12 @@
-import { Counter, Gauge, Histogram, register } from 'prom-client'
+import { collectDefaultMetrics, Counter, Gauge, Histogram, register } from 'prom-client'
 
 // Включаем сбор стандартных метрик (CPU, память и т.д.)
 register.setDefaultLabels({
   app: 'trip-scheduler-server',
 })
+
+// Собирает event loop lag, gc stats, heap usage и т.д.
+collectDefaultMetrics({ prefix: 'nodejs_' })
 
 // 1. Счетчик HTTP-запросов
 export const httpRequestCounter = new Counter({
@@ -45,6 +48,27 @@ export const totalUsersGauge = new Gauge({
 export const totalTripsGauge = new Gauge({
   name: 'total_trips_in_database',
   help: 'Total number of trips in the database',
+})
+
+// 7. Gauge для активных сессий (по refresh токенам)
+export const activeSessionsGauge = new Gauge({
+  name: 'active_user_sessions',
+  help: 'Number of active user sessions based on valid refresh tokens',
+})
+
+// 8. Счетчик загрузок файлов
+export const fileUploadsCounter = new Counter({
+  name: 'file_uploads_total',
+  help: 'Total number of uploaded files',
+  labelNames: ['placement'], // e.g., 'memories', 'route', 'avatar'
+})
+
+// 9. Гистограмма размеров загруженных файлов (в байтах)
+export const fileUploadSizeBytesHistogram = new Histogram({
+  name: 'file_upload_size_bytes',
+  help: 'Size distribution of uploaded files in bytes',
+  labelNames: ['placement'],
+  buckets: [100000, 500000, 1000000, 5000000, 10000000, 25000000], // 100KB, 500KB, 1MB, 5MB, 10MB, 25MB
 })
 
 // Экспортируем register для создания эндпоинта

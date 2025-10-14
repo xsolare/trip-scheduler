@@ -1,11 +1,11 @@
 /* eslint-disable antfu/no-top-level-await */
 /* eslint-disable no-console */
 import type { Hono } from 'hono'
-import { sql } from 'drizzle-orm'
+import { gte, sql } from 'drizzle-orm'
 import { db } from '../db'
-import { trips, users } from '../db/schema'
+import { refreshTokens, trips, users } from '../db/schema'
 import Server from './app'
-import { totalTripsGauge, totalUsersGauge } from './services/metrics.service'
+import { activeSessionsGauge, totalTripsGauge, totalUsersGauge } from './services/metrics.service'
 
 const app: Hono = Server.getApp()
 const port = Number(process.env.PORT) || 8080
@@ -21,6 +21,13 @@ async function updateDatabaseMetrics() {
 
     const [tripCountResult] = await db.select({ count: sql<number>`count(*)` }).from(trips)
     totalTripsGauge.set(Number(tripCountResult.count))
+
+    // Новая метрика: количество активных refresh токенов
+    const [activeTokensResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(refreshTokens)
+      .where(gte(refreshTokens.expiresAt, new Date()))
+    activeSessionsGauge.set(Number(activeTokensResult.count))
   }
   catch (error) {
     console.error('❌ Ошибка при обновлении метрик из базы данных:', error)

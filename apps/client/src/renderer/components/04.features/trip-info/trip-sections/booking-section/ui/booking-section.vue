@@ -6,12 +6,12 @@ import draggable from 'vuedraggable'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
 import { useBookingSection } from '../composables'
-import AiBookingCreator from './shared/ai-booking-creator.vue'
 import AttractionCard from './cards/attraction-card.vue'
 import FlightCard from './cards/flight-card.vue'
 import HotelCard from './cards/hotel-card.vue'
 import TrainCard from './cards/train-card.vue'
 import AddBookingDialog from './dialogs/add-booking-dialog.vue'
+import AiBookingCreator from './shared/ai-booking-creator.vue'
 
 interface Props {
   section: {
@@ -80,7 +80,9 @@ function getCardComponent(type: Booking['type']) {
         variant="outlined"
         title="Создать с помощью ИИ"
         @click="isAiCreatorViewOpen = !isAiCreatorViewOpen"
-      >AI</KitBtn>
+      >
+        AI
+      </KitBtn>
     </div>
 
     <div v-show="isAiCreatorViewOpen" v-if="!readonly" class="ai-creator-wrapper">
@@ -94,7 +96,7 @@ function getCardComponent(type: Booking['type']) {
             <div v-for="booking in allBookingsSorted" :key="booking.id">
               <Component
                 :is="getCardComponent(booking.type)"
-                :booking="booking"
+                :booking="booking as any"
                 :readonly="readonly"
                 @delete="deleteBooking(booking.id)"
                 @update:booking="updateBooking"

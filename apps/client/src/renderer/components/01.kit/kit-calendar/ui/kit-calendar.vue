@@ -23,9 +23,8 @@ const model = defineModel<CalendarDate | null>({ required: true })
 
 <template>
   <CalendarRoot
-    v-if="model"
     v-slot="{ weekDays, grid }"
-    v-model="model"
+    v-model="model!"
     class="calendar"
     fixed-weeks
     :locale="locale"

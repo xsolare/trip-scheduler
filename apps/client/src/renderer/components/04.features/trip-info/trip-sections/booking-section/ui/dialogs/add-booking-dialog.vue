@@ -1,33 +1,34 @@
 <script setup lang="ts">
-import type { BookingType } from '../../models/types';
-import { KitBtn } from '~/components/01.kit/kit-btn';
-import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close';
-import { BOOKING_TYPES_CONFIG } from '../../composables';
+import type { BOOKING_TYPES_CONFIG } from '../../composables'
+import type { BookingType } from '../../models/types'
+import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 
 defineProps<{
-  bookingTypeConfigs: typeof BOOKING_TYPES_CONFIG;
-}>();
+  bookingTypeConfigs: typeof BOOKING_TYPES_CONFIG
+}>()
 
 const emit = defineEmits<{
-  (e: 'add', type: BookingType): void;
-}>();
+  (e: 'add', type: BookingType): void
+}>()
 
-const visible = defineModel<boolean>('visible', { required: true });
+const visible = defineModel<boolean>('visible', { required: true })
 
 function handleAddClick(type: BookingType) {
-  emit('add', type);
+  emit('add', type)
 }
 
 function formatAddButtonLabel(label: string): string {
-  const words = label.toLowerCase().split(' ');
-  const lastWord = words[words.length - 1];
+  const words = label.toLowerCase().split(' ')
+  const lastWord = words[words.length - 1]
 
   if (lastWord.endsWith('ы')) {
-    words[words.length - 1] = lastWord.slice(0, -1);
-  } else if (lastWord.endsWith('а')) {
-    words[words.length - 1] = `${lastWord.slice(0, -1)}о`;
+    words[words.length - 1] = lastWord.slice(0, -1)
   }
-  return `Добавить ${words.join(' ')}`;
+  else if (lastWord.endsWith('а')) {
+    words[words.length - 1] = `${lastWord.slice(0, -1)}о`
+  }
+  return `Добавить ${words.join(' ')}`
 }
 </script>
 
@@ -39,7 +40,9 @@ function formatAddButtonLabel(label: string): string {
     :max-width="600"
   >
     <div class="add-booking-dialog-content">
-      <p class="description">Выберите, что вы хотите добавить в свое путешествие.</p>
+      <p class="description">
+        Выберите, что вы хотите добавить в свое путешествие.
+      </p>
       <div class="buttons-grid">
         <KitBtn
           v-for="(config, type) in bookingTypeConfigs"

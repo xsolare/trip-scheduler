@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Booking, BookingType } from '../../models/types'
 import { Icon } from '@iconify/vue'
-import { useFileDialog } from '@vueuse/core'
 import { computed, onUnmounted, ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitFileInput } from '~/components/01.kit/kit-file-input'
 import { KitInput } from '~/components/01.kit/kit-input'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
 import { useRequest, useRequestStatus } from '~/plugins/request'
@@ -26,13 +26,7 @@ const error = ref<string | null>(null)
 const selectedType = ref<BookingType>('flight')
 const notes = ref<string>('')
 const generatedBooking = ref<Booking | null>(null)
-
-const uploadedFile = computed(() => files.value?.[0])
-
-const { files, open, reset: resetFile } = useFileDialog({
-  accept: '.png,.jpg,.jpeg,.pdf',
-  multiple: false,
-})
+const uploadedFile = ref<File | null>(null)
 
 const bookingTypeOptions = Object.entries(BOOKING_TYPES_CONFIG).map(([key, value]) => ({
   value: key as BookingType,
@@ -58,7 +52,7 @@ function resetState() {
   state.value = 'upload'
   error.value = null
   notes.value = ''
-  resetFile()
+  uploadedFile.value = null
   generatedBooking.value = null
 }
 
@@ -84,9 +78,8 @@ async function handleGenerate() {
       fn: db => db.llm.generateBookingFromData(formData),
     })
 
-    if (!response) {
+    if (!response)
       throw new Error('Не удалось получить ответ от сервера.')
-    }
 
     const bookingConfig = BOOKING_TYPES_CONFIG[response.type as BookingType]
     generatedBooking.value = {
@@ -106,9 +99,9 @@ async function handleGenerate() {
 
 function handleSave() {
   if (generatedBooking.value) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...bookingData } = generatedBooking.value
     emit('save', bookingData)
+    resetState()
   }
 }
 
@@ -137,16 +130,14 @@ onUnmounted(() => {
         :clearable="false"
         placeholder="Выберите тип бронирования"
       />
-      <div class="file-input-area" @click="open()">
-        <Icon icon="mdi:cloud-upload-outline" />
-        <p v-if="!uploadedFile">
+      <KitFileInput v-model="uploadedFile" accept=".png,.jpg,.jpeg,.pdf">
+        <template #default>
           Нажмите, чтобы выбрать файл, или перетащите его сюда
-        </p>
-        <p v-else class="file-name">
-          {{ uploadedFile.name }} ({{ (uploadedFile.size / 1024).toFixed(1) }} KB)
-        </p>
-        <span>Поддерживаются: .png, .jpg, .jpeg, .pdf</span>
-      </div>
+        </template>
+        <template #supported-formats>
+          Поддерживаются: .png, .jpg, .jpeg, .pdf
+        </template>
+      </KitFileInput>
       <KitInput
         v-model="notes"
         type="textarea"
@@ -183,7 +174,7 @@ onUnmounted(() => {
       <div class="preview-card-wrapper">
         <Component
           :is="previewCardComponent"
-          :booking="generatedBooking"
+          :booking="generatedBooking as any"
           :readonly="false"
           @update:booking="updatePreviewBooking"
         />
@@ -202,7 +193,6 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .ai-creator-content {
-  min-height: 350px;
   display: flex;
   flex-direction: column;
 }
@@ -213,11 +203,10 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 1rem;
 
-  :deep(){
+  :deep() {
     .delete-btn,
-    .kit-editable-controls{
-
-    display: none;
+    .kit-editable-controls {
+      display: none;
     }
   }
 }
@@ -228,38 +217,6 @@ onUnmounted(() => {
   line-height: 1.5;
   margin-top: 0;
   margin-bottom: 0.5rem;
-}
-
-.file-input-area {
-  border: 2px dashed var(--border-secondary-color);
-  border-radius: var(--r-m);
-  padding: 2rem 1rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--border-focus-color);
-    background-color: var(--bg-tertiary-color);
-  }
-
-  .iconify {
-    font-size: 2.5rem;
-    color: var(--fg-tertiary-color);
-    margin-bottom: 0.5rem;
-  }
-  p {
-    font-weight: 500;
-    color: var(--fg-secondary-color);
-  }
-  .file-name {
-    color: var(--fg-accent-color);
-  }
-  span {
-    font-size: 0.8rem;
-    color: var(--fg-tertiary-color);
-    margin-top: 0.25rem;
-  }
 }
 
 .dialog-actions {

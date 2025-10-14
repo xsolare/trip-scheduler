@@ -12,6 +12,7 @@ enum OAuthProviders { GitHub = 'github', Google = 'google' }
 const store = useAppStore(['auth'])
 const toast = useToast()
 const router = useRouter()
+const route = useRoute()
 
 const step = ref<'details' | 'verify'>('details')
 
@@ -236,7 +237,7 @@ watch(formError, (newError) => {
       </form>
 
       <div class="utils">
-        <router-link :to="AppRoutePaths.Auth.SignIn" class="util-link">
+        <router-link :to="{ path: AppRoutePaths.Auth.SignIn, query: route.query }" class="util-link">
           Уже есть аккаунт? Войти
         </router-link>
       </div>

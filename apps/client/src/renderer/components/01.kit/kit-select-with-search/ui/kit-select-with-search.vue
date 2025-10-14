@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<{
   multiple?: boolean
   creatable?: boolean
   icon?: string
+  size?: 'sm' | 'md' | 'lg'
 }>(), {
   label: '',
   placeholder: 'Выберите значение...',
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<{
   multiple: false,
   creatable: false,
   icon: undefined,
+  size: 'md',
 })
 
 const emit = defineEmits<{
@@ -165,7 +167,10 @@ onClickOutside(wrapperRef, handleClose)
     <div
       v-if="multiple"
       class="chip-input-wrapper"
-      :class="{ 'is-focused': isOpen, 'has-icon': !!icon }"
+      :class="[
+        `kit-input-${size}`,
+        { 'is-focused': isOpen, 'has-icon': !!icon },
+      ]"
       @click="handleOpen"
     >
       <Icon v-if="icon" :icon="icon" class="main-icon" />
@@ -203,6 +208,7 @@ onClickOutside(wrapperRef, handleClose)
         :placeholder="placeholder"
         :disabled="disabled"
         :icon="icon"
+        :size="size"
         autocomplete="off"
         @focus="handleOpen"
         @click="handleOpen"
@@ -285,7 +291,6 @@ onClickOutside(wrapperRef, handleClose)
   }
 }
 
-// ... (стили выпадающего списка)
 .dropdown-panel {
   position: absolute;
   top: calc(100% + 4px);
@@ -353,8 +358,6 @@ onClickOutside(wrapperRef, handleClose)
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 6px 40px 6px 12px;
-  min-height: 46px;
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-s);
@@ -385,7 +388,6 @@ onClickOutside(wrapperRef, handleClose)
     background: none;
     outline: none;
     color: var(--fg-primary-color);
-    font-size: 1rem;
     min-width: 120px;
     padding: 4px 0;
   }
@@ -397,9 +399,7 @@ onClickOutside(wrapperRef, handleClose)
   gap: 6px;
   background-color: var(--bg-accent-color);
   color: var(--fg-on-accent-color);
-  padding: 4px 8px;
   border-radius: var(--r-s);
-  font-size: 0.875rem;
   font-weight: 500;
 
   .chip-remove-icon {
@@ -425,5 +425,70 @@ onClickOutside(wrapperRef, handleClose)
 .fade-dropdown-leave-to {
   opacity: 0;
   transform: translateY(-5px);
+}
+
+.chip-input-wrapper {
+  &.kit-input-sm {
+    min-height: 38px;
+    padding: 4px 36px 4px 10px;
+    font-size: 0.875rem;
+
+    &.has-icon {
+      padding-left: 36px;
+    }
+    .main-icon {
+      left: 10px;
+      font-size: 1.125rem;
+    }
+    .search-input {
+      font-size: 0.875rem;
+    }
+    .chip {
+      padding: 2px 6px;
+      font-size: 0.8125rem;
+    }
+  }
+
+  &.kit-input-md {
+    min-height: 46px;
+    padding: 6px 40px 6px 12px;
+    font-size: 1rem;
+
+    &.has-icon {
+      padding-left: 40px;
+    }
+    .main-icon {
+      left: 12px;
+      font-size: 1.25rem;
+    }
+    .search-input {
+      font-size: 1rem;
+    }
+    .chip {
+      padding: 4px 8px;
+      font-size: 0.875rem;
+    }
+  }
+
+  &.kit-input-lg {
+    min-height: 54px;
+    padding: 8px 44px 8px 14px;
+    font-size: 1.125rem;
+
+    &.has-icon {
+      padding-left: 44px;
+    }
+    .main-icon {
+      left: 14px;
+      font-size: 1.375rem;
+    }
+    .search-input {
+      font-size: 1.125rem;
+    }
+    .chip {
+      padding: 6px 10px;
+      font-size: 1rem;
+    }
+  }
 }
 </style>

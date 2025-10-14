@@ -103,7 +103,7 @@ function zoomOut() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 10;
+  z-index: 8;
 
   .kit-btn,
   :deep(.kit-btn) {

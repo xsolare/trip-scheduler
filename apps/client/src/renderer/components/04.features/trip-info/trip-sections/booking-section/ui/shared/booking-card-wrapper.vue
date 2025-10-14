@@ -15,9 +15,9 @@ const confirm = useConfirm()
 
 const isDetailsVisible = ref(false)
 
-const showVisibleIfClose=()=>{
-  if(!isDetailsVisible.value)
-     isDetailsVisible.value = !isDetailsVisible.value
+function showVisibleIfClose() {
+  if (!isDetailsVisible.value)
+    isDetailsVisible.value = !isDetailsVisible.value
 }
 
 async function handleDelete() {

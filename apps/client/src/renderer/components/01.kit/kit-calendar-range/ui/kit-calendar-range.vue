@@ -34,7 +34,6 @@ const model = defineModel<DateRange | null>({ required: true })
 
 <template>
   <RangeCalendarRoot
-    v-if="model"
     v-slot="{ weekDays, grid }"
     v-model="model as any"
     class="calendar"

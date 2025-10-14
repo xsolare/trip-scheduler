@@ -157,7 +157,10 @@ router.beforeEach(async (to, _, next) => {
   const requiresAuth = to.meta.requiresAuth
 
   if (requiresAuth && !authStore.isAuthenticated) {
-    return next({ name: AppRouteNames.SignIn })
+    return next({
+      name: AppRouteNames.SignIn,
+      query: { returnUrl: to.fullPath },
+    })
   }
 
   next()

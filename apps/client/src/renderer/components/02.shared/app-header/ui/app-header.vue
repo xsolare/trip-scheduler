@@ -7,6 +7,7 @@ import { AppRoutePaths } from '~/shared/constants/routes'
 
 const headerEl = ref<HTMLElement>()
 const router = useRouter()
+const route = useRoute()
 const appStore = useAppStore(['auth', 'theme', 'layout'])
 
 const isProfileDrawerOpen = ref(false)
@@ -23,6 +24,13 @@ watch(isHeaderVisible, isVisible => appStore.layout.setHeaderVisibility(isVisibl
 
 function checkScreenSize() {
   isSmallScreen.value = window.innerWidth < 1400
+}
+
+function goToSignIn() {
+  router.push({
+    path: AppRoutePaths.Auth.SignIn,
+    query: { returnUrl: route.fullPath },
+  })
 }
 
 onMounted(() => {
@@ -103,7 +111,7 @@ onMounted(() => {
           <div
             v-else
             class="profile-img"
-            @click.stop="router.push(AppRoutePaths.Auth.SignIn)"
+            @click.stop="goToSignIn"
           >
             <Icon
               icon="mdi:face-man-profile"

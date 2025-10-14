@@ -8,6 +8,7 @@ import { imageService } from '~/modules/image/image.service'
 import { userRepository } from '~/repositories/user.repository'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
 import { extractAndStructureMetadata, generateImageVariants } from '~/services/image-metadata.service'
+import { fileUploadsCounter, fileUploadSizeBytesHistogram } from '~/services/metrics.service'
 import { quotaService } from '~/services/quota.service'
 
 export async function uploadFileController(c: Context) {
@@ -44,7 +45,6 @@ export async function uploadFileController(c: Context) {
     // 2. Подготовка данных
     const fileBuffer = Buffer.from(await file.arrayBuffer())
 
-    // --- ПРОВЕРКА КВОТЫ ХРАНИЛИЩА ---
     // Предварительная проверка по размеру исходного файла
     await quotaService.checkStorageQuota(userId, fileBuffer.length)
 
@@ -85,8 +85,10 @@ export async function uploadFileController(c: Context) {
       } as ImageMetadata,
     )
 
-    // --- УВЕЛИЧЕНИЕ СЧЕТЧИКА ИСПОЛЬЗОВАНИЯ ---
     await quotaService.incrementStorageUsage(userId, totalSize)
+
+    fileUploadsCounter.inc({ placement })
+    fileUploadSizeBytesHistogram.observe({ placement }, file.size)
 
     // 7. Отправка ответа
     return c.json(newImageRecord)

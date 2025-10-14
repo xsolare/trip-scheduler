@@ -1,4 +1,4 @@
-import type { GeneratedBooking, ILLMRepository } from '../../model/types'
+import type { GeneratedBooking, GeneratedTransaction, ILLMRepository } from '../../model/types'
 
 export class LLMRepository implements ILLMRepository {
   async generateBookingFromData(formData: FormData): Promise<GeneratedBooking> {
@@ -43,5 +43,27 @@ export class LLMRepository implements ILLMRepository {
         checkOutDate: '2025-11-05',
       },
     }
+  }
+
+  async generateFinancesFromData(formData: FormData): Promise<GeneratedTransaction[]> {
+    // eslint-disable-next-line no-console
+    console.log('[Mock] Generating finances from FormData:', formData.get('bookingType'), formData.get('file'))
+    await new Promise(resolve => setTimeout(resolve, 1200))
+
+    // Пример ответа, имитирующий распознавание
+    return [
+      {
+        title: 'Обед в кафе (из текста)',
+        amount: 500,
+        currency: 'RUB',
+        date: '2025-10-13', // Имитация "вчера"
+      },
+      {
+        title: 'Такси (из текста)',
+        amount: 1200,
+        currency: 'RUB',
+        notes: 'До дома',
+      },
+    ]
   }
 }

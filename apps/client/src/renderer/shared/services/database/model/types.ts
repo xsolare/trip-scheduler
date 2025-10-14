@@ -22,8 +22,21 @@ export interface GeneratedBooking {
   data: any // Структура данных зависит от типа
 }
 
+/**
+ * Структура объекта транзакции, возвращаемая сервисом генерации ИИ.
+ */
+export interface GeneratedTransaction {
+  title: string
+  amount: number
+  currency: string
+  categorySuggestion?: string
+  date?: string // YYYY-MM-DD
+  notes?: string
+}
+
 export interface ILLMRepository {
   generateBookingFromData: (formData: FormData) => Promise<GeneratedBooking>
+  generateFinancesFromData: (formData: FormData) => Promise<GeneratedTransaction[]>
 }
 
 export interface ITripRepository {

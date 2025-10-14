@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCalendarRange } from '~/components/01.kit/kit-calendar-range'
 import { useFinancesSection } from '../composables'
+import AiFinancesCreator from './components/ai-finances-creator.vue'
 import BudgetSettingsDialog from './components/budget-settings-dialog.vue'
 import CategoryManagerDialog from './components/category-manager-dialog.vue'
 import FinancesDashboard from './components/finances-dashboard.vue'
@@ -30,6 +31,7 @@ const {
   isTransactionFormOpen,
   isCategoryManagerOpen,
   isSettingsOpen,
+  isAiCreatorOpen,
   transactionToEdit,
   spendingByCategory,
   spendingByDay,
@@ -40,6 +42,7 @@ const {
   toggleCategoryFilter,
   openTransactionForm,
   saveTransaction,
+  addMultipleTransactions,
   deleteTransaction,
   saveCategory,
   deleteCategory,
@@ -168,6 +171,9 @@ onClickOutside(dateFilterWrapperRef, () => {
           <KitBtn v-if="!readonly" icon="mdi:plus" @click="openTransactionForm()">
             Добавить трату
           </KitBtn>
+          <KitBtn v-if="!readonly" icon="mdi:magic-staff" variant="outlined" @click="isAiCreatorOpen = !isAiCreatorOpen">
+            AI
+          </KitBtn>
           <KitBtn v-if="!readonly" icon="mdi:tag-outline" variant="text" @click="handleOpenCategoryManager">
             Категории
           </KitBtn>
@@ -202,6 +208,15 @@ onClickOutside(dateFilterWrapperRef, () => {
           </div>
         </div>
       </div>
+    </div>
+
+    <div v-if="!readonly" v-show="isAiCreatorOpen" class="ai-creator-wrapper">
+      <AiFinancesCreator
+        :categories="categories"
+        :settings="settings"
+        @close="isAiCreatorOpen = false"
+        @save="addMultipleTransactions"
+      />
     </div>
 
     <TransactionsList
@@ -244,6 +259,14 @@ onClickOutside(dateFilterWrapperRef, () => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.ai-creator-wrapper {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-m);
+  background-color: var(--bg-secondary-color);
 }
 
 .list-controls {
@@ -318,6 +341,7 @@ onClickOutside(dateFilterWrapperRef, () => {
 
 .list-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
