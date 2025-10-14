@@ -1,6 +1,7 @@
 export enum AppRouteNames {
   Root = 'root',
   About = 'about',
+  UsefulLinks = 'useful-links',
 
   NotFound = 'not-found',
 
@@ -24,6 +25,7 @@ export enum AppRouteNames {
 export const AppRoutePaths = {
   Root: '/',
   About: '/about',
+  UsefulLinks: '/useful-links',
 
   NotFound: '/:catchAll(.*)?',
 

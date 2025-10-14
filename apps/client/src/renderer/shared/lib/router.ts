@@ -9,6 +9,7 @@ const isElectron = !!window.electronAPI
 const Root = () => import('~/pages/root.vue')
 const NotFound = () => import('~/pages/not-found.vue')
 const About = () => import('~/pages/about.vue')
+const UsefulLinks = () => import('~/pages/useful-links.vue')
 
 // --- Аутентификация ---
 const SignIn = () => import('~/pages/auth/sign-in.vue')
@@ -40,6 +41,12 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.About,
     name: AppRouteNames.About,
     component: About,
+  },
+  {
+    path: AppRoutePaths.UsefulLinks,
+    name: AppRouteNames.UsefulLinks,
+    component: UsefulLinks,
+    meta: { layout: 'default' },
   },
   {
     path: AppRoutePaths.Auth.SignIn,
@@ -117,9 +124,6 @@ const routes: RouteRecordRaw[] = [
     component: CommunityInfo,
     meta: { layout: 'default', requiresAuth: true },
   },
-  // Секции
-  // {
-  // },
 
   // --- Системные маршруты ---
   {

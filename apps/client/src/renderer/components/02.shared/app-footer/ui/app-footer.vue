@@ -9,6 +9,9 @@ import { Icon } from '@iconify/vue'
       <div class="spacer" />
 
       <div class="links">
+        <router-link :to="{ name: AppRouteNames.UsefulLinks }" class="p-link">
+          <Icon width="20" height="20" icon="mdi:link-variant" color="var(--fg-primary-color)" />
+        </router-link>
         <router-link :to="{ name: AppRouteNames.About }" class="p-link">
           <Icon width="20" height="20" icon="mdi:information-outline" color="var(--fg-primary-color)" />
         </router-link>

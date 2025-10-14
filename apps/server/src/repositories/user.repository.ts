@@ -30,7 +30,7 @@ export const userRepository = {
   async findByEmail(email: string) {
     return await db.query.users.findFirst({
       where: eq(users.email, email),
-      with: { // ИЗМЕНЕНИЕ: Также добавляем план здесь
+      with: {
         plan: true,
       },
     })

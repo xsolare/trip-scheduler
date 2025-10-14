@@ -41,5 +41,11 @@ export const totalUsersGauge = new Gauge({
   help: 'Total number of registered users in the database',
 })
 
+// 6. Gauge для количества путешествий
+export const totalTripsGauge = new Gauge({
+  name: 'total_trips_in_database',
+  help: 'Total number of trips in the database',
+})
+
 // Экспортируем register для создания эндпоинта
 export { register }

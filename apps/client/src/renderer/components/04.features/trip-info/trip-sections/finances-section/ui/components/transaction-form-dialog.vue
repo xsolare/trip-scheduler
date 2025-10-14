@@ -114,6 +114,22 @@ watch(isTimeless, (isNowTimeless) => {
         </KitCheckbox>
       </div>
 
+      <div class="category-select-wrapper span-2">
+        <KitSelectWithSearch
+          v-model="form.categoryId!"
+          :items="categoryItems"
+          label="Категория"
+          placeholder="Выберите категорию"
+        />
+        <KitBtn
+          icon="mdi:cog-outline"
+          variant="text"
+          title="Управлять категориями"
+          class="manage-categories-btn"
+          @click="$emit('openCategoryManager')"
+        />
+      </div>
+
       <div v-if="!isTimeless" ref="datePickerWrapperRef" class="date-picker-wrapper span-2">
         <label class="kit-input__label">Дата</label>
         <button type="button" class="date-input" @click="isCalendarOpen = !isCalendarOpen">
@@ -127,17 +143,16 @@ watch(isTimeless, (isNowTimeless) => {
         />
       </div>
 
-      <div class="category-select-wrapper span-2">
-        <KitSelectWithSearch
-          v-model="form.categoryId!"
-          :items="categoryItems"
-          label="Категория"
-          placeholder="Выберите категорию"
+      <div class="note-wrapper span-2">
+        <KitInput
+          v-model="form.notes"
+          type="textarea"
+          label="Заметки"
+          placeholder="Дополнительная информация"
+          :rows="4"
+          class="span-2"
         />
-        <KitBtn icon="mdi:cog-outline" variant="text" title="Управлять категориями" class="manage-categories-btn" @click="$emit('openCategoryManager')" />
       </div>
-
-      <KitInput v-model="form.notes" label="Заметки" placeholder="Дополнительная информация" class="span-2" />
 
       <div class="form-actions span-2">
         <KitBtn variant="text" @click="emit('update:visible', false)">

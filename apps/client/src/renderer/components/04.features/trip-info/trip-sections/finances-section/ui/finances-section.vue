@@ -163,42 +163,44 @@ onClickOutside(dateFilterWrapperRef, () => {
         </button>
       </div>
 
-      <div ref="dateFilterWrapperRef" class="date-filter-wrapper">
-        <KitBtn
-          icon="mdi:calendar-blank-outline"
-          variant="text"
-          @click="isDateFilterOpen = !isDateFilterOpen"
-        >
-          {{ formattedDateFilter }}
-        </KitBtn>
-        <div v-if="isDateFilterOpen" class="calendar-popover">
-          <KitCalendarRange
-            v-model="calendarDateFilter"
-            :min-value="availableDateRange.minValue"
-            :max-value="availableDateRange.maxValue"
-            :initial-focus-date="availableDateRange.maxValue"
-          />
-          <div class="popover-actions">
-            <KitBtn variant="text" size="sm" @click="clearDateFilter">
-              Сбросить
-            </KitBtn>
-            <KitBtn size="sm" @click="isDateFilterOpen = false">
-              Применить
-            </KitBtn>
+      <div class="actions-and-filters">
+        <div class="list-actions">
+          <KitBtn v-if="!readonly" icon="mdi:plus" @click="openTransactionForm()">
+            Добавить трату
+          </KitBtn>
+          <KitBtn v-if="!readonly" icon="mdi:tag-outline" variant="text" @click="handleOpenCategoryManager">
+            Категории
+          </KitBtn>
+          <KitBtn v-if="!readonly" icon="mdi:cog-outline" variant="text" @click="isSettingsOpen = true">
+            Настройки
+          </KitBtn>
+        </div>
+
+        <div ref="dateFilterWrapperRef" class="date-filter-wrapper">
+          <KitBtn
+            icon="mdi:calendar-blank-outline"
+            variant="text"
+            @click="isDateFilterOpen = !isDateFilterOpen"
+          >
+            {{ formattedDateFilter }}
+          </KitBtn>
+          <div v-if="isDateFilterOpen" class="calendar-popover">
+            <KitCalendarRange
+              v-model="calendarDateFilter"
+              :min-value="availableDateRange.minValue"
+              :max-value="availableDateRange.maxValue"
+              :initial-focus-date="availableDateRange.maxValue"
+            />
+            <div class="popover-actions">
+              <KitBtn variant="text" size="sm" @click="clearDateFilter">
+                Сбросить
+              </KitBtn>
+              <KitBtn size="sm" @click="isDateFilterOpen = false">
+                Применить
+              </KitBtn>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="list-actions">
-        <KitBtn v-if="!readonly" icon="mdi:plus" @click="openTransactionForm()">
-          Добавить трату
-        </KitBtn>
-        <KitBtn v-if="!readonly" icon="mdi:tag-outline" variant="text" @click="handleOpenCategoryManager">
-          Категории
-        </KitBtn>
-        <KitBtn v-if="!readonly" icon="mdi:cog-outline" variant="text" @click="isSettingsOpen = true">
-          Настройки
-        </KitBtn>
       </div>
     </div>
 
@@ -246,10 +248,8 @@ onClickOutside(dateFilterWrapperRef, () => {
 
 .list-controls {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .category-filter-pills {
@@ -283,9 +283,15 @@ onClickOutside(dateFilterWrapperRef, () => {
   }
 }
 
+.actions-and-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
 .date-filter-wrapper {
   position: relative;
-  margin-left: auto;
 }
 
 .calendar-popover {
@@ -316,21 +322,17 @@ onClickOutside(dateFilterWrapperRef, () => {
 }
 
 @include media-down(sm) {
-  .list-controls {
+  .actions-and-filters {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
   }
   .date-filter-wrapper {
-    margin-left: 0;
     order: 1;
   }
   .list-actions {
     order: 2;
     justify-content: flex-end;
-  }
-  .category-filter-pills {
-    order: 0;
   }
 }
 </style>

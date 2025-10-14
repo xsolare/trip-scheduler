@@ -14,18 +14,35 @@ export async function restoreSession(pinia: Pinia): Promise<void> {
   }
 
   try {
+    // Если есть access-токен, пытаемся получить пользователя
     if (authStore.tokenPair?.accessToken) {
       await authStore.me()
     }
-
+    // Если access-токена нет, но есть refresh-токен, сразу обновляем
     else if (authStore.tokenPair?.refreshToken) {
       await authStore.refresh()
       await authStore.me()
     }
   }
-  catch (error) {
-    console.error('Не удалось восстановить сессию:', error)
-    authStore.clearAuth()
+  catch {
+    // Если первая попытка не удалась (например, access-токен истек)
+    // и у нас все еще есть refresh-токен (т.к. me() его больше не удаляет).
+    if (authStore.tokenPair?.refreshToken) {
+      try {
+        console.warn('Первоначальная попытка восстановления сессии не удалась, пробую обновить токен.')
+        await authStore.refresh()
+        await authStore.me()
+      }
+      catch (refreshError) {
+        // Если и обновление не помогло, то все очищаем
+        console.error('Не удалось восстановить сессию даже после обновления токена:', refreshError)
+        authStore.clearAuth()
+      }
+    }
+    else {
+      // Если refresh-токена нет, то просто очищаем
+      authStore.clearAuth()
+    }
   }
   finally {
     authStore.isInitialized = true

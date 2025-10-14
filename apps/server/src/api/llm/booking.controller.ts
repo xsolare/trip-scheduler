@@ -2,7 +2,7 @@ import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { authUtils } from '~/lib/auth.utils'
-import { bookingGenerationService } from '~/services/booking-generation.service'
+import { bookingGenerationService } from '~/services/llm/booking-generation.service'
 
 const bookingController = new Hono()
 

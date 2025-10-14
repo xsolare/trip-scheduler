@@ -20,7 +20,7 @@ export enum EAuthRequestKeys {
 
 export interface IAuthState {
   user: User | null
-  tokenPair: TokenPair | null
+  tokenPair: Partial<TokenPair>
   isInitialized: boolean
 }
 
@@ -34,10 +34,7 @@ export const useAuthStore = defineStore('auth', {
     return {
       isInitialized: false,
       user: null,
-      tokenPair:
-        accessToken.value && refreshToken.value
-          ? { accessToken: accessToken.value, refreshToken: refreshToken.value }
-          : null,
+      tokenPair: { accessToken: accessToken.value ?? null, refreshToken: refreshToken.value ?? null } as Partial<TokenPair>,
     }
   },
 
@@ -69,7 +66,7 @@ export const useAuthStore = defineStore('auth', {
           this.user = data
         },
         onError: (error) => {
-          this.clearAuth()
+          this.user = null
           throw error
         },
       })

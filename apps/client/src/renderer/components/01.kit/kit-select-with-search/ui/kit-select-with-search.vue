@@ -256,8 +256,7 @@ onClickOutside(wrapperRef, handleClose)
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--fg-secondary-color);
-    padding-left: 4px;
-    cursor: pointer; // [ИЗМЕНЕНИЕ] 3. Добавлен курсор
+    cursor: pointer;
   }
 }
 
