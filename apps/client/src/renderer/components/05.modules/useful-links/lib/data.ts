@@ -6,6 +6,7 @@ export const linkCategories: LinkCategory[] = [
     icon: 'mdi:airplane',
     links: [
       { name: 'Aviasales', url: 'https://www.aviasales.ru/', description: 'Популярный агрегатор для поиска дешевых авиабилетов.', recommended: true, tags: ['агрегатор', 'бюджетно'] },
+      { name: 'Trip.com', url: 'https://www.trip.com/', description: 'Крупное онлайн-агентство для бронирования авиабилетов, отелей и другого.', recommended: true, tags: ['агрегатор', 'отели', 'комплексный поиск'] },
       { name: 'Skyscanner', url: 'https://www.skyscanner.ru/', description: 'Глобальный поисковик авиабилетов, отелей и проката автомобилей.', tags: ['агрегатор', 'комплексный поиск'] },
       { name: 'Kiwi.com', url: 'https://www.kiwi.com/', description: 'Находит уникальные маршруты, комбинируя рейсы разных авиакомпаний.', tags: ['сложные маршруты'] },
       { name: 'Google Flights', url: 'https://www.google.com/flights', description: 'Сервис от Google для поиска и сравнения авиабилетов.', tags: ['агрегатор', 'карта цен'] },

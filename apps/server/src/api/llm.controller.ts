@@ -34,6 +34,7 @@ async function generateBookingController(c: Context) {
   try {
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const generatedData = await bookingGenerationService.generateBookingFromFile({
+      userId: payload.id,
       fileBuffer,
       fileName: file.name,
       bookingType,
@@ -73,6 +74,7 @@ async function generateFinancesController(c: Context) {
     const fileBuffer = file ? Buffer.from(await file.arrayBuffer()) : undefined
 
     const generatedData = await financesGenerationService.generateTransactionsFromData({
+      userId: payload.id,
       fileBuffer,
       fileName: file?.name,
       text,

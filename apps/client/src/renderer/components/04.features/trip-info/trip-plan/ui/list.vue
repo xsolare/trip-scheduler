@@ -88,7 +88,7 @@ const draggableActivities = computed({
 
 <style scoped lang="scss">
 .day-activities {
-  margin-bottom: 16px;
+  margin-bottom: 32px;
 
   .activities-container {
     width: 100%;

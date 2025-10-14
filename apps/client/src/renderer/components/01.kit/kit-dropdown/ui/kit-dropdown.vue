@@ -14,11 +14,13 @@ const props = withDefaults(defineProps<{
   modelValue?: T | null
   sideOffset?: number
   align?: 'start' | 'center' | 'end'
+  size?: 'sm' | 'md' | 'lg'
 }>(), {
   items: () => [],
   modelValue: null,
   sideOffset: 8,
   align: 'start',
+  size: 'md',
 })
 
 const emit = defineEmits<{
@@ -50,7 +52,7 @@ function handleSelect(item: KitDropdownItem<T>) {
             v-for="item in props.items"
             :key="String(item.value)"
             class="kit-dropdown-item"
-            :class="{ active: modelValue === item.value }"
+            :class="[`kit-dropdown-item--${size}`, { active: modelValue === item.value }]"
             @click="handleSelect(item)"
           >
             <Icon v-if="item.icon" :icon="item.icon" class="item-icon" />
@@ -80,12 +82,33 @@ function handleSelect(item: KitDropdownItem<T>) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
   border-radius: var(--r-xs);
   cursor: pointer;
   transition: background-color 0.2s ease;
   outline: none;
-  font-size: 0.95rem;
+
+  // --- Sizing ---
+  &--sm {
+    padding: 6px 10px;
+    font-size: 0.875rem;
+    .item-icon {
+      font-size: 1rem;
+    }
+  }
+  &--md {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    .item-icon {
+      font-size: 1.1rem;
+    }
+  }
+  &--lg {
+    padding: 10px 14px;
+    font-size: 1rem;
+    .item-icon {
+      font-size: 1.2rem;
+    }
+  }
 
   &:hover,
   &[data-highlighted] {
@@ -114,7 +137,6 @@ function handleSelect(item: KitDropdownItem<T>) {
 }
 
 .item-icon {
-  font-size: 1.1rem;
   color: var(--fg-secondary-color);
 }
 

@@ -6,7 +6,7 @@ register.setDefaultLabels({
 })
 
 // Собирает event loop lag, gc stats, heap usage и т.д.
-collectDefaultMetrics({ prefix: 'nodejs_' })
+collectDefaultMetrics()
 
 // 1. Счетчик HTTP-запросов
 export const httpRequestCounter = new Counter({

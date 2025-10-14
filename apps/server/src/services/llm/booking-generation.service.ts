@@ -2,8 +2,11 @@ import type { AiRequestPrompts } from '~/lib/llm'
 import { TRPCError } from '@trpc/server'
 import { PDFParse } from 'pdf-parse'
 import { createAiChatRequest } from '~/lib/llm'
+import { llmUsageRepository } from '~/repositories/llm-usage.repository'
+import { quotaService } from '~/services/quota.service'
 
 interface GenerateBookingParams {
+  userId: string
   fileBuffer: Buffer
   fileName: string
   bookingType: string
@@ -120,10 +123,12 @@ Now, provide the JSON response based on the system instructions.
 `
 }
 
-async function generateBookingFromFile({ fileBuffer, fileName, bookingType, notes }: GenerateBookingParams) {
+async function generateBookingFromFile({ userId, fileBuffer, fileName, bookingType, notes }: GenerateBookingParams) {
+  await quotaService.checkLlmCreditQuota(userId)
+
   const prompts: AiRequestPrompts = {
     system: getSystemPrompt(bookingType),
-    user: '', // Будет заполнено ниже
+    user: '',
   }
 
   const isImage = /\.(?:png|jpg|jpeg)$/i.test(fileName)
@@ -158,9 +163,27 @@ async function generateBookingFromFile({ fileBuffer, fileName, bookingType, note
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Неподдерживаемый тип файла. Поддерживаются PDF, PNG, JPG.' })
   }
 
+  const modelId = 'gemini-2.5-pro'
   const completion = await createAiChatRequest(prompts, {
-    model: 'gemini-2.5-pro',
+    model: modelId,
   })
+
+  if (completion.usage) {
+    await quotaService.deductLlmCredits(
+      userId,
+      modelId,
+      completion.usage.prompt_tokens,
+      completion.usage.completion_tokens,
+    )
+
+    await llmUsageRepository.create({
+      userId,
+      model: modelId,
+      operation: 'bookingGeneration',
+      inputTokens: completion.usage.prompt_tokens,
+      outputTokens: completion.usage.completion_tokens,
+    })
+  }
 
   const jsonResponse = completion.choices[0].message.content
   if (!jsonResponse)

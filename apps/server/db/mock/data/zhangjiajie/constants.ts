@@ -1,4 +1,8 @@
-import { MOCK_USER_ID_1 } from 'db/mock/00.user'
+import { MOCK_USER_ID_1 } from 'db/mock/00.users'
+import {
+  getMemoriesPath as getMemoriesPathFromLib,
+  getRoutePath as getRoutePathFromLib,
+} from 'db/mock/data/lib/helpers'
 
 export const TRIP_ID = 'c0417422-b266-4242-91e8-f9a7d852a9fd'
 export const USER_ID = MOCK_USER_ID_1
@@ -23,4 +27,5 @@ export const DAY_IDS = {
 }
 
 // Хелпер для формирования путей к изображениям
-export const getRoutePath = (filename: string) => `trips/${TRIP_ID}/route/${filename}`
+export const getMemoriesPath = (filename: string) => getMemoriesPathFromLib(filename, TRIP_ID)
+export const getRoutePath = (filename: string) => getRoutePathFromLib(filename, TRIP_ID)

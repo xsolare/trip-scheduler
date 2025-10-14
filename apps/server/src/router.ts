@@ -5,6 +5,7 @@ import { commentRouter } from './modules/comment/comment.router'
 import { communityRouter } from './modules/community/community.router'
 import { dayRouter } from './modules/day/day.router'
 import { imageRouter } from './modules/image/image.router'
+import { llmUsageRouter } from './modules/llm-usage/llm-usage.router'
 import { memoryRouter } from './modules/memory/memory.router'
 import { tripSectionRouter } from './modules/trip-section/trip-section.router'
 import { tripRouter } from './modules/trip/trip.router'
@@ -21,6 +22,7 @@ export const appRouter = router({
   comment: commentRouter,
   account: accountRouter,
   community: communityRouter,
+  llmUsage: llmUsageRouter,
 })
 
 export type AppRouter = typeof appRouter

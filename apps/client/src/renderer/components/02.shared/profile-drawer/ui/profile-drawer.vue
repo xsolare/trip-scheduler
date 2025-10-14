@@ -57,6 +57,16 @@ const secondaryMenuItems = [
       open.value = false
     },
   },
+  {
+    label: 'Полезные ссылки',
+    icon: 'mdi:link-variant',
+    action: () => {
+      router.push({
+        name: AppRouteNames.UsefulLinks,
+      })
+      open.value = false
+    },
+  },
 ]
 
 async function handleLogout() {

@@ -44,7 +44,7 @@ function handleSelectNextDay() {
   align-items: center;
   padding: 24px 0;
   border-top: 1px solid var(--border-secondary-color);
-  margin-top: auto;
+  margin-top: 64px;
 }
 
 .nav-button {

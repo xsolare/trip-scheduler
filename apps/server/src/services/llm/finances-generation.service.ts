@@ -1,8 +1,11 @@
 import type { AiRequestPrompts } from '~/lib/llm'
 import { TRPCError } from '@trpc/server'
 import { createAiChatRequest } from '~/lib/llm'
+import { llmUsageRepository } from '~/repositories/llm-usage.repository'
+import { quotaService } from '~/services/quota.service'
 
 interface GenerateFinancesParams {
+  userId: string
   fileBuffer?: Buffer
   fileName?: string
   text?: string | null
@@ -63,7 +66,9 @@ function getUserPrompt(text: string | null, notes: string | null): AiRequestProm
   return parts
 }
 
-async function generateTransactionsFromData({ fileBuffer, fileName, text, notes }: GenerateFinancesParams): Promise<GeneratedTransaction[]> {
+async function generateTransactionsFromData({ userId, fileBuffer, fileName, text, notes }: GenerateFinancesParams): Promise<GeneratedTransaction[]> {
+  await quotaService.checkLlmCreditQuota(userId)
+
   const prompts: AiRequestPrompts = {
     system: getSystemPrompt(),
     user: getUserPrompt(text!, notes!),
@@ -72,7 +77,7 @@ async function generateTransactionsFromData({ fileBuffer, fileName, text, notes 
   const isImage = fileName && /\.(?:png|jpg|jpeg)$/i.test(fileName)
 
   if (isImage && fileBuffer) {
-    if (!Array.isArray(prompts.user)) { // Should always be an array from getUserPrompt
+    if (!Array.isArray(prompts.user)) {
       prompts.user = [{ type: 'text', text: prompts.user as string }]
     }
     (prompts.user as any[]).push({
@@ -86,10 +91,28 @@ async function generateTransactionsFromData({ fileBuffer, fileName, text, notes 
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'No text or valid image provided for analysis.' })
   }
 
+  const modelId = 'gemini-2.5-pro'
   const completion = await createAiChatRequest(prompts, {
-    model: 'gemini-2.5-pro', // A model that supports vision is required for image analysis
+    model: modelId,
     response_format: { type: 'json_object' },
   })
+
+  if (completion.usage) {
+    await quotaService.deductLlmCredits(
+      userId,
+      modelId,
+      completion.usage.prompt_tokens,
+      completion.usage.completion_tokens,
+    )
+
+    await llmUsageRepository.create({
+      userId,
+      model: modelId,
+      operation: 'financesGeneration',
+      inputTokens: completion.usage.prompt_tokens,
+      outputTokens: completion.usage.completion_tokens,
+    })
+  }
 
   const jsonResponse = completion.choices[0].message.content
   if (!jsonResponse) {
@@ -97,11 +120,9 @@ async function generateTransactionsFromData({ fileBuffer, fileName, text, notes 
   }
 
   try {
-    // Attempt to clean markdown code blocks if they exist, then parse.
     const cleanedResponse = jsonResponse.replace(/```json|```/g, '').trim()
     const parsedData = JSON.parse(cleanedResponse)
 
-    // The response could be the array directly, or an object containing the array.
     if (Array.isArray(parsedData)) {
       return parsedData
     }

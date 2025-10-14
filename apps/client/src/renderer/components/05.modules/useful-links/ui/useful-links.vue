@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { KitBtn } from '~/components/01.kit/kit-btn'
+import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitInput } from '~/components/01.kit/kit-input'
+import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
 import { useUsefulLinks } from '~/components/05.modules/useful-links/composables/use-useful-links'
 
 const {
@@ -15,6 +18,20 @@ const {
 } = useUsefulLinks()
 
 const viewMode = ref<'grid' | 'list'>('grid')
+
+const sortOptions = [
+  { value: 'default', label: 'По умолчанию', icon: 'mdi:sort' },
+  { value: 'alphabetical', label: 'По алфавиту', icon: 'mdi:sort-alphabetical' },
+]
+
+const viewModeItems = [
+  { id: 'grid', label: 'Сетка', icon: 'mdi:view-grid-outline' },
+  { id: 'list', label: 'Список', icon: 'mdi:view-list-outline' },
+]
+
+const currentSortOption = computed(() => {
+  return sortOptions.find(opt => opt.value === sortOrder.value) || sortOptions[0]
+})
 
 function getFaviconUrl(url: string) {
   try {
@@ -65,28 +82,30 @@ function scrollToCategory(id: string) {
           v-model="searchQuery"
           placeholder="Поиск по названию или описанию..."
           icon="mdi:magnify"
-          size="lg"
+          size="md"
         />
       </div>
 
       <!-- Управление отображением -->
       <div class="view-controls">
-        <select v-model="sortOrder" class="sort-select">
-          <option value="default">
-            Сортировка: по умолчанию
-          </option>
-          <option value="alphabetical">
-            Сортировка: по алфавиту
-          </option>
-        </select>
-        <div class="view-toggle">
-          <button :class="{ active: viewMode === 'grid' }" title="Сетка" @click="viewMode = 'grid'">
-            <Icon icon="mdi:view-grid-outline" />
-          </button>
-          <button :class="{ active: viewMode === 'list' }" title="Список" @click="viewMode = 'list'">
-            <Icon icon="mdi:view-list-outline" />
-          </button>
-        </div>
+        <KitDropdown
+          v-model="sortOrder"
+          :items="sortOptions"
+          align="end"
+          size="md"
+        >
+          <template #trigger>
+            <KitBtn
+              :icon="currentSortOption.icon"
+              variant="outlined"
+              color="secondary"
+              size="md"
+            >
+              {{ `Сортировка: ${currentSortOption.label}` }}
+            </KitBtn>
+          </template>
+        </KitDropdown>
+        <KitViewSwitcher v-model="viewMode" :items="viewModeItems" />
       </div>
     </div>
 
@@ -213,40 +232,6 @@ function scrollToCategory(id: string) {
   align-items: center;
 }
 
-.sort-select {
-  background-color: var(--bg-secondary-color);
-  border: 1px solid var(--border-secondary-color);
-  color: var(--fg-primary-color);
-  border-radius: var(--r-m);
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  height: 44px; // Align with input
-}
-
-.view-toggle {
-  display: flex;
-  background-color: var(--bg-secondary-color);
-  border: 1px solid var(--border-secondary-color);
-  border-radius: var(--r-m);
-  padding: 2px;
-
-  button {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    padding: 0.4rem 0.6rem;
-    cursor: pointer;
-    color: var(--fg-tertiary-color);
-    border-radius: var(--r-s);
-    transition: all 0.2s ease;
-
-    &.active {
-      background-color: var(--bg-hover-color);
-      color: var(--fg-accent-color);
-    }
-  }
-}
-
 .tags-filter {
   display: flex;
   flex-wrap: wrap;
@@ -291,7 +276,7 @@ function scrollToCategory(id: string) {
   background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-l);
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
 }
