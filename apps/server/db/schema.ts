@@ -77,6 +77,7 @@ export const plans = pgTable('plans', {
   name: text('name').notNull().unique(), // e.g., "Free", "Pro"
   maxTrips: integer('max_trips').notNull().default(1),
   maxStorageBytes: bigint('max_storage_bytes', { mode: 'number' }).notNull().default(ONE_GIGABYTE_IN_BYTES),
+  monthlyLlmCredits: bigint('monthly_llm_credits', { mode: 'number' }).notNull().default(100000), // Лимит кредитов в месяц
   isDeveloping: boolean('is_developing').default(false).notNull(),
 })
 
@@ -96,9 +97,11 @@ export const users = pgTable('users', {
   googleId: text('google_id').unique(),
 
   // --- ПОЛЯ ДЛЯ КВОТ ---
-  planId: integer('plan_id').references(() => plans.id).notNull().default(1), // FK на тарифный план
+  planId: integer('plan_id').references(() => plans.id).notNull().default(1),
   currentTripsCount: integer('current_trips_count').notNull().default(0),
   currentStorageBytes: bigint('current_storage_bytes', { mode: 'number' }).notNull().default(0),
+  llmCreditsUsed: bigint('llm_credits_used', { mode: 'number' }).notNull().default(0),
+  llmCreditsPeriodStartDate: timestamp('llm_credits_period_start_date', { withTimezone: true }).defaultNow().notNull(),
 
   // --- ПОЛЯ ДЛЯ СТАТУСА ---
   statusText: text('status_text'),
@@ -233,6 +236,31 @@ export const memories = pgTable('memories', {
 })
 
 // ===============================================
+// ================ МОДЕЛИ LLM И ЦЕНЫ ============
+// ===============================================
+export const llmModels = pgTable('llm_models', {
+  id: text('id').primaryKey(), // e.g., 'gemini-2.5-pro'
+  costPerMillionInputTokens: real('cost_per_million_input_tokens').notNull().default(0),
+  costPerMillionOutputTokens: real('cost_per_million_output_tokens').notNull().default(0),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ===============================================
+// =========== ИСПОЛЬЗОВАНИЕ ТОКЕНОВ LLM =========
+// ===============================================
+export const llmTokenUsage = pgTable('llm_token_usage', {
+  id: serial('id').primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  model: text('model').notNull().references(() => llmModels.id, { onDelete: 'set null' }),
+  operation: text('operation').notNull(), // e.g., 'bookingGeneration', 'financesGeneration'
+  inputTokens: integer('input_tokens').notNull(),
+  outputTokens: integer('output_tokens').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => ({
+  userIdIndex: index('llm_usage_user_id_idx').on(t.userId),
+}))
+
+// ===============================================
 // ================= СООБЩЕСТВА ==================
 // ===============================================
 
@@ -257,11 +285,28 @@ export const communityMembers = pgTable('community_members', {
   pk: primaryKey({ columns: [t.communityId, t.userId] }),
 }))
 
+export const commentParentTypeEnum = pgEnum('comment_parent_type', ['trip', 'day'])
+
+export const comments = pgTable('comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  text: text('text').notNull(),
+
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+
+  // Полиморфная связь
+  parentId: uuid('parent_id').notNull(),
+  parentType: commentParentTypeEnum('parent_type').notNull(),
+
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => ({
+  parentIndex: index('parent_idx').on(t.parentId),
+}))
+
 // ===============================================
 // =================== СВЯЗИ =====================
 // ===============================================
 
-// Отношения
 export const tripsRelations = relations(trips, ({ one, many }) => ({
   user: one(users, {
     fields: [trips.userId],
@@ -325,31 +370,11 @@ export const memoriesRelations = relations(memories, ({ one }) => ({
   }),
 }))
 
-export const commentParentTypeEnum = pgEnum('comment_parent_type', ['trip', 'day'])
-
-export const comments = pgTable('comments', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  text: text('text').notNull(),
-
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-
-  // Полиморфная связь
-  parentId: uuid('parent_id').notNull(),
-  parentType: commentParentTypeEnum('parent_type').notNull(),
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, t => ({
-  parentIndex: index('parent_idx').on(t.parentId),
-}))
-
 export const commentsRelations = relations(comments, ({ one }) => ({
   user: one(users, {
     fields: [comments.userId],
     references: [users.id],
   }),
-  // Обратные связи к trip, day, activity не указываем здесь из-за полиморфизма,
-  // будем делать join в запросах
 }))
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -357,15 +382,31 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   refreshTokens: many(refreshTokens),
   tripParticipations: many(tripParticipants),
   comments: many(comments),
-  plan: one(plans, { // Связь пользователя с его планом
+  plan: one(plans, {
     fields: [users.planId],
     references: [plans.id],
   }),
-  communityMemberships: many(communityMembers), // Пользователь может состоять во многих сообществах
+  communityMemberships: many(communityMembers),
+  llmTokenUsage: many(llmTokenUsage),
+}))
+
+export const llmTokenUsageRelations = relations(llmTokenUsage, ({ one }) => ({
+  user: one(users, {
+    fields: [llmTokenUsage.userId],
+    references: [users.id],
+  }),
+  llmModel: one(llmModels, {
+    fields: [llmTokenUsage.model],
+    references: [llmModels.id],
+  }),
+}))
+
+export const llmModelsRelations = relations(llmModels, ({ many }) => ({
+  usageRecords: many(llmTokenUsage),
 }))
 
 export const plansRelations = relations(plans, ({ many }) => ({
-  users: many(users), // Связь плана с пользователями
+  users: many(users),
 }))
 
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
@@ -375,7 +416,6 @@ export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   }),
 }))
 
-// Связи для Сообществ
 export const communitiesRelations = relations(communities, ({ one, many }) => ({
   owner: one(users, {
     fields: [communities.ownerId],

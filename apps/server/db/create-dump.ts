@@ -8,6 +8,10 @@ async function createDump() {
   console.log('🎬 Начало создания дампа базы данных...')
 
   try {
+    const allUsers = await db.query.users.findMany()
+    const allCommunities = await db.query.communities.findMany()
+    const allCommunityMembers = await db.query.communityMembers.findMany()
+
     const allTrips = await db.query.trips.findMany({
       with: {
         user: true,
@@ -25,24 +29,22 @@ async function createDump() {
         memories: {
           orderBy: (memories, { asc }) => [asc(memories.timestamp)],
         },
+        participants: true,
+        sections: {
+          orderBy: (sections, { asc }) => [asc(sections.order)],
+        },
       },
       orderBy: (trips, { desc }) => [desc(trips.createdAt)],
     })
 
-    console.log(`🔍 Найдено ${allTrips.length} путешествий для дампа.`)
+    console.log(`🔍 Найдено ${allUsers.length} пользователей, ${allCommunities.length} сообществ и ${allTrips.length} путешествий для дампа.`)
 
-    const serializableData = allTrips.map(trip => ({
-      ...trip,
-      startDate: trip.startDate,
-      endDate: trip.endDate,
-      days: trip.days.map(day => ({
-        ...day,
-        date: day.date,
-        activities: day.activities.map(activity => ({
-          ...activity,
-        })),
-      })),
-    }))
+    const serializableData = {
+      users: allUsers,
+      communities: allCommunities,
+      communityMembers: allCommunityMembers,
+      trips: allTrips,
+    }
 
     const dumpDir = path.join(__dirname, 'dump')
     await fs.mkdir(dumpDir, { recursive: true })

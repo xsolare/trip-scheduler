@@ -7,11 +7,16 @@ import { FREE_PLAN_ID, ONE_GIGABYTE_IN_BYTES } from '~/lib/constants'
 import { db } from './index'
 import {
   activities,
+  comments,
   communities,
   communityMembers,
   days,
+  emailVerificationTokens,
+  llmModels,
+  llmTokenUsage,
   memories,
   plans,
+  refreshTokens,
   tripImages,
   tripParticipants,
   trips,
@@ -86,23 +91,44 @@ async function seed() {
   }
 
   console.log('🗑️  Очистка старых данных...')
+  // Порядок важен из-за foreign keys
+  await db.delete(llmTokenUsage)
+  await db.delete(llmModels)
   await db.delete(memories)
   await db.delete(activities)
   await db.delete(days)
+  await db.delete(comments)
   await db.delete(tripSections)
   await db.delete(tripImages)
   await db.delete(tripParticipants)
   await db.delete(trips)
   await db.delete(communityMembers)
   await db.delete(communities)
+  await db.delete(refreshTokens)
+  await db.delete(emailVerificationTokens)
   await db.delete(users)
   await db.delete(plans)
 
   console.log('⭐ Создание тарифных планов...')
   await db.insert(plans).values([
-    { id: FREE_PLAN_ID, name: 'Базовый', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES, isDeveloping: false },
-    { id: 2, name: 'Про', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES, isDeveloping: false },
-    { id: 3, name: 'Командный', maxTrips: 999, maxStorageBytes: 100 * ONE_GIGABYTE_IN_BYTES, isDeveloping: true },
+    // $1.00 / месяц в кредитах
+    { id: FREE_PLAN_ID, name: 'Базовый', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 100000, isDeveloping: false },
+    // $10.00 / месяц в кредитах
+    { id: 2, name: 'Про', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 1000000, isDeveloping: false },
+    // $50.00 / месяц в кредитах
+    { id: 3, name: 'Командный', maxTrips: 999, maxStorageBytes: 100 * ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 5000000, isDeveloping: true },
+  ])
+
+  console.log('🤖 Заполнение цен на LLM модели...')
+  await db.insert(llmModels).values([
+    { id: 'gemini-2.5-pro', costPerMillionInputTokens: 1.25, costPerMillionOutputTokens: 10.0 },
+    { id: 'claude-sonnet-4-5', costPerMillionInputTokens: 3.3, costPerMillionOutputTokens: 16.5 },
+    { id: 'gpt-5-codex', costPerMillionInputTokens: 1.25, costPerMillionOutputTokens: 10.0 },
+    { id: 'o3', costPerMillionInputTokens: 2.0, costPerMillionOutputTokens: 8.0 },
+    { id: 'o4-mini', costPerMillionInputTokens: 1.1, costPerMillionOutputTokens: 4.4 },
+    { id: 'gpt-4.1', costPerMillionInputTokens: 2.0, costPerMillionOutputTokens: 8.0 },
+    // Добавляем модели, которые используются в коде, чтобы избежать ошибок
+    { id: 'gemini-flash-latest', costPerMillionInputTokens: 0.5, costPerMillionOutputTokens: 1.5 },
   ])
 
   console.log('✈️  Подготовка данных для вставки...')
@@ -165,7 +191,6 @@ async function seed() {
     if (mockImages) {
       const processedImages = mockImages.map((image: any) => ({
         ...image,
-        // Если originalName не указан, извлекаем его из URL
         originalName: image.originalName || image.url.split('/').pop(),
       }))
       imagesToInsert.push(...processedImages)
@@ -183,7 +208,6 @@ async function seed() {
 
   console.log(`✈️  Вставка ${usersToInsert.length} пользователей, ${tripsToInsert.length} путешествий, ${communitiesToInsert.length} сообществ...`)
 
-  // Вставка в правильном порядке для соблюдения foreign key constraints
   if (usersToInsert.length > 0)
     await db.insert(users).values(usersToInsert.map(u => ({ ...u, planId: FREE_PLAN_ID })))
 

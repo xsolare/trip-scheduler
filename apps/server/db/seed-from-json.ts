@@ -2,8 +2,22 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
+import { FREE_PLAN_ID, ONE_GIGABYTE_IN_BYTES } from '~/lib/constants'
 import { db } from './index'
-import { activities, communities, communityMembers, days, memories, plans, tripImages, trips, tripSections, users } from './schema'
+import {
+  activities,
+  comments,
+  communities,
+  communityMembers,
+  days,
+  memories,
+  plans,
+  tripImages,
+  tripParticipants,
+  trips,
+  tripSections,
+  users,
+} from './schema'
 
 /**
  * Находит самый последний по времени создания файл дампа в директории db/dump.
@@ -49,43 +63,72 @@ async function seedFromJson() {
     console.log(`🔍 Найден последний файл дампа: ${path.basename(dumpFile)}`)
   }
 
-  let sourceTrips: any[]
+  let dumpData
   try {
     const fileContent = await fs.readFile(dumpFile, 'utf-8')
-    sourceTrips = JSON.parse(fileContent)
+    dumpData = JSON.parse(fileContent)
   }
   catch (error) {
     console.error(`❌ Ошибка при чтении или парсинге файла дампа ${dumpFile}:`, error)
     process.exit(1)
   }
 
-  if (!Array.isArray(sourceTrips) || sourceTrips.length === 0) {
-    console.warn('⚠️ Файл дампа пуст или имеет неверный формат. Заполнение базы данных пропущено.')
+  const { users: sourceUsers, communities: sourceCommunities, communityMembers: sourceMembers, trips: sourceTrips } = dumpData
+
+  if (!Array.isArray(sourceTrips) || !Array.isArray(sourceUsers)) {
+    console.warn('⚠️ Файл дампа имеет неверный формат. Заполнение базы данных пропущено.')
     process.exit(0)
   }
 
-  console.log('🗑️  Очистка старых данных (путешествия, дни, активности, изображения, воспоминания)...')
+  console.log('🗑️  Очистка старых данных...')
+  // Порядок важен из-за foreign keys
   await db.delete(memories)
   await db.delete(activities)
   await db.delete(days)
+  await db.delete(comments)
   await db.delete(tripSections)
   await db.delete(tripImages)
+  await db.delete(tripParticipants)
   await db.delete(trips)
   await db.delete(communityMembers)
   await db.delete(communities)
   await db.delete(users)
   await db.delete(plans)
 
+  console.log('⭐ Создание тарифных планов...')
+  await db.insert(plans).values([
+    { id: FREE_PLAN_ID, name: 'Базовый', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 100000, isDeveloping: false },
+    { id: 2, name: 'Про', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 1000000, isDeveloping: false },
+    { id: 3, name: 'Командный', maxTrips: 999, maxStorageBytes: 100 * ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 5000000, isDeveloping: true },
+  ])
+
   console.log('✈️  Подготовка данных для вставки...')
+
+  if (sourceUsers.length > 0) {
+    console.log(`👤 Вставка ${sourceUsers.length} пользователей...`)
+    await db.insert(users).values(sourceUsers)
+  }
+
+  if (sourceCommunities.length > 0) {
+    console.log(`🏘️  Вставка ${sourceCommunities.length} сообществ...`)
+    await db.insert(communities).values(sourceCommunities)
+  }
+
+  if (sourceMembers.length > 0) {
+    console.log(`👥 Вставка ${sourceMembers.length} участников сообществ...`)
+    await db.insert(communityMembers).values(sourceMembers)
+  }
 
   const tripsToInsert: (typeof trips.$inferInsert)[] = []
   const daysToInsert: (typeof days.$inferInsert)[] = []
   const activitiesToInsert: (typeof activities.$inferInsert)[] = []
   const imagesToInsert: (typeof tripImages.$inferInsert)[] = []
   const memoriesToInsert: (typeof memories.$inferInsert)[] = []
+  const sectionsToInsert: (typeof tripSections.$inferInsert)[] = []
+  const participantsToInsert: (typeof tripParticipants.$inferInsert)[] = []
 
   for (const tripData of sourceTrips) {
-    const { days: tripDays, images: tripImagesData, memories: tripMemories, ...tripDetails } = tripData
+    const { days: tripDays, images: tripImagesData, memories: tripMemories, sections, participants, ...tripDetails } = tripData
 
     tripsToInsert.push({
       ...tripDetails,
@@ -94,6 +137,12 @@ async function seedFromJson() {
       createdAt: new Date(tripDetails.createdAt),
       updatedAt: new Date(tripDetails.updatedAt),
     })
+
+    if (sections)
+      sectionsToInsert.push(...sections)
+
+    if (participants)
+      participantsToInsert.push(...participants)
 
     if (tripDays) {
       for (const day of tripDays) {
@@ -127,10 +176,14 @@ async function seedFromJson() {
     }
   }
 
-  console.log(`✈️  Вставка ${tripsToInsert.length} путешествий, ${daysToInsert.length} дней, ${activitiesToInsert.length} активностей, ${imagesToInsert.length} изображений и ${memoriesToInsert.length} воспоминаний...`)
+  console.log(`✈️  Вставка ${tripsToInsert.length} путешествий и всех связанных данных...`)
 
   if (tripsToInsert.length > 0)
     await db.insert(trips).values(tripsToInsert)
+  if (sectionsToInsert.length > 0)
+    await db.insert(tripSections).values(sectionsToInsert)
+  if (participantsToInsert.length > 0)
+    await db.insert(tripParticipants).values(participantsToInsert)
   if (daysToInsert.length > 0)
     await db.insert(days).values(daysToInsert)
   if (imagesToInsert.length > 0)
