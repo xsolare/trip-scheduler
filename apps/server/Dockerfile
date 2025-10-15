@@ -5,7 +5,7 @@ FROM oven/bun:1-slim AS builder
 WORKDIR /usr/src/app
 
 # Копируем файлы зависимостей
-COPY package.json bun.lock ./
+COPY package.json ./
 
 # Устанавливаем ВСЕ зависимости, включая devDependencies, для сборки
 RUN bun install
