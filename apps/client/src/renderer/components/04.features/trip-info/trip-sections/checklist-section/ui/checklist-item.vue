@@ -69,11 +69,14 @@ function handleLinkUpdate(value: string) {
           @update:model-value="updateField('completed', !!$event)"
         />
         <KitEditable
+          v-if="!readonly"
           :model-value="item.text"
-          :readonly="readonly"
           class="item-text"
           @update:model-value="updateField('text', $event)"
         />
+        <div v-else class="item-text">
+          {{ item.text }}
+        </div>
         <div class="item-actions">
           <button v-if="!readonly" class="action-btn" :class="{ 'is-active': item.link }" title="Добавить/Изменить ссылку" @click="isEditingLink = !isEditingLink">
             <Icon icon="mdi:paperclip" />
@@ -140,7 +143,7 @@ function handleLinkUpdate(value: string) {
         <!-- Блок для заметки -->
         <div v-if="item.description || isEditingDescription" class="detail-block">
           <div class="icon-wrapper">
-            <Icon icon="mdi:text-box-outline" class="detail-icon" />
+            <Icon icon="mdi:text-box-outline" class="detail-icon" width="14" height="14" />
           </div>
           <KitEditable
             v-if="isEditingDescription"
@@ -169,6 +172,7 @@ function handleLinkUpdate(value: string) {
   transition: all 0.2s ease;
   border: 1px solid var(--border-secondary-color);
   padding: 0.375rem 0.5rem;
+  gap: 4px;
 
   // --- Priority Styles ---
   border-left: 3px solid transparent;
@@ -203,7 +207,7 @@ function handleLinkUpdate(value: string) {
 .main-line {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   min-height: 28px;
   margin-left: 6px;
 }
@@ -245,6 +249,7 @@ function handleLinkUpdate(value: string) {
   min-width: 0;
   padding: 4px 0;
   line-height: 1.4;
+  font-size: 1rem;
 }
 
 .item-actions {
@@ -276,23 +281,22 @@ function handleLinkUpdate(value: string) {
 .item-details-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin: 2px 0 4px 32px;
-  padding: 2px 8px;
-  background-color: var(--bg-secondary-color);
-  border-radius: var(--r-s);
-  border: 1px solid var(--border-tertiary-color);
+  margin: 2px 0 4px 6px;
+  padding: 2px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-secondary-color);
 }
 
 .detail-block {
   display: flex;
-  gap: 0.75rem;
+  gap: 8px;
   align-items: center;
 }
 
 .icon-wrapper {
   flex-shrink: 0;
-  height: 24px;
+  height: 20px;
+  width: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -331,7 +335,7 @@ function handleLinkUpdate(value: string) {
 
 .detail-text {
   width: 100%;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   line-height: 1.5;
   color: var(--fg-secondary-color);
   white-space: pre-wrap;

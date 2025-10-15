@@ -120,7 +120,7 @@ const colorClass = computed(() => `is-color-${props.color}`)
 
   &.is-color-tertiary {
     &:hover:not([data-disabled]) {
-      border-color: var(--border-tertiary-color);
+      border-color: var(--border-secondary-color);
     }
     &[data-state='checked'] {
       background-color: var(--fg-tertiary-color);
