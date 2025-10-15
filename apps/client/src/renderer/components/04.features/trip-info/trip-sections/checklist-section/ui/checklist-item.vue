@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { ChecklistItem } from '../models/types'
+import type { ChecklistItem, ChecklistPriority } from '../models/types'
 import { Icon } from '@iconify/vue'
+import { onClickOutside } from '@vueuse/core'
 import { ref } from 'vue'
 import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
 import { KitEditable } from '~/components/01.kit/kit-editable'
@@ -17,14 +18,28 @@ const emit = defineEmits<{
 
 const isEditingDescription = ref(false)
 const isEditingLink = ref(false)
+const isPriorityPickerOpen = ref(false)
+const priorityPickerMenuRef = ref(null)
+
+const priorityMap: Record<ChecklistPriority, string> = {
+  5: 'Высочайший',
+  4: 'Высокий',
+  3: 'Средний',
+  2: 'Низкий',
+  1: 'Без приоритета',
+}
+
+onClickOutside(priorityPickerMenuRef, () => {
+  isPriorityPickerOpen.value = false
+})
 
 function updateField<K extends keyof ChecklistItem>(key: K, value: ChecklistItem[K]) {
   emit('update:item', { ...props.item, [key]: value })
 }
 
-function togglePriority() {
-  const newPriority = props.item.priority === 'high' ? 'normal' : 'high'
-  updateField('priority', newPriority)
+function setPriority(priority: ChecklistPriority) {
+  updateField('priority', priority)
+  isPriorityPickerOpen.value = false
 }
 
 function handleDescriptionUpdate(value: string) {
@@ -42,7 +57,7 @@ function handleLinkUpdate(value: string) {
 
 <template>
   <div class="checklist-item-wrapper">
-    <div class="checklist-item" :class="{ 'completed': item.completed, 'priority-high': item.priority === 'high' }">
+    <div class="checklist-item" :class="[`priority-${item.priority}`, { completed: item.completed }]">
       <div class="main-line">
         <button v-if="!readonly" class="drag-handle" title="Перетащить">
           <Icon icon="mdi:drag-vertical" />
@@ -66,9 +81,36 @@ function handleLinkUpdate(value: string) {
           <button v-if="!readonly" class="action-btn" :class="{ 'is-active': item.description }" title="Добавить/Изменить заметку" @click="isEditingDescription = !isEditingDescription">
             <Icon icon="mdi:text-box-outline" />
           </button>
-          <button v-if="!readonly" class="action-btn priority-btn" :class="{ 'is-active': item.priority === 'high' }" title="Высокий приоритет" @click="togglePriority">
-            <Icon icon="mdi:fire" />
-          </button>
+
+          <!-- Priority Picker -->
+          <div v-if="!readonly" class="priority-picker-wrapper">
+            <button
+              class="action-btn priority-btn"
+              :class="`is-active-p${item.priority}`"
+              title="Изменить приоритет"
+              @click="isPriorityPickerOpen = !isPriorityPickerOpen"
+            >
+              <Icon icon="mdi:flag" />
+            </button>
+            <div
+              v-if="isPriorityPickerOpen"
+              ref="priorityPickerMenuRef"
+              class="priority-picker-menu"
+            >
+              <button
+                v-for="p in ([5, 4, 3, 2, 1] as const)"
+                :key="p"
+                class="priority-option"
+                :class="`priority-option-${p}`"
+                @click="setPriority(p)"
+              >
+                <div class="priority-indicator" />
+                <span class="priority-text">{{ priorityMap[p] }}</span>
+                <Icon v-if="item.priority === p" icon="mdi:check" class="check-icon" />
+              </button>
+            </div>
+          </div>
+
           <button v-if="!readonly" class="delete-item-btn" @click="$emit('delete')">
             <Icon icon="mdi:close" />
           </button>
@@ -81,7 +123,9 @@ function handleLinkUpdate(value: string) {
       >
         <!-- Блок для ссылки -->
         <div v-if="item.link || isEditingLink" class="detail-block">
-          <Icon icon="mdi:link-variant" class="detail-icon" />
+          <div class="icon-wrapper">
+            <Icon icon="mdi:link-variant" class="detail-icon" />
+          </div>
           <KitEditable
             v-if="isEditingLink"
             :model-value="item.link || ''"
@@ -95,7 +139,9 @@ function handleLinkUpdate(value: string) {
 
         <!-- Блок для заметки -->
         <div v-if="item.description || isEditingDescription" class="detail-block">
-          <Icon icon="mdi:text-box-outline" class="detail-icon" />
+          <div class="icon-wrapper">
+            <Icon icon="mdi:text-box-outline" class="detail-icon" />
+          </div>
           <KitEditable
             v-if="isEditingDescription"
             :model-value="item.description || ''"
@@ -124,9 +170,24 @@ function handleLinkUpdate(value: string) {
   border: 1px solid var(--border-secondary-color);
   padding: 0.375rem 0.5rem;
 
-  &.priority-high {
-    border-left: 3px solid var(--fg-warning-color);
-    padding-left: calc(0.5rem - 3px);
+  // --- Priority Styles ---
+  border-left: 3px solid transparent;
+  padding-left: calc(0.5rem - 2px);
+
+  &.priority-5 {
+    border-left-color: var(--fg-error-color);
+  }
+  &.priority-4 {
+    border-left-color: var(--fg-warning-color);
+  }
+  &.priority-3 {
+    border-left-color: var(--fg-info-color);
+  }
+  &.priority-2 {
+    border-left-color: var(--fg-tertiary-color);
+  }
+  &.priority-1 {
+    border: 1px solid var(--border-secondary-color);
   }
 
   &:hover {
@@ -143,7 +204,8 @@ function handleLinkUpdate(value: string) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: 4px;
+  min-height: 28px;
+  margin-left: 6px;
 }
 
 .completed {
@@ -151,7 +213,7 @@ function handleLinkUpdate(value: string) {
     text-decoration: line-through;
     color: var(--fg-tertiary-color);
   }
-  background-color: var(--bg-secondary-color);
+  background-color: var(--bg-secondary-color) !important;
 }
 
 .drag-handle,
@@ -181,12 +243,15 @@ function handleLinkUpdate(value: string) {
 .item-text {
   flex-grow: 1;
   min-width: 0;
+  padding: 4px 0;
+  line-height: 1.4;
 }
 
 .item-actions {
   display: flex;
   align-items: center;
   margin-left: auto;
+  padding-left: 8px;
 }
 
 .action-btn {
@@ -197,9 +262,6 @@ function handleLinkUpdate(value: string) {
   &.is-active {
     color: var(--fg-accent-color);
     opacity: 1;
-  }
-  &.priority-btn.is-active {
-    color: var(--fg-warning-color);
   }
 }
 
@@ -214,47 +276,53 @@ function handleLinkUpdate(value: string) {
 .item-details-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-left: 8px;
-  padding-top: 0.5rem;
-  margin-top: 0.5rem;
-  border-top: 1px solid var(--border-tertiary-color, var(--border-secondary-color));
+  gap: 0.5rem;
+  margin: 2px 0 4px 32px;
+  padding: 2px 8px;
+  background-color: var(--bg-secondary-color);
+  border-radius: var(--r-s);
+  border: 1px solid var(--border-tertiary-color);
 }
 
 .detail-block {
   display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.icon-wrapper {
+  flex-shrink: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .detail-icon {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--fg-tertiary-color);
-  flex-shrink: 0;
-  margin-top: 8px;
 }
 
 .details-input {
   width: 100%;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--fg-secondary-color);
-  background-color: var(--bg-secondary-color);
-  padding: 4px 8px;
-  border-radius: var(--r-xs);
-  border: 1px solid transparent;
+  background-color: transparent;
+  padding: 0;
+  border: none;
+
   &:focus-within {
-    border-color: var(--fg-accent-color);
+    color: var(--fg-primary-color);
   }
 }
 
 .detail-link {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--fg-accent-color);
   text-decoration: none;
   word-break: break-all;
-  padding-top: 4px;
-  padding-bottom: 4px;
 
   &:hover {
     text-decoration: underline;
@@ -263,11 +331,93 @@ function handleLinkUpdate(value: string) {
 
 .detail-text {
   width: 100%;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--fg-secondary-color);
   white-space: pre-wrap;
   word-break: break-word;
-  padding: 8px 0;
+}
+
+// --- Priority Picker Styles ---
+.priority-picker-wrapper {
+  position: relative;
+}
+
+.priority-btn {
+  &.is-active-p5 {
+    color: var(--fg-error-color);
+    opacity: 1;
+  }
+  &.is-active-p4 {
+    color: var(--fg-warning-color);
+    opacity: 1;
+  }
+  &.is-active-p3 {
+    color: var(--fg-info-color);
+    opacity: 1;
+  }
+  &.is-active-p2 {
+    color: var(--fg-tertiary-color);
+    opacity: 1;
+  }
+}
+
+.priority-picker-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  width: 190px;
+  background-color: var(--bg-secondary-color);
+  border: 1px solid var(--border-primary-color);
+  border-radius: var(--r-s);
+  box-shadow: var(--shadow-m);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.priority-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--r-xs);
+  text-align: left;
+  width: 100%;
+  &:hover {
+    background-color: var(--bg-hover-color);
+  }
+  .priority-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  &.priority-option-5 .priority-indicator {
+    background-color: var(--fg-error-color);
+  }
+  &.priority-option-4 .priority-indicator {
+    background-color: var(--fg-warning-color);
+  }
+  &.priority-option-3 .priority-indicator {
+    background-color: var(--fg-info-color);
+  }
+  &.priority-option-2 .priority-indicator {
+    background-color: var(--fg-tertiary-color);
+  }
+  &.priority-option-1 .priority-indicator {
+    border: 1px solid var(--fg-tertiary-color);
+  }
+
+  .priority-text {
+    flex-grow: 1;
+    font-size: 0.9rem;
+  }
+  .check-icon {
+    color: var(--fg-accent-color);
+    font-size: 1.1rem;
+    margin-left: auto;
+  }
 }
 </style>

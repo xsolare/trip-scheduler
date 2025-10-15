@@ -1,4 +1,4 @@
-import type { ChecklistGroup, ChecklistItem, ChecklistSectionContent, ChecklistTab } from '../models/types'
+import type { ChecklistGroup, ChecklistItem, ChecklistPriority, ChecklistSectionContent, ChecklistTab } from '../models/types'
 import { useDebounceFn } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, ref, watch } from 'vue'
@@ -24,7 +24,24 @@ export function useChecklistSection(
   const confirm = useConfirm()
 
   // --- Локальное состояние ---
-  const items = ref<ChecklistItem[]>(JSON.parse(JSON.stringify(props.section.content?.items || [])))
+  const initialItems = (props.section.content?.items || []).map((item: any): ChecklistItem => {
+    let priority: ChecklistPriority = 1
+    if (item.priority === 'high') {
+      priority = 4
+    }
+    else if (item.priority === 'normal') {
+      priority = 1
+    }
+    else if (typeof item.priority === 'number' && item.priority >= 1 && item.priority <= 5) {
+      priority = item.priority
+    }
+    return {
+      ...item,
+      priority,
+    }
+  })
+
+  const items = ref<ChecklistItem[]>(JSON.parse(JSON.stringify(initialItems)))
   const groups = ref<ChecklistGroup[]>(JSON.parse(JSON.stringify(props.section.content?.groups || [])))
   const activeTab = ref<ChecklistTab>('preparation')
 
@@ -56,7 +73,7 @@ export function useChecklistSection(
       completed: false,
       type: tab,
       groupId,
-      priority: 'normal',
+      priority: 1, // Приоритет по умолчанию - "Без приоритета"
     })
   }
 
@@ -140,24 +157,19 @@ export function useChecklistSection(
     }, {} as Record<string, ChecklistItem[]>)
   })
 
-  // --- ЛОГИКА СКРЫТИЯ ПУСТЫХ ГРУПП ---
   const currentTabGroups = computed(() => {
     return groups.value.filter((group) => {
       if (group.type !== activeTab.value)
         return false
 
-      // Группа видима, если в ней есть отфильтрованные задачи
-      const hasVisibleItems = (itemsByGroupId.value[group.id] || []).length > 0
-
       const search = searchQuery.value.trim().toLowerCase()
       if (search) {
-        // При поиске также показываем группу, если ее имя совпадает
         const nameMatchesSearch = group.name.toLowerCase().includes(search)
-        return hasVisibleItems || nameMatchesSearch
+        const hasVisibleItems = (itemsByGroupId.value[group.id] || []).length > 0
+        return nameMatchesSearch || hasVisibleItems
       }
 
-      // Без поиска показываем группу только если в ней есть видимые элементы
-      return hasVisibleItems
+      return true
     })
   })
 

@@ -4,6 +4,11 @@
 export type ChecklistTab = 'preparation' | 'in-trip'
 
 /**
+ * Уровень приоритета задачи от 1 (самый низкий) до 5 (самый высокий).
+ */
+export type ChecklistPriority = 1 | 2 | 3 | 4 | 5
+
+/**
  * Элемент чек-листа.
  */
 export interface ChecklistItem {
@@ -12,9 +17,8 @@ export interface ChecklistItem {
   completed: boolean
   type: ChecklistTab
   groupId: string | null
-  // --- НОВЫЕ ПОЛЯ ---
   description?: string // Описание или заметка к задаче
-  priority?: 'normal' | 'high' // Приоритет задачи
+  priority: ChecklistPriority // Приоритет задачи
   link?: string // Внешняя ссылка
 }
 

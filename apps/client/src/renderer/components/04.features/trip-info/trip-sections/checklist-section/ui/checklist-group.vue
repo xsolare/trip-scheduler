@@ -149,7 +149,6 @@ function onAddItem() {
   border-radius: var(--r-m);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .group-header {
