@@ -1,4 +1,4 @@
-import { dbQueryDurationHistogram } from '~/services/metrics.service'
+import { dbActiveQueriesGauge, dbQueryDurationHistogram } from '~/services/metrics.service'
 
 /**
  * Обертка для измерения длительности выполнения запроса к базе данных.
@@ -12,14 +12,14 @@ export async function measureDbQuery<T>(
   operation: 'select' | 'insert' | 'update' | 'delete' | 'transaction',
   queryFn: () => Promise<T>,
 ): Promise<T> {
+  dbActiveQueriesGauge.inc()
   const end = dbQueryDurationHistogram.startTimer({ table, operation })
   try {
     const result = await queryFn()
-    end()
     return result
   }
-  catch (error) {
+  finally {
     end()
-    throw error
+    dbActiveQueriesGauge.dec()
   }
 }

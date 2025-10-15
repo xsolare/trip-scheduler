@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { externalApiDurationHistogram, externalApiErrorCounter } from '~/services/metrics.service'
+import { externalApiCallsCounter, externalApiDurationHistogram } from '~/services/metrics.service'
 
 // Chat Models
 const AI_HUBMIX_MODELS_CHAT = [
@@ -69,12 +69,14 @@ async function measureExternalApiCall<T>(
   try {
     const result = await apiCallFn()
     end()
+    // При успехе инкрементируем счетчик со статусом 'success'
+    externalApiCallsCounter.inc({ service, operation, status: 'success' })
     return result
   }
   catch (error: any) {
     end()
-    const statusCode = error.status || 'unknown'
-    externalApiErrorCounter.inc({ service, operation, status_code: statusCode })
+    // При ошибке инкрементируем счетчик со статусом 'error'
+    externalApiCallsCounter.inc({ service, operation, status: 'error' })
     throw error
   }
 }

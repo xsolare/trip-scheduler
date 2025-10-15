@@ -2,12 +2,11 @@
 /* eslint-disable no-console */
 import type { Hono } from 'hono'
 import { gte, sql } from 'drizzle-orm'
-import { db, pool } from '../db'
+import { db } from '../db'
 import { refreshTokens, trips, users } from '../db/schema'
 import Server from './app'
 import {
   activeSessionsGauge,
-  registerPgPoolMetrics,
   totalTripsGauge,
   totalUsersGauge,
   uncaughtExceptionsCounter,
@@ -57,9 +56,6 @@ try {
   console.log('🟡 Проверяем соединение с базой данных...')
   await db.execute(sql`SELECT 1`)
   console.log('✅ Соединение с базой данных успешно установлено!')
-
-  registerPgPoolMetrics(pool)
-  console.log('📊 Метрики пула соединений PostgreSQL зарегистрированы.')
 
   setInterval(updateDatabaseMetrics, 30000)
   await updateDatabaseMetrics()

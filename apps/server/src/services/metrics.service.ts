@@ -1,4 +1,3 @@
-/* eslint-disable no-new */
 import type { Pool } from 'pg'
 import { collectDefaultMetrics, Counter, Gauge, Histogram, register } from 'prom-client'
 
@@ -73,8 +72,6 @@ export const fileUploadSizeBytesHistogram = new Histogram({
   buckets: [100000, 500000, 1000000, 5000000, 10000000, 25000000],
 })
 
-// --- НОВЫЕ МЕТРИКИ ---
-
 // 10. Счетчик необработанных исключений
 export const uncaughtExceptionsCounter = new Counter({
   name: 'nodejs_uncaught_exceptions_total',
@@ -97,34 +94,17 @@ export const externalApiDurationHistogram = new Histogram({
   buckets: [0.1, 0.5, 1, 2, 5, 10, 30],
 })
 
-// 13. Счетчик ошибок внешних API
-export const externalApiErrorCounter = new Counter({
-  name: 'external_api_errors_total',
-  help: 'Total number of errors from external API calls',
-  labelNames: ['service', 'operation', 'status_code'],
+// 13. Счетчик вызовов внешних API со статусом
+export const externalApiCallsCounter = new Counter({
+  name: 'external_api_calls_total',
+  help: 'Total number of calls to external APIs',
+  labelNames: ['service', 'operation', 'status'],
 })
 
-/**
- * Регистрирует метрики для пула соединений PostgreSQL.
- * @param pool - Экземпляр пула 'pg'.
- */
-export function registerPgPoolMetrics(pool: Pool) {
-  new Gauge({
-    name: 'pg_pool_total_connections',
-    help: 'Total connections in the pool',
-    collect() { this.set(pool.totalCount) },
-  })
-  new Gauge({
-    name: 'pg_pool_idle_connections',
-    help: 'Idle connections in the pool',
-    collect() { this.set(pool.idleCount) },
-  })
-  new Gauge({
-    name: 'pg_pool_waiting_clients',
-    help: 'Clients waiting for a connection from the pool',
-    collect() { this.set(pool.waitingCount) },
-  })
-}
+// 14. Gauge для активных запросов к БД
+export const dbActiveQueriesGauge = new Gauge({
+  name: 'db_active_queries',
+  help: 'Number of currently active database queries',
+})
 
-// Экспортируем register для создания эндпоинта
 export { register }
