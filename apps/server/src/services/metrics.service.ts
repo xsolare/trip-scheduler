@@ -1,3 +1,5 @@
+/* eslint-disable no-new */
+import type { Pool } from 'pg'
 import { collectDefaultMetrics, Counter, Gauge, Histogram, register } from 'prom-client'
 
 // Включаем сбор стандартных метрик (CPU, память и т.д.)
@@ -8,29 +10,29 @@ register.setDefaultLabels({
 // Собирает event loop lag, gc stats, heap usage и т.д.
 collectDefaultMetrics()
 
-// 1. Счетчик HTTP-запросов
+// 1. Счетчик HTTP-запросов (без изменений)
 export const httpRequestCounter = new Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'path', 'status_code'],
 })
 
-// 2. Гистограмма длительности HTTP-запросов (в секундах)
+// 2. Гистограмма длительности HTTP-запросов (без изменений)
 export const httpRequestDurationHistogram = new Histogram({
   name: 'http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'path', 'status_code'],
-  buckets: [0.1, 0.5, 1, 1.5, 2, 5], // Настройте бакеты под ваше приложение
+  buckets: [0.1, 0.5, 1, 1.5, 2, 5],
 })
 
-// 3. Счетчик tRPC процедур
+// 3. Счетчик tRPC процедур (без изменений)
 export const trpcRequestCounter = new Counter({
   name: 'trpc_requests_total',
   help: 'Total number of tRPC requests',
-  labelNames: ['path', 'type', 'status'], // path - 'trip.getById', type - 'query' | 'mutation', status - 'success' | 'error'
+  labelNames: ['path', 'type', 'status'],
 })
 
-// 4. Гистограмма длительности tRPC процедур
+// 4. Гистограмма длительности tRPC процедур (без изменений)
 export const trpcRequestDurationHistogram = new Histogram({
   name: 'trpc_request_duration_seconds',
   help: 'Duration of tRPC requests in seconds',
@@ -38,38 +40,91 @@ export const trpcRequestDurationHistogram = new Histogram({
   buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
 })
 
-// 5. Gauge для количества пользователей
+// 5. Gauge для количества пользователей (без изменений)
 export const totalUsersGauge = new Gauge({
   name: 'total_registered_users',
   help: 'Total number of registered users in the database',
 })
 
-// 6. Gauge для количества путешествий
+// 6. Gauge для количества путешествий (без изменений)
 export const totalTripsGauge = new Gauge({
   name: 'total_trips_in_database',
   help: 'Total number of trips in the database',
 })
 
-// 7. Gauge для активных сессий (по refresh токенам)
+// 7. Gauge для активных сессий (без изменений)
 export const activeSessionsGauge = new Gauge({
   name: 'active_user_sessions',
   help: 'Number of active user sessions based on valid refresh tokens',
 })
 
-// 8. Счетчик загрузок файлов
+// 8. Счетчик загрузок файлов (без изменений)
 export const fileUploadsCounter = new Counter({
   name: 'file_uploads_total',
   help: 'Total number of uploaded files',
-  labelNames: ['placement'], // e.g., 'memories', 'route', 'avatar'
+  labelNames: ['placement'],
 })
 
-// 9. Гистограмма размеров загруженных файлов (в байтах)
+// 9. Гистограмма размеров загруженных файлов (без изменений)
 export const fileUploadSizeBytesHistogram = new Histogram({
   name: 'file_upload_size_bytes',
   help: 'Size distribution of uploaded files in bytes',
   labelNames: ['placement'],
-  buckets: [100000, 500000, 1000000, 5000000, 10000000, 25000000], // 100KB, 500KB, 1MB, 5MB, 10MB, 25MB
+  buckets: [100000, 500000, 1000000, 5000000, 10000000, 25000000],
 })
+
+// --- НОВЫЕ МЕТРИКИ ---
+
+// 10. Счетчик необработанных исключений
+export const uncaughtExceptionsCounter = new Counter({
+  name: 'nodejs_uncaught_exceptions_total',
+  help: 'Total number of uncaught exceptions or unhandled rejections',
+})
+
+// 11. Гистограмма длительности запросов к БД
+export const dbQueryDurationHistogram = new Histogram({
+  name: 'db_query_duration_seconds',
+  help: 'Duration of database queries in seconds',
+  labelNames: ['table', 'operation'],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1],
+})
+
+// 12. Гистограмма длительности запросов к внешним API
+export const externalApiDurationHistogram = new Histogram({
+  name: 'external_api_duration_seconds',
+  help: 'Duration of external API calls in seconds',
+  labelNames: ['service', 'operation'],
+  buckets: [0.1, 0.5, 1, 2, 5, 10, 30],
+})
+
+// 13. Счетчик ошибок внешних API
+export const externalApiErrorCounter = new Counter({
+  name: 'external_api_errors_total',
+  help: 'Total number of errors from external API calls',
+  labelNames: ['service', 'operation', 'status_code'],
+})
+
+/**
+ * Регистрирует метрики для пула соединений PostgreSQL.
+ * @param pool - Экземпляр пула 'pg'.
+ */
+export function registerPgPoolMetrics(pool: Pool) {
+  new Gauge({
+    name: 'pg_pool_total_connections',
+    help: 'Total connections in the pool',
+    collect() { this.set(pool.totalCount) },
+  })
+  new Gauge({
+    name: 'pg_pool_idle_connections',
+    help: 'Idle connections in the pool',
+    collect() { this.set(pool.idleCount) },
+  })
+  new Gauge({
+    name: 'pg_pool_waiting_clients',
+    help: 'Clients waiting for a connection from the pool',
+    collect() { this.set(pool.waitingCount) },
+  })
+}
 
 // Экспортируем register для создания эндпоинта
 export { register }

@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { externalApiDurationHistogram, externalApiErrorCounter } from '~/services/metrics.service'
 
 // Chat Models
 const AI_HUBMIX_MODELS_CHAT = [
@@ -52,27 +53,43 @@ interface ProviderConfig {
   baseURL: string | undefined
 }
 
+/**
+ * Обертка для измерения длительности и подсчета ошибок внешних API вызовов.
+ * @param service Имя внешнего сервиса (например, модель LLM).
+ * @param operation Название операции (например, 'chat_completion').
+ * @param apiCallFn Асинхронная функция, выполняющая сам API вызов.
+ * @returns Результат выполнения apiCallFn.
+ */
+async function measureExternalApiCall<T>(
+  service: string,
+  operation: string,
+  apiCallFn: () => Promise<T>,
+): Promise<T> {
+  const end = externalApiDurationHistogram.startTimer({ service, operation })
+  try {
+    const result = await apiCallFn()
+    end()
+    return result
+  }
+  catch (error: any) {
+    end()
+    const statusCode = error.status || 'unknown'
+    externalApiErrorCounter.inc({ service, operation, status_code: statusCode })
+    throw error
+  }
+}
+
 function getProviderConfig(modelName: AiModel): ProviderConfig {
-  // Determine if the model is primarily from HubMix list or OpenRouter list
-  // This logic might need adjustment if model names are not unique across providers
-  // or if TTS models require a specific provider distinct from chat models.
-  // For now, assuming TTS models like 'tts-1' are routed via the same providers
-  // as your chat models, and we can infer the provider from the list it belongs to.
-
   const isHubMixModel = (AI_HUBMIX_MODELS_CHAT as readonly string[]).includes(modelName)
-    || (AI_TTS_MODELS as readonly string[]).includes(modelName) // Assuming HubMix handles OpenAI TTS models
+    || (AI_TTS_MODELS as readonly string[]).includes(modelName)
 
-  if (isHubMixModel) { // Prioritize HubMix if a model name could be in both (unlikely but for safety)
+  if (isHubMixModel) {
     return {
       apiKey: process.env.AI_HUBMIX_KEY,
       baseURL: process.env.AI_HUBMIX_API_URL,
     }
   }
 
-  // Fallback or default if model source is unclear, adjust as needed
-  // This indicates a potential issue if a model isn't covered by the above.
-  // For OpenAI TTS models specifically, they usually use the OpenAI API structure,
-  // so whichever provider (HubMix/OpenRouter) proxies to OpenAI speech endpoint.
   console.warn(`Provider config not clearly defined for model: ${modelName}. Falling back to HubMix.`)
   return {
     apiKey: process.env.AI_HUBMIX_KEY,
@@ -110,16 +127,17 @@ export async function createAiChatRequest(
     baseURL,
   })
 
-  return openai.chat.completions.create({
-    messages: [
-      { role: 'system', content: prompt.system },
-      { role: 'user', content: prompt.user },
-    ],
-    model: mergedOptions.model,
-    response_format: mergedOptions.response_format,
-    temperature: mergedOptions.temperature,
-    stream: false,
-  })
+  return measureExternalApiCall(mergedOptions.model, 'chat_completion', () =>
+    openai.chat.completions.create({
+      messages: [
+        { role: 'system', content: prompt.system },
+        { role: 'user', content: prompt.user },
+      ],
+      model: mergedOptions.model,
+      response_format: mergedOptions.response_format,
+      temperature: mergedOptions.temperature,
+      stream: false,
+    }))
 }
 
 export async function createAiSpeechRequest(
@@ -136,20 +154,12 @@ export async function createAiSpeechRequest(
     baseURL,
   })
 
-  try {
-    const speechResponse = await openai.audio.speech.create({
+  return measureExternalApiCall(payload.model, 'speech_creation', () =>
+    openai.audio.speech.create({
       model: payload.model,
       input: payload.input,
       voice: payload.voice,
       response_format: payload.response_format ?? 'mp3',
       speed: payload.speed ?? 1.0,
-    })
-
-    return speechResponse
-  }
-  catch (error) {
-    console.error('Error creating speech:', error)
-
-    throw error
-  }
+    }))
 }

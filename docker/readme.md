@@ -195,3 +195,13 @@ docker run -d \
 
 echo "--- Контейнер $CONTAINER_NAME успешно запущен! ---"
 ```
+
+
+## Deploy
+
+./build_server.sh v12
+./build_client.sh v7
+
+docker compose down
+
+V_CLIENT=v7 V_SERVER=v12 docker compose up -d

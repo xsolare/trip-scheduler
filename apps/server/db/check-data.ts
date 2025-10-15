@@ -21,7 +21,7 @@ import {
  * @param tableName - Человекочитаемое имя таблицы для вывода.
  * @returns Объект с именем и количеством записей.
  */
-async function getTableCount(table: any, tableName: string): Promise<{ name: string; count: number }> {
+async function getTableCount(table: any, tableName: string): Promise<{ name: string, count: number }> {
   const [result] = await db
     .select({ count: sql<number>`count(*)` })
     .from(table)

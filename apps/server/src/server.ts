@@ -2,10 +2,16 @@
 /* eslint-disable no-console */
 import type { Hono } from 'hono'
 import { gte, sql } from 'drizzle-orm'
-import { db } from '../db'
+import { db, pool } from '../db'
 import { refreshTokens, trips, users } from '../db/schema'
 import Server from './app'
-import { activeSessionsGauge, totalTripsGauge, totalUsersGauge } from './services/metrics.service'
+import {
+  activeSessionsGauge,
+  registerPgPoolMetrics,
+  totalTripsGauge,
+  totalUsersGauge,
+  uncaughtExceptionsCounter,
+} from './services/metrics.service'
 
 const app: Hono = Server.getApp()
 const port = Number(process.env.PORT) || 8080
@@ -22,7 +28,6 @@ async function updateDatabaseMetrics() {
     const [tripCountResult] = await db.select({ count: sql<number>`count(*)` }).from(trips)
     totalTripsGauge.set(Number(tripCountResult.count))
 
-    // Новая метрика: количество активных refresh токенов
     const [activeTokensResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(refreshTokens)
@@ -37,17 +42,30 @@ async function updateDatabaseMetrics() {
 console.log(`🚀 Trip Scheduler API starting...`)
 console.log(`📍 Server running at http://${host}:${port}`)
 
+process.on('uncaughtException', (err, origin) => {
+  console.error(`[Uncaught Exception] Origin: ${origin}, Error:`, err)
+  uncaughtExceptionsCounter.inc()
+  // process.exit(1);
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection] At:', promise, 'reason:', reason)
+  uncaughtExceptionsCounter.inc()
+})
+
 try {
   console.log('🟡 Проверяем соединение с базой данных...')
   await db.execute(sql`SELECT 1`)
   console.log('✅ Соединение с базой данных успешно установлено!')
 
-  setInterval(updateDatabaseMetrics, 30000)
-  updateDatabaseMetrics()
-}
-catch {
-  console.error('❌ Ошибка: Не удалось подключиться к базе данных. Сервер будет остановлен.')
+  registerPgPoolMetrics(pool)
+  console.log('📊 Метрики пула соединений PostgreSQL зарегистрированы.')
 
+  setInterval(updateDatabaseMetrics, 30000)
+  await updateDatabaseMetrics()
+}
+catch (error) {
+  console.error('❌ Ошибка: Не удалось подключиться к базе данных. Сервер будет остановлен.', error)
   process.exit(1)
 }
 

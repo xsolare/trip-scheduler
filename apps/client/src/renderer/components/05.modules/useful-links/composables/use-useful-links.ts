@@ -30,17 +30,17 @@ export function useUsefulLinks() {
       // Фильтруем ссылки по поисковому запросу
       const linksBySearch = query
         ? category.links.filter(
-          link =>
-            link.name.toLowerCase().includes(query)
-            || link.description.toLowerCase().includes(query),
-        )
+            link =>
+              link.name.toLowerCase().includes(query)
+              || link.description.toLowerCase().includes(query),
+          )
         : [...category.links]
 
       // Фильтруем ссылки по выбранным тегам
       const linksByTags = selectedTags.value.length > 0
         ? linksBySearch.filter(link =>
-          selectedTags.value.every(tag => link.tags?.includes(tag)),
-        )
+            selectedTags.value.every(tag => link.tags?.includes(tag)),
+          )
         : linksBySearch
 
       if (linksByTags.length > 0) {
