@@ -1,4 +1,3 @@
-import type { Pool } from 'pg'
 import { collectDefaultMetrics, Counter, Gauge, Histogram, register } from 'prom-client'
 
 // Включаем сбор стандартных метрик (CPU, память и т.д.)
@@ -9,14 +8,14 @@ register.setDefaultLabels({
 // Собирает event loop lag, gc stats, heap usage и т.д.
 collectDefaultMetrics()
 
-// 1. Счетчик HTTP-запросов (без изменений)
+// 1. Счетчик HTTP-запросов
 export const httpRequestCounter = new Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'path', 'status_code'],
 })
 
-// 2. Гистограмма длительности HTTP-запросов (без изменений)
+// 2. Гистограмма длительности HTTP-запросов
 export const httpRequestDurationHistogram = new Histogram({
   name: 'http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
@@ -24,14 +23,14 @@ export const httpRequestDurationHistogram = new Histogram({
   buckets: [0.1, 0.5, 1, 1.5, 2, 5],
 })
 
-// 3. Счетчик tRPC процедур (без изменений)
+// 3. Счетчик tRPC процедур
 export const trpcRequestCounter = new Counter({
   name: 'trpc_requests_total',
   help: 'Total number of tRPC requests',
   labelNames: ['path', 'type', 'status'],
 })
 
-// 4. Гистограмма длительности tRPC процедур (без изменений)
+// 4. Гистограмма длительности tRPC процедур
 export const trpcRequestDurationHistogram = new Histogram({
   name: 'trpc_request_duration_seconds',
   help: 'Duration of tRPC requests in seconds',
@@ -39,32 +38,32 @@ export const trpcRequestDurationHistogram = new Histogram({
   buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
 })
 
-// 5. Gauge для количества пользователей (без изменений)
+// 5. Gauge для количества пользователей
 export const totalUsersGauge = new Gauge({
   name: 'total_registered_users',
   help: 'Total number of registered users in the database',
 })
 
-// 6. Gauge для количества путешествий (без изменений)
+// 6. Gauge для количества путешествий
 export const totalTripsGauge = new Gauge({
   name: 'total_trips_in_database',
   help: 'Total number of trips in the database',
 })
 
-// 7. Gauge для активных сессий (без изменений)
+// 7. Gauge для активных сессий
 export const activeSessionsGauge = new Gauge({
   name: 'active_user_sessions',
   help: 'Number of active user sessions based on valid refresh tokens',
 })
 
-// 8. Счетчик загрузок файлов (без изменений)
+// 8. Счетчик загрузок файлов
 export const fileUploadsCounter = new Counter({
   name: 'file_uploads_total',
   help: 'Total number of uploaded files',
   labelNames: ['placement'],
 })
 
-// 9. Гистограмма размеров загруженных файлов (без изменений)
+// 9. Гистограмма размеров загруженных файлов
 export const fileUploadSizeBytesHistogram = new Histogram({
   name: 'file_upload_size_bytes',
   help: 'Size distribution of uploaded files in bytes',

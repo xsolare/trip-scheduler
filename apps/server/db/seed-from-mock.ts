@@ -27,7 +27,6 @@ import {
   users,
 } from './schema'
 
-// Функция copyStaticFiles остается без изменений
 async function copyStaticFiles() {
   const sourceDir = path.join(__dirname, 'mock/static')
   const destDir = path.join(process.cwd(), 'static')
@@ -179,7 +178,6 @@ async function seed() {
   }
 
   console.log('\n🗑️  Очистка старых данных...')
-  // ... (код очистки таблиц остается без изменений)
   await db.delete(llmTokenUsage)
   await db.delete(llmModels)
   await db.delete(memories)
@@ -198,7 +196,6 @@ async function seed() {
   await db.delete(plans)
 
   console.log('⭐ Создание тарифных планов...')
-  // ... (код создания планов остается без изменений)
   await db.insert(plans).values([
     { id: FREE_PLAN_ID, name: 'Базовый', maxTrips: 1, maxStorageBytes: ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 100000, isDeveloping: false },
     { id: 2, name: 'Про', maxTrips: 10, maxStorageBytes: 20 * ONE_GIGABYTE_IN_BYTES, monthlyLlmCredits: 1000000, isDeveloping: false },
@@ -206,7 +203,6 @@ async function seed() {
   ])
 
   console.log('🤖 Заполнение цен на LLM модели...')
-  // ... (код заполнения цен на модели остается без изменений)
   await db.insert(llmModels).values([
     { id: 'gemini-2.5-pro', costPerMillionInputTokens: 1.25, costPerMillionOutputTokens: 10.0 },
     { id: 'claude-sonnet-4-5', costPerMillionInputTokens: 3.3, costPerMillionOutputTokens: 16.5 },
@@ -218,8 +214,6 @@ async function seed() {
   ])
 
   console.log('✈️  Подготовка данных для вставки...')
-  // ... (код подготовки и вставки данных остается практически без изменений,
-  // так как он уже работает с массивами объектов, которые мы теперь получаем)
   const tripsToInsert: (typeof trips.$inferInsert)[] = []
   const daysToInsert: (typeof days.$inferInsert)[] = []
   const activitiesToInsert: (typeof activities.$inferInsert)[] = []
@@ -293,7 +287,7 @@ async function seed() {
   console.log('✍️  Запись данных в базу...')
 
   if (selectedUsers.length > 0)
-    await db.insert(users).values(selectedUsers.map((u: any) => ({ ...u, planId: FREE_PLAN_ID })))
+    await db.insert(users).values(selectedUsers.map((u: any) => ({ ...u, planId: 3 })))
 
   if (selectedCommunities.length > 0) {
     await db.insert(communities).values(selectedCommunities)

@@ -4,6 +4,12 @@ import type { CreateCommentInput, UpdateCommentInput } from '~/shared/types/mode
 import type { Community, CreateCommunityInput, ListCommunitiesInput } from '~/shared/types/models/community'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
 import type { CreateTripInput, Plan, Trip, TripImage, TripImagePlacement, TripSection, TripSectionType, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
+import type { Place, PlaceTag } from '~/shared/types/models/place';
+
+export interface IPlacesRepository {
+  getPlacesByCity(city: string, filters?: { tags?: string[] }): Promise<Place[]>;
+  getAvailableTags(city: string): Promise<PlaceTag[]>;
+}
 
 export interface TripListFilters {
   search?: string
@@ -118,6 +124,7 @@ export interface IDatabaseClient {
   account: IAccountRepository
   community: ICommunityRepository
   llm: ILLMRepository
+  places: IPlacesRepository
 
   initDb: () => Promise<this>
 

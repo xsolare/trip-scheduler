@@ -72,7 +72,6 @@ onClickOutside(dropdownPanel, () => {
       :class="sizeClass"
       @click="togglePicker"
     >
-      <!-- 5. Используем modelValue напрямую, без props. -->
       <Icon width="20" height="20" :icon="modelValue || 'mdi:image-off-outline'" class="main-icon" />
       <Icon icon="mdi:chevron-down" class="chevron" :class="{ rotated: isOpen }" />
     </button>
@@ -100,7 +99,6 @@ onClickOutside(dropdownPanel, () => {
 </template>
 
 <style scoped lang="scss">
-/* Стили остаются без изменений */
 .icon-picker-wrapper {
   position: relative;
 }

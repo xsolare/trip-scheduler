@@ -3,12 +3,16 @@ import type { CommunitiesHubTab } from '../composables/use-communities-hub'
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
+import { useAuthStore } from '~/shared/store/auth.store'
 import { useCommunitiesHubStore } from '../composables/use-communities-hub'
 import CommunityList from './list/community-list.vue'
 import CreateCommunityFlow from './new-community/create-community-flow.vue'
 
 const store = useCommunitiesHubStore()
 const { activeTab, communities, isLoading } = storeToRefs(store)
+
+const authStore = useAuthStore()
+const { isAuthenticated } = storeToRefs(authStore)
 
 const isCreateModalOpen = ref(false)
 
@@ -18,6 +22,9 @@ const tabItems: ViewSwitcherItem<CommunitiesHubTab>[] = [
 ]
 
 onMounted(() => {
+  if (!isAuthenticated.value)
+    store.activeTab = 'public'
+
   store.fetchCommunities()
 })
 </script>
@@ -34,7 +41,7 @@ onMounted(() => {
       </KitBtn>
     </div>
 
-    <div class="hub-controls">
+    <div v-if="isAuthenticated" class="hub-controls">
       <KitViewSwitcher
         v-model="activeTab"
         :items="tabItems"

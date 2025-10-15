@@ -32,7 +32,7 @@ function handleNavigate(dayId: string) {
 <template>
   <KitDialogWithClose
     :visible="visible"
-    title="Запланированные достопримечательности"
+    title="Достопримечательности"
     icon="mdi:camera"
     :max-width="800"
     @update:visible="emit('update:visible', $event)"

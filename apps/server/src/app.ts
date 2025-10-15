@@ -1,5 +1,6 @@
 import { trpcServer } from '@hono/trpc-server'
 import { Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
@@ -87,6 +88,9 @@ class Server {
   private initializeRoutes() {
     // Определение API маршрутов
     const apiRoutes = new Hono()
+      .use('/upload', bodyLimit({
+        maxSize: 25 * 1024 * 1024,
+      }))
       .post('/upload', uploadFileController)
       .route('/avatar', avatarController)
       .route('/auth', authController)

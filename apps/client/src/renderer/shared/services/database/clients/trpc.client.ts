@@ -9,9 +9,11 @@ import type {
   IFileRepository,
   ILLMRepository,
   IMemoryRepository,
+  IPlacesRepository,
   ITripRepository,
   ITripSectionRepository,
 } from '../model/types'
+import { PlacesRepository } from '../repositories/mock/places.repository'
 import { AccountRepository } from '../repositories/trpc/account.repository'
 import { ActivityRepository } from '../repositories/trpc/activity.repository'
 import { AuthRepository } from '../repositories/trpc/auth.repository'
@@ -40,6 +42,7 @@ class TRPCDatabaseClient implements IDatabaseClient {
   account: IAccountRepository = new AccountRepository()
   community: ICommunityRepository = new CommunityRepository()
   llm: ILLMRepository = new LLMRepository()
+  places: IPlacesRepository = new PlacesRepository()
 
   /**
    * Инициализация клиента. Для tRPC не требуется специальных действий.

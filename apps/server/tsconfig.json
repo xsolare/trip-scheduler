@@ -33,7 +33,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "build/**/*.ts",
     "db/**/*.ts"
   ]
 }

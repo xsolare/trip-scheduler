@@ -344,4 +344,19 @@ watch(() => props.section, (newSection) => {
   opacity: 1;
   transform: scale(1);
 }
+
+@include media-down(md) {
+  .section-controls {
+    opacity: 1;
+    transform: scale(1);
+    top: -12px;
+    right: 4px;
+    gap: 8px;
+  }
+
+  .activity-section-renderer:hover .section-controls {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 </style>

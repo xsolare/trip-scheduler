@@ -20,6 +20,8 @@ export enum AppRouteNames {
 
   CommunitiesList = 'communities-list',
   CommunityInfo = 'community-info',
+
+  Explore = 'explore',
 }
 
 export const AppRoutePaths = {
@@ -52,4 +54,6 @@ export const AppRoutePaths = {
     List: '/communities',
     Info: (id: string) => `/communities/${id}`,
   },
+
+  Explore: '/explore',
 }

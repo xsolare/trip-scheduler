@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 import { useMouse } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
-import { InteractiveGridPattern } from '~/components/02.shared/interactive-grid-pattern'
+import { BackgroundParallaxEffects } from '~/components/02.shared/background-parallax-effects'
 
 const router = useRouter()
 
@@ -25,7 +25,19 @@ onMounted(() => {
 })
 
 function goToTrips() {
-  router.push('/trips')
+  router.push(AppRoutePaths.Trip.List)
+}
+
+function goToCommunity() {
+  router.push(AppRoutePaths.Communities.List)
+}
+
+function goToPlaces() {
+  router.push(AppRoutePaths.Explore)
+}
+
+function goToUsefulLinks() {
+  router.push(AppRoutePaths.UsefulLinks)
 }
 
 function onMouseMove() {
@@ -74,7 +86,26 @@ const cardEventListeners = computed(() => {
 </script>
 
 <template>
-  <div class="root-page">
+  <div class="welcome-page">
+    <BackgroundParallaxEffects
+      class="particles-background"
+      :quantity="60"
+      :ease="100"
+      :staticity="30"
+    />
+
+    <div class="feature-card" @click="goToCommunity">
+      <div class="feature-icon">
+        <Icon icon="mdi:account-group-outline" />
+      </div>
+      <h2 class="feature-title">
+        Сообщества
+      </h2>
+      <p class="feature-subtitle">
+        Обсуждайте маршруты и находите попутчиков.
+      </p>
+    </div>
+
     <div
       ref="cardRef"
       class="welcome-card"
@@ -82,13 +113,6 @@ const cardEventListeners = computed(() => {
       :style="{ transform: transformStyle }"
       v-on="cardEventListeners"
     >
-      <InteractiveGridPattern
-        class="card-background-grid"
-        :squares="[25, 25]"
-        :width="35"
-        :height="35"
-      />
-
       <div class="card-content">
         <div class="logo-accent">
           <Icon icon="mdi:map-marker-path" />
@@ -106,50 +130,189 @@ const cardEventListeners = computed(() => {
         </KitBtn>
       </div>
     </div>
+
+    <div class="feature-card" @click="goToPlaces">
+      <div class="feature-icon">
+        <Icon icon="mdi:map-search-outline" />
+      </div>
+      <h2 class="feature-title">
+        Интересные места
+      </h2>
+      <p class="feature-subtitle">
+        Иследуйте популярные локации и достопримечательности.
+      </p>
+    </div>
+
+    <button class="useful-links-button" @click="goToUsefulLinks">
+      <Icon icon="mdi:link-variant" class="link-icon" />
+      <span class="link-text">Полезные ссылки</span>
+    </button>
   </div>
 </template>
 
 <style scoped lang="scss">
-@media (hover: none) and (pointer: coarse) {
-  .welcome-card {
-    transform: none !important;
+.welcome-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  min-height: 100%;
+  padding: 16px;
+  animation: fadeIn 0.8s ease-out forwards;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--bg-primary-color) 0%, var(--bg-tertiary-color) 50%);
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 40px;
   }
 }
 
-.root-page {
+.particles-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.useful-links-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10;
   display: flex;
-  justify-content: center;
   align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  background-color: rgba(var(--bg-secondary-color-rgb), 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-secondary-color);
+  border-radius: 44px; 
+  color: var(--fg-secondary-color);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: var(--s-m);
+
+  .link-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .link-text {
+    font-weight: 500;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+  }
+
+  &:hover {
+    gap: 12px;
+    padding: 0 20px;
+    color: var(--fg-accent-color);
+    border-color: var(--border-primary-color);
+    background-color: rgba(var(--bg-secondary-color-rgb), 0.7);
+
+    .link-text {
+      max-width: 200px; 
+      opacity: 1;
+      margin-left: 4px;
+    }
+  }
+}
+
+.feature-card,
+.welcome-card {
+  background-color: rgba(var(--bg-secondary-color-rgb), 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1;
+}
+
+.feature-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-xl);
+  box-shadow: var(--s-l);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  max-width: 400px;
   width: 100%;
-  height: 100%;
-  padding: 16px;
-  animation: fadeIn 0.8s ease-out forwards;
+
+  @media (min-width: 1024px) {
+    max-width: 300px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--s-xl);
+    border-color: var(--border-primary-color);
+    background-color: rgba(var(--bg-secondary-color-rgb), 0.7);
+
+    .feature-icon {
+      transform: scale(1.1);
+      color: var(--fg-accent-color);
+    }
+  }
+
+  .feature-icon {
+    font-size: 3rem;
+    color: var(--fg-secondary-color);
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--fg-primary-color);
+    margin: 0 0 12px;
+  }
+
+  .feature-subtitle {
+    font-size: 0.95rem;
+    color: var(--fg-secondary-color);
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .welcome-card, .feature-card {
+    transform: none !important;
+  }
 }
 
 .welcome-card {
   position: relative;
   overflow: hidden;
   border-radius: var(--r-xl);
-  background-color: var(--bg-secondary-color);
   border: 1px solid var(--border-secondary-color);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--s-xl);
   max-width: 600px;
+  width: 100%;
   will-change: transform;
+  order: -1; // <-- ИЗМЕНЕНИЕ: Ставит эту карточку первой на мобильных
+
+  @media (min-width: 1024px) {
+    order: initial; // <-- ИЗМЕНЕНИЕ: Сбрасывает порядок для десктопной версии
+  }
 }
 
 .welcome-card.is-transitioning {
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.card-background-grid {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  transform: skewY(-12deg);
-  mask-image: radial-gradient(circle 250px at center, white, transparent);
-  -webkit-mask-image: radial-gradient(circle 250px at center, white, transparent);
 }
 
 .card-content {

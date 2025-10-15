@@ -31,6 +31,8 @@ const SettingsPage = () => import('~/pages/account/settings.vue')
 const CommunitiesList = () => import('~/pages/communities/index.vue')
 const CommunityInfo = () => import('~/pages/communities/[id].vue')
 
+const ExplorePage = () => import('~/pages/explore.vue');
+
 const routes: RouteRecordRaw[] = [
   {
     path: AppRoutePaths.Root,
@@ -116,13 +118,13 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.Communities.List,
     name: AppRouteNames.CommunitiesList,
     component: CommunitiesList,
-    meta: { layout: 'default', requiresAuth: true },
+    meta: { layout: 'default' },
   },
   {
     path: AppRoutePaths.Communities.Info(':id'),
     name: AppRouteNames.CommunityInfo,
     component: CommunityInfo,
-    meta: { layout: 'default', requiresAuth: true },
+    meta: { layout: 'default' },
   },
 
   // --- Системные маршруты ---
@@ -130,6 +132,12 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.NotFound,
     name: AppRouteNames.NotFound,
     component: NotFound,
+    meta: { layout: 'default' },
+  },
+  {
+    path: AppRoutePaths.Explore,
+    name: AppRouteNames.Explore,
+    component: ExplorePage,
     meta: { layout: 'default' },
   },
 ]

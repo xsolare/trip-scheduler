@@ -284,6 +284,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
   span {
     color: var(--fg-secondary-color);
   }

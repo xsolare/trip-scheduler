@@ -1,4 +1,4 @@
-import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, ILLMRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types'
+import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, ILLMRepository, IMemoryRepository, IPlacesRepository, ITripRepository, ITripSectionRepository } from '../model/types'
 import { AccountRepository } from '../repositories/mock/account.repository'
 import { ActivityRepository } from '../repositories/mock/activity.repository'
 import { AuthRepository } from '../repositories/mock/auth.repository'
@@ -8,6 +8,7 @@ import { DayRepository } from '../repositories/mock/day.repository'
 import { FileRepository } from '../repositories/mock/file.repository'
 import { LLMRepository } from '../repositories/mock/llm.repository'
 import { MemoryRepository } from '../repositories/mock/memory.repository'
+import { PlacesRepository } from '../repositories/mock/places.repository'
 import { TripSectionRepository } from '../repositories/mock/trip-section.repository'
 import { TripRepository } from '../repositories/mock/trip.repository'
 
@@ -23,6 +24,7 @@ class MockDatabaseClient implements IDatabaseClient {
   comments!: ICommentRepository
   community!: ICommunityRepository
   llm!: ILLMRepository
+  places!: IPlacesRepository
 
   async initDb(): Promise<this> {
     this.account = new AccountRepository()
@@ -36,6 +38,7 @@ class MockDatabaseClient implements IDatabaseClient {
     this.comments = new CommentRepository()
     this.community = new CommunityRepository()
     this.llm = new LLMRepository()
+    this.places = new PlacesRepository()
 
     return this
   }

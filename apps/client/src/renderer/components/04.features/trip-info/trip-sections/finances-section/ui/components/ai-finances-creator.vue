@@ -530,4 +530,53 @@ function updateTransactionDate(tx: GeneratedTransaction, newDate: CalendarDate |
     }
   }
 }
+
+@include media-down(md) {
+  .preview-item {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .pi-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    margin-top: 0;
+
+    .pi-category-icon {
+      font-size: 1.3rem;
+    }
+  }
+
+  .pi-content {
+    gap: 1rem;
+  }
+
+  .pi-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .pi-amount-currency {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .pi-date-trigger {
+    width: 100%;
+    justify-self: stretch;
+    justify-content: center;
+    padding: 0.5rem;
+    background-color: var(--bg-secondary-color);
+    border-radius: var(--r-m);
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
+  }
+
+  .pi-input-group {
+    border-bottom: none;
+  }
+}
 </style>

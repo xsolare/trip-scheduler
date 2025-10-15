@@ -1,4 +1,5 @@
-import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, ILLMRepository, IMemoryRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import type { IAccountRepository, IActivityRepository, IAuthRepository, ICommentRepository, ICommunityRepository, IDatabaseClient, IDayRepository, IFileRepository, ILLMRepository, IMemoryRepository, IPlacesRepository, ITripRepository, ITripSectionRepository } from '../model/types.ts'
+import { PlacesRepository } from '../repositories/mock/places.repository.ts'
 import { AccountRepository } from '../repositories/sql/account.repository.ts'
 import { ActivityRepository } from '../repositories/sql/activity.repository.ts'
 import { AuthRepository } from '../repositories/sql/auth.repository.ts'
@@ -33,6 +34,7 @@ class SqlDatabaseClient implements IDatabaseClient {
   comments!: ICommentRepository
   community!: ICommunityRepository
   llm!: ILLMRepository
+  places!: IPlacesRepository
 
   async initDb(): Promise<this> {
     if (!window.electronAPI) {
@@ -67,6 +69,7 @@ class SqlDatabaseClient implements IDatabaseClient {
     this.comments = new CommentRepository()
     this.community = new CommunityRepository()
     this.llm = new LLMRepository()
+    this.places = new PlacesRepository()
 
     return this
   }
