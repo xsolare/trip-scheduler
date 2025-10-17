@@ -159,6 +159,7 @@ function onAddItem() {
   padding: 0.5rem 0.5rem 0.5rem 0.75rem;
   background-color: var(--bg-tertiary-color);
   cursor: pointer;
+  border-radius: var(--r-m);
 }
 
 .title-container {

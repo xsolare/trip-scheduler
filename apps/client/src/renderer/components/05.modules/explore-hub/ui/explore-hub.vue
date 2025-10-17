@@ -67,7 +67,7 @@ onMounted(() => {
           <h2 class="panel-title">
             Фильтры
           </h2>
-          <KitViewSwitcher v-model="viewMode" :items="viewModeItems" />
+          <!-- <KitViewSwitcher v-model="viewMode" :items="viewModeItems" /> -->
         </div>
         <PlacesFilters
           :tags="tags"

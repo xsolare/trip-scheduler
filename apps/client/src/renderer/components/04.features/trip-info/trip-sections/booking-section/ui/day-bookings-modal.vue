@@ -18,7 +18,7 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
 }>()
 
-const { activeTab, bookingGroups, tabItems } = useBookingSection({
+const { activeTab, bookingGroups, tabItems, allBookingsSorted } = useBookingSection({
   section: {
     id: 'day-bookings-modal',
     type: 'booking',
@@ -26,6 +26,17 @@ const { activeTab, bookingGroups, tabItems } = useBookingSection({
   },
   readonly: true,
 }, () => {})
+
+const cardComponents = {
+  flight: FlightCard,
+  hotel: HotelCard,
+  train: TrainCard,
+  attraction: AttractionCard,
+}
+
+function getCardComponent(type: Booking['type']) {
+  return cardComponents[type]
+}
 </script>
 
 <template>
@@ -38,13 +49,26 @@ const { activeTab, bookingGroups, tabItems } = useBookingSection({
   >
     <div class="day-bookings-content">
       <KitTabs v-if="tabItems.length > 0" v-model="activeTab" :items="tabItems">
-        <template v-for="tab in tabItems" :key="tab.id" #[tab.id]>
+        <template #timeline>
+          <div class="bookings-grid">
+            <div v-for="booking in allBookingsSorted" :key="booking.id">
+              <Component
+                :is="getCardComponent(booking.type)"
+                :booking="booking as any"
+                :readonly="true"
+              />
+            </div>
+          </div>
+        </template>
+
+        <template v-for="tab in tabItems.filter(t => t.id !== 'timeline')" :key="tab.id" #[tab.id]>
           <div class="bookings-grid">
             <div v-for="booking in bookingGroups[tab.id]" :key="booking.id">
-              <FlightCard v-if="booking.type === 'flight'" :booking="booking" :readonly="true" />
-              <HotelCard v-else-if="booking.type === 'hotel'" :booking="booking" :readonly="true" />
-              <TrainCard v-else-if="booking.type === 'train'" :booking="booking" :readonly="true" />
-              <AttractionCard v-else-if="booking.type === 'attraction'" :booking="booking" :readonly="true" />
+              <Component
+                :is="getCardComponent(booking.type)"
+                :booking="booking as any"
+                :readonly="true"
+              />
             </div>
           </div>
         </template>
