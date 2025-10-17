@@ -64,7 +64,9 @@ class CacheStrategyFactory {
       cacheName,
       plugins: [
         createMonitoringPlugin(cacheName),
-        new CacheableResponsePlugin({ statuses: [200] }),
+        new CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
         new ExpirationPlugin({
           maxEntries: options.maxEntries,
           maxAgeSeconds: options.maxAgeSeconds,
@@ -83,7 +85,7 @@ class CacheStrategyFactory {
       plugins: [
         createMonitoringPlugin(cacheName),
         new CacheableResponsePlugin({
-          statuses: options.statuses || [200],
+          statuses: options.statuses || [0, 200],
         }),
         new ExpirationPlugin({
           maxEntries: options.maxEntries,
@@ -102,7 +104,7 @@ class CacheStrategyFactory {
       cacheName,
       plugins: [
         createMonitoringPlugin(cacheName),
-        new CacheableResponsePlugin({ statuses: [200] }),
+        new CacheableResponsePlugin({ statuses: [0, 200] }),
         new ExpirationPlugin({
           maxEntries: options.maxEntries,
           maxAgeSeconds: options.maxAgeSeconds,

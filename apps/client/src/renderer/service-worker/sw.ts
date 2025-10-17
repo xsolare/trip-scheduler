@@ -95,6 +95,18 @@ if (import.meta.env.PROD) {
   )
 }
 
+// GEOCODING API (Open-Meteo)
+registerRoute(
+  ({ url }) => url.hostname === 'geocoding-api.open-meteo.com',
+  CacheStrategyFactory.createStaleWhileRevalidate(
+    CACHE_CONFIG.names.geocoding,
+    {
+      maxEntries: CACHE_CONFIG.limits.geocoding,
+      maxAgeSeconds: CACHE_CONFIG.durations.geocoding,
+    },
+  ),
+)
+
 registerRoute(
   ({ url }) => url.hostname === 'api.iconify.design',
   CacheStrategyFactory.createStaleWhileRevalidate(

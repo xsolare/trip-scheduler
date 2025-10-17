@@ -29,6 +29,7 @@ const CACHE_CONFIG = {
     vendorAssets: 'trip-scheduler-vendor-assets',
     regularAssets: 'trip-scheduler-regular-assets',
     maptiler: 'trip-scheduler-maptiler-tiles',
+    geocoding: 'trip-scheduler-geocoding-api',
   },
   durations: {
     images: 365 * 24 * 60 * 60,
@@ -42,6 +43,7 @@ const CACHE_CONFIG = {
     },
     manifests: 7 * 24 * 60 * 60,
     maptiler: 30 * 24 * 60 * 60, // 30 дней
+    geocoding: 30 * 24 * 60 * 60, // 30 дней
   },
   limits: {
     fonts: 30,
@@ -53,6 +55,7 @@ const CACHE_CONFIG = {
     regularAssets: 50,
     manifests: 100,
     maptiler: 1000,
+    geocoding: 100,
   },
 } as const
 
