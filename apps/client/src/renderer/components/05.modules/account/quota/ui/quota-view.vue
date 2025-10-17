@@ -62,6 +62,14 @@ onMounted(() => {
           unit="bytes"
           :to="{ name: AppRouteNames.AccountStorage }"
         />
+        <UserQuotaWidget
+          title="LLM Токены"
+          icon="mdi:robot-outline"
+          :current="user.llmCreditsUsed"
+          :limit="user.plan.monthlyLlmCredits"
+          unit="tokens"
+          :to="{ name: AppRouteNames.AccountQuota }"
+        />
       </div>
     </div>
 

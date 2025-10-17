@@ -7,7 +7,7 @@ interface Props {
   icon: string
   current: number
   limit: number
-  unit: 'items' | 'bytes'
+  unit: 'items' | 'bytes' | 'tokens'
   to?: RouteLocationRaw
 }
 
@@ -15,16 +15,22 @@ const props = defineProps<Props>()
 
 const componentType = computed(() => (props.to ? 'router-link' : 'div'))
 
+function formatNumber(num: number): string {
+  return new Intl.NumberFormat('ru-RU', { useGrouping: true }).format(num)
+}
+
 const formattedCurrent = computed(() => {
   if (props.unit === 'bytes')
     return formatBytes(props.current)
-  return props.current.toString()
+
+  return formatNumber(props.current)
 })
 
 const formattedLimit = computed(() => {
   if (props.unit === 'bytes')
     return formatBytes(props.limit)
-  return props.limit.toString()
+  
+  return formatNumber(props.limit)
 })
 
 const percentage = computed(() => {

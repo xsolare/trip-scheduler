@@ -1,13 +1,5 @@
-import { computed, ref } from 'vue'
+import type { Plan } from '~/shared/types/models/trip'
 import { useRequest, useRequestStatus } from '~/plugins/request'
-
-export interface Plan {
-  id: number
-  name: string
-  maxTrips: number
-  maxStorageBytes: number
-  isDeveloping: boolean
-}
 
 // Mock-данные для price, т.к. их нет в схеме БД
 const planPrices: Record<number, { monthly: number, yearly: number }> = {
@@ -23,9 +15,9 @@ const planDescriptions: Record<number, string> = {
 }
 
 const planFeatures: Record<number, string[]> = {
-  1: ['1 путешествия', '1 ГБ хранилища', 'Базовое планирование', 'Без совместной работы'],
-  2: ['10 путешествий', '20 ГБ хранилища', 'Расширенное планирование', 'Совместная работа (до 5 чел.)', 'Офлайн-карты'],
-  3: ['Неограниченно путешествий', '100 ГБ хранилища', 'Все PRO-функции', 'Управление командой', 'Приоритетная поддержка'],
+  1: ['3 путешествия', '1 ГБ хранилища', '100,000 LLM токенов/мес', 'Базовое планирование', 'Без совместной работы'],
+  2: ['50 путешествий', '20 ГБ хранилища', '1,000,000 LLM токенов/мес', 'Расширенное планирование', 'Совместная работа (до 5 чел.)', 'Офлайн-карты'],
+  3: ['Неограниченно путешествий', '100 ГБ хранилища', '5,000,000 LLM токенов/мес', 'Все PRO-функции', 'Управление командой', 'Приоритетная поддержка'],
 }
 
 export enum EAccountKeys {
@@ -55,7 +47,7 @@ export function useQuota() {
       key: EAccountKeys.FETCH_PLANS,
       fn: db => db.account.listPlans(),
       onSuccess: (data) => {
-        rawPlans.value = data
+        rawPlans.value = data as Plan[]
       },
     })
   }

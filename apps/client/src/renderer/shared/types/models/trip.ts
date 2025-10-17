@@ -72,9 +72,10 @@ export interface ImageMetadata {
     software?: string // Программа, в которой обработано фото
     creator?: string // Инструмент создателя
     copyright?: string // Информация об авторских правах
-    modifyDate?: string // Дата последнего изменения файла (ISO string)
+    modifyDate?: string | Date // Дата последнего изменения файла (ISO string или Date)
   }
 
+  // Новые добавленные структуры
   gps?: GpsMetadata
   iptc?: IptcMetadata
 
@@ -130,6 +131,7 @@ export enum TripSectionType {
   CHECKLIST = 'checklist',
   NOTES = 'notes',
   CUSTOM = 'custom',
+  MAP = 'map',
 }
 
 export interface TripSection {
@@ -176,6 +178,7 @@ export interface Plan {
   name: string
   maxTrips: number
   maxStorageBytes: number
+  monthlyLlmCredits: number
   isDeveloping: boolean
 }
 

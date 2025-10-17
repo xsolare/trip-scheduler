@@ -6,6 +6,7 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
 import { TripEditInfoDialog } from '~/components/04.features/trip-info/trip-edit-info-dialog'
+import { TripMapSection } from '~/components/04.features/trip-info/trip-map-section'
 import { TripMemoriesView } from '~/components/04.features/trip-info/trip-memories'
 import { TripPlanView } from '~/components/04.features/trip-info/trip-plan'
 import { useDisplay } from '~/shared/composables/use-display'
@@ -28,6 +29,7 @@ const { activeView } = storeToRefs(ui)
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
 const sectionId = computed(() => route.query.section as string)
+const isMapView = computed(() => route.query.view === 'map')
 
 const isEditModalOpen = ref(false)
 
@@ -50,7 +52,7 @@ watch(
     }
 
     if (newDayId && newDayId !== route.query.day) {
-      router.replace({ query: { ...route.query, day: newDayId, section: undefined } })
+      router.replace({ query: { ...route.query, day: newDayId, section: undefined, view: undefined } })
     }
     else if (!newDayId && route.query.day) {
       // Handle case where day is deselected
@@ -65,7 +67,7 @@ watch(dayId, (newDayId) => {
   if (newDayId && newDayId !== plan.currentDayId) {
     plan.setCurrentDay(newDayId)
   }
-  else if (!newDayId && plan.currentDayId) {
+  else if (!newDayId && plan.currentDayId && !sectionId.value && !isMapView.value) {
     plan.setCurrentDay('') // or null
   }
 }, { immediate: true })
@@ -128,36 +130,39 @@ onUnmounted(() => {
       </template>
 
       <template #success>
-        <!-- Вид "Обзор" (Визитка) -->
-        <TripOverviewContent v-if="!dayId && !sectionId" :plan="plan" :sections="sections" @edit="handleEditTrip" />
+        <TripMapSection v-if="isMapView" :days="days" />
+        <template v-else>
+          <!-- Вид "Обзор" (Визитка) -->
+          <TripOverviewContent v-if="!dayId && !sectionId" :plan="plan" :sections="sections" @edit="handleEditTrip" />
 
-        <!-- Вид "День" -->
-        <template v-else-if="dayId && !sectionId">
-          <DaysControls
-            :wrapper-bounding="{
-              left: wrapperLeft,
-              width: wrapperWidth,
-            }"
-          />
-          <div :key="plan.currentDayId!" class="trip-info-day-view">
-            <KitDivider :is-loading="plan.isLoadingUpdateDay">
-              о дне
-            </KitDivider>
-            <DayHeader />
+          <!-- Вид "День" -->
+          <template v-else-if="dayId && !sectionId">
+            <DaysControls
+              :wrapper-bounding="{
+                left: wrapperLeft,
+                width: wrapperWidth,
+              }"
+            />
+            <div :key="plan.currentDayId!" class="trip-info-day-view">
+              <KitDivider :is-loading="plan.isLoadingUpdateDay">
+                о дне
+              </KitDivider>
+              <DayHeader />
 
-            <div class="view-content" :class="`view-mode-${activeView}`">
-              <TripPlanView v-if="activeView === 'plan' || activeView === 'split'" />
-              <TripMemoriesView v-if="activeView === 'memories' || activeView === 'split'" />
+              <div class="view-content" :class="`view-mode-${activeView}`">
+                <TripPlanView v-if="activeView === 'plan' || activeView === 'split'" />
+                <TripMemoriesView v-if="activeView === 'memories' || activeView === 'split'" />
+              </div>
+
+              <div ref="dayNavigationWrapperRef">
+                <DayNavigation v-if="!isLoading && days.length > 1" />
+              </div>
             </div>
+          </template>
 
-            <div ref="dayNavigationWrapperRef">
-              <DayNavigation v-if="!isLoading && days.length > 1" />
-            </div>
-          </div>
+          <!-- Вид "Раздел" -->
+          <SectionRenderer v-else-if="sectionId" />
         </template>
-
-        <!-- Вид "Раздел" -->
-        <SectionRenderer v-else-if="sectionId" />
 
         <TripEditInfoDialog
           v-if="isEditModalOpen"

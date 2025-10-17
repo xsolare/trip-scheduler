@@ -1,8 +1,10 @@
-<!-- Маршрут по дням (план + воспоминания) -->
 <script setup lang="ts">
 import { TripInfo } from '~/components/05.modules/trip-info'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { useDisplay } from '~/shared/composables/use-display'
+
+const route = useRoute()
+const isMapView = computed(() => route.query.view === 'map')
 
 const store = useModuleStore(['plan', 'ui'])
 const { mdAndDown } = useDisplay()
@@ -17,6 +19,7 @@ const { isDaysPanelPinned, activeView } = storeToRefs(store.ui)
     :class="[
       { isPanelPinned: isDaysPanelPinned && !mdAndDown },
       { 'has-error': fetchError },
+      { 'is-map-view': isMapView },
       activeView,
     ]"
   >
@@ -27,6 +30,10 @@ const { isDaysPanelPinned, activeView } = storeToRefs(store.ui)
 <style lang="scss" scoped>
 .content-wrapper {
   transition: background-color 0.2s ease;
+
+  &.is-map-view {
+    max-width: 1800px;
+  }
 
   &.has-error {
     background: transparent;

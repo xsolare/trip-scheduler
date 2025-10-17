@@ -130,13 +130,13 @@ const areItemsEmpty = computed(() => {
 })
 
 const mapCenter = computed<Coordinate>(() => {
-  if (props.section.center)
+  if (props.section?.center)
     return props.section.center
 
-  if (props.section.points?.length > 0)
+  if (props.section?.points?.length > 0)
     return props.section.points[0].coordinates
 
-  if (props.section.routes?.length > 0 && props.section.routes[0].points.length > 0)
+  if (props.section?.routes?.length > 0 && props.section.routes[0].points.length > 0)
     return props.section.routes[0].points[0].coordinates
 
   return [37.6176, 55.7558] // Москва

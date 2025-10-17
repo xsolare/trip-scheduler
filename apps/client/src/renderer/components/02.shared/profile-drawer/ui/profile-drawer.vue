@@ -120,6 +120,15 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout', action: () => hand
           :to="{ name: AppRouteNames.AccountStorage }"
           @click="open = false"
         />
+        <UserQuotaWidget
+          title="LLM Токены"
+          icon="mdi:robot-outline"
+          :current="user.llmCreditsUsed"
+          :limit="user.plan.monthlyLlmCredits"
+          unit="tokens"
+          :to="{ name: AppRouteNames.AccountQuota }"
+          @click="open = false"
+        />
       </div>
 
       <nav class="drawer-nav">
@@ -230,7 +239,7 @@ const logoutItem = { label: 'Выйти', icon: 'mdi:logout', action: () => hand
 .quota-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
   padding: 8px;
   border-radius: var(--r-m);
 }

@@ -38,12 +38,17 @@ export function useTripInfoLayout() {
       label: 'Обзор',
       icon: 'mdi:view-dashboard-outline',
     }
+    const mapTab: ViewSwitcherItem<string> = {
+      id: 'trip-map',
+      label: 'Карта путешествия',
+      icon: 'mdi:map-search-outline',
+    }
     const sectionTabs: ViewSwitcherItem<string>[] = sortedSections.value.map((section: TripSection) => ({
       id: section.id,
       label: section.title,
       icon: section.icon || 'mdi:file-document-outline',
     }))
-    return [overviewTab, ...sectionTabs]
+    return [overviewTab, mapTab, ...sectionTabs]
   })
 
   watchEffect(() => {
@@ -62,6 +67,9 @@ export function useTripInfoLayout() {
     if (route.query.day) {
       return { id: 'daily-route', label: 'Маршрут по дням', icon: 'mdi:calendar-month-outline' }
     }
+    if (route.query.view === 'map') {
+      return { id: 'trip-map', label: 'Карта путешествия', icon: 'mdi:map-search-outline' }
+    }
     return tabItems.value.find(item => item.id === activeTabId.value)
   })
 
@@ -71,7 +79,7 @@ export function useTripInfoLayout() {
     ]
 
     // Если выбрана какая-либо секция (а не "Маршрут по дням" или "Обзор")
-    if (activeTab.value && !['daily-route', 'overview'].includes(activeTab.value.id)) {
+    if (activeTab.value && !['daily-route', 'overview', 'trip-map'].includes(activeTab.value.id)) {
       const sectionActions: KitDropdownItem[] = [
         { value: 'edit', label: 'Редактировать', icon: 'mdi:pencil-outline' },
         { value: 'clear', label: 'Очистить', icon: 'mdi:broom' },
@@ -85,21 +93,25 @@ export function useTripInfoLayout() {
 
   // --- МЕТОДЫ (METHODS) ---
   function selectSection(id: string) {
-    activeTabId.value = id
     isDrawerOpen.value = false
     isLayoutDropdownOpen.value = false
     isHeaderDropdownOpen.value = false
 
     const currentQuery = { ...route.query }
-    delete currentQuery.day // Всегда убираем день при смене раздела
+    delete currentQuery.day
+    delete currentQuery.section
+    delete currentQuery.view
 
-    if (activeTabId.value === 'overview') {
-      delete currentQuery.section
+    if (id === 'trip-map') {
+      router.push({ query: { ...currentQuery, view: 'map' } })
+    }
+    else if (id === 'overview') {
+      router.push({ query: currentQuery })
     }
     else {
-      currentQuery.section = activeTabId.value
+      router.push({ query: { ...currentQuery, section: id } })
     }
-    router.push({ query: currentQuery })
+    activeTabId.value = id
   }
 
   function handleCurrentSectionClick() {
@@ -117,7 +129,7 @@ export function useTripInfoLayout() {
   }
 
   function openEditDialog() {
-    if (!activeTab.value || ['daily-route', 'overview'].includes(activeTab.value.id))
+    if (!activeTab.value || ['daily-route', 'overview', 'trip-map'].includes(activeTab.value.id))
       return
     const section = sortedSections.value.find((s: TripSection) => s.id === activeTab.value!.id)
     if (!section)
@@ -146,7 +158,7 @@ export function useTripInfoLayout() {
   }
 
   async function handleClearSection() {
-    if (!activeTab.value || ['daily-route', 'overview'].includes(activeTab.value.id))
+    if (!activeTab.value || ['daily-route', 'overview', 'trip-map'].includes(activeTab.value.id))
       return
 
     const isConfirmed = await confirm({
@@ -160,7 +172,7 @@ export function useTripInfoLayout() {
   }
 
   async function handleDeleteSection() {
-    if (!activeTab.value || ['daily-route', 'overview'].includes(activeTab.value.id))
+    if (!activeTab.value || ['daily-route', 'overview', 'trip-map'].includes(activeTab.value.id))
       return
     const isConfirmed = await confirm({
       title: `Удалить раздел "${activeTab.value.label}"?`,

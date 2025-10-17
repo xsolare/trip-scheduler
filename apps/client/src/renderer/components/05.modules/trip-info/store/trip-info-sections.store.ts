@@ -73,6 +73,11 @@ export const useTripSectionsStore = defineStore('tripSections', {
           defaultIcon = 'mdi:format-list-checks'
           defaultTitle = 'Чек-лист'
           break
+        case TripSectionType.MAP:
+          defaultContent = {}
+          defaultIcon = 'mdi:map-search-outline'
+          defaultTitle = 'Карта путешествия'
+          break
       }
 
       // Оптимистичное добавление

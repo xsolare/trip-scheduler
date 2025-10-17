@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
+// import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
 import { computed, onMounted, ref } from 'vue'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
-import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
+// import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
 import { useExploreStore } from '~/components/04.features/explore-hub/store/explore.store'
 import { PlacesFilters, PlacesList, PlacesListSkeleton, PlacesMap } from '~/components/04.features/explore-hub/ui'
@@ -11,10 +11,10 @@ const exploreStore = useExploreStore()
 const { filteredPlaces, tags, isLoading, selectedTagIds, currentCity } = storeToRefs(exploreStore)
 
 const viewMode = ref<'list' | 'map'>('list')
-const viewModeItems: ViewSwitcherItem<'list' | 'map'>[] = [
-  { id: 'list', label: 'Список', icon: 'mdi:view-list' },
-  { id: 'map', label: 'Карта', icon: 'mdi:map-outline' },
-]
+// const viewModeItems: ViewSwitcherItem<'list' | 'map'>[] = [
+//   { id: 'list', label: 'Список', icon: 'mdi:view-list' },
+//   { id: 'map', label: 'Карта', icon: 'mdi:map-outline' },
+// ]
 
 const cityOptions = ref([
   { value: 'Chongqing', label: 'Chongqing' },

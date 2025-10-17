@@ -21,6 +21,9 @@ export async function createContext(_: FetchCreateContextFnOptions, c: Context) 
 
   const user = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.id, payload.id),
+    with: {
+      plan: true,
+    },
   })
 
   return { user, db, c }
@@ -51,7 +54,7 @@ const isAuthed = t.middleware(({ ctx, next }) => {
   }
   return next({
     ctx: {
-      user: ctx.user as typeof users.$inferSelect,
+      user: ctx.user as typeof users.$inferSelect & { plan: any }, // Типизация теперь соответствует реальности
       db: ctx.db,
       c: ctx.c,
     },

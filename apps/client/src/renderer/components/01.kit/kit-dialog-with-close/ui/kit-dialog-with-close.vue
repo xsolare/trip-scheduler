@@ -55,6 +55,9 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
         <div class="dialog-body">
           <slot />
         </div>
+        <div v-if="$slots.footer" class="dialog-footer">
+          <slot name="footer" />
+        </div>
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -152,6 +155,16 @@ const maxWidthPx = computed(() => `${maxWidth}px`)
 .dialog-body {
   flex-grow: 1;
   overflow-y: auto;
+}
+
+.dialog-footer {
+  flex-shrink: 0;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border-secondary-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 @keyframes overlay-show {

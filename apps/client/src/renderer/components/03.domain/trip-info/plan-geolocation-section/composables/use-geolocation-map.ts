@@ -202,7 +202,8 @@ function useGeolocationMap() {
       routeSource.addFeature(feature)
     }
 
-    feature.setStyle(
+    feature.setStyle([
+      // Style for the line
       new Style({
         stroke: new Stroke({
           color: route.color || '#4363D8',
@@ -210,7 +211,31 @@ function useGeolocationMap() {
           lineDash: route.isDirect ? [10, 10] : undefined,
         }),
       }),
-    )
+      // Style for the start point
+      new Style({
+        geometry: new Point(lineGeometry.getFirstCoordinate()),
+        image: new CircleStyle({
+          radius: 6,
+          fill: new Fill({ color: '#ffffff' }),
+          stroke: new Stroke({
+            color: route.color || '#4363D8',
+            width: 3,
+          }),
+        }),
+      }),
+      // Style for the end point
+      new Style({
+        geometry: new Point(lineGeometry.getLastCoordinate()),
+        image: new CircleStyle({
+          radius: 6,
+          fill: new Fill({ color: route.color || '#4363D8' }),
+          stroke: new Stroke({
+            color: '#ffffff',
+            width: 3,
+          }),
+        }),
+      }),
+    ])
   }
 
   const addOrUpdateDrawnRoute = (route: DrawnRoute) => {
@@ -230,14 +255,53 @@ function useGeolocationMap() {
       feature.setId(route.id)
       routeSource.addFeature(feature)
     }
-    feature.setStyle(
-      new Style({
-        stroke: new Stroke({
-          color: route.color || '#4363D8',
-          width: 4,
+
+    const lineStrings = multiLineGeometry.getLineStrings()
+    if (lineStrings.length > 0) {
+      feature.setStyle([
+        // Style for the line
+        new Style({
+          stroke: new Stroke({
+            color: route.color || '#4363D8',
+            width: 4,
+          }),
         }),
-      }),
-    )
+        // Style for the start point
+        new Style({
+          geometry: new Point(lineStrings[0].getFirstCoordinate()),
+          image: new CircleStyle({
+            radius: 6,
+            fill: new Fill({ color: '#ffffff' }),
+            stroke: new Stroke({
+              color: route.color || '#4363D8',
+              width: 3,
+            }),
+          }),
+        }),
+        // Style for the end point
+        new Style({
+          geometry: new Point(lineStrings[lineStrings.length - 1].getLastCoordinate()),
+          image: new CircleStyle({
+            radius: 6,
+            fill: new Fill({ color: route.color || '#4363D8' }),
+            stroke: new Stroke({
+              color: '#ffffff',
+              width: 3,
+            }),
+          }),
+        }),
+      ])
+    }
+    else {
+      feature.setStyle(
+        new Style({
+          stroke: new Stroke({
+            color: route.color || '#4363D8',
+            width: 4,
+          }),
+        }),
+      )
+    }
   }
 
   const removeRoute = (routeId: string) => {

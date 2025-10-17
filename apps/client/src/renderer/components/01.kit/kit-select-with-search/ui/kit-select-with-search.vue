@@ -234,8 +234,10 @@ onClickOutside(wrapperRef, handleClose)
             :class="{ 'is-active': isSelected(item), 'is-disabled': multiple && isSelected(item) }"
             @mousedown.prevent="selectItem(item)"
           >
-            <Icon v-if="item.icon" :icon="item.icon" class="item-icon" />
-            <span>{{ item.label }}</span>
+            <slot name="item" :item="item">
+              <Icon v-if="item.icon" :icon="item.icon" class="item-icon" />
+              <span>{{ item.label }}</span>
+            </slot>
             <Icon v-if="multiple && isSelected(item)" icon="mdi:check" class="item-check-icon" />
           </li>
         </ul>

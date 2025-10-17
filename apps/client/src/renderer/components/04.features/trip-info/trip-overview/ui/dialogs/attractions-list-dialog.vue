@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { IDay } from '~/components/04.features/trip-info/trip-plan/models/types'
 import { Icon } from '@iconify/vue'
+import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDialogWithClose } from '~/components/01.kit/kit-dialog-with-close'
 import { EActivityTag } from '~/shared/types/models/activity'
 
@@ -13,6 +14,9 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
   (e: 'navigate', dayId: string): void
 }>()
+
+const router = useRouter()
+const route = useRoute()
 
 const attractionsByDay = computed(() => {
   return props.days
@@ -27,6 +31,11 @@ function handleNavigate(dayId: string) {
   emit('navigate', dayId)
   emit('update:visible', false)
 }
+
+function showOnMap() {
+  emit('update:visible', false)
+  router.push({ query: { ...route.query, view: 'map' } })
+}
 </script>
 
 <template>
@@ -38,6 +47,12 @@ function handleNavigate(dayId: string) {
     @update:visible="emit('update:visible', $event)"
   >
     <div class="dialog-content">
+      <div class="show-on-map-wrapper">
+        <KitBtn icon="mdi:map-outline" variant="text" @click="showOnMap">
+          Показать всё на карте
+        </KitBtn>
+      </div>
+
       <div v-if="attractionsByDay.length > 0" class="days-list">
         <div v-for="(day, index) in attractionsByDay" :key="day.id" class="day-group">
           <button class="day-header" @click="handleNavigate(day.id)">
@@ -68,6 +83,11 @@ function handleNavigate(dayId: string) {
 </template>
 
 <style scoped lang="scss">
+.show-on-map-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
 .dialog-content {
   padding-top: 1rem;
 }

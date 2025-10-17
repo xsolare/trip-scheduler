@@ -15,12 +15,14 @@ const props = withDefaults(defineProps<{
   sideOffset?: number
   align?: 'start' | 'center' | 'end'
   size?: 'sm' | 'md' | 'lg'
+  portalTarget?: HTMLElement
 }>(), {
   items: () => [],
   modelValue: null,
   sideOffset: 8,
   align: 'start',
   size: 'md',
+  portalTarget: undefined,
 })
 
 const emit = defineEmits<{
@@ -40,7 +42,7 @@ function handleSelect(item: KitDropdownItem<T>) {
       <slot name="trigger" />
     </DropdownMenuTrigger>
 
-    <DropdownMenuPortal>
+    <DropdownMenuPortal :to="props.portalTarget">
       <DropdownMenuContent
         class="kit-dropdown-content"
         :side-offset="props.sideOffset"
@@ -74,7 +76,7 @@ function handleSelect(item: KitDropdownItem<T>) {
   border: 1px solid var(--border-primary-color);
   border-radius: var(--r-s);
   box-shadow: var(--shadow-m);
-  z-index: 14;
+  z-index: 2100;
   min-width: 200px;
 }
 

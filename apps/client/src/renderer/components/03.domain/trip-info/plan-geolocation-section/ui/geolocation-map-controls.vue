@@ -5,6 +5,13 @@ import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { TILE_SOURCES } from '../constant/map-styles'
 
+interface Props {
+  mapInstance: Map | null
+  isFullscreen: boolean
+  portalTarget?: HTMLElement
+  withPanel?: boolean
+}
+
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
@@ -13,11 +20,6 @@ const emit = defineEmits<{
   (e: 'setTileSource', sourceId: TileSourceId): void
   (e: 'centerOnMyLocation'): void
 }>()
-
-interface Props {
-  mapInstance: Map | null
-  isFullscreen: boolean
-}
 
 const tillerItems = computed(() => Object.entries(TILE_SOURCES).map(([id, { label, icon }]) => ({
   value: id as TileSourceId,
@@ -67,7 +69,7 @@ function zoomOut() {
         @click="zoomOut"
       />
     </div>
-    <KitDropdown :items="tillerItems" @update:model-value="emit('setTileSource', $event as TileSourceId)">
+    <KitDropdown :items="tillerItems" :portal-target="portalTarget" @update:model-value="emit('setTileSource', $event as TileSourceId)">
       <template #trigger>
         <KitBtn
           variant="outlined"
@@ -85,7 +87,7 @@ function zoomOut() {
       @click="emit('toggleFullscreen')"
     />
     <KitBtn
-      v-if="isFullscreen"
+      v-if="isFullscreen && withPanel"
       variant="outlined"
       color="secondary"
       icon="mdi:view-list"
@@ -112,6 +114,10 @@ function zoomOut() {
     height: 26px;
     flex-shrink: 0;
     background-color: var(--bg-secondary-color);
+
+    &:hover {
+      background-color: var(--bg-hover-color);
+    }
   }
 }
 

@@ -9,6 +9,7 @@ export type User = RouterOutput['user']['me'] & {
   plan?: Plan
   currentTripsCount: number
   currentStorageBytes: number
+  llmCreditsUsed: number
 }
 
 /**

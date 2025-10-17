@@ -19,6 +19,6 @@ export const llmUsageProcedures = {
   getSummary: protectedProcedure
     .output(LlmUsageSummarySchema)
     .query(async ({ ctx }) => {
-      return llmUsageService.getSummary(ctx.user.id)
+      return llmUsageService.getSummary(ctx.user)
     }),
 }

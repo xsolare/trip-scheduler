@@ -3,4 +3,5 @@ export interface Plan {
   name: string
   maxTrips: number
   maxStorageBytes: number
+  monthlyLlmCredits: number
 }

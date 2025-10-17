@@ -9,4 +9,6 @@ export const LlmUsageSchema = createSelectSchema(llmTokenUsage)
 export const LlmUsageSummarySchema = z.object({
   totalInputTokens: z.number(),
   totalOutputTokens: z.number(),
+  limit: z.number(),
+  used: z.number(),
 })

@@ -21,12 +21,14 @@ interface Props {
   zoom?: number
   isFullscreen: boolean
   interactiveOnClick?: boolean
+  withPanel?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: true,
   zoom: 14,
   interactiveOnClick: false,
+  withPanel: true,
 })
 
 const emit = defineEmits<{
@@ -168,6 +170,20 @@ onMounted(async () => {
 
   emit('mapReady', { mapInstance, isMapLoaded, initMap, addOrUpdatePoint, removePoint, addOrUpdateRoute, addOrUpdateDrawnRoute, removeRoute, modifyInteraction, setTileSource, showCurrentLocation, ...restMapController })
 })
+
+watch(isMapLoaded, (isReady) => {
+  if (isReady) {
+    props.points.forEach(addOrUpdatePoint)
+    props.routes.forEach((route) => {
+      if (route.isVisible)
+        addOrUpdateRoute(route)
+    })
+    props.drawnRoutes.forEach((route) => {
+      if (route.isVisible)
+        addOrUpdateDrawnRoute(route)
+    })
+  }
+})
 </script>
 
 <template>
@@ -198,6 +214,8 @@ onMounted(async () => {
       <GeolocationMapControls
         :map-instance="mapInstance"
         :is-fullscreen="isFullscreen"
+        :portal-target="mapContainerRef"
+        :with-panel="withPanel"
         @toggle-panel="$emit('togglePanel')"
         @toggle-fullscreen="$emit('toggleFullscreen')"
         @set-tile-source="handleSetTileSource"
