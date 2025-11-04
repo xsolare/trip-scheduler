@@ -13,7 +13,6 @@ export interface LocationCoords {
 export interface MapMarker {
   id: string
   coords: LocationCoords
-  iconUrl?: string
-  color?: string
-  draggable?: boolean
+  imageUrl?: string // URL для превью во всплывающем окне
+  payload?: any // Дополнительные данные, связанные с маркером
 }

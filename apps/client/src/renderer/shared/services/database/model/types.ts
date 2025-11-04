@@ -3,12 +3,12 @@ import type { SignInPayload, SignUpPayload, TokenPair, User } from '~/shared/typ
 import type { CreateCommentInput, UpdateCommentInput } from '~/shared/types/models/comment'
 import type { Community, CreateCommunityInput, ListCommunitiesInput } from '~/shared/types/models/community'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
+import type { Place, PlaceTag } from '~/shared/types/models/place'
 import type { CreateTripInput, Plan, Trip, TripImage, TripImagePlacement, TripSection, TripSectionType, TripStatus, TripWithDays, UpdateTripInput } from '~/shared/types/models/trip'
-import type { Place, PlaceTag } from '~/shared/types/models/place';
 
 export interface IPlacesRepository {
-  getPlacesByCity(city: string, filters?: { tags?: string[] }): Promise<Place[]>;
-  getAvailableTags(city: string): Promise<PlaceTag[]>;
+  getPlacesByCity: (city: string, filters?: { tags?: string[] }) => Promise<Place[]>
+  getAvailableTags: (city: string) => Promise<PlaceTag[]>
 }
 
 export interface TripListFilters {
@@ -71,6 +71,7 @@ export interface IActivityRepository {
 
 export interface IFileRepository {
   uploadFile: (file: File, tripId: string, placement: TripImagePlacement, timestamp?: string | null, comment?: string | null) => Promise<TripImage>
+  uploadFileWithProgress: (file: File, tripId: string, placement: TripImagePlacement, onProgress: (percentage: number) => void, signal: AbortSignal) => Promise<TripImage>
   listImageByTrip: (tripId: string, placement: TripImagePlacement) => Promise<TripImage[]>
   getAllUserFiles: () => Promise<TripImage[]>
   deleteFile: (id: string) => Promise<void>

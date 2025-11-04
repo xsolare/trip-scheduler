@@ -260,7 +260,7 @@ function updateSegmentField<K extends keyof FlightSegment>(segmentIndex: number,
 
       <div class="route-visualizer">
         <div class="total-duration">
-          В пути: {{ totalDurationFormatted }}
+          {{ totalDurationFormatted }}
         </div>
         <div class="route-line">
           <template v-for="(part) in journeySegments" :key="part">

@@ -222,7 +222,7 @@ onClickOutside(dateFilterWrapperRef, () => {
     <TransactionsList
       :transactions="filteredTransactions"
       :categories="categories"
-      :main-currency="settings.mainCurrency"
+      :settings="settings"
       :readonly="readonly"
       :filtered-total="filteredTotal"
       @edit-transaction="openTransactionForm"

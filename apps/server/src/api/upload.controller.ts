@@ -11,84 +11,100 @@ import { extractAndStructureMetadata, generateImageVariants } from '~/services/i
 import { fileUploadsCounter, fileUploadSizeBytesHistogram } from '~/services/metrics.service'
 import { quotaService } from '~/services/quota.service'
 
+/**
+ * Извлекает имя файла из заголовка Content-Disposition.
+ */
+function getFileNameFromHeader(header: string | null): string | null {
+  if (!header)
+    return null
+  const match = header.match(/filename="([^"]+)"/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 export async function uploadFileController(c: Context) {
   // --- АУТЕНТИФИКАЦИЯ ---
   const authHeader = c.req.header('authorization')
   const token = authHeader?.split(' ')[1]
-  if (!token) {
+  if (!token)
     throw new HTTPException(401, { message: 'Токен аутентификации не предоставлен.' })
-  }
+
   const payload = await authUtils.verifyToken(token)
-  if (!payload) {
+  if (!payload)
     throw new HTTPException(401, { message: 'Невалидный или истекший токен.' })
-  }
   const userId = payload.id
 
   // 1. Валидация HTTP-запроса
-  const formData = await c.req.formData()
+  const { tripId, placement } = c.req.query()
+  const fileName = getFileNameFromHeader(c.req.header('content-disposition')!)
 
-  const file = formData.get('file')
-  const tripId = formData.get('tripId')
-  const placement = formData.get('placement') as 'route' | 'memories'
+  // Используем c.req.blob() для корректной работы с потоком, затем получаем ArrayBuffer
+  const fileBlob = await c.req.blob()
+  const fileBuffer = await fileBlob.arrayBuffer()
 
-  if (!file || !(file instanceof File)) {
-    throw new HTTPException(400, { message: 'Файл не найден в запросе.' })
-  }
-  if (!tripId || typeof tripId !== 'string') {
+  if (!fileBuffer || fileBuffer.byteLength === 0)
+    throw new HTTPException(400, { message: 'Файл не найден в теле запроса.' })
+
+  if (!tripId || typeof tripId !== 'string')
     throw new HTTPException(400, { message: 'Необходимо указать ID путешествия (tripId).' })
-  }
-  if (!placement || !tripImagePlacementEnum.enumValues.includes(placement)) {
+
+  if (!placement || !tripImagePlacementEnum.enumValues.includes(placement as 'route' | 'memories'))
     throw new HTTPException(400, { message: 'Необходимо указать корректный тип размещения.' })
-  }
+
+  if (!fileName)
+    throw new HTTPException(400, { message: 'Необходимо указать имя файла в заголовке Content-Disposition.' })
 
   try {
     // 2. Подготовка данных
-    const fileBuffer = Buffer.from(await file.arrayBuffer())
-
-    // Предварительная проверка по размеру исходного файла
-    await quotaService.checkStorageQuota(userId, fileBuffer.length)
-
-    const paths = generateFilePaths(`trips/${tripId}/${placement}`, file.name)
+    const buffer = Buffer.from(fileBuffer)
+    await quotaService.checkStorageQuota(userId, buffer.length)
+    const paths = generateFilePaths(`trips/${tripId}/${placement}`, fileName)
 
     // 3. Извлечение метаданных
-    const { metadata } = await extractAndStructureMetadata(fileBuffer)
+    // Обертка в try-catch для sharp, чтобы отловить ошибку формата
+    let metadata, imageVariants
+    try {
+      ({ metadata } = await extractAndStructureMetadata(buffer))
+      imageVariants = await generateImageVariants(buffer)
+    }
+    catch (sharpError: any) {
+      console.error('Sharp processing error:', sharpError)
+      throw new HTTPException(415, { message: `Неподдерживаемый формат изображения: ${sharpError.message}` })
+    }
 
     // 4. Генерация и сохранение вариантов
-    const imageVariants = await generateImageVariants(fileBuffer)
     const variantUrls: Record<string, string> = {}
     let variantsTotalSize = 0
 
-    // Используем Promise.all для параллельного сохранения
     await Promise.all(
-      Object.entries(imageVariants).map(async ([name, buffer]) => {
+      Object.entries(imageVariants).map(async ([name, variantBuffer]) => {
         const variantPaths = paths.getVariantPaths(name)
-        await saveFile(variantPaths.diskPath, buffer)
+        await saveFile(variantPaths.diskPath, variantBuffer)
         variantUrls[name] = variantPaths.dbPath
-        variantsTotalSize += buffer.length
+        variantsTotalSize += variantBuffer.length
       }),
     )
 
     // 5. Сохранение основного файла
-    await saveFile(paths.original.diskPath, fileBuffer)
+    await saveFile(paths.original.diskPath, buffer)
 
     // 6. Сохранение записи в БД
-    const totalSize = fileBuffer.length + variantsTotalSize
+    const totalSize = buffer.length + variantsTotalSize
     const newImageRecord = await imageService.create(
       tripId,
-      paths.original.dbPath, // URL оригинала
-      file.name, // Сохраняем оригинальное имя
-      placement,
+      paths.original.dbPath,
+      fileName,
+      placement as 'route' | 'memories',
       totalSize,
       {
         ...metadata,
-        variants: variantUrls, // Объект с URL вариантов
+        variants: variantUrls,
       } as ImageMetadata,
     )
 
     await quotaService.incrementStorageUsage(userId, totalSize)
 
     fileUploadsCounter.inc({ placement })
-    fileUploadSizeBytesHistogram.observe({ placement }, file.size)
+    fileUploadSizeBytesHistogram.observe({ placement }, buffer.length)
 
     // 7. Отправка ответа
     return c.json(newImageRecord)
@@ -96,8 +112,15 @@ export async function uploadFileController(c: Context) {
   catch (error: any) {
     console.error('Ошибка при обработке загруженного файла:', error)
 
-    if (error instanceof HTTPException) {
+    if (error instanceof HTTPException)
       throw error
+
+    // Более конкретное сообщение об ошибке
+    if (error.message.includes('Input buffer')) {
+      return c.json(
+        { message: 'Ошибка обработки изображения. Возможно, файл поврежден или имеет неподдерживаемый формат.' },
+        415, // Unsupported Media Type
+      )
     }
 
     return c.json(
@@ -128,7 +151,6 @@ export async function uploadAvatarController(c: Context) {
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const paths = generateFilePaths(`avatars/${userId}`, file.name)
 
-    // Для аватаров создаем только один вариант
     const avatarBuffer = await sharp(fileBuffer).resize(200, 200).webp({ quality: 85 }).toBuffer()
     await saveFile(paths.original.diskPath, avatarBuffer)
 
@@ -139,9 +161,8 @@ export async function uploadAvatarController(c: Context) {
   catch (error: any) {
     console.error('Ошибка при загрузке аватара:', error)
 
-    if (error instanceof HTTPException) {
+    if (error instanceof HTTPException)
       throw error
-    }
 
     return c.json(
       { message: error.message || 'Не удалось загрузить аватар.' },

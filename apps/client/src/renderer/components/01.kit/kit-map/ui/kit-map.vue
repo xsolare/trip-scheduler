@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Map } from 'ol'
+import type { Map as OlMap } from 'ol'
+import type { MapMarker } from '../models/types'
 import { useFullscreen } from '@vueuse/core'
 import { onMounted, ref, watch } from 'vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
@@ -12,27 +13,33 @@ interface Props {
   center: [number, number]
   zoom?: number
   height?: string
+  markers?: MapMarker[]
+  autoPan?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   zoom: 12,
   height: '100%',
+  markers: () => [],
+  autoPan: true,
 })
 
 const emit = defineEmits<{
-  (e: 'mapReady', map: Map): void
+  (e: 'mapReady', map: OlMap): void
   (e: 'click', coords: [number, number]): void
 }>()
 
 const mapWrapperRef = ref<HTMLElement | null>(null)
-const { mapInstance, isMapReady, initMap, zoomIn, zoomOut } = useKitMap()
+const popupRef = ref<HTMLElement | null>(null)
+const { mapInstance, isMapReady, initMap, zoomIn, zoomOut, updateMarkers, fitViewToMarkers } = useKitMap()
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(mapWrapperRef)
 
 onMounted(async () => {
-  if (mapWrapperRef.value) {
-    await initMap(mapWrapperRef.value, {
+  if (mapWrapperRef.value && popupRef.value) {
+    await initMap(mapWrapperRef.value, popupRef.value, {
       center: props.center,
       zoom: props.zoom,
+      autoPan: props.autoPan,
     })
 
     if (mapInstance.value) {
@@ -40,6 +47,11 @@ onMounted(async () => {
         emit('click', event.coordinate as [number, number])
       })
       emit('mapReady', mapInstance.value)
+
+      if (props.markers.length > 0) {
+        updateMarkers(props.markers)
+        fitViewToMarkers()
+      }
     }
   }
 })
@@ -47,6 +59,13 @@ onMounted(async () => {
 watch(() => props.center, (newCenter) => {
   mapInstance.value?.getView().animate({ center: newCenter, duration: 500 })
 })
+
+watch(() => props.markers, (newMarkers) => {
+  if (isMapReady.value) {
+    updateMarkers(newMarkers)
+    fitViewToMarkers()
+  }
+}, { deep: true })
 </script>
 
 <template>
@@ -56,6 +75,8 @@ watch(() => props.center, (newCenter) => {
     </div>
 
     <slot />
+
+    <div ref="popupRef" class="ol-popup-placeholder" />
 
     <div class="controls-container">
       <KitMapControls :map-instance="mapInstance" @zoom-in="zoomIn" @zoom-out="zoomOut" />
@@ -70,6 +91,44 @@ watch(() => props.center, (newCenter) => {
     </div>
   </div>
 </template>
+
+<style lang="scss">
+.ol-popup-placeholder {
+  position: absolute;
+  background-color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  border-radius: var(--r-s);
+  border: 1px solid #cccccc;
+  bottom: 12px;
+  left: -50px;
+  min-width: 120px;
+  transform: translate(-50%, -10px);
+
+  &::after,
+  &::before {
+    top: 100%;
+    border: solid transparent;
+    content: ' ';
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+  }
+  &::after {
+    border-top-color: white;
+    border-width: 10px;
+    left: 50%;
+    margin-left: -10px;
+  }
+  &::before {
+    border-top-color: #cccccc;
+    border-width: 11px;
+    left: 50%;
+    margin-left: -11px;
+  }
+}
+</style>
 
 <style scoped lang="scss">
 .kit-map-wrapper {

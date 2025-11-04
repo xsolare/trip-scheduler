@@ -12,12 +12,13 @@ import { KitInput } from '~/components/01.kit/kit-input'
 import { KitTimeField } from '~/components/01.kit/kit-time-field'
 import { useModuleStore } from '~/components/05.modules/trip-info/composables/use-trip-info-module'
 import { getTagInfo, memoryToViewerImage } from '~/components/05.modules/trip-info/lib/helpers'
+import MemoriesMap from './memories-map.vue'
 import ProcessingQueue from './processing/processing-queue.vue'
-import UploadingQueue from './processing/uploading-queue.vue'
+import UploadingIndicator from './processing/uploading-indicator.vue'
 import MemoriesTimeline from './timeline/memories-timeline.vue'
 
 const { memories, plan: tripData, ui } = useModuleStore(['memories', 'plan', 'ui'])
-const { memoriesForSelectedDay, memoriesToProcess, getProcessingMemories, isLoadingMemories: isLoading } = storeToRefs(memories)
+const { memoriesForSelectedDay, memoriesToProcess, getProcessingMemories, isLoadingMemories: isLoading, memoriesWithGeo } = storeToRefs(memories)
 
 const { getActivitiesForSelectedDay } = storeToRefs(tripData)
 const { isViewMode } = storeToRefs(ui)
@@ -28,6 +29,7 @@ const { open: openFileDialog, onChange, reset } = useFileDialog({
 })
 
 const isProcessing = computed(() => getProcessingMemories.value.length > 0)
+const isMapVisible = ref(false)
 
 const galleryImages = computed<ImageViewerImage[]>(() => {
   return memoriesForSelectedDay.value
@@ -125,8 +127,7 @@ onChange((files) => {
   if (!files || files.length === 0)
     return
 
-  Array.from(files).forEach(file => memories.uploadMemoryImage(file))
-
+  memories.enqueueFilesForUpload(Array.from(files))
   reset()
 })
 </script>
@@ -156,7 +157,7 @@ onChange((files) => {
       </KitDropdown>
     </div>
 
-    <UploadingQueue
+    <UploadingIndicator
       v-if="isProcessing"
       :processing-memories="getProcessingMemories"
       @cancel="memories.cancelMemoryUpload"
@@ -165,6 +166,12 @@ onChange((files) => {
     />
 
     <ProcessingQueue v-if="!isViewMode && memoriesToProcess.length > 0" />
+
+    <MemoriesMap
+      v-if="isMapVisible"
+      :memories="memoriesWithGeo"
+      @close="isMapVisible = false"
+    />
 
     <MemoriesTimeline
       v-if="memoriesForSelectedDay.length > 0"
@@ -184,6 +191,17 @@ onChange((files) => {
       <p v-if="!isViewMode">
         Добавьте свои первые фотографии или заметки, чтобы создать ленту этого дня!
       </p>
+    </div>
+
+    <div v-if="memoriesWithGeo.length > 0 && !isMapVisible" class="map-button-container">
+      <KitBtn
+        variant="outlined"
+        color="secondary"
+        @click="isMapVisible = true"
+      >
+        <Icon icon="mdi:map-marker-outline" />
+        Показать фотографии на карте
+      </KitBtn>
     </div>
 
     <!-- Add Note Modal -->
@@ -332,6 +350,13 @@ onChange((files) => {
       color: var(--fg-primary-color);
     }
   }
+}
+
+.map-button-container {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-secondary-color);
 }
 
 .spin {

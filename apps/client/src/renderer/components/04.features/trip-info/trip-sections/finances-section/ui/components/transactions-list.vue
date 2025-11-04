@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { Category, Transaction } from '../../models/types'
+import type { Category, FinancesSettings, Transaction } from '../../models/types'
 import { Icon } from '@iconify/vue'
 import { useCurrencyFormatter } from '../../composables/use-currency-formatter'
 
 interface Props {
   transactions: Transaction[]
   categories: Category[]
-  mainCurrency: string
+  settings: FinancesSettings
   readonly: boolean
   filteredTotal: number
 }
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'editTransaction', transaction: Transaction): void
   (e: 'deleteTransaction', id: string): void
@@ -20,6 +20,16 @@ function getCategory(id: string | null, categories: Category[]) {
   return categories.find(c => c.id === id)
 }
 const { format: formatCurrency } = useCurrencyFormatter()
+
+function getConvertedAmountInMainCurrency(transaction: Transaction): string | null {
+  // Check if currency is the same as main, if so, no need to convert
+  if (transaction.currency === props.settings.mainCurrency)
+    return null
+
+  const rate = props.settings.exchangeRates[transaction.currency] || 1
+  const convertedAmount = transaction.amount * rate
+  return formatCurrency(convertedAmount, props.settings.mainCurrency)
+}
 </script>
 
 <template>
@@ -28,7 +38,7 @@ const { format: formatCurrency } = useCurrencyFormatter()
       <h3>Все траты</h3>
       <div v-if="filteredTotal > 0" class="total-amount">
         <span>Потрачено:</span>
-        <strong>{{ formatCurrency(filteredTotal, mainCurrency) }}</strong>
+        <strong>{{ formatCurrency(filteredTotal, settings.mainCurrency) }}</strong>
       </div>
     </header>
     <div v-if="transactions.length > 0" class="transactions-list">
@@ -55,9 +65,14 @@ const { format: formatCurrency } = useCurrencyFormatter()
             </div>
           </div>
           <div class="item-amount">
-            <span>
-              -{{ formatCurrency(tx.amount, tx.currency) }}
-            </span>
+            <div class="amount-group">
+              <span class="original-amount">
+                -{{ formatCurrency(tx.amount, tx.currency) }}
+              </span>
+              <span v-if="tx.currency !== settings.mainCurrency" class="converted-amount">
+                ~{{ getConvertedAmountInMainCurrency(tx) }}
+              </span>
+            </div>
             <div v-if="!readonly" class="item-actions">
               <button title="Редактировать" @click="emit('editTransaction', tx)">
                 <Icon icon="mdi:pencil-outline" />
@@ -147,11 +162,23 @@ const { format: formatCurrency } = useCurrencyFormatter()
   display: flex;
   align-items: center;
   gap: 1.5rem;
+}
+
+.amount-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+.original-amount {
   font-weight: 500;
   font-size: 1rem;
-  span {
-    color: var(--fg-error-color);
-  }
+  color: var(--fg-error-color);
+}
+.converted-amount {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--fg-tertiary-color);
 }
 
 .item-actions {

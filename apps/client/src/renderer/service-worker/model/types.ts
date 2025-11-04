@@ -71,36 +71,36 @@ const API_CACHE_RULES: ApiCacheRule[] = [
   {
     path: 'trip.list',
     cacheName: 'trip-scheduler-api-trips',
-    strategy: 'StaleWhileRevalidate',
-    maxAgeSeconds: 1 * 60 * 60, // 1 час
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 1 * 60 * 60 * 24, // 24 часа
     maxEntries: 10,
   },
   {
     path: 'day.getByTripId',
     cacheName: 'trip-scheduler-api-days',
-    strategy: 'StaleWhileRevalidate',
-    maxAgeSeconds: 1 * 60 * 60, // 1 час
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 1 * 60 * 60 * 24, // 24 часа
     maxEntries: 50,
   },
   {
     path: 'trip.getByIdWithDays',
     cacheName: 'trip-scheduler-api-trip-details',
     strategy: 'NetworkFirst',
-    maxAgeSeconds: 1 * 60 * 60, // 1 час
+    maxAgeSeconds: 1 * 60 * 60 * 24, // 24 часа
     maxEntries: 20,
   },
   {
     path: 'memory.getByTripId',
     cacheName: 'trip-scheduler-api-memories',
-    strategy: 'StaleWhileRevalidate',
-    maxAgeSeconds: 1 * 60 * 60, // 1 час
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 1 * 60 * 60 * 24, // 24 часа
     maxEntries: 50,
   },
   {
     path: 'image.listByTrip',
     cacheName: 'trip-scheduler-api-route-images',
-    strategy: 'StaleWhileRevalidate',
-    maxAgeSeconds: 1 * 60 * 60, // 1 час
+    strategy: 'NetworkFirst',
+    maxAgeSeconds: 1 * 60 * 60 * 24, // 24 часа
     maxEntries: 50,
   },
 ]

@@ -1,4 +1,3 @@
-<!-- /home/evai/my/trip-scheduler/apps/client/src/renderer/components/05.modules/trip-info/ui/controls/days-controls.vue -->
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
 import type { IDay } from '../../models/types'
@@ -177,74 +176,70 @@ onUnmounted(() => {
     />
 
     <Teleport to="body">
-      <Transition name="fade">
-        <div
-          v-if="showFixedControls"
-          ref="fixedLeftControlsRef"
-          class="fixed-controls-container"
-          :style="fixedLeftControlsStyle"
-        >
-          <div class="left-controls">
-            <button
-              v-if="!isDaysPanelPinned"
-              class="menu-btn"
-              title="Открыть меню дней"
-              @click="isDaysPanelOpen = !isDaysPanelOpen"
-            >
-              <Icon icon="mdi:menu" />
-            </button>
+      <div
+        ref="fixedLeftControlsRef"
+        class="fixed-controls-container"
+        :class="{ 'is-visible': showFixedControls }"
+        :style="fixedLeftControlsStyle"
+      >
+        <div class="left-controls">
+          <button
+            v-if="!isDaysPanelPinned"
+            class="menu-btn"
+            title="Открыть меню дней"
+            @click="isDaysPanelOpen = !isDaysPanelOpen"
+          >
+            <Icon icon="mdi:menu" />
+          </button>
 
-            <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
-              <KitSkeleton width="100px" height="20px" border-radius="6px" type="wave" />
-              <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
-            </div>
-            <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
-              <template #trigger>
-                <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
-                  <h3 v-if="getSelectedDay">
-                    {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
-                  </h3>
-                  <span v-if="getSelectedDay">
-                    {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
-                  </span>
-                </div>
-              </template>
-            </CalendarPopover>
+          <div v-if="isDayInfoLoading" class="current-day-info-skeleton">
+            <KitSkeleton width="100px" height="20px" border-radius="6px" type="wave" />
+            <KitSkeleton width="80px" height="18px" border-radius="6px" type="wave" />
+          </div>
+          <CalendarPopover v-else v-model="selectedCalendarDate" :disabled="isViewMode">
+            <template #trigger>
+              <div class="current-day-info" role="button" :class="{ readonly: isViewMode }">
+                <h3 v-if="getSelectedDay">
+                  {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) }}
+                </h3>
+                <span v-if="getSelectedDay">
+                  {{ new Date(getSelectedDay.date).toLocaleDateString('ru-RU', { weekday: 'long' }) }}
+                </span>
+              </div>
+            </template>
+          </CalendarPopover>
+        </div>
+      </div>
+      <div
+        ref="fixedRightControlsRef"
+        class="fixed-controls-container"
+        :class="{ 'is-visible': showFixedControls }"
+        :style="fixedRightControlsStyle"
+      >
+        <div v-if="!isDayInfoLoading" class="right-controls">
+          <button
+            v-if="isEditModeAllow"
+            class="mode-button"
+            :title="isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
+            @click="toggleMode"
+          >
+            <Icon :icon="isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
+          </button>
+
+          <div class="view-controls">
+            <ViewSwitcher />
+            <button
+              v-if="isEditModeAllow && mdAndUp"
+              class="split-view-btn"
+              title="Отобразить План и Воспоминания"
+              :class="{ 'is-active': activeView === 'split' }"
+              @click="store.ui.setActiveView('split')"
+            >
+              <Icon icon="mdi:view-split-vertical" />
+            </button>
           </div>
         </div>
-      </Transition>
-      <Transition name="fade">
-        <div
-          v-if="showFixedControls && !isDayInfoLoading"
-          ref="fixedRightControlsRef"
-          class="fixed-controls-container"
-          :style="fixedRightControlsStyle"
-        >
-          <div class="right-controls">
-            <button
-              v-if="isEditModeAllow"
-              class="mode-button"
-              :title="isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
-              @click="toggleMode"
-            >
-              <Icon :icon="isViewMode ? 'mdi:pencil-outline' : 'mdi:eye-outline'" />
-            </button>
-
-            <div class="view-controls">
-              <ViewSwitcher />
-              <button
-                v-if="isEditModeAllow && mdAndUp"
-                class="split-view-btn"
-                title="Отобразить План и Воспоминания"
-                :class="{ 'is-active': activeView === 'split' }"
-                @click="store.ui.setActiveView('split')"
-              >
-                <Icon icon="mdi:view-split-vertical" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -398,19 +393,18 @@ onUnmounted(() => {
   backdrop-filter: blur(4px);
   border-radius: var(--r-xs);
   padding: 8px;
-  transition: top 0.3s ease;
-}
-
-.fade-enter-active,
-.fade-leave-active {
   transition:
+    top 0.3s ease,
     opacity 0.3s ease,
     transform 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+  pointer-events: none;
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
 }
 </style>

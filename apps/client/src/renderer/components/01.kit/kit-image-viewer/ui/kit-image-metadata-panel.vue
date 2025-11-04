@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { IImageViewerImageMeta } from '../models/types'
+import type { MapMarker } from '~/components/01.kit/kit-map'
 import { Icon } from '@iconify/vue'
 import { onClickOutside } from '@vueuse/core'
+import { KitMap } from '~/components/01.kit/kit-map/ui'
 
 interface Props {
   visible: boolean
@@ -14,36 +16,15 @@ const emit = defineEmits<{
 }>()
 
 const panelRef = ref<HTMLElement | null>(null)
-const mapChoicePanelRef = ref<HTMLElement | null>(null)
+
 const showExtended = ref(false)
 
-// --- Состояния для управления картами ---
-const isMapChoiceVisible = ref(false)
-const isMapVisible = ref(false)
-const selectedMapUrl = ref<string | null>(null)
-
-// --- Провайдеры карт ---
-const mapProviders = [
-  {
-    name: 'Google Maps',
-    icon: 'mdi:google-maps',
-    urlTemplate: 'https://www.google.com/maps?q={lat},{lon}&output=embed',
-  },
-  {
-    name: 'OpenStreetMap',
-    icon: 'mdi:map-marker-outline',
-    urlTemplate: 'https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik&marker={lat},{lon}',
-  },
-]
+// --- Состояния для управления картой ---
+const showMap = ref(false)
 
 onClickOutside(panelRef, () => {
-  if (props.visible && !isMapChoiceVisible.value) {
+  if (props.visible)
     emit('close')
-  }
-})
-
-onClickOutside(mapChoicePanelRef, () => {
-  isMapChoiceVisible.value = false
 })
 
 const gpsCoordinates = computed(() => {
@@ -53,36 +34,45 @@ const gpsCoordinates = computed(() => {
   return null
 })
 
-function openMapChoice() {
-  if (gpsCoordinates.value) {
-    isMapChoiceVisible.value = true
-  }
+function toggleMap() {
+  if (gpsCoordinates.value)
+    showMap.value = !showMap.value
 }
 
-function selectMapProvider(provider: typeof mapProviders[0]) {
+const mapCenter = computed((): [number, number] => {
   const coords = gpsCoordinates.value
   if (!coords)
-    return
+    return [0, 0] // Default, should not be visible anyway
+  // [longitude, latitude] for OpenLayers
+  return [coords.longitude, coords.latitude]
+})
 
-  let url = ''
-  if (provider.name === 'OpenStreetMap') {
-    const delta = 0.008
-    const bbox = [coords.longitude - delta, coords.latitude - delta, coords.longitude + delta, coords.latitude + delta].join(',')
-    url = provider.urlTemplate.replace('{bbox}', bbox).replace('{lat}', String(coords.latitude)).replace('{lon}', String(coords.longitude))
-  }
-  else {
-    url = provider.urlTemplate.replace('{lat}', String(coords.latitude)).replace('{lon}', String(coords.longitude))
-  }
+const mapMarkers = computed((): MapMarker[] => {
+  const coords = gpsCoordinates.value
+  if (!coords)
+    return []
+  return [{
+    id: 'geolocation-marker',
+    coords: {
+      lon: coords.longitude,
+      lat: coords.latitude,
+    },
+  }]
+})
 
-  selectedMapUrl.value = url
-  isMapChoiceVisible.value = false
-  isMapVisible.value = true
-}
+const googleMapsLink = computed(() => {
+  const coords = gpsCoordinates.value
+  if (!coords)
+    return '#'
+  return `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`
+})
 
-function closeMap() {
-  isMapVisible.value = false
-  selectedMapUrl.value = null
-}
+const osmLink = computed(() => {
+  const coords = gpsCoordinates.value
+  if (!coords)
+    return '#'
+  return `https://www.openstreetmap.org/?mlat=${coords.latitude}&mlon=${coords.longitude}#map=16/${coords.latitude}/${coords.longitude}`
+})
 
 const takenAtDate = computed(() => {
   if (!props.meta.takenAt)
@@ -264,9 +254,9 @@ const extendedInfo = computed(() => {
                     <span>{{ item.label }}</span>
                   </dt>
                   <dd>
-                    <button v-if="item.isMap" class="map-link" @click="openMapChoice">
+                    <button v-if="item.isMap" class="map-link" @click="toggleMap">
                       <span>{{ item.value }}</span>
-                      <Icon icon="mdi:map-search-outline" class="link-icon" />
+                      <Icon :icon="showMap ? 'mdi:chevron-up' : 'mdi:map-search-outline'" class="link-icon" />
                     </button>
                     <template v-else>
                       {{ item.value }}
@@ -274,6 +264,31 @@ const extendedInfo = computed(() => {
                   </dd>
                 </div>
               </dl>
+              <Transition name="fade-height">
+                <div v-if="showMap && gpsCoordinates" class="map-display-area">
+                  <div class="kit-map-wrapper">
+                    <ClientOnly>
+                      <KitMap
+                        class="embedded-map"
+                        :center="mapCenter"
+                        :zoom="15"
+                        height="220px"
+                        :markers="mapMarkers"
+                      />
+                    </ClientOnly>
+                  </div>
+                  <div class="external-map-links">
+                    <a :href="googleMapsLink" target="_blank" rel="noopener noreferrer" class="external-map-btn">
+                      <Icon icon="mdi:google-maps" />
+                      <span>Google Maps</span>
+                    </a>
+                    <a :href="osmLink" target="_blank" rel="noopener noreferrer" class="external-map-btn">
+                      <Icon icon="mdi:map-marker-outline" />
+                      <span>OpenStreetMap</span>
+                    </a>
+                  </div>
+                </div>
+              </Transition>
             </section>
 
             <!-- Камера и объектив -->
@@ -342,46 +357,6 @@ const extendedInfo = computed(() => {
         </div>
       </div>
     </Transition>
-
-    <!-- Модальное окно выбора карты -->
-    <Transition name="fade">
-      <div v-if="isMapChoiceVisible" class="map-choice-overlay">
-        <div ref="mapChoicePanelRef" class="map-choice-panel">
-          <h4>Выберите карту</h4>
-          <div class="map-provider-list">
-            <button
-              v-for="provider in mapProviders"
-              :key="provider.name"
-              class="map-provider-btn"
-              @click="selectMapProvider(provider)"
-            >
-              <Icon :icon="provider.icon" class="provider-icon" />
-              <span>{{ provider.name }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- Карта в iframe -->
-    <Transition name="fade">
-      <div v-if="isMapVisible" class="map-overlay-iframe">
-        <div class="map-container">
-          <iframe
-            v-if="selectedMapUrl"
-            :src="selectedMapUrl"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            style="border:0;"
-            allowfullscreen
-          />
-        </div>
-        <button class="close-map-btn" title="Закрыть карту" @click="closeMap">
-          <Icon icon="mdi:close" />
-        </button>
-      </div>
-    </Transition>
   </Teleport>
 </template>
 
@@ -389,9 +364,10 @@ const extendedInfo = computed(() => {
 .metadata-overlay {
   position: fixed;
   inset: 0;
-  z-index: 13;
+  z-index: 21;
   display: flex;
   justify-content: flex-end;
+  pointer-events: none;
 }
 
 .metadata-panel {
@@ -404,6 +380,7 @@ const extendedInfo = computed(() => {
   flex-direction: column;
   border-left: 1px solid var(--border-primary-color);
   box-shadow: var(--s-l);
+  pointer-events: auto;
 
   @include media-down(sm) {
     max-width: 100%;
@@ -585,114 +562,48 @@ const extendedInfo = computed(() => {
   }
 }
 
-.map-choice-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  z-index: 10001;
+.map-display-area {
+  margin-top: 12px;
+  border: 1px solid var(--border-secondary-color);
+  border-radius: var(--r-m);
+  overflow: hidden;
+}
+
+.kit-map-wrapper {
+  border-bottom: 1px solid var(--border-secondary-color);
+}
+
+.external-map-links {
+  display: flex;
+  background-color: var(--bg-tertiary-color);
+}
+
+.external-map-btn {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.map-choice-panel {
-  background-color: var(--bg-secondary-color);
-  color: var(--fg-primary-color);
-  padding: 24px;
-  border-radius: var(--r-m);
-  border: 1px solid var(--border-primary-color);
-  box-shadow: var(--s-xl);
-  width: 90%;
-  max-width: 320px;
-
-  h4 {
-    margin: 0 0 20px 0;
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--fg-secondary-color);
-  }
-}
-
-.map-provider-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.map-provider-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  width: 100%;
-  text-align: left;
-  border-radius: var(--r-s);
-  background-color: var(--bg-tertiary-color);
-  color: var(--fg-primary-color);
-  font-size: 1rem;
+  gap: 8px;
+  padding: 12px;
+  color: var(--fg-secondary-color);
+  text-decoration: none;
+  font-size: 0.9rem;
   font-weight: 500;
   transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
+    background-color 0.2s,
+    color 0.2s;
 
   &:hover {
     background-color: var(--bg-hover-color);
-    transform: translateY(-2px);
+    color: var(--fg-primary-color);
   }
 
-  .provider-icon {
-    font-size: 22px;
-    color: var(--fg-accent-color);
+  &:first-child {
+    border-right: 1px solid var(--border-secondary-color);
   }
-}
 
-.map-overlay-iframe {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  z-index: 10002;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-
-  @include media-down(sm) {
-    padding: 12px;
-  }
-}
-
-.map-container {
-  width: 100%;
-  height: 100%;
-  background-color: var(--bg-tertiary-color);
-  border-radius: var(--r-m);
-  border: 1px solid var(--border-primary-color);
-  overflow: hidden;
-  box-shadow: var(--s-xl);
-}
-
-.close-map-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: rgba(220, 38, 38, 1);
-    transform: scale(1.1);
+  .iconify {
+    font-size: 1.2em;
   }
 }
 
@@ -718,7 +629,7 @@ const extendedInfo = computed(() => {
 .fade-height-enter-to,
 .fade-height-leave-from {
   opacity: 1;
-  max-height: 2000px;
+  max-height: 500px; /* Adjust if map container can be taller */
 }
 
 .fade-enter-active,

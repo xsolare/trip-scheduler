@@ -113,7 +113,7 @@ const totalDurationFormatted = computed(() => {
 
       <div class="route-visualizer">
         <div class="total-duration">
-          В пути: {{ totalDurationFormatted }}
+          {{ totalDurationFormatted }}
         </div>
         <div class="route-line">
           <div class="route-icon">
@@ -269,6 +269,7 @@ const totalDurationFormatted = computed(() => {
   color: var(--fg-tertiary-color);
   background-color: var(--bg-tertiary-color);
   padding: 2px 8px;
+  margin-bottom: 4px;
   border-radius: var(--r-full);
 }
 
