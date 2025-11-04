@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { PlaceTag } from '~/shared/types/models/place';
-import { KitCheckbox } from '~/components/01.kit/kit-checkbox';
+import type { PlaceTag } from '~/shared/types/models/place'
+import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
 
 defineProps<{
-  tags: PlaceTag[];
-  selectedTagIds: string[];
-}>();
+  tags: PlaceTag[]
+  selectedTagIds: string[]
+}>()
 
 const emit = defineEmits<{
-  (e: 'toggleTag', tagId: string): void;
-}>();
+  (e: 'toggleTag', tagId: string): void
+}>()
 </script>
 
 <template>

@@ -191,8 +191,6 @@ export const useTripMemoriesStore = defineStore('tripMemories', {
 
           const pItem = this.processingMemories.get(tempId)
 
-          console.log('error', error)
-
           if (pItem) {
             pItem.status = 'error'
             pItem.progress = 0

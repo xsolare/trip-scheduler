@@ -3,6 +3,13 @@ import type { User } from '~/shared/types/models/auth'
 import type { TripImage, TripImagePlacement } from '~/shared/types/models/trip'
 
 export class FileRepository implements IFileRepository {
+  public async uploadFileWithProgress(): Promise<TripImage> {
+    console.warn('uploadFileWithProgress is not implemented for the SQL client.')
+    // This is a placeholder to satisfy the interface.
+    // In a real scenario, this would need a proper implementation using Electron's IPC.
+    return Promise.reject(new Error('Function not implemented.'))
+  }
+
   /**
    * Загружает файл на сервер.
    * @param _file - Объект файла для загрузки.

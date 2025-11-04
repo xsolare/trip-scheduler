@@ -1,3 +1,3 @@
-import ExploreHub from './ui/explore-hub.vue';
+import ExploreHub from './ui/explore-hub.vue'
 
-export { ExploreHub };
+export { ExploreHub }

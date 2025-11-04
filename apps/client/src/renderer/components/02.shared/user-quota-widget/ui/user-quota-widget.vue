@@ -29,7 +29,7 @@ const formattedCurrent = computed(() => {
 const formattedLimit = computed(() => {
   if (props.unit === 'bytes')
     return formatBytes(props.limit)
-  
+
   return formatNumber(props.limit)
 })
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Place } from '~/shared/types/models/place';
-import PlaceCard from './place-card.vue';
+import type { Place } from '~/shared/types/models/place'
+import PlaceCard from './place-card.vue'
 
-defineProps<{ places: Place[] }>();
+defineProps<{ places: Place[] }>()
 </script>
 
 <template>

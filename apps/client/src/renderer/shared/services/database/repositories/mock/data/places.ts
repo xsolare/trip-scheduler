@@ -1,11 +1,11 @@
-import type { Place, PlaceTag } from '~/shared/types/models/place';
+import type { Place, PlaceTag } from '~/shared/types/models/place'
 
 export const mockTags: PlaceTag[] = [
   { id: 'tag-1', name: 'Архитектура', icon: 'mdi:bank' },
   { id: 'tag-2', name: 'История', icon: 'mdi:book-open-page-variant' },
   { id: 'tag-3', name: 'Природа', icon: 'mdi:sprout' },
   { id: 'tag-4', name: 'Еда', icon: 'mdi:food-fork-drink' },
-];
+]
 
 export const mockPlaces: Place[] = [
   {
@@ -38,4 +38,4 @@ export const mockPlaces: Place[] = [
     photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Wulong_Karst-Three_Natural_Bridges-Tianlong_Bridge-2009-08-01.jpg/1280px-Wulong_Karst-Three_Natural_Bridges-Tianlong_Bridge-2009-08-01.jpg',
     rating: 4.9,
   },
-];
+]

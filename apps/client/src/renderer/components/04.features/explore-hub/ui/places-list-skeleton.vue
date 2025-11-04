@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { KitSkeleton } from '~/components/01.kit/kit-skeleton';
+import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 </script>
 
 <template>

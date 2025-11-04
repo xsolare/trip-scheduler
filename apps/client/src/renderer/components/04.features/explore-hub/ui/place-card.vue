@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { Place } from '~/shared/types/models/place';
-import { Icon } from '@iconify/vue';
-import { KitImage } from '~/components/01.kit/kit-image';
+import type { Place } from '~/shared/types/models/place'
+import { Icon } from '@iconify/vue'
+import { KitImage } from '~/components/01.kit/kit-image'
 
-defineProps<{ place: Place }>();
+defineProps<{ place: Place }>()
 </script>
 
 <template>
@@ -16,8 +16,12 @@ defineProps<{ place: Place }>();
         <Icon icon="mdi:star" />
         <span>{{ place.rating.toFixed(1) }}</span>
       </div>
-      <h3 class="place-name">{{ place.name }}</h3>
-      <p class="place-description">{{ place.description }}</p>
+      <h3 class="place-name">
+        {{ place.name }}
+      </h3>
+      <p class="place-description">
+        {{ place.description }}
+      </p>
       <div v-if="place.tags.length" class="place-tags">
         <span v-for="tag in place.tags" :key="tag.id" class="tag">{{ tag.name }}</span>
       </div>

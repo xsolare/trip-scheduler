@@ -31,12 +31,24 @@ const props = withDefaults(defineProps<{
 
 // --- Иконки ---
 const travelIcons = [
-  'mdi:airplane', 'mdi:map-marker-outline', 'mdi:compass-outline',
-  'mdi:wallet-travel', 'mdi:camera-outline', 'mdi:food-fork-drink',
-  'mdi:bed', 'mdi:car', 'mdi:train', 'mdi:beach',
-  'mdi:ticket-confirmation-outline', 'mdi:passport', 'mdi:briefcase-outline',
-  'mdi:earth', 'mdi:sun-compass', 'mdi:sunglasses',
-  'mdi:ship-wheel', 'mdi:flag-variant-outline',
+  'mdi:airplane',
+  'mdi:map-marker-outline',
+  'mdi:compass-outline',
+  'mdi:wallet-travel',
+  'mdi:camera-outline',
+  'mdi:food-fork-drink',
+  'mdi:bed',
+  'mdi:car',
+  'mdi:train',
+  'mdi:beach',
+  'mdi:ticket-confirmation-outline',
+  'mdi:passport',
+  'mdi:briefcase-outline',
+  'mdi:earth',
+  'mdi:sun-compass',
+  'mdi:sunglasses',
+  'mdi:ship-wheel',
+  'mdi:flag-variant-outline',
 ]
 
 function getRandomIcon() {
@@ -91,7 +103,7 @@ function createParticle(id: number): Particle {
     translateY: 0,
     size: 0.8 + Math.random() * 0.7,
     alpha: 0,
-    targetAlpha: parseFloat((Math.random() * 0.15 + 0.05).toFixed(2)),
+    targetAlpha: Number.parseFloat((Math.random() * 0.15 + 0.05).toFixed(2)),
     dx: (Math.random() - 0.5) * 0.3,
     dy: (Math.random() - 0.5) * 0.3,
     magnetism: 0.1 + Math.random() * 4,

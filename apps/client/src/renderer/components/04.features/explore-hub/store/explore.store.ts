@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { useRequest, useRequestStatus } from '~/plugins/request';
-import type { Place, PlaceTag } from '~/shared/types/models/place';
+import type { Place, PlaceTag } from '~/shared/types/models/place'
+import { defineStore } from 'pinia'
+import { useRequest, useRequestStatus } from '~/plugins/request'
 
 export enum EExploreKeys {
   FETCH_PLACES = 'explore:fetch-places',
@@ -8,10 +8,10 @@ export enum EExploreKeys {
 }
 
 interface IExploreState {
-  places: Place[];
-  tags: PlaceTag[];
-  currentCity: string | null;
-  selectedTagIds: string[];
+  places: Place[]
+  tags: PlaceTag[]
+  currentCity: string | null
+  selectedTagIds: string[]
 }
 
 export const useExploreStore = defineStore('exploreHub', {
@@ -27,46 +27,48 @@ export const useExploreStore = defineStore('exploreHub', {
 
     filteredPlaces(state): Place[] {
       if (state.selectedTagIds.length === 0) {
-        return state.places;
+        return state.places
       }
       return state.places.filter(place =>
-        state.selectedTagIds.every(tagId => place.tags.some(pt => pt.id === tagId))
-      );
+        state.selectedTagIds.every(tagId => place.tags.some(pt => pt.id === tagId)),
+      )
     },
   },
 
   actions: {
     async fetchPlacesByCity(city: string) {
-      if (this.currentCity === city && this.places.length > 0) return;
+      if (this.currentCity === city && this.places.length > 0)
+        return
 
-      this.currentCity = city;
-      this.places = [];
-      this.tags = [];
+      this.currentCity = city
+      this.places = []
+      this.tags = []
 
       await useRequest({
         key: EExploreKeys.FETCH_PLACES,
         fn: db => db.places.getPlacesByCity(city),
         onSuccess: (data) => {
-          this.places = data;
+          this.places = data
         },
-      });
+      })
 
       await useRequest({
         key: EExploreKeys.FETCH_TAGS,
         fn: db => db.places.getAvailableTags(city),
         onSuccess: (data) => {
-          this.tags = data;
+          this.tags = data
         },
-      });
+      })
     },
 
     toggleTagFilter(tagId: string) {
-      const index = this.selectedTagIds.indexOf(tagId);
+      const index = this.selectedTagIds.indexOf(tagId)
       if (index > -1) {
-        this.selectedTagIds.splice(index, 1);
-      } else {
-        this.selectedTagIds.push(tagId);
+        this.selectedTagIds.splice(index, 1)
+      }
+      else {
+        this.selectedTagIds.push(tagId)
       }
     },
   },
-});
+})

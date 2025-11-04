@@ -31,7 +31,7 @@ const SettingsPage = () => import('~/pages/account/settings.vue')
 const CommunitiesList = () => import('~/pages/communities/index.vue')
 const CommunityInfo = () => import('~/pages/communities/[id].vue')
 
-const ExplorePage = () => import('~/pages/explore.vue');
+const ExplorePage = () => import('~/pages/explore.vue')
 
 const routes: RouteRecordRaw[] = [
   {

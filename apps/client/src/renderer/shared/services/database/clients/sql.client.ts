@@ -16,7 +16,7 @@ export interface IDatabaseWrapper {
   select: <T>(sql: string, params?: any[]) => Promise<T>
   execute: (
     sql: string,
-    params?: any[]
+    params?: any[],
   ) => Promise<{ rowsAffected: number, lastInsertId: number }>
 }
 

@@ -17,7 +17,7 @@ function onDrop(files: File[] | null) {
 
   const imageFiles = files.filter(file => file.type.startsWith('image/'))
   if (imageFiles.length > 0)
-    imageFiles.forEach(file => memories.uploadMemoryImage(file))
+    memories.enqueueFilesForUpload(imageFiles)
 }
 </script>
 

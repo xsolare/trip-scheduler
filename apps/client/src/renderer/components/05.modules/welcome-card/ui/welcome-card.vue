@@ -191,7 +191,7 @@ const cardEventListeners = computed(() => {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-secondary-color);
-  border-radius: 44px; 
+  border-radius: 44px;
   color: var(--fg-secondary-color);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
@@ -220,7 +220,7 @@ const cardEventListeners = computed(() => {
     background-color: rgba(var(--bg-secondary-color-rgb), 0.7);
 
     .link-text {
-      max-width: 200px; 
+      max-width: 200px;
       opacity: 1;
       margin-left: 4px;
     }
@@ -290,7 +290,8 @@ const cardEventListeners = computed(() => {
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .welcome-card, .feature-card {
+  .welcome-card,
+  .feature-card {
     transform: none !important;
   }
 }
