@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import type { CustomActivitySection, SectionGroup } from '../models/types'
 import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/plan-geolocation-section'
-import type { Activity, ActivitySection, ActivitySectionGallery, ActivitySections, ActivitySectionText } from '~/shared/types/models/activity'
+import type {
+  Activity,
+  ActivitySection,
+  ActivitySectionGallery,
+  ActivitySectionMetro,
+  ActivitySections,
+  ActivitySectionText,
+} from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
 import { onClickOutside } from '@vueuse/core'
@@ -45,6 +52,7 @@ const sectionTypeIcons: Record<EActivitySectionType, string> = {
   [EActivitySectionType.DESCRIPTION]: 'mdi:text-box-outline',
   [EActivitySectionType.GALLERY]: 'mdi:image-multiple-outline',
   [EActivitySectionType.GEOLOCATION]: 'mdi:map-marker-outline',
+  [EActivitySectionType.METRO]: 'mdi:subway-variant',
 }
 
 const tagInfo = computed(() => getTagInfo(props.activity.tag))
@@ -203,6 +211,34 @@ function addSection(type: EActivitySectionType) {
         routes: [],
         drawnRoutes: [],
       } as ActivitySectionGeolocation
+      break
+    case EActivitySectionType.METRO:
+      newSection = {
+        id: uuidv4(),
+        type: EActivitySectionType.METRO,
+        mode: 'free',
+        city: null,
+        rides: [
+          {
+            id: uuidv4(),
+            startStation: 'Начальная станция',
+            endStation: 'Станция пересадки',
+            lineName: 'Линия 1',
+            lineColor: '#E53935', // red
+            direction: 'На север',
+            stops: 2,
+          },
+          {
+            id: uuidv4(),
+            startStation: 'Станция пересадки',
+            endStation: 'Конечная станция',
+            lineName: 'Линия 2',
+            lineColor: '#1E88E5', // blue
+            direction: 'На запад',
+            stops: 3,
+          },
+        ],
+      } as ActivitySectionMetro
       break
     default:
       return

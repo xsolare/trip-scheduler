@@ -305,10 +305,10 @@ const cardEventListeners = computed(() => {
   max-width: 600px;
   width: 100%;
   will-change: transform;
-  order: -1; // <-- ИЗМЕНЕНИЕ: Ставит эту карточку первой на мобильных
+  order: -1;
 
   @media (min-width: 1024px) {
-    order: initial; // <-- ИЗМЕНЕНИЕ: Сбрасывает порядок для десктопной версии
+    order: initial;
   }
 }
 

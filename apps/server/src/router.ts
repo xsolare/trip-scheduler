@@ -7,6 +7,7 @@ import { dayRouter } from './modules/day/day.router'
 import { imageRouter } from './modules/image/image.router'
 import { llmUsageRouter } from './modules/llm-usage/llm-usage.router'
 import { memoryRouter } from './modules/memory/memory.router'
+import { metroRouter } from './modules/metro/metro.router'
 import { tripSectionRouter } from './modules/trip-section/trip-section.router'
 import { tripRouter } from './modules/trip/trip.router'
 import { userRouter } from './modules/user/user.router'
@@ -23,6 +24,7 @@ export const appRouter = router({
   account: accountRouter,
   community: communityRouter,
   llmUsage: llmUsageRouter,
+  metro: metroRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -50,6 +50,14 @@ const sectionOptions: SectionOption[] = [
     description: 'Добавить местоположение на карте',
     category: 'location',
   },
+  {
+    type: EActivitySectionType.METRO,
+    label: 'Метро',
+    icon: 'mdi:subway-variant',
+    shortcut: 'M',
+    description: 'Добавить маршрут на метро',
+    category: 'location',
+  },
 ]
 
 const contentOptions = computed(() => sectionOptions.filter(opt => opt.category === 'content'))

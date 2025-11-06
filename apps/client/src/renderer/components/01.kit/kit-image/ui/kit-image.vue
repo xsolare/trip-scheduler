@@ -42,7 +42,7 @@ const props = withDefaults(defineProps<Props>(), {
 const isLoading = ref(true)
 const hasError = ref(false)
 const imageRef = ref<HTMLImageElement | null>(null)
-const loadTimeoutId = ref<NodeJS.Timeout | undefined>()
+const loadTimeoutId = ref<ReturnType<typeof setTimeout> | undefined>()
 const imageObserver = ref<IntersectionObserver | undefined>()
 
 const resolvedVariants = computed(() => {
@@ -56,10 +56,15 @@ const resolvedVariants = computed(() => {
 })
 const resolvedSrc = computed(() => resolveApiUrl(props.src))
 
-const imageStyle = computed(() => ({
-  objectFit: props.objectFit,
-  opacity: !isLoading.value && !hasError.value ? 1 : 0,
-}))
+const imageStyle = computed(() => {
+  const isLoaded = !isLoading.value && !hasError.value
+  return {
+    objectFit: props.objectFit,
+    opacity: isLoaded ? 1 : 0,
+    filter: isLoaded ? 'blur(0)' : 'blur(10px)',
+    transform: isLoaded ? 'scale(1)' : 'scale(1.1)',
+  }
+})
 
 function handleLoad() {
   clearLoadTimeout()
@@ -73,15 +78,6 @@ function handleError() {
   hasError.value = true
 }
 
-function checkImageState(imgElement: HTMLImageElement) {
-  if (imgElement.complete) {
-    if (imgElement.naturalWidth > 0)
-      handleLoad()
-    else
-      handleError()
-  }
-}
-
 function clearLoadTimeout() {
   if (loadTimeoutId.value) {
     clearTimeout(loadTimeoutId.value)
@@ -89,10 +85,12 @@ function clearLoadTimeout() {
   }
 }
 
+// Таймер теперь запускается только тогда, когда загрузка действительно должна начаться
 function setLoadTimeout() {
   clearLoadTimeout()
   if (props.loadTimeout > 0) {
     loadTimeoutId.value = setTimeout(() => {
+      // Если изображение все еще в состоянии загрузки после таймаута, считаем это ошибкой
       if (isLoading.value)
         handleError()
     }, props.loadTimeout)
@@ -100,7 +98,7 @@ function setLoadTimeout() {
 }
 
 function setupIntersectionObserver() {
-  if (typeof window === 'undefined' || !imageRef.value || props.loading !== 'lazy')
+  if (typeof window === 'undefined' || !imageRef.value)
     return
 
   cleanupObserver()
@@ -108,8 +106,11 @@ function setupIntersectionObserver() {
   imageObserver.value = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && imageRef.value && isLoading.value) {
-          checkImageState(imageRef.value)
+        // Когда изображение попадает в область видимости
+        if (entry.isIntersecting) {
+          // Запускаем таймер ожидания загрузки
+          setLoadTimeout()
+          // И отключаем наблюдатель, так как он больше не нужен
           cleanupObserver()
         }
       })
@@ -133,22 +134,26 @@ watch(
     isLoading.value = true
     hasError.value = false
     cleanupObserver()
+    clearLoadTimeout() // Также сбрасываем таймер при смене src
 
-    if (!newSrc)
+    if (!newSrc) {
+      isLoading.value = false
       return
-
-    setLoadTimeout()
+    }
 
     nextTick(() => {
       if (imageRef.value) {
-        if (imageRef.value.complete) {
-          checkImageState(imageRef.value)
+        // Если изображение уже загружено (из кеша), обрабатываем сразу
+        if (imageRef.value.complete && imageRef.value.naturalWidth > 0) {
+          handleLoad()
           return
         }
 
+        // Для eager-загрузки таймер запускается немедленно
         if (props.loading === 'eager') {
-          // Для eager загрузки слушатели @load/@error сделают свою работу
+          setLoadTimeout()
         }
+        // Для lazy-загрузки мы ждем, пока IntersectionObserver не запустит таймер
         else {
           setupIntersectionObserver()
         }
@@ -168,9 +173,10 @@ defineExpose({
   hasError: readonly(hasError),
   retry: () => {
     if (props.src && hasError.value) {
-      isLoading.value = true
-      hasError.value = false
-      setLoadTimeout()
+      // При повторной попытке сбрасываем состояние и логику как при первой загрузке
+      const newSrc = props.src
+      // "Перезагружаем" watcher
+      watch(() => newSrc, () => {}, { immediate: true })
     }
   },
 })
@@ -244,6 +250,7 @@ defineExpose({
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
+  background-color: var(--bg-tertiary-color);
 
   .placeholder-wrapper,
   .image,
@@ -261,7 +268,10 @@ defineExpose({
   }
 
   .image {
-    transition: opacity 0.3s ease-out;
+    transition:
+      transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      filter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      opacity 0.4s ease-out;
   }
 
   .error-placeholder {

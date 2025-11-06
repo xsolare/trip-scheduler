@@ -66,10 +66,32 @@ const ActivitySectionGeolocationSchema = ActivitySectionBaseSchema.extend({
   zoom: z.number().optional().nullable(),
 })
 
+// Схема для поездки на метро
+const MetroRideSchema = z.object({
+  id: z.string(),
+  startStationId: z.string().nullable().optional(),
+  startStation: z.string(),
+  endStationId: z.string().nullable().optional(),
+  endStation: z.string(),
+  lineId: z.string().nullable().optional(),
+  lineName: z.string(),
+  lineColor: z.string(),
+  direction: z.string(),
+  stops: z.number(),
+})
+
+const ActivitySectionMetroSchema = ActivitySectionBaseSchema.extend({
+  type: z.literal('metro'),
+  mode: z.enum(['free', 'city']).default('free'),
+  systemId: z.string().uuid().nullable().default(null),
+  rides: z.array(MetroRideSchema),
+})
+
 export const ActivitySectionSchema = z.discriminatedUnion('type', [
   ActivitySectionTextSchema,
   ActivitySectionGallerySchema,
   ActivitySectionGeolocationSchema,
+  ActivitySectionMetroSchema,
 ])
 
 export const ActivitySchema = z.object({

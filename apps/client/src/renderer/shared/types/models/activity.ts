@@ -12,6 +12,7 @@ export enum EActivitySectionType {
   DESCRIPTION = 'description',
   GALLERY = 'gallery',
   GEOLOCATION = 'geolocation',
+  METRO = 'metro',
 }
 
 export interface ActivitySection {
@@ -32,7 +33,27 @@ export interface ActivitySectionGallery extends ActivitySection {
   imageUrls: string[]
 }
 
-export type ActivitySections = (ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation)[]
+export interface MetroRide {
+  id: string
+  startStationId: string | null
+  startStation: string
+  endStationId: string | null
+  endStation: string
+  lineId: string | null
+  lineName: string
+  lineColor: string
+  direction: string
+  stops: number
+}
+
+export interface ActivitySectionMetro extends ActivitySection {
+  type: EActivitySectionType.METRO
+  mode: 'free' | 'city'
+  systemId: string | null
+  rides: MetroRide[]
+}
+
+export type ActivitySections = (ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation | ActivitySectionMetro)[]
 
 export interface Activity {
   id: string

@@ -4,6 +4,7 @@ import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-inf
 import type {
   ActivitySection,
   ActivitySectionGallery,
+  ActivitySectionMetro,
   ActivitySectionText,
 } from '~/shared/types/models/activity'
 import { Icon } from '@iconify/vue'
@@ -15,6 +16,7 @@ import { useModuleStore } from '~/components/05.modules/trip-info/composables/us
 import { EActivitySectionType } from '~/shared/types/models/activity'
 import DescriptionSection from './description-section.vue'
 import GallerySection from './gallery-section.vue'
+import MetroSection from './metro-section.vue'
 
 interface Props {
   section: ActivitySection
@@ -154,6 +156,12 @@ watch(() => props.section, (newSection) => {
       v-else-if="section.type === EActivitySectionType.GEOLOCATION"
       :readonly="isViewMode"
       :section="section as ActivitySectionGeolocation"
+      @update-section="onUpdate"
+    />
+    <MetroSection
+      v-else-if="section.type === EActivitySectionType.METRO"
+      :section="section as ActivitySectionMetro"
+      :readonly="isViewMode"
       @update-section="onUpdate"
     />
 

@@ -1,5 +1,3 @@
-// db/seed-from-mock.ts
-
 /* eslint-disable no-console */
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -18,6 +16,10 @@ import {
   llmModels,
   llmTokenUsage,
   memories,
+  metroLines,
+  metroLineStations,
+  metroStations,
+  metroSystems,
   plans,
   refreshTokens,
   tripImages,
@@ -194,6 +196,10 @@ async function seed() {
   await db.delete(emailVerificationTokens)
   await db.delete(users)
   await db.delete(plans)
+  await db.delete(metroLineStations)
+  await db.delete(metroStations)
+  await db.delete(metroLines)
+  await db.delete(metroSystems)
 
   console.log('⭐ Создание тарифных планов...')
   await db.insert(plans).values([
@@ -212,6 +218,33 @@ async function seed() {
     { id: 'gpt-4.1', costPerMillionInputTokens: 2.0, costPerMillionOutputTokens: 8.0 },
     { id: 'gemini-flash-latest', costPerMillionInputTokens: 0.5, costPerMillionOutputTokens: 1.5 },
   ])
+
+  const metroData = (await import(url.pathToFileURL(path.join(__dirname, 'mock/metro.data.ts')).href)).MOCK_METRO_DATA
+
+  if (metroData) {
+    console.log(`🚇 Вставка данных для ${metroData.length} систем метро...`)
+    for (const system of metroData) {
+      const [insertedSystem] = await db.insert(metroSystems).values({ id: system.id, city: system.city, country: system.country }).returning()
+      for (const line of system.lines) {
+        const [insertedLine] = await db.insert(metroLines).values({ id: line.id, systemId: insertedSystem.id, name: line.name, color: line.color }).returning()
+        const stationsToInsert = line.stations.map((station: any) => ({ id: station.id, systemId: insertedSystem.id, name: station.name }))
+        if (stationsToInsert.length > 0) {
+          // Вставка станций с обработкой конфликтов (если станция уже существует)
+          await db.insert(metroStations).values(stationsToInsert).onConflictDoNothing()
+        }
+
+        const lineStationsToInsert = line.stations.map((station: any, index: number) => ({
+          lineId: insertedLine.id,
+          stationId: station.id,
+          order: index,
+        }))
+
+        if (lineStationsToInsert.length > 0) {
+          await db.insert(metroLineStations).values(lineStationsToInsert)
+        }
+      }
+    }
+  }
 
   console.log('✈️  Подготовка данных для вставки...')
   const tripsToInsert: (typeof trips.$inferInsert)[] = []

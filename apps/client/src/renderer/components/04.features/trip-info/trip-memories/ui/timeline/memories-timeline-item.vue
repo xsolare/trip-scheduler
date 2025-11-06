@@ -4,7 +4,7 @@ import type { CustomImageViewerImageMeta } from '~/components/05.modules/trip-in
 import type { IMemory } from '~/components/05.modules/trip-info/models/types'
 import { Icon } from '@iconify/vue'
 import { Time } from '@internationalized/date'
-import { onClickOutside } from '@vueuse/core'
+import { onClickOutside, useWindowSize } from '@vueuse/core'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitImageViewer, useImageViewer } from '~/components/01.kit/kit-image-viewer'
 import { KitInlineMdEditorWrapper } from '~/components/01.kit/kit-inline-md-editor'
@@ -34,9 +34,8 @@ const { getSelectedDay } = storeToRefs(store.plan)
 const memoryComment = ref(props.memory.comment || '')
 
 function saveComment() {
-  if (memoryComment.value !== props.memory.comment) {
+  if (memoryComment.value !== props.memory.comment)
     updateMemory({ id: props.memory.id, comment: memoryComment.value })
-  }
 }
 
 const isTimeEditing = ref(false)
@@ -71,9 +70,8 @@ function saveTime() {
 }
 
 const displayTime = computed(() => {
-  if (!props.memory.timestamp) {
+  if (!props.memory.timestamp)
     return ''
-  }
 
   const d = new Date(props.memory.timestamp)
 
@@ -82,13 +80,11 @@ const displayTime = computed(() => {
 
   const formattedTime = `${hours}:${minutes}`
 
-  // Do not display time for memories that are acting as activities (they have their own time display)
   if (props.memory.title)
     return ''
 
-  if (formattedTime === '00:00') {
+  if (formattedTime === '00:00')
     return ''
-  }
 
   return formattedTime
 })
@@ -99,9 +95,8 @@ async function handleDelete() {
     description: 'Это действие нельзя будет отменить. Воспоминание будет удалено навсегда.',
   })
 
-  if (isConfirmed) {
+  if (isConfirmed)
     await deleteMemory(props.memory.id)
-  }
 }
 
 async function handleRemoveTimestamp() {
@@ -110,9 +105,8 @@ async function handleRemoveTimestamp() {
     description: 'Воспоминание будет перемещено в блок "Фотографии для обработки".',
   })
 
-  if (isConfirmed) {
+  if (isConfirmed)
     removeTimestamp(props.memory.id)
-  }
 }
 
 const imageViewer = useImageViewer()
@@ -121,17 +115,15 @@ const activeViewerActivityTitle = ref('')
 const activeViewerTime = shallowRef<Time | null>(null)
 
 const formattedActiveViewerTime = computed(() => {
-  if (!activeViewerTime.value) {
+  if (!activeViewerTime.value)
     return ''
-  }
 
   const hours = String(activeViewerTime.value.hour).padStart(2, '0')
   const minutes = String(activeViewerTime.value.minute).padStart(2, '0')
   const formattedTime = `${hours}:${minutes}`
 
-  if (formattedTime === '00:00') {
+  if (formattedTime === '00:00')
     return ''
-  }
 
   return formattedTime
 })
@@ -160,12 +152,10 @@ watch(imageViewer.currentImage, (newImage) => {
       }
     }
 
-    if (dateToUse) {
+    if (dateToUse)
       activeViewerTime.value = new Time(dateToUse.getUTCHours(), dateToUse.getUTCMinutes())
-    }
-    else {
+    else
       activeViewerTime.value = null
-    }
 
     if (memoryId) {
       const group = props.timelineGroups?.find(g => g.memories.some((m: IMemory) => m.id === memoryId))
@@ -178,7 +168,7 @@ watch(imageViewer.currentImage, (newImage) => {
 }, { deep: true })
 
 function openImageViewer() {
-  if (isTimeEditing.value || !props.memory.image)
+  if (isTimeEditing.value || !props.memory.image || isMorphed.value)
     return
 
   const imageList = props.galleryImages ?? []
@@ -187,18 +177,16 @@ function openImageViewer() {
 
   const startIndex = imageList.findIndex(img => img.url === props.memory.image?.url)
 
-  if (startIndex !== -1) {
+  if (startIndex !== -1)
     imageViewer.open(imageList, startIndex)
-  }
 }
 
 function saveViewerComment() {
   const meta = imageViewer.currentImage.value?.meta as CustomImageViewerImageMeta | undefined
   if (meta?.memoryId) {
     const originalMemory = store.memories.memories.find((m: IMemory) => m.id === meta.memoryId)
-    if (originalMemory && activeViewerComment.value !== (originalMemory.comment || '')) {
+    if (originalMemory && activeViewerComment.value !== (originalMemory.comment || ''))
       updateMemory({ id: meta.memoryId, comment: activeViewerComment.value })
-    }
   }
 }
 
@@ -214,16 +202,113 @@ function saveViewerTime() {
 
   const datePart = day.date.split('T')[0]
   const timePart = `${activeViewerTime.value.hour.toString().padStart(2, '0')}:${activeViewerTime.value.minute.toString().padStart(2, '0')}:00`
-
   const newTimestamp = `${datePart}T${timePart}.000Z`
 
-  if (newTimestamp !== originalMemory.timestamp) {
+  if (newTimestamp !== originalMemory.timestamp)
     updateMemory({ id: meta.memoryId, timestamp: newTimestamp })
-  }
 }
 
 onClickOutside(timeEditorRef, saveTime)
 onClickOutside(commentEditorRef, saveViewerComment)
+
+// --- Morph & Quality Logic ---
+const { width: windowWidth } = useWindowSize()
+const isDesktop = computed(() => windowWidth.value >= 1024)
+
+const imageSrc = computed(() => {
+  if (!props.memory.image)
+    return ''
+  if (isDesktop.value)
+    return props.memory.image.variants?.medium || props.memory.image.url
+
+  return props.memory.image.variants?.small || props.memory.image.url
+})
+
+const photoWrapperRef = ref<HTMLElement | null>(null)
+const isMorphed = ref(false)
+const isMorphing = ref(false)
+const morphStyle = ref<Record<string, string>>({})
+const placeholderStyle = ref<Record<string, string>>({})
+let initialRect: DOMRect | null = null
+
+function enterMorph() {
+  if (isMorphed.value || isMorphing.value || !isDesktop.value || !photoWrapperRef.value)
+    return
+
+  isMorphing.value = true
+  initialRect = photoWrapperRef.value.getBoundingClientRect()
+
+  placeholderStyle.value = {
+    width: `${initialRect.width}px`,
+    height: `${initialRect.height}px`,
+  }
+
+  morphStyle.value = {
+    position: 'fixed',
+    top: `${initialRect.top}px`,
+    left: `${initialRect.left}px`,
+    width: `${initialRect.width}px`,
+    height: `${initialRect.height}px`,
+    zIndex: '1000',
+    transition: 'none',
+  }
+
+  isMorphed.value = true
+  document.body.style.overflow = 'hidden'
+
+  requestAnimationFrame(() => {
+    const aspectRatio = initialRect!.height / initialRect!.width
+    const targetWidth = Math.min(window.innerWidth * 0.8, 800)
+    const targetHeight = targetWidth * aspectRatio
+
+    morphStyle.value = {
+      ...morphStyle.value,
+      top: '50%',
+      left: '50%',
+      width: `${targetWidth}px`,
+      height: `${targetHeight}px`,
+      transform: 'translate(-50%, -50%)',
+      transition: 'all 0.3s ease-out',
+    }
+    setTimeout(() => isMorphing.value = false, 50)
+  })
+}
+
+function leaveMorph() {
+  if (!initialRect || isMorphing.value)
+    return
+
+  isMorphing.value = true
+
+  morphStyle.value = {
+    ...morphStyle.value,
+    top: `${initialRect.top}px`,
+    left: `${initialRect.left}px`,
+    width: `${initialRect.width}px`,
+    height: `${initialRect.height}px`,
+    transform: 'translate(0, 0)',
+  }
+
+  const onTransitionEnd = () => {
+    photoWrapperRef.value?.removeEventListener('transitionend', onTransitionEnd)
+    clearTimeout(fallback)
+    isMorphed.value = false
+    morphStyle.value = {}
+    isMorphing.value = false
+    initialRect = null
+    document.body.style.overflow = ''
+  }
+
+  const fallback = setTimeout(onTransitionEnd, 350)
+  photoWrapperRef.value?.addEventListener('transitionend', onTransitionEnd, { once: true })
+}
+
+function handleWrapperClick() {
+  if (isMorphed.value)
+    leaveMorph()
+  else
+    openImageViewer()
+}
 </script>
 
 <template>
@@ -232,11 +317,26 @@ onClickOutside(commentEditorRef, saveViewerComment)
     :class="{ 'is-photo': memory.imageId, 'is-note': !memory.imageId && !memory.title, 'is-activity': memory.title, 'is-unsorted': isUnsorted }"
   >
     <template v-if="memory.imageId && memory?.image?.url">
-      <div class="photo-wrapper" @click="openImageViewer">
+      <div v-if="isMorphed" :style="placeholderStyle" />
+      <div
+        ref="photoWrapperRef"
+        class="photo-wrapper"
+        :class="{ morphed: isMorphed }"
+        :style="isMorphed ? morphStyle : {}"
+        @click="handleWrapperClick"
+      >
         <KitImage
-          :src="memory.image.variants?.small || memory.image.url"
+          :src="imageSrc"
           object-fit="cover"
         />
+        <button
+          v-if="isDesktop"
+          class="morph-trigger-btn"
+          title="Приблизить"
+          @click.stop="enterMorph"
+        >
+          <Icon icon="mdi:eye-outline" />
+        </button>
         <div class="photo-overlay">
           <div v-if="memoryComment" class="memory-comment-overlay">
             <p>{{ memoryComment }}</p>
@@ -317,10 +417,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
       </div>
     </template>
 
-    <!-- Hide item if it's an activity without an image, as it's rendered in the group header -->
-    <template v-if="memory.title && memory.imageId">
-      <!-- Content for activity with image is already handled by the photo template -->
-    </template>
+    <template v-if="memory.title && memory.imageId" />
 
     <KitImageViewer
       v-model:visible="imageViewer.isOpen.value"
@@ -437,15 +534,6 @@ onClickOutside(commentEditorRef, saveViewerComment)
     height: 300px;
     cursor: pointer;
 
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--s-m);
-    }
-
     @include media-down(sm) {
       height: 180px;
     }
@@ -462,6 +550,15 @@ onClickOutside(commentEditorRef, saveViewerComment)
   height: 100%;
   position: relative;
   overflow: hidden;
+  border-radius: var(--r-m);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &.morphed {
+    cursor: zoom-out;
+    box-shadow: var(--s-l);
+  }
 
   .is-unsorted & {
     height: 200px;
@@ -471,9 +568,39 @@ onClickOutside(commentEditorRef, saveViewerComment)
     transition: transform 0.3s ease;
   }
 
-  &:hover :deep(img) {
+  &:hover:not(.morphed) :deep(img) {
     transform: scale(1.05);
   }
+}
+
+.morph-trigger-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+.photo-wrapper:hover:not(.morphed) .morph-trigger-btn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .photo-overlay {
@@ -482,6 +609,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  pointer-events: none;
 
   &::before {
     content: '';
@@ -493,6 +621,11 @@ onClickOutside(commentEditorRef, saveViewerComment)
     opacity: 0;
     transition: opacity 0.3s ease;
   }
+}
+
+.photo-wrapper:hover:not(.morphed) .photo-overlay::before,
+.photo-wrapper.morphed .photo-overlay::before {
+  opacity: 1;
 }
 
 .memory-comment-overlay {
@@ -510,7 +643,8 @@ onClickOutside(commentEditorRef, saveViewerComment)
     transform 0.3s ease;
   z-index: 2;
 
-  .photo-wrapper:hover & {
+  .photo-wrapper:hover:not(.morphed) &,
+  .photo-wrapper.morphed & {
     opacity: 1;
     transform: translateY(0);
   }
@@ -540,6 +674,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
   z-index: 3;
   transition: background-color 0.2s ease;
   line-height: 20px;
+  pointer-events: auto;
 
   :deep(.kit-time-field) {
     background-color: transparent;
@@ -613,16 +748,18 @@ onClickOutside(commentEditorRef, saveViewerComment)
 
 .memory-actions {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  bottom: 8px;
+  right: 8px;
   z-index: 3;
   opacity: 0;
   transition: opacity 0.2s ease;
   display: flex;
   gap: 4px;
+  pointer-events: none;
 
-  .photo-wrapper:hover & {
+  .photo-wrapper:hover:not(.morphed) & {
     opacity: 1;
+    pointer-events: auto;
   }
 
   &.is-note-actions {
@@ -631,6 +768,7 @@ onClickOutside(commentEditorRef, saveViewerComment)
     right: auto;
     left: auto;
     opacity: 0;
+    pointer-events: auto;
     transition: opacity 0.2s ease;
 
     @include media-down(sm) {
@@ -643,8 +781,8 @@ onClickOutside(commentEditorRef, saveViewerComment)
   }
 
   button {
-    background: var(--bg-primary-color);
-    border: 1px solid var(--border-secondary-color);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: var(--r-full);
     width: 28px;
     height: 28px;
@@ -652,31 +790,23 @@ onClickOutside(commentEditorRef, saveViewerComment)
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--fg-inverted-color);
+    color: white;
     transition: all 0.2s;
 
     &:hover {
-      color: var(--fg-primary-color);
-      border-color: var(--border-primary-color);
+      background: rgba(0, 0, 0, 0.7);
+      border-color: white;
     }
   }
 
-  button[title='Удалить'] {
+  button[title='Удалить']:hover {
     color: var(--fg-error-color);
     border-color: var(--fg-error-color);
   }
 
-  button[title='Убрать временную метку'] {
-    color: var(--fg-accent-color);
-    border-color: var(--fg-accent-color);
-  }
-
   @include media-down(sm) {
     opacity: 1;
-
-    .photo-wrapper {
-      opacity: 1;
-    }
+    pointer-events: auto;
   }
 }
 

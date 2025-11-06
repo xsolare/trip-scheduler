@@ -51,13 +51,33 @@ interface ActivitySectionGeolocation extends ActivitySectionBase {
   drawnRoutes: any[]
 }
 
-export type ActivitySection = ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation
+interface MetroRide {
+  id: string
+  startStationId: string | null
+  startStation: string
+  endStationId: string | null
+  endStation: string
+  lineId: string | null
+  lineName: string
+  lineColor: string
+  direction: string
+  stops: number
+}
+
+interface ActivitySectionMetro extends ActivitySectionBase {
+  type: 'metro'
+  mode: 'free' | 'city'
+  systemId: string | null
+  rides: MetroRide[]
+}
+
+export type ActivitySection = ActivitySectionText | ActivitySectionGallery | ActivitySectionGeolocation | ActivitySectionMetro
 
 // Обновленные Enums
 export const statusEnum = pgEnum('status', ['completed', 'planned', 'draft'])
 export const visibilityEnum = pgEnum('visibility', ['public', 'private'])
 export const activityTagEnum = pgEnum('activity_tag', ['transport', 'walk', 'food', 'attraction', 'relax'])
-export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery', 'geolocation'])
+export const activitySectionTypeEnum = pgEnum('activity_section_type', ['description', 'gallery', 'geolocation', 'metro'])
 export const activityStatusEnum = pgEnum('activity_status', ['none', 'completed', 'skipped'])
 export const tripImagePlacementEnum = pgEnum('trip_image_placement', ['route', 'memories'])
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
@@ -304,6 +324,38 @@ export const comments = pgTable('comments', {
 }))
 
 // ===============================================
+// ==================== МЕТРО ====================
+// ===============================================
+
+export const metroSystems = pgTable('metro_systems', {
+  id: text('id').primaryKey(),
+  city: text('city').notNull().unique(), // e.g., 'Москва'
+  country: text('country').notNull(), // e.g., 'Россия'
+})
+
+export const metroLines = pgTable('metro_lines', {
+  id: text('id').primaryKey(),
+  systemId: text('system_id').notNull().references(() => metroSystems.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(), // e.g., 'Сокольническая линия'
+  color: text('color').notNull(), // e.g., '#EF161E'
+})
+
+export const metroStations = pgTable('metro_stations', {
+  id: text('id').primaryKey(),
+  systemId: text('system_id').notNull().references(() => metroSystems.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(), // e.g., 'Охотный Ряд'
+})
+
+// Связующая таблица для станций и линий (многие ко многим)
+export const metroLineStations = pgTable('metro_line_stations', {
+  lineId: text('line_id').notNull().references(() => metroLines.id, { onDelete: 'cascade' }),
+  stationId: text('station_id').notNull().references(() => metroStations.id, { onDelete: 'cascade' }),
+  order: integer('order').notNull().default(0), // Порядок станции на линии
+}, t => ({
+  pk: primaryKey({ columns: [t.lineId, t.stationId] }),
+}))
+
+// ===============================================
 // =================== СВЯЗИ =====================
 // ===============================================
 
@@ -432,5 +484,38 @@ export const communityMembersRelations = relations(communityMembers, ({ one }) =
   user: one(users, {
     fields: [communityMembers.userId],
     references: [users.id],
+  }),
+}))
+
+// --- Новые связи для Метро ---
+export const metroSystemsRelations = relations(metroSystems, ({ many }) => ({
+  lines: many(metroLines),
+  stations: many(metroStations),
+}))
+
+export const metroLinesRelations = relations(metroLines, ({ one, many }) => ({
+  system: one(metroSystems, {
+    fields: [metroLines.systemId],
+    references: [metroSystems.id],
+  }),
+  lineStations: many(metroLineStations),
+}))
+
+export const metroStationsRelations = relations(metroStations, ({ one, many }) => ({
+  system: one(metroSystems, {
+    fields: [metroStations.systemId],
+    references: [metroSystems.id],
+  }),
+  lineStations: many(metroLineStations),
+}))
+
+export const metroLineStationsRelations = relations(metroLineStations, ({ one }) => ({
+  line: one(metroLines, {
+    fields: [metroLineStations.lineId],
+    references: [metroLines.id],
+  }),
+  station: one(metroStations, {
+    fields: [metroLineStations.stationId],
+    references: [metroStations.id],
   }),
 }))
