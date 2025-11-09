@@ -15,7 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const tripsHub = useTripsHub()
-const { mdAndUp } = useDisplay()
+const { mdAndUp, smAndDown } = useDisplay()
 
 const currentTab = computed({
   get: () => tripsHub.activeTab.value,
@@ -24,8 +24,10 @@ const currentTab = computed({
 
 const tabItems: ViewSwitcherItem<TripsHubTab>[] = [
   { id: 'my', label: 'Мои путешествия', icon: 'mdi:account-heart-outline' },
-  { id: 'public', label: 'Общие', icon: 'mdi:earth' },
+  { id: 'public', label: 'Общие путешествия', icon: 'mdi:earth' },
 ]
+
+const tabLabel = computed(() => tabItems.find(f => f.id === currentTab.value))
 
 const displayModeItems: ViewSwitcherItem<TDisplayMode>[] = [
   { id: 'column', icon: 'mdi:view-grid-outline', label: '' },
@@ -161,6 +163,13 @@ provide(TripsHubKey, tripsHub)
           </div>
         </div>
       </Transition>
+
+      <!-- Mobile Tab Info Block -->
+      <div v-if="smAndDown && currentTab" class="mobile-tab-info">
+        <KitDivider>
+          <span class="mobile-tab-label">{{ tabLabel?.label }}</span>
+        </KitDivider>
+      </div>
     </div>
 
     <div class="hub-content" :class="`display-mode--${tripsHub.displayMode.value}`">
@@ -227,6 +236,23 @@ provide(TripsHubKey, tripsHub)
   gap: 16px;
   padding: 0 8px;
 }
+
+.mobile-tab-info {
+  text-align: center;
+  animation: fade-in 0.3s ease;
+
+  .mobile-tab-label {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fg-accent-color);
+    border-radius: var(--r-full);
+    text-transform: none;
+    letter-spacing: 1px;
+  }
+}
+
 .spacer {
   flex-grow: 1;
 }

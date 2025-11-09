@@ -84,7 +84,7 @@ const statusInfo = computed(() => {
 
 .card-cover {
   width: 100px;
-  height: 60px;
+  height: 100px;
   border-radius: var(--r-s);
   overflow: hidden;
   flex-shrink: 0;
@@ -109,9 +109,9 @@ const statusInfo = computed(() => {
     font-size: 1rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+    padding-right: 24px;
   }
 }
 

@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception'
 import sharp from 'sharp'
 import { authUtils } from '~/lib/auth.utils'
 import { imageService } from '~/modules/image/image.service'
+import { tripRepository } from '~/repositories/trip.repository'
 import { userRepository } from '~/repositories/user.repository'
 import { generateFilePaths, saveFile } from '~/services/file-storage.service'
 import { extractAndStructureMetadata, generateImageVariants } from '~/services/image-metadata.service'
@@ -46,6 +47,15 @@ export async function uploadFileController(c: Context) {
 
   if (!tripId || typeof tripId !== 'string')
     throw new HTTPException(400, { message: 'Необходимо указать ID путешествия (tripId).' })
+
+  // --- ПРОВЕРКА ПРАВ ДОСТУПА ---
+  const trip = await tripRepository.getById(tripId)
+  if (!trip)
+    throw new HTTPException(404, { message: 'Путешествие не найдено.' })
+
+  if (trip.userId !== userId)
+    throw new HTTPException(403, { message: 'У вас нет прав на загрузку файлов в это путешествие.' })
+  // --- КОНЕЦ ПРОВЕРКИ ---
 
   if (!placement || !tripImagePlacementEnum.enumValues.includes(placement as 'route' | 'memories'))
     throw new HTTPException(400, { message: 'Необходимо указать корректный тип размещения.' })

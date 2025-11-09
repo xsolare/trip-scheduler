@@ -8,39 +8,52 @@ import { deleteFileWithVariants } from '~/services/file-storage.service'
 import { quotaService } from '~/services/quota.service'
 
 export const memoryService = {
-  async create(data: z.infer<typeof CreateMemoryInputSchema>) {
+  async create(data: z.infer<typeof CreateMemoryInputSchema>, userId: string) {
+    const trip = await tripRepository.getById(data.tripId)
+    if (!trip)
+      throw createTRPCError('NOT_FOUND', `Путешествие с ID ${data.tripId} не найдено.`)
+
+    if (trip.userId !== userId)
+      throw createTRPCError('FORBIDDEN', 'У вас нет прав на добавление воспоминания в это путешествие.')
+
     return await memoryRepository.create(data)
   },
 
-  async update(data: z.infer<typeof UpdateMemoryInputSchema>) {
-    const updatedMemory = await memoryRepository.update(data)
-    if (!updatedMemory) {
+  async update(data: z.infer<typeof UpdateMemoryInputSchema>, userId: string) {
+    const memory = await memoryRepository.findByIdWithOwner(data.id)
+    if (!memory)
       throw createTRPCError('NOT_FOUND', `Воспоминание с ID ${data.id} не найдено.`)
-    }
+
+    if (memory.trip.userId !== userId)
+      throw createTRPCError('FORBIDDEN', 'У вас нет прав на изменение этого воспоминания.')
+
+    const updatedMemory = await memoryRepository.update(data)
+    if (!updatedMemory)
+      throw createTRPCError('NOT_FOUND', `Воспоминание с ID ${data.id} не найдено.`)
+
     return updatedMemory
   },
 
-  async delete(id: string) {
+  async delete(id: string, userId: string) {
+    const memory = await memoryRepository.findByIdWithOwner(id)
+    if (!memory)
+      throw createTRPCError('NOT_FOUND', `Воспоминание с ID ${id} не найдено.`)
+
+    if (memory.trip.userId !== userId)
+      throw createTRPCError('FORBIDDEN', 'У вас нет прав на удаление этого воспоминания.')
+
     // Этот метод возвращает полный объект `memory` с вложенным `image`
     const deletedMemory = await memoryRepository.delete(id)
-    if (!deletedMemory) {
+    if (!deletedMemory)
       throw createTRPCError('NOT_FOUND', `Воспоминание с ID ${id} не найдено.`)
-    }
 
     // Если у воспоминания было изображение, удаляем его файлы
     const imageToDelete = deletedMemory.image
     if (deletedMemory.imageId && imageToDelete) {
       try {
-        // Получаем ID пользователя для обновления квоты
-        const trip = await tripRepository.getById(deletedMemory.tripId)
-        if (!trip) {
-          throw new Error(`Путешествие ${deletedMemory.tripId} не найдено для обновления квоты.`)
-        }
-
         // 1. Уменьшаем квоту использования хранилища
-        if (imageToDelete.sizeBytes) {
-          await quotaService.decrementStorageUsage(trip.userId, imageToDelete.sizeBytes)
-        }
+        if (imageToDelete.sizeBytes)
+          await quotaService.decrementStorageUsage(userId, imageToDelete.sizeBytes)
 
         // 2. Удаляем запись из таблицы trip_images
         await imageRepository.delete(deletedMemory.imageId)

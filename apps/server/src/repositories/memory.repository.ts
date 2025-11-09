@@ -47,6 +47,22 @@ export const memoryRepository = {
   },
 
   /**
+   * Находит воспоминание по ID и возвращает его вместе с ID владельца путешествия.
+   */
+  async findByIdWithOwner(id: string) {
+    return await db.query.memories.findFirst({
+      where: eq(memories.id, id),
+      with: {
+        trip: {
+          columns: {
+            userId: true,
+          },
+        },
+      },
+    })
+  },
+
+  /**
    * Обновляет воспоминание (комментарий или временную метку).
    * @returns Обновленный полный объект или null
    */

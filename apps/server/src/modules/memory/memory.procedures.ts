@@ -17,20 +17,20 @@ export const memoryProcedures = {
 
   create: protectedProcedure
     .input(CreateMemoryInputSchema)
-    .mutation(async ({ input }) => {
-      return memoryService.create(input)
+    .mutation(async ({ input, ctx }) => {
+      return memoryService.create(input, ctx.user.id)
     }),
 
   update: protectedProcedure
     .input(UpdateMemoryInputSchema)
-    .mutation(async ({ input }) => {
-      return memoryService.update(input)
+    .mutation(async ({ input, ctx }) => {
+      return memoryService.update(input, ctx.user.id)
     }),
 
   delete: protectedProcedure
     .input(DeleteMemoryInputSchema)
-    .mutation(async ({ input }) => {
-      return memoryService.delete(input.id)
+    .mutation(async ({ input, ctx }) => {
+      return memoryService.delete(input.id, ctx.user.id)
     }),
 
   // TODO service

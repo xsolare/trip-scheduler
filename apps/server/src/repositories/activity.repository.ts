@@ -58,4 +58,24 @@ export const activityRepository = {
 
     return deletedActivity || null
   },
+
+  /**
+   * Находит активность по ID и возвращает ее вместе с ID владельца путешествия.
+   */
+  async findByIdWithOwner(id: string) {
+    return await db.query.activities.findFirst({
+      where: eq(activities.id, id),
+      with: {
+        day: {
+          with: {
+            trip: {
+              columns: {
+                userId: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  },
 }

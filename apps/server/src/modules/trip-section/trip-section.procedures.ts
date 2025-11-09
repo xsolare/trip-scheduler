@@ -10,17 +10,17 @@ import { tripSectionService } from './trip-section.service'
 export const tripSectionProcedures = {
   create: protectedProcedure
     .input(CreateTripSectionInputSchema)
-    .mutation(({ input }) => tripSectionService.create(input)),
+    .mutation(({ input, ctx }) => tripSectionService.create(input, ctx.user.id)),
 
   update: protectedProcedure
     .input(UpdateTripSectionInputSchema)
-    .mutation(({ input }) => tripSectionService.update(input)),
+    .mutation(({ input, ctx }) => tripSectionService.update(input, ctx.user.id)),
 
   delete: protectedProcedure
     .input(DeleteTripSectionInputSchema)
-    .mutation(({ input }) => tripSectionService.delete(input.id)),
+    .mutation(({ input, ctx }) => tripSectionService.delete(input.id, ctx.user.id)),
 
   reorder: protectedProcedure
     .input(ReorderTripSectionsInputSchema)
-    .mutation(({ input }) => tripSectionService.reorder(input)),
+    .mutation(({ input, ctx }) => tripSectionService.reorder(input, ctx.user.id)),
 }

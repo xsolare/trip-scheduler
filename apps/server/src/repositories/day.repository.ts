@@ -24,6 +24,22 @@ export const dayRepository = {
   },
 
   /**
+   * Находит день по ID и возвращает его вместе с ID владельца путешествия.
+   */
+  async findByIdWithOwner(id: string) {
+    return await db.query.days.findFirst({
+      where: eq(days.id, id),
+      with: {
+        trip: {
+          columns: {
+            userId: true,
+          },
+        },
+      },
+    })
+  },
+
+  /**
    * Обновляет детали дня (название, описание, дата).
    * @param id - ID дня для обновления.
    * @param details - Объект с данными для обновления.

@@ -62,8 +62,8 @@ export function useTripsHub() {
 
   const availableTags = ref<{ value: string, label: string }[]>([])
   const tagSearchQuery = ref('')
-  const debouncedTagSearchQuery = useDebounce(tagSearchQuery, 300)
 
+  const debouncedTagSearchQuery = useDebounce(tagSearchQuery, 300)
   const debouncedFilters = useDebounce(filters, 400)
 
   // Computed (getters)

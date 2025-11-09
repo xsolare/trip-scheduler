@@ -1,8 +1,7 @@
 <script setup lang="ts" generic="T extends string | number">
 import type { ViewSwitcherItem } from '~/components/01.kit/kit-view-switcher'
-import { computed, ref, watch } from 'vue'
+import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
-import { KitDivider } from '../../kit-divider'
 
 const props = defineProps<{
   items: ViewSwitcherItem<T>[]
@@ -17,12 +16,6 @@ const contentWrapperRef = ref<HTMLElement | null>(null)
 
 const currentTab = computed(() => {
   return props.items.find(item => item.id === model.value)
-})
-
-watch(model, (newVal, oldVal) => {
-  const newIndex = props.items.findIndex(item => item.id === newVal)
-  const oldIndex = props.items.findIndex(item => item.id === oldVal)
-  transitionName.value = newIndex > oldIndex ? 'slide-left' : 'slide-right'
 })
 
 function onBeforeLeave(el: Element) {
@@ -48,6 +41,12 @@ function onAfterEnter() {
     contentWrapperRef.value.style.height = 'auto'
   }
 }
+
+watch(model, (newVal, oldVal) => {
+  const newIndex = props.items.findIndex(item => item.id === newVal)
+  const oldIndex = props.items.findIndex(item => item.id === oldVal)
+  transitionName.value = newIndex > oldIndex ? 'slide-left' : 'slide-right'
+})
 </script>
 
 <template>

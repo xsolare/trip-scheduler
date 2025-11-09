@@ -54,7 +54,7 @@ function handleSelect(item: KitDropdownItem<T>) {
             v-for="item in props.items"
             :key="String(item.value)"
             class="kit-dropdown-item"
-            :class="[`kit-dropdown-item--${size}`, { active: modelValue === item.value }]"
+            :class="[`kit-dropdown-item--${size}`, { 'active': modelValue === item.value, 'is-destructive': item.isDestructive }]"
             @click="handleSelect(item)"
           >
             <Icon v-if="item.icon" :icon="item.icon" class="item-icon" />

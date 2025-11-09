@@ -26,6 +26,19 @@ export const tripSectionRepository = {
     return newSection
   },
 
+  async findByIdWithOwner(id: string) {
+    return await db.query.tripSections.findFirst({
+      where: eq(tripSections.id, id),
+      with: {
+        trip: {
+          columns: {
+            userId: true,
+          },
+        },
+      },
+    })
+  },
+
   async update(id: string, data: TripSectionUpdate) {
     const [updatedSection] = await db
       .update(tripSections)

@@ -16,19 +16,19 @@ export const dayProcedures = {
 
   create: protectedProcedure
     .input(CreateDayInputSchema)
-    .mutation(async ({ input }) => {
-      return dayService.create(input)
+    .mutation(async ({ input, ctx }) => {
+      return dayService.create(input, ctx.user.id)
     }),
 
   update: protectedProcedure
     .input(UpdateDayInputSchema)
-    .mutation(async ({ input }) => {
-      return dayService.update(input.id, input.details)
+    .mutation(async ({ input, ctx }) => {
+      return dayService.update(input.id, input.details, ctx.user.id)
     }),
 
   delete: protectedProcedure
     .input(DeleteDayInputSchema)
-    .mutation(async ({ input }) => {
-      return dayService.delete(input.id)
+    .mutation(async ({ input, ctx }) => {
+      return dayService.delete(input.id, ctx.user.id)
     }),
 }

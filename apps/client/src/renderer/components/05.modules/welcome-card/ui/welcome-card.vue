@@ -94,7 +94,7 @@ const cardEventListeners = computed(() => {
       :staticity="30"
     />
 
-    <div class="feature-card" @click="goToCommunity">
+    <!-- <div class="feature-card" @click="goToCommunity">
       <div class="feature-icon">
         <Icon icon="mdi:account-group-outline" />
       </div>
@@ -104,7 +104,7 @@ const cardEventListeners = computed(() => {
       <p class="feature-subtitle">
         Обсуждайте маршруты и находите попутчиков.
       </p>
-    </div>
+    </div> -->
 
     <div
       ref="cardRef"
@@ -131,7 +131,7 @@ const cardEventListeners = computed(() => {
       </div>
     </div>
 
-    <div class="feature-card" @click="goToPlaces">
+    <!-- <div class="feature-card" @click="goToPlaces">
       <div class="feature-icon">
         <Icon icon="mdi:map-search-outline" />
       </div>
@@ -141,7 +141,7 @@ const cardEventListeners = computed(() => {
       <p class="feature-subtitle">
         Иследуйте популярные локации и достопримечательности.
       </p>
-    </div>
+    </div> -->
 
     <button class="useful-links-button" @click="goToUsefulLinks">
       <Icon icon="mdi:link-variant" class="link-icon" />

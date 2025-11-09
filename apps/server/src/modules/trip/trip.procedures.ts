@@ -42,14 +42,14 @@ export const tripProcedures = {
 
   update: protectedProcedure
     .input(UpdateTripInputSchema)
-    .mutation(async ({ input }) => {
-      return tripService.update(input.id, input.details)
+    .mutation(async ({ input, ctx }) => {
+      return tripService.update(input.id, input.details, ctx.user.id)
     }),
 
   delete: protectedProcedure
     .input(GetTripByIdInputSchema)
-    .mutation(async ({ input }) => {
-      return tripService.delete(input.tripId)
+    .mutation(async ({ input, ctx }) => {
+      return tripService.delete(input.tripId, ctx.user.id)
     }),
 
   getUniqueCities: publicProcedure

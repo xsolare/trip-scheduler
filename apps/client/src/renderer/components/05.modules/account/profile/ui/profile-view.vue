@@ -152,7 +152,7 @@ onMounted(() => {
 }
 
 .profile-cover {
-  height: 250px;
+  min-height: 250px;
   background: linear-gradient(to right, var(--bg-tertiary-color), var(--bg-secondary-color));
   border-radius: var(--r-l);
   position: relative;
@@ -205,7 +205,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 2rem;
-  padding: calc(2rem + 40px) 2rem 2rem;
+  padding: 32px 0 0 0;
   align-items: start;
 }
 
@@ -285,8 +285,15 @@ onMounted(() => {
   .profile-sidebar {
     order: 2;
   }
+  .profile-main-content {
+    padding: 8px;
+  }
 }
 @include media-down(sm) {
+  .profile-cover {
+    height: auto;
+    padding-top: 1.5rem;
+  }
   .profile-header {
     flex-direction: column;
     align-items: center;

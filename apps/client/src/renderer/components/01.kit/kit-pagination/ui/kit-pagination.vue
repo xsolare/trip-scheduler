@@ -2,11 +2,13 @@
 import { Icon } from '@iconify/vue'
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  currentPage: number
-  totalItems: number
-  itemsPerPage: number
-}>(), {
+interface Props {
+  currentPage?: number
+  totalItems?: number
+  itemsPerPage?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
   currentPage: 1,
   totalItems: 0,
   itemsPerPage: 20,

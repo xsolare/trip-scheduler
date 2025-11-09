@@ -22,6 +22,7 @@ function useProfileView() {
   async function init(userId: string) {
     if (!userId)
       return
+    
     await fetchRecentTrips(userId)
   }
 

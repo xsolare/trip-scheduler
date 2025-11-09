@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
 import type { IDay } from '~/components/04.features/trip-info/trip-plan/models/types'
 import type { Trip, TripSection } from '~/shared/types/models/trip'
 import { Icon } from '@iconify/vue'
-import { DropdownMenuItem } from 'reka-ui'
 import { KitAnimatedTooltip } from '~/components/01.kit/kit-animated-tooltip'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitDropdown } from '~/components/01.kit/kit-dropdown'
 import { KitImage } from '~/components/01.kit/kit-image'
+import { useTripPermissions } from '~/components/05.modules/trip-info/composables/use-trip-permissions'
 import { EActivityTag } from '~/shared/types/models/activity'
 import { TripStatus } from '~/shared/types/models/trip'
 import CountdownWidget from './content/countdown-widget.vue'
@@ -34,7 +35,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const confirm = useConfirm()
-const toast = useToast()
+const { canEdit } = useTripPermissions()
 
 const isMoreMenuOpen = ref(false)
 
@@ -139,9 +140,22 @@ async function handleDeleteTrip() {
     await emit('delete')
 }
 
-function handleShareTrip() {
-  // TODO: Реализовать логику "Поделиться"
-  toast.info('Функция "Поделиться" находится в разработке.')
+const moreMenuItems = computed((): KitDropdownItem<string>[] => {
+  const items: KitDropdownItem<string>[] = [
+    { value: 'share', label: 'Поделиться', icon: 'mdi:share-variant-outline' },
+  ]
+  if (canEdit.value) {
+    items.unshift({ value: 'edit', label: 'Редактировать', icon: 'mdi:pencil-outline' })
+    items.push({ value: 'delete', label: 'Удалить', icon: 'mdi:trash-can-outline', isDestructive: true })
+  }
+  return items
+})
+
+function handleMenuAction(action: string) {
+  if (action === 'edit')
+    handleEditTrip()
+  else if (action === 'delete')
+    handleDeleteTrip()
 }
 </script>
 
@@ -161,21 +175,17 @@ function handleShareTrip() {
       <div class="banner-overlay" />
 
       <div class="card-actions">
-        <KitDropdown v-model:open="isMoreMenuOpen" align="end">
+        <KitDropdown
+          v-model:open="isMoreMenuOpen"
+          align="end"
+          :items="moreMenuItems"
+          @update:model-value="handleMenuAction"
+        >
           <template #trigger>
             <button class="action-btn" title="Еще" @click.stop.prevent>
               <Icon icon="mdi:dots-vertical" />
             </button>
           </template>
-          <DropdownMenuItem class="kit-dropdown-item" @click="handleEditTrip">
-            <Icon icon="mdi:pencil-outline" /><span>Редактировать</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="kit-dropdown-item" @click="handleShareTrip">
-            <Icon icon="mdi:share-variant-outline" /><span>Поделиться</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="kit-dropdown-item is-destructive" @click="handleDeleteTrip">
-            <Icon icon="mdi:trash-can-outline" /><span>Удалить</span>
-          </DropdownMenuItem>
         </KitDropdown>
       </div>
 

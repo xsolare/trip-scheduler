@@ -1,4 +1,4 @@
-import type { Router, RouteRecordRaw } from 'vue-router'
+import type { Router, RouteRecordRaw, RouterScrollBehavior } from 'vue-router'
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import { AppRouteNames, AppRoutePaths } from '~/shared/constants/routes'
 import { useAuthStore } from '~/shared/store/auth.store'
@@ -142,9 +142,19 @@ const routes: RouteRecordRaw[] = [
   },
 ]
 
+const scrollBehavior: RouterScrollBehavior = (_to, _from, savedPosition) => {
+  if (savedPosition) {
+    return savedPosition
+  }
+  else {
+    return { top: 0 }
+  }
+}
+
 const router: Router = createRouter({
   history: isElectron ? createWebHashHistory() : createWebHistory('/'),
   routes,
+  scrollBehavior,
 })
 
 // --- Глобальный навигационный гард ---

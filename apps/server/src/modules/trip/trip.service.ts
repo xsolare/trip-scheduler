@@ -20,17 +20,17 @@ export const tripService = {
 
   async getById(id: string) {
     const trip = await tripRepository.getById(id)
-    if (!trip) {
+    if (!trip)
       throw createTRPCError('NOT_FOUND', `Путешествие с ID ${id} не найдено.`)
-    }
+
     return trip
   },
 
   async getByIdWithDays(id: string) {
     const trip = await tripRepository.getByIdWithDays(id)
-    if (!trip) {
+    if (!trip)
       throw createTRPCError('NOT_FOUND', `Путешествие с ID ${id} не найдено.`)
-    }
+
     return trip
   },
 
@@ -60,20 +60,29 @@ export const tripService = {
     return newTrip
   },
 
-  async update(id: string, details: z.infer<typeof UpdateTripInputSchema>['details']) {
-    const updatedTrip = await tripRepository.update(id, details)
-    if (!updatedTrip) {
+  async update(id: string, details: z.infer<typeof UpdateTripInputSchema>['details'], userId: string) {
+    const trip = await tripRepository.getById(id)
+    if (!trip)
       throw createTRPCError('NOT_FOUND', `Путешествие с ID ${id} не найдено.`)
-    }
+
+    if (trip.userId !== userId)
+      throw createTRPCError('FORBIDDEN', 'У вас нет прав на изменение этого путешествия.')
+
+    const updatedTrip = await tripRepository.update(id, details)
+    if (!updatedTrip)
+      throw createTRPCError('NOT_FOUND', `Путешествие с ID ${id} не найдено.`)
+
     return updatedTrip
   },
 
-  async delete(id: string) {
+  async delete(id: string, userId: string) {
     // Сначала получаем данные о путешествии, чтобы знать userId и кол-во изображений
     const tripToDelete = await tripRepository.getByIdWithImages(id)
-    if (!tripToDelete) {
+    if (!tripToDelete)
       throw createTRPCError('NOT_FOUND', `Путешествие с ID ${id} для удаления не найдено.`)
-    }
+
+    if (tripToDelete.userId !== userId)
+      throw createTRPCError('FORBIDDEN', 'У вас нет прав на удаление этого путешествия.')
 
     const deletedTrip = await tripRepository.delete(id)
     if (!deletedTrip) {
@@ -86,9 +95,8 @@ export const tripService = {
 
     // Уменьшаем счетчик занимаемого места
     const totalImageSize = tripToDelete.images.reduce((sum, image) => sum + (image.sizeBytes || 0), 0)
-    if (totalImageSize > 0) {
+    if (totalImageSize > 0)
       await quotaService.decrementStorageUsage(tripToDelete.userId, totalImageSize)
-    }
 
     return deletedTrip
   },

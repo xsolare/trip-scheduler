@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 import type { SignUpInputSchema, UpdateUserInputSchema } from '~/modules/user/user.schemas'
-import { and, eq, sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { db } from '~/../db'
 import { communityMembers, tripParticipants, users } from '~/../db/schema'
 import { authUtils } from '~/lib/auth.utils'

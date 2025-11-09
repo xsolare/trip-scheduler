@@ -147,6 +147,7 @@ export interface TripSection {
 
 export interface Trip {
   id: string
+  userId: string
   title: string
   imageUrl: string | null
   description: string | null
