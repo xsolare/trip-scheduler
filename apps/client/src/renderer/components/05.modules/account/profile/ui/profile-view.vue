@@ -70,22 +70,8 @@ onMounted(() => {
             <span class="stat-label">Путешествий</span>
           </div>
           <div class="stat-item">
-            <span class="stat-value">12</span>
-            <span class="stat-label">Друзей</span>
-          </div>
-          <div class="stat-item">
             <span class="stat-value">{{ user._count?.communities ?? 0 }}</span>
             <span class="stat-label">Сообществ</span>
-          </div>
-        </div>
-
-        <div class="friends-widget">
-          <h3 class="widget-title">
-            Друзья
-          </h3>
-          <!-- Placeholder for friends list -->
-          <div class="friends-list">
-            <p>Пустота...</p>
           </div>
         </div>
 
