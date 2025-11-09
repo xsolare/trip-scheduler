@@ -1,8 +1,10 @@
 <script setup lang="ts" generic="T extends string | number | object">
 import type { KitDropdownItem } from '~/components/01.kit/kit-dropdown'
 import { Icon } from '@iconify/vue'
-import { onClickOutside } from '@vueuse/core'
-import { nextTick } from 'vue'
+// --- Новые импорты ---
+import { onClickOutside, useElementBounding, useWindowSize } from '@vueuse/core'
+import { nextTick, ref, watch } from 'vue'
+// --- Конец новых импортов ---
 import { KitInput } from '~/components/01.kit/kit-input'
 
 const props = withDefaults(defineProps<{
@@ -37,6 +39,31 @@ const wrapperRef = ref<HTMLElement | null>(null)
 const searchInputRef = ref<InstanceType<typeof KitInput> | null>(null)
 const isOpen = ref(false)
 const searchQuery = ref('')
+
+// --- Новое состояние и логика для определения направления открытия ---
+const openDirection = ref<'down' | 'up'>('down')
+const DROPDOWN_MIN_HEIGHT = 250 // Примерная минимальная высота выпадающего списка
+const { height: windowHeight } = useWindowSize()
+const { bottom: wrapperBottom, top: wrapperTop } = useElementBounding(wrapperRef)
+
+watch(isOpen, (isNowOpen) => {
+  if (isNowOpen) {
+    // Ждем следующего тика, чтобы DOM обновился и wrapperRef был доступен
+    nextTick(() => {
+      const spaceBelow = windowHeight.value - wrapperBottom.value
+      const spaceAbove = wrapperTop.value
+
+      // Если внизу места мало, а вверху больше - открываем вверх
+      if (spaceBelow < DROPDOWN_MIN_HEIGHT && spaceAbove > spaceBelow) {
+        openDirection.value = 'up'
+      }
+      else {
+        openDirection.value = 'down'
+      }
+    })
+  }
+})
+// --- Конец новой логики ---
 
 const selectedItems = computed(() => {
   if (!props.modelValue)
@@ -225,7 +252,12 @@ onClickOutside(wrapperRef, handleClose)
 
     <!-- Общий выпадающий список -->
     <Transition name="fade-dropdown">
-      <div v-if="isOpen" class="dropdown-panel">
+      <!-- --- Добавлен класс is-open-up --- -->
+      <div
+        v-if="isOpen"
+        class="dropdown-panel"
+        :class="{ 'is-open-up': openDirection === 'up' }"
+      >
         <ul v-if="filteredItems.length > 0 && !loading" class="dropdown-list">
           <li
             v-for="item in filteredItems"
@@ -295,7 +327,6 @@ onClickOutside(wrapperRef, handleClose)
 
 .dropdown-panel {
   position: absolute;
-  top: calc(100% + 4px);
   width: 100%;
   max-height: 250px;
   overflow-y: auto;
@@ -304,6 +335,14 @@ onClickOutside(wrapperRef, handleClose)
   border-radius: var(--r-m);
   z-index: 100;
   box-shadow: var(--s-l);
+  // --- Изменения стилей для позиционирования ---
+  top: calc(100% + 4px); // По умолчанию открывается вниз
+
+  &.is-open-up {
+    top: auto; // Сбрасываем top
+    bottom: calc(100% + 4px); // Позиционируем снизу
+  }
+  // --- Конец изменений ---
 }
 
 .dropdown-list {
@@ -426,8 +465,15 @@ onClickOutside(wrapperRef, handleClose)
 .fade-dropdown-enter-from,
 .fade-dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-5px);
+  transform: translateY(-5px); // По умолчанию анимация вниз
 }
+
+// --- Новые стили для анимации вверх ---
+.is-open-up.fade-dropdown-enter-from,
+.is-open-up.fade-dropdown-leave-to {
+  transform: translateY(5px);
+}
+// --- Конец новых стилей ---
 
 .chip-input-wrapper {
   &.kit-input-sm {

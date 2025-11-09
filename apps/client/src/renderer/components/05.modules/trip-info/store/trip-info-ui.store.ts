@@ -1,7 +1,6 @@
 import type { RemovableRef } from '@vueuse/core'
 import type { ActiveView, ImageQuality, InteractionMode } from '../models/types'
 import { useStorage } from '@vueuse/core'
-import { useAppStore } from '~/shared/composables/use-store'
 
 export interface ITripInfoUiState {
   isDaysPanelOpen: boolean
@@ -37,13 +36,6 @@ export const useTripInfoUiStore = defineStore('tripInfoUi', {
      * @param state - Текущее состояние стора.
      */
     isViewMode: state => state.interactionMode === 'view',
-    isEditModeAllow: () => {
-      const store = useAppStore(['auth'])
-
-      // TODO доделать позже
-      if (store.auth.user?.role === 'admin')
-        return true
-    },
     areAllActivitiesCollapsed: state => (allIds: string[]) => {
       if (allIds.length === 0)
         return false

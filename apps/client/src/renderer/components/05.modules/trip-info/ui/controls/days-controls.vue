@@ -8,6 +8,7 @@ import { KitSkeleton } from '~/components/01.kit/kit-skeleton'
 import { CalendarPopover } from '~/components/02.shared/calendar-popover'
 import { useDisplay } from '~/shared/composables/use-display'
 import { useModuleStore } from '../../composables/use-trip-info-module'
+import { useTripPermissions } from '../../composables/use-trip-permissions'
 import DaysPanel from './days-panel.vue'
 import ViewSwitcher from './view-switcher.vue'
 
@@ -21,11 +22,12 @@ interface Props {
 const props = defineProps<Props>()
 
 const store = useModuleStore(['ui', 'plan'])
-const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView, isEditModeAllow } = storeToRefs(store.ui)
+const { isDaysPanelPinned, isDaysPanelOpen, isViewMode, activeView } = storeToRefs(store.ui)
 const { getAllDays, getSelectedDay, isLoading, isLoadingNewDay } = storeToRefs(store.plan)
 const { setCurrentDay, updateDayDetails } = store.plan
 const appStore = useAppStore(['layout'])
 const { isHeaderVisible, headerHeight } = storeToRefs(appStore.layout)
+const { canEdit } = useTripPermissions()
 
 const controlsRef = ref<HTMLElement | null>(null)
 const fixedLeftControlsRef = ref<HTMLElement | null>(null)
@@ -154,7 +156,7 @@ onUnmounted(() => {
         <div class="view-controls">
           <ViewSwitcher />
           <button
-            v-if="isEditModeAllow && mdAndUp"
+            v-if="canEdit && mdAndUp"
             class="split-view-btn"
             title="Отобразить План и Воспоминания"
             :class="{ 'is-active': activeView === 'split' }"
@@ -218,7 +220,7 @@ onUnmounted(() => {
       >
         <div v-if="!isDayInfoLoading" class="right-controls">
           <button
-            v-if="isEditModeAllow"
+            v-if="canEdit"
             class="mode-button"
             :title="isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
             @click="toggleMode"
@@ -229,7 +231,7 @@ onUnmounted(() => {
           <div class="view-controls">
             <ViewSwitcher />
             <button
-              v-if="isEditModeAllow && mdAndUp"
+              v-if="canEdit && mdAndUp"
               class="split-view-btn"
               title="Отобразить План и Воспоминания"
               :class="{ 'is-active': activeView === 'split' }"

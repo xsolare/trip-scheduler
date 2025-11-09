@@ -6,6 +6,7 @@ import { Icon } from '@iconify/vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitImage } from '~/components/01.kit/kit-image'
 import { KitInput } from '~/components/01.kit/kit-input'
+import { KitPagination } from '~/components/01.kit/kit-pagination'
 import { KitSelectWithSearch } from '~/components/01.kit/kit-select-with-search'
 import { KitViewSwitcher } from '~/components/01.kit/kit-view-switcher'
 import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
@@ -30,6 +31,9 @@ const {
   activeChart,
   setSort,
   sortBy,
+  currentPage,
+  itemsPerPage,
+  paginatedFiles,
 } = useStorageModule()
 const confirm = useConfirm()
 
@@ -43,6 +47,12 @@ const viewModeItems: ViewSwitcherItem[] = [
 const chartViewItems: ViewSwitcherItem<'byTrip' | 'byPlacement'>[] = [
   { id: 'byTrip', label: 'По путешествиям' },
   { id: 'byPlacement', label: 'По секциям' },
+]
+
+const itemsPerPageOptions = [
+  { value: 24, label: '24 на странице' },
+  { value: 48, label: '48 на странице' },
+  { value: 96, label: '96 на странице' },
 ]
 
 function formatPlacement(placement: TripImagePlacement) {
@@ -69,8 +79,9 @@ async function handleDeleteFile(fileId: string, fileName: string) {
     description: 'Файл будет удален навсегда. Это действие нельзя отменить.',
     type: 'danger',
   })
-  if (isConfirmed)
+  if (isConfirmed) {
     deleteFile(fileId)
+  }
 }
 
 onMounted(() => {
@@ -152,7 +163,7 @@ onMounted(() => {
       <template #success="{ data }">
         <!-- Grid View -->
         <div v-if="viewMode === 'grid'" class="files-grid">
-          <div v-for="file in data" :key="file.id" class="file-card">
+          <div v-for="file in paginatedFiles" :key="file.id" class="file-card">
             <div class="file-card-image">
               <KitImage :src="file.variants?.small || file.url" :alt="file.originalName" />
             </div>
@@ -192,7 +203,7 @@ onMounted(() => {
               </button>
               <span />
             </div>
-            <div v-for="file in data" :key="file.id" class="list-item-row">
+            <div v-for="file in paginatedFiles" :key="file.id" class="list-item-row">
               <div class="file-info-cell">
                 <KitImage :src="file.variants?.small || file.url" :alt="file.originalName" class="file-thumbnail" />
                 <span>{{ file.originalName }}</span>
@@ -207,6 +218,23 @@ onMounted(() => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div v-if="data.length > 0" class="pagination-controls">
+          <KitPagination
+            :current-page="currentPage"
+            :total-items="filteredAndSortedFiles.length"
+            :items-per-page="itemsPerPage"
+            @update:current-page="currentPage = $event"
+          />
+          <div class="items-per-page-selector">
+            <KitSelectWithSearch
+              v-model="itemsPerPage"
+              :items="itemsPerPageOptions"
+              :clearable="false"
+            />
           </div>
         </div>
       </template>
@@ -472,5 +500,19 @@ onMounted(() => {
 .slide-fade-leave-to {
   transform: translateY(-10px);
   opacity: 0;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary-color);
+  border-radius: var(--r-m);
+}
+
+.items-per-page-selector {
+  width: 180px;
 }
 </style>

@@ -12,6 +12,7 @@ import { BackgroundEffects } from '~/components/02.shared/background-effects'
 import { ThemeManager } from '~/components/02.shared/theme-manager'
 import { TripCommentsWidget } from '~/components/04.features/trip-info/trip-comments'
 import { useModuleStore } from '~/components/05.modules/trip-info'
+import { useTripPermissions } from '~/components/05.modules/trip-info/composables/use-trip-permissions'
 import AddSectionDialog from '~/components/06.layouts/trip-info/ui/add-section-dialog.vue'
 import { CommentParentType } from '~/shared/types/models/comment'
 import { useTripInfoLayout } from '../composables'
@@ -23,7 +24,8 @@ const { smAndDown } = useDisplay()
 
 const { mainNavigationRef, navigationWrapperRef } = layout
 const { plan, ui, routeGallery, memories, sections } = useModuleStore(['plan', 'ui', 'routeGallery', 'memories', 'sections'])
-const authStore = useAppStore('auth')
+const store = useAppStore(['auth'])
+const { canEdit } = useTripPermissions()
 
 const tripId = computed(() => route.params.id as string)
 const dayId = computed(() => route.query.day as string)
@@ -102,7 +104,7 @@ onBeforeUnmount(() => {
                   <Icon :icon="item.icon!" class="section-item-icon" />
                   <span>{{ item.label }}</span>
                 </li>
-                <li v-if="authStore.isAuthenticated" class="add-section-item-wrapper">
+                <li v-if="store.auth.isAuthenticated" class="add-section-item-wrapper">
                   <button class="add-section-btn" @click="ui.openAddSectionDialog">
                     <Icon icon="mdi:plus-circle-outline" />
                     <span>Добавить раздел</span>
@@ -120,7 +122,7 @@ onBeforeUnmount(() => {
             :parent-type="CommentParentType.DAY"
           />
           <button
-            v-if="ui.isEditModeAllow"
+            v-if="canEdit"
             class="nav-button"
             :title="ui.isViewMode ? 'Перейти в режим редактирования' : 'Перейти в режим просмотра'"
             @click="toggleMode"

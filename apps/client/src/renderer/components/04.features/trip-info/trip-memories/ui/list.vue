@@ -185,7 +185,7 @@ onChange((files) => {
     </div>
     <div
       v-else-if="memoriesForSelectedDay.length === 0 && memoriesToProcess.length === 0 && !isProcessing"
-      class="state-info"
+      class="empty-state"
     >
       <p>В этом дне пока нет воспоминаний.</p>
       <p v-if="!isViewMode">
@@ -349,6 +349,23 @@ onChange((files) => {
       font-size: 1.1rem;
       color: var(--fg-primary-color);
     }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  border: 2px dashed var(--border-secondary-color);
+  border-radius: var(--r-s);
+  margin-top: 20px;
+
+  p {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--fg-secondary-color);
   }
 }
 

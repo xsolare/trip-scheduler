@@ -1,5 +1,4 @@
 import type { TripImage } from '~/shared/types/models/trip'
-import { computed, ref } from 'vue'
 import { useRequest, useRequestError, useRequestStatus } from '~/plugins/request'
 import { useAuthStore } from '~/shared/store/auth.store'
 import { TripImagePlacement } from '~/shared/types/models/trip'
@@ -36,6 +35,9 @@ export function useStorageModule() {
   const viewMode = ref<'grid' | 'list'>('grid')
   const activeChart = ref<'byTrip' | 'byPlacement'>('byTrip')
 
+  const currentPage = ref(1)
+  const itemsPerPage = ref(24)
+
   const isLoading = useRequestStatus(EStorageKeys.FETCH_FILES)
   const error = useRequestError(EStorageKeys.FETCH_FILES)
 
@@ -60,8 +62,9 @@ export function useStorageModule() {
       fn: db => db.files.deleteFile(fileId),
       onSuccess: () => {
         toast.success('Файл успешно удален.')
-        if (fileToDelete?.sizeBytes)
+        if (fileToDelete?.sizeBytes) {
           authStore.decrementStorageUsage(fileToDelete.sizeBytes)
+        }
       },
       onError: (e) => {
         toast.error('Не удалось удалить файл.')
@@ -90,10 +93,12 @@ export function useStorageModule() {
       result = result.filter(f => f.originalName?.toLowerCase().includes(search))
     }
     if (filters.value.tripId) {
-      if (filters.value.tripId === 'no-trip')
+      if (filters.value.tripId === 'no-trip') {
         result = result.filter(f => !f.trip)
-      else
+      }
+      else {
         result = result.filter(f => f.trip?.id === filters.value.tripId)
+      }
     }
     if (filters.value.extension) {
       result = result.filter(f => f.originalName?.toLowerCase().endsWith(`.${filters.value.extension}`))
@@ -131,20 +136,32 @@ export function useStorageModule() {
       if (bVal === null || bVal === undefined)
         return -1 * order
 
-      if (typeof aVal === 'number' && typeof bVal === 'number')
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
         return (aVal - bVal) * order
-
-      if (typeof aVal === 'string' && typeof bVal === 'string')
+      }
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
         return aVal.localeCompare(bVal, undefined, { numeric: true }) * order
-
-      if (sortBy.value.key === 'createdAt')
+      }
+      if (sortBy.value.key === 'createdAt') {
         return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * order
+      }
 
       return 0
     })
 
     return result
   })
+
+  const paginatedFiles = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value
+    const end = start + itemsPerPage.value
+    return filteredAndSortedFiles.value.slice(start, end)
+  })
+
+  // Сбрасываем страницу при изменении фильтров
+  watch([filters, sortBy], () => {
+    currentPage.value = 1
+  }, { deep: true })
 
   const totalStorageUsed = computed(() => {
     return files.value.reduce((acc, file) => acc + (file.sizeBytes || 0), 0)
@@ -154,14 +171,17 @@ export function useStorageModule() {
     const tripsMap = new Map<string, string>()
     let hasFilesWithoutTrip = false
     files.value.forEach((file) => {
-      if (file.trip)
+      if (file.trip) {
         tripsMap.set(file.trip.id, file.trip.title)
-      else
+      }
+      else {
         hasFilesWithoutTrip = true
+      }
     })
     const tripOptions = Array.from(tripsMap.entries()).map(([id, title]) => ({ value: id, label: title }))
-    if (hasFilesWithoutTrip)
+    if (hasFilesWithoutTrip) {
       tripOptions.push({ value: 'no-trip', label: 'Без путешествия' })
+    }
 
     return [{ value: '', label: 'Все путешествия' }, ...tripOptions]
   })
@@ -171,8 +191,9 @@ export function useStorageModule() {
     files.value.forEach((file) => {
       const name = file.originalName || ''
       const parts = name.split('.')
-      if (parts.length > 1)
+      if (parts.length > 1) {
         extensions.add(parts.pop()!.toLowerCase())
+      }
     })
     const extOptions = Array.from(extensions).sort().map(ext => ({ value: ext, label: `.${ext}` }))
     return [{ value: '', label: 'Все расширения' }, ...extOptions]
@@ -189,9 +210,9 @@ export function useStorageModule() {
     files.value.forEach((file) => {
       const tripId = file.trip?.id || 'no-trip'
       const tripName = file.trip?.title || 'Без путешествия'
-      if (!tripStorage[tripId])
+      if (!tripStorage[tripId]) {
         tripStorage[tripId] = { name: tripName, size: 0 }
-
+      }
       tripStorage[tripId].size += file.sizeBytes || 0
     })
 
@@ -231,8 +252,9 @@ export function useStorageModule() {
       [TripImagePlacement.ROUTE]: 0,
     }
     files.value.forEach((file) => {
-      if (file.placement && placementStorage[file.placement] !== undefined)
+      if (file.placement && placementStorage[file.placement] !== undefined) {
         placementStorage[file.placement] += file.sizeBytes || 0
+      }
     })
 
     const data = [
@@ -270,5 +292,8 @@ export function useStorageModule() {
     storageByTrip,
     storageByPlacement,
     activeChart,
+    currentPage,
+    itemsPerPage,
+    paginatedFiles,
   }
 }
