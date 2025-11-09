@@ -23,7 +23,6 @@ class Server {
     'http://localhost:1420', // Vite dev server для веб-разработки
     'http://localhost:4173', // Vite preview
     'capacitor://localhost', // Android Capacitor
-    'https://2b9c3075ee15.ngrok-free.app',
     'http://localhost', // Capacitor
     'https://localhost', // Capacitor
     'http://trip-scheduler.ru', // Production-домен
