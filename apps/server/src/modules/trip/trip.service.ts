@@ -92,4 +92,8 @@ export const tripService = {
 
     return deletedTrip
   },
+
+  async listByUser(userId: string, limit: number) {
+    return await tripRepository.listByUser(userId, limit)
+  },
 }

@@ -132,6 +132,13 @@ export const userService = {
   },
 
   /**
+   * Получает статистику пользователя.
+   */
+  async getStats(id: string) {
+    return await userRepository.getStats(id)
+  },
+
+  /**
    * Обновляет информацию о пользователе.
    */
   async update(id: string, data: z.infer<typeof UpdateUserInputSchema>) {

@@ -4,20 +4,33 @@ import { Icon } from '@iconify/vue'
 import { KitAvatar } from '~/components/01.kit/kit-avatar'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitTabs } from '~/components/01.kit/kit-tabs'
+import { AsyncStateWrapper } from '~/components/02.shared/async-state-wrapper'
+import { UserQuotaWidget } from '~/components/02.shared/user-quota-widget'
 import { AppRouteNames } from '~/shared/constants/routes'
 import { useAuthStore } from '~/shared/store/auth.store'
+import { useProfileView } from '../composables/use-profile-view'
+import { RecentTripCard } from './components'
 
 const authStore = useAuthStore()
-const user = computed(() => authStore.user)
 const router = useRouter()
+const profileView = useProfileView()
 
 const activeTab = ref('trips')
+const user = computed(() => authStore.user)
+
+const { recentTrips, isLoading } = profileView
 
 const tabItems: ViewSwitcherItem[] = [
   { id: 'trips', label: 'Путешествия', icon: 'mdi:map-legend' },
   { id: 'activity', label: 'Активность', icon: 'mdi:pulse' },
   { id: 'communities', label: 'Сообщества', icon: 'mdi:account-group-outline' },
 ]
+
+onMounted(() => {
+  if (user.value) {
+    profileView.init(user.value.id)
+  }
+})
 </script>
 
 <template>
@@ -65,14 +78,42 @@ const tabItems: ViewSwitcherItem[] = [
             <span class="stat-label">Сообществ</span>
           </div>
         </div>
+
         <div class="friends-widget">
           <h3 class="widget-title">
             Друзья
           </h3>
           <!-- Placeholder for friends list -->
           <div class="friends-list">
-            <p>Раздел в разработке</p>
+            <p>Пустота...</p>
           </div>
+        </div>
+
+        <div v-if="user && user.plan" class="quota-section">
+          <UserQuotaWidget
+            title="Путешествия"
+            icon="mdi:briefcase-outline"
+            :current="user.currentTripsCount"
+            :limit="user.plan.maxTrips"
+            :to="{ name: AppRouteNames.AccountQuota }"
+            unit="items"
+          />
+          <UserQuotaWidget
+            title="Хранилище"
+            icon="mdi:database-outline"
+            :current="user.currentStorageBytes"
+            :limit="user.plan.maxStorageBytes"
+            unit="bytes"
+            :to="{ name: AppRouteNames.AccountStorage }"
+          />
+          <UserQuotaWidget
+            title="LLM Токены"
+            icon="mdi:robot-outline"
+            :current="user.llmCreditsUsed"
+            :limit="user.plan.monthlyLlmCredits"
+            unit="tokens"
+            :to="{ name: AppRouteNames.AccountQuota }"
+          />
         </div>
       </aside>
       <main class="profile-main-content">
@@ -80,7 +121,21 @@ const tabItems: ViewSwitcherItem[] = [
           <template #trips>
             <div class="tab-content">
               <h3>Последние путешествия</h3>
-              <p>Раздел в разработке</p>
+              <AsyncStateWrapper :loading="isLoading" :data="recentTrips.length > 0 ? recentTrips : null">
+                <template #success="{ data }">
+                  <div class="recent-trips-list">
+                    <RecentTripCard v-for="trip in data" :key="trip.id" :trip="trip" />
+                  </div>
+                </template>
+                <template #empty>
+                  <div class="empty-trips">
+                    <p>Пока нет недавних путешествий для отображения.</p>
+                    <KitBtn @click="router.push({ name: AppRouteNames.TripList })">
+                      Посмотреть все путешествия
+                    </KitBtn>
+                  </div>
+                </template>
+              </AsyncStateWrapper>
             </div>
           </template>
           <template #activity>
@@ -104,6 +159,10 @@ const tabItems: ViewSwitcherItem[] = [
 <style scoped lang="scss">
 .profile-view {
   padding-top: 2rem;
+
+  @include media-down(md) {
+    padding-top: 84px;
+  }
 }
 
 .profile-cover {
@@ -158,9 +217,10 @@ const tabItems: ViewSwitcherItem[] = [
 
 .profile-body {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 300px 1fr;
   gap: 2rem;
   padding: calc(2rem + 40px) 2rem 2rem;
+  align-items: start;
 }
 
 .profile-sidebar,
@@ -169,7 +229,7 @@ const tabItems: ViewSwitcherItem[] = [
   border: 1px solid var(--border-secondary-color);
   border-radius: var(--r-l);
   padding: 1.5rem;
-  min-height: 220px;
+  min-height: 200px;
 }
 
 .widget-title {
@@ -182,7 +242,8 @@ const tabItems: ViewSwitcherItem[] = [
   display: flex;
   justify-content: space-around;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
+
   .stat-item {
     display: flex;
     flex-direction: column;
@@ -197,8 +258,16 @@ const tabItems: ViewSwitcherItem[] = [
   }
 }
 
+.quota-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-secondary-color);
+  margin-top: 24px;
+  padding-top: 8px;
+}
+
 .tab-content {
-  padding-top: 1rem;
   h3 {
     margin-top: 0;
   }
@@ -207,7 +276,23 @@ const tabItems: ViewSwitcherItem[] = [
   }
 }
 
-@media (max-width: 960px) {
+.recent-trips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.empty-trips {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--fg-secondary-color);
+}
+
+@include media-down(md) {
   .profile-body {
     grid-template-columns: 1fr;
   }
@@ -215,7 +300,7 @@ const tabItems: ViewSwitcherItem[] = [
     order: 2;
   }
 }
-@media (max-width: 600px) {
+@include media-down(sm) {
   .profile-header {
     flex-direction: column;
     align-items: center;
@@ -226,7 +311,7 @@ const tabItems: ViewSwitcherItem[] = [
     margin-bottom: -70px;
   }
   .info-section {
-    padding-top: 70px;
+    padding-top: 50px;
   }
   .actions-section {
     width: 100%;

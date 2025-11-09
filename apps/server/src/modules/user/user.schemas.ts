@@ -83,3 +83,8 @@ export const AuthOutputSchema = z.object({
 export const RefreshOutputSchema = z.object({
   token: TokenPairSchema,
 })
+
+export const UserStatsSchema = z.object({
+  trips: z.number(),
+  communities: z.number(),
+})

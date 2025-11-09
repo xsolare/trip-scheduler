@@ -13,6 +13,7 @@ import {
   UpdateUserInputSchema,
   UpdateUserStatusInputSchema,
   UserSchema,
+  UserStatsSchema,
   VerifyEmailInputSchema,
 } from './user.schemas'
 import { userService } from './user.service'
@@ -82,6 +83,15 @@ export const userProcedures = {
     .output(UserSchema)
     .query(async ({ ctx }) => {
       return userService.getById(ctx.user.id)
+    }),
+
+  /**
+   * Процедура для получения статистики текущего пользователя.
+   */
+  getStats: protectedProcedure
+    .output(UserStatsSchema)
+    .query(async ({ ctx }) => {
+      return userService.getStats(ctx.user.id)
     }),
 
   /**

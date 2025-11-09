@@ -1,8 +1,8 @@
 import type { z } from 'zod'
 import type { SignUpInputSchema, UpdateUserInputSchema } from '~/modules/user/user.schemas'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '~/../db'
-import { communityMembers, users } from '~/../db/schema'
+import { communityMembers, tripParticipants, users } from '~/../db/schema'
 import { authUtils } from '~/lib/auth.utils'
 import { FREE_PLAN_ID } from '~/lib/constants'
 import { createTRPCError } from '~/lib/trpc'
@@ -140,7 +140,7 @@ export const userRepository = {
     if (!user)
       return null
 
-    const [communityCount] = await db
+    const [communityCountResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(communityMembers)
       .where(eq(communityMembers.userId, id))
@@ -148,8 +148,28 @@ export const userRepository = {
     return {
       ...excludePassword(user),
       _count: {
-        communities: Number(communityCount.count),
+        communities: Number(communityCountResult.count),
       },
+    }
+  },
+
+  /**
+   * Получает статистику пользователя (количество путешествий и сообществ).
+   */
+  async getStats(userId: string) {
+    const [tripCountResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(tripParticipants)
+      .where(eq(tripParticipants.userId, userId))
+
+    const [communityCountResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(communityMembers)
+      .where(eq(communityMembers.userId, userId))
+
+    return {
+      trips: Number(tripCountResult.count),
+      communities: Number(communityCountResult.count),
     }
   },
 

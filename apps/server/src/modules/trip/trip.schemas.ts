@@ -69,3 +69,8 @@ export const ListTripsInputSchema = z.object({
   cities: z.array(z.string()).optional(),
   userIds: z.array(z.string().uuid()).optional(),
 }).optional()
+
+export const ListTripsByUserInputSchema = z.object({
+  userId: z.string().uuid(),
+  limit: z.number().min(1).max(10).optional().default(3),
+})

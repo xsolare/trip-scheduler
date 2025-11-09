@@ -1,14 +1,9 @@
-import { AppRouteNames } from '~/shared/constants/routes'
-import { trpc } from '~/shared/services/trpc/trpc.service'
-import { useAuthStore } from '~/shared/store/auth.store'
-
-export function useProfile() {
-  const authStore = useAuthStore()
+function useProfile() {
+  const store = useAppStore(['auth'])
   const toast = useToast()
   const confirm = useConfirm()
-  const router = useRouter()
 
-  const user = computed(() => authStore.user)
+  const user = computed(() => store.auth.user)
 
   // --- Profile Info Form ---
   const profileForm = reactive({
@@ -44,7 +39,7 @@ export function useProfile() {
     isUpdatingProfile.value = true
     try {
       const payload = data || { name: profileForm.name }
-      await authStore.updateUser(payload)
+      await store.auth.updateUser(payload)
       toast.success('Профиль успешно обновлен')
     }
     catch (e: any) {
@@ -61,12 +56,7 @@ export function useProfile() {
 
     isChangingPassword.value = true
     try {
-      await trpc.user.changePassword.mutate({
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
-      })
-      toast.success('Пароль успешно изменен')
-      Object.assign(passwordForm, { currentPassword: '', newPassword: '', confirmPassword: '' })
+      // TODO
     }
     catch (e: any) {
       toast.error(e.message || 'Ошибка при смене пароля')
@@ -89,10 +79,7 @@ export function useProfile() {
 
     isDeletingAccount.value = true
     try {
-      await trpc.user.deleteAccount.mutate({ password: deleteForm.password })
-      toast.success('Ваш аккаунт был успешно удален.')
-      await authStore.signOut()
-      await router.push({ name: AppRouteNames.Root })
+      // TODO
     }
     catch (e: any) {
       toast.error(e.message || 'Ошибка при удалении аккаунта')
@@ -110,7 +97,7 @@ export function useProfile() {
 
     isUpdatingProfile.value = true
     try {
-      await authStore.uploadAvatar(file)
+      await store.auth.uploadAvatar(file)
       toast.success('Аватар успешно обновлен')
     }
     catch {
@@ -144,3 +131,5 @@ export function useProfile() {
     handleAvatarUpload,
   }
 }
+
+export { useProfile }

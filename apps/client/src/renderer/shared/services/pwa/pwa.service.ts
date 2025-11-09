@@ -6,7 +6,7 @@ import { usePwaStore } from '~/shared/store/pwa.store'
 /**
  * Инициализирует PWA и периодическую проверку обновлений.
  */
-export function initializePwaUpdater(pinia: Pinia): void {
+function initializePwaUpdater(pinia: Pinia): void {
   const pwaStore = usePwaStore(pinia)
   const intervalMS = 60 * 1 * 1000
 
@@ -42,3 +42,5 @@ export function initializePwaUpdater(pinia: Pinia): void {
 
   pwaStore.setUpdateFunction(updateServiceWorker)
 }
+
+export { initializePwaUpdater }

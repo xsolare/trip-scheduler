@@ -10,7 +10,7 @@ import { requestPlugin } from './plugins/request'
 import { restoreSession } from './plugins/session-restore'
 import { themePlugin } from './plugins/theme'
 import { resolveSrc } from './shared/directives/resolve-src'
-import databaseServicePromise from './shared/services/database'
+import { TRPCDatabaseClient } from './shared/services/api'
 
 /**
  * Асинхронная функция для инициализации приложения.
@@ -18,16 +18,17 @@ import databaseServicePromise from './shared/services/database'
 async function initializeApp() {
   const app = createApp(application)
   const pinia = createPinia()
+  const databaseService = new TRPCDatabaseClient()
 
   app.directive('resolve-src', resolveSrc)
 
   app.use(pinia)
-  app.use(requestPlugin, { databaseService: databaseServicePromise })
+  app.use(requestPlugin, { databaseService })
   app.use(router)
   app.use(themePlugin)
 
   await restoreSession(pinia)
-  await initializePwaUpdater(pinia)
+  initializePwaUpdater(pinia)
 
   app.mount('#app')
 }

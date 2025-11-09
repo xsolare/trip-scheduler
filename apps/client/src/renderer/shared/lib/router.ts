@@ -106,7 +106,7 @@ const routes: RouteRecordRaw[] = [
     path: AppRoutePaths.Account.Profile,
     name: AppRouteNames.AccountProfile,
     component: ProfilePage,
-    meta: { layout: 'default', requiresAuth: true },
+    meta: { layout: 'default' },
   },
   {
     path: AppRoutePaths.Account.Settings,
@@ -169,6 +169,11 @@ router.beforeEach(async (to, _, next) => {
       name: AppRouteNames.SignIn,
       query: { returnUrl: to.fullPath },
     })
+  }
+
+  // Если пользователь авторизован и пытается зайти на страницу входа/регистрации
+  if (authStore.isAuthenticated && (to.name === AppRouteNames.SignIn || to.name === AppRouteNames.SignUp)) {
+    return next({ name: AppRouteNames.TripList })
   }
 
   next()

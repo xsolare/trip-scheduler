@@ -3,6 +3,7 @@ import { protectedProcedure, publicProcedure } from '~/lib/trpc'
 import {
   CreateTripInputSchema,
   GetTripByIdInputSchema,
+  ListTripsByUserInputSchema,
   ListTripsInputSchema,
   UpdateTripInputSchema,
 } from './trip.schemas'
@@ -13,6 +14,12 @@ export const tripProcedures = {
     .input(ListTripsInputSchema)
     .query(async ({ input, ctx }) => {
       return tripService.getAll(input, ctx.user?.id)
+    }),
+
+  listByUser: publicProcedure
+    .input(ListTripsByUserInputSchema)
+    .query(async ({ input }) => {
+      return tripService.listByUser(input.userId, input.limit)
     }),
 
   getById: publicProcedure

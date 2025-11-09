@@ -2,7 +2,6 @@
 /// <reference types="vite-plugin-pwa/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_APP_API_MODE: string
   readonly VITE_APP_SERVER_URL: string
   readonly VITE_APP_REQUEST_THROTTLE: boolean
 }

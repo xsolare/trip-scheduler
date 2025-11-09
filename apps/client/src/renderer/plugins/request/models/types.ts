@@ -1,13 +1,11 @@
 import type { InjectionKey } from 'vue'
-import type { IDatabaseClient } from '~/shared/services/database/model/types'
-
-export type DatabaseService = Promise<IDatabaseClient>
+import type { IDatabaseClient } from '~/shared/services/api/model/types'
 
 export interface RequestPluginOptions {
-  databaseService: DatabaseService
+  databaseService: IDatabaseClient
 }
 
-export const DatabaseServiceKey: InjectionKey<DatabaseService> = Symbol('DatabaseService')
+export const DatabaseServiceKey: InjectionKey<IDatabaseClient> = Symbol('DatabaseService')
 
 export type DatabaseFn<T> = (db: IDatabaseClient, signal: AbortSignal) => Promise<T>
 

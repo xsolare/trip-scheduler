@@ -249,7 +249,7 @@ watch(() => sectionData.value.systemId, (newId) => {
           <!-- Readonly View (for both modes) -->
           <div v-else class="ride-content readonly">
             <div class="line-indicator" :style="{ backgroundColor: ride.lineColor }">
-              <span class="line-number">{{ ride.lineNumber }}</span>
+              <span v-if="ride.lineNumber" class="line-number">{{ ride.lineNumber }}</span>
             </div>
             <div class="ride-info">
               <div class="station start">
@@ -343,6 +343,9 @@ watch(() => sectionData.value.systemId, (newId) => {
     font-size: 0.8rem;
     font-weight: 700;
     font-family: 'Sansation';
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 .ride-segment.editable .line-indicator {

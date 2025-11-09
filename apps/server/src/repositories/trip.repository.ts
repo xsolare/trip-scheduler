@@ -300,4 +300,24 @@ export const tripRepository = {
       return deletedTrip || null
     })
   },
+
+  /**
+   * Получает последние N путешествий пользователя.
+   */
+  async listByUser(userId: string, limit: number) {
+    return measureDbQuery('trips', 'select', async () => {
+      const userTripsSubquery = db
+        .select({ tripId: tripParticipants.tripId })
+        .from(tripParticipants)
+        .where(eq(tripParticipants.userId, userId))
+
+      const result = await db.query.trips.findMany({
+        where: inArray(trips.id, userTripsSubquery),
+        orderBy: (trips, { desc }) => [desc(trips.createdAt)],
+        limit,
+        with: withParticipants,
+      })
+      return result.map(mapTripParticipants)
+    })
+  },
 }
