@@ -410,7 +410,6 @@ const visibilityIcon = computed(() => {
       transition: color 0.2s;
     }
 
-    // Новые стили для статусов в мета-блоке
     &--status {
       font-weight: 500;
 

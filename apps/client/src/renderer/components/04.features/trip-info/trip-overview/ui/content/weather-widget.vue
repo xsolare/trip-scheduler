@@ -355,7 +355,6 @@ onMounted(() => {
 
 .weather-details {
   display: grid;
-  // Изменено на 2 колонки
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   padding-top: 1.25rem;

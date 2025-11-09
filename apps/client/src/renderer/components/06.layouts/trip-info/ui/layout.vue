@@ -88,6 +88,7 @@ onBeforeUnmount(() => {
             <h1 class="current-section-title">
               {{ layout.activeTab.value?.label }}
             </h1>
+            <Icon icon="mdi:chevron-down" class="chevron-icon" :class="{ 'is-open': layout.isLayoutDropdownOpen.value }" />
           </div>
 
           <button class="nav-arrow right" title="Следующая секция" @click="layout.navigate('next')">
@@ -329,6 +330,17 @@ onBeforeUnmount(() => {
 
       &:hover {
         background-color: var(--bg-hover-color);
+      }
+
+      .chevron-icon {
+        font-size: 1.2rem;
+        color: var(--fg-secondary-color);
+        transition: transform 0.2s ease;
+        margin-left: 4px;
+
+        &.is-open {
+          transform: rotate(180deg);
+        }
       }
 
       &-icon {

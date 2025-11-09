@@ -70,11 +70,9 @@ interface ImageMetadata {
     modifyDate?: string | Date // Дата последнего изменения файла (ISO string или Date)
   }
 
-  // Новые добавленные структуры
   gps?: GpsMetadata
   iptc?: IptcMetadata
 
-  // Поле для всех остальных данных, которые не были распарсены
   rawExif?: Record<string, any>
 }
 

@@ -1,5 +1,5 @@
 import type { IAuthRepository } from '../../model/types'
-import type { SignInPayload, SignUpPayload, TokenPair, User } from '~/shared/types/models/auth'
+import type { SignInPayload, SignUpPayload, TelegramAuthPayload, TokenPair, User } from '~/shared/types/models/auth'
 import { throttle } from '../../lib/decorators'
 
 // --- Моковые данные ---
@@ -34,6 +34,21 @@ let verificationPendingFor: SignUpPayload | null = null
  */
 export class AuthRepository implements IAuthRepository {
   private isAuthenticated = false
+
+  @throttle(1000)
+  async signInWithTelegram(authData: TelegramAuthPayload): Promise<{ user: User, token: TokenPair }> {
+    // eslint-disable-next-line no-console
+    console.log('[SQL Mock] Signing in with Telegram:', authData.first_name)
+    this.isAuthenticated = true
+
+    const tgUser = {
+      ...MOCK_USER,
+      id: `mock-tg-${authData.id}`,
+      name: `${authData.first_name} ${authData.last_name || ''}`.trim(),
+      avatarUrl: authData.photo_url || MOCK_USER.avatarUrl,
+    } as User
+    return Promise.resolve({ user: tgUser, token: MOCK_TOKEN_PAIR })
+  }
 
   @throttle(1000)
   async signUp(payload: SignUpPayload): Promise<{ success: boolean, message: string }> {

@@ -226,7 +226,7 @@ async function seed() {
     for (const system of metroData) {
       const [insertedSystem] = await db.insert(metroSystems).values({ id: system.id, city: system.city, country: system.country }).returning()
       for (const line of system.lines) {
-        const [insertedLine] = await db.insert(metroLines).values({ id: line.id, systemId: insertedSystem.id, name: line.name, color: line.color }).returning()
+        const [insertedLine] = await db.insert(metroLines).values({ id: line.id, systemId: insertedSystem.id, name: line.name, color: line.color, lineNumber: line.lineNumber }).returning()
         const stationsToInsert = line.stations.map((station: any) => ({ id: station.id, systemId: insertedSystem.id, name: station.name }))
         if (stationsToInsert.length > 0) {
           // Вставка станций с обработкой конфликтов (если станция уже существует)

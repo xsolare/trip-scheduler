@@ -8,7 +8,7 @@ import { FREE_PLAN_ID } from '~/lib/constants'
 import { createTRPCError } from '~/lib/trpc'
 
 interface OAuthInput {
-  provider: 'google' | 'github'
+  provider: 'google' | 'github' | 'telegram'
   providerId: string
   email: string | null
   name: string
@@ -59,51 +59,70 @@ export const userRepository = {
    * Всегда возвращает объект пользователя без поля 'password'.
    */
   async findOrCreateFromOAuth({ provider, providerId, email, name, avatarUrl }: OAuthInput): Promise<UserForClient> {
-    if (!email) {
-      throw new Error('Для создания учетной записи требуется email от провайдера.')
-    }
-
-    const providerColumn = provider === 'google' ? users.googleId : users.githubId
+    let user: Awaited<ReturnType<typeof db.query.users.findFirst>> | undefined
 
     // 1. Попытка найти пользователя по ID провайдера.
-    const userWithProviderId = await db.query.users.findFirst({
-      where: eq(providerColumn, providerId),
-      with: { plan: true },
-    })
-
-    if (userWithProviderId) {
-      return excludePassword(userWithProviderId)
+    if (provider === 'google') {
+      user = await db.query.users.findFirst({ where: eq(users.googleId, providerId), with: { plan: true } })
+    }
+    else if (provider === 'github') {
+      user = await db.query.users.findFirst({ where: eq(users.githubId, providerId), with: { plan: true } })
+    }
+    else if (provider === 'telegram') {
+      user = await db.query.users.findFirst({ where: eq(users.telegramId, providerId), with: { plan: true } })
     }
 
-    // 2. Если не найден, ищем по email, чтобы связать аккаунты.
-    const userWithEmail = await db.query.users.findFirst({
-      where: eq(users.email, email),
-      with: { plan: true },
-    })
+    if (user) {
+      return excludePassword(user) as UserForClient
+    }
 
-    if (userWithEmail) {
-      // Связываем аккаунты и возвращаем обновленного пользователя
-      const [updatedUser] = await db.update(users)
-        .set({ [providerColumn.name]: providerId, updatedAt: new Date() })
-        .where(eq(users.id, userWithEmail.id))
-        .returning()
+    // 2. Если email предоставлен, ищем по нему для связи аккаунтов.
+    if (email) {
+      const userWithEmail = await db.query.users.findFirst({
+        where: eq(users.email, email),
+        with: { plan: true },
+      })
 
-      return { ...excludePassword(updatedUser), plan: userWithEmail.plan }
+      if (userWithEmail) {
+        // Связываем аккаунты и возвращаем обновленного пользователя
+        const updateData: Partial<typeof users.$inferInsert> = { updatedAt: new Date() }
+        if (provider === 'google')
+          updateData.googleId = providerId
+        else if (provider === 'github')
+          updateData.githubId = providerId
+        else if (provider === 'telegram')
+          updateData.telegramId = providerId
+
+        const [updatedUser] = await db.update(users)
+          .set(updateData)
+          .where(eq(users.id, userWithEmail.id))
+          .returning()
+
+        return { ...excludePassword(updatedUser), plan: userWithEmail.plan }
+      }
     }
 
     // 3. Если пользователь не найден, создаем нового.
+    const finalEmail = email || `telegram_${providerId}@telegram.user`
+    const newUserPayload: typeof users.$inferInsert = {
+      email: finalEmail,
+      name,
+      avatarUrl: avatarUrl || undefined,
+      emailVerified: new Date(),
+      planId: FREE_PLAN_ID,
+    }
+
+    if (provider === 'google')
+      newUserPayload.googleId = providerId
+    else if (provider === 'github')
+      newUserPayload.githubId = providerId
+    else if (provider === 'telegram')
+      newUserPayload.telegramId = providerId
+
     const [newUser] = await db.insert(users)
-      .values({
-        email,
-        name,
-        avatarUrl: avatarUrl || undefined,
-        emailVerified: new Date(),
-        [providerColumn.name]: providerId,
-        planId: FREE_PLAN_ID,
-      })
+      .values(newUserPayload)
       .returning()
 
-    // Возвращаем нового пользователя с планом
     return await this.getById(newUser.id) as UserForClient
   },
 

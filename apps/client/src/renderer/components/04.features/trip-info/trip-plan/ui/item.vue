@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CustomActivitySection, SectionGroup } from '../models/types'
+import type { CustomActivitySection, SectionGroup } from '../models/types.ts'
 import type { ActivitySectionGeolocation } from '~/components/03.domain/trip-info/plan-geolocation-section'
 import type {
   Activity,
@@ -40,6 +40,7 @@ const emit = defineEmits<{
 
 const store = useModuleStore(['ui'])
 const { isViewMode } = storeToRefs(store.ui)
+const confirm = useConfirm()
 
 const isTimeEditing = ref(false)
 const timeEditorRef = ref<HTMLElement | null>(null)
@@ -218,6 +219,7 @@ function addSection(type: EActivitySectionType) {
         type: EActivitySectionType.METRO,
         mode: 'free',
         city: null,
+        systemId: null,
         rides: [
           {
             id: uuidv4(),
@@ -225,8 +227,12 @@ function addSection(type: EActivitySectionType) {
             endStation: 'Станция пересадки',
             lineName: 'Линия 1',
             lineColor: '#E53935', // red
+            lineNumber: null,
             direction: 'На север',
             stops: 2,
+            endStationId: null,
+            lineId: null,
+            startStationId: null,
           },
           {
             id: uuidv4(),
@@ -234,8 +240,12 @@ function addSection(type: EActivitySectionType) {
             endStation: 'Конечная станция',
             lineName: 'Линия 2',
             lineColor: '#1E88E5', // blue
+            lineNumber: null,
             direction: 'На запад',
             stops: 3,
+            endStationId: null,
+            lineId: null,
+            startStationId: null,
           },
         ],
       } as ActivitySectionMetro
@@ -285,6 +295,19 @@ function isSectionExpanded(groupId: string, sectionId: string): boolean {
 
 function handleInlineEditorBlur() {
   updateActivity({ title: activityTitle.value })
+}
+
+async function handleDelete() {
+  const isConfirmed = await confirm({
+    title: 'Удалить активность?',
+    description: 'Это действие необратимо. Все секции внутри этой активности будут удалены.',
+    type: 'danger',
+    confirmText: 'Удалить',
+  })
+
+  if (isConfirmed) {
+    emit('delete', props.activity.id)
+  }
 }
 
 onClickOutside(timeEditorRef, saveTimeChanges)
@@ -356,7 +379,7 @@ onClickOutside(timeEditorRef, saveTimeChanges)
         <button
           class="control-btn delete-btn"
           title="Удалить активность"
-          @click="$emit('delete', activity.id)"
+          @click="handleDelete"
         >
           <Icon icon="mdi:trash-can-outline" />
         </button>

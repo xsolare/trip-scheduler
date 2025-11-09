@@ -168,6 +168,7 @@ watch(imageViewer.currentImage, (newImage) => {
 }, { deep: true })
 
 function openImageViewer() {
+  // eslint-disable-next-line ts/no-use-before-define
   if (isTimeEditing.value || !props.memory.image || isMorphed.value)
     return
 
@@ -291,6 +292,7 @@ function leaveMorph() {
 
   const onTransitionEnd = () => {
     photoWrapperRef.value?.removeEventListener('transitionend', onTransitionEnd)
+    // eslint-disable-next-line ts/no-use-before-define
     clearTimeout(fallback)
     isMorphed.value = false
     morphStyle.value = {}

@@ -41,6 +41,10 @@ export const metroRepository = {
     // Собираем итоговую структуру
     const linesWithStations = lines.map(line => ({
       ...line,
+      id: line.id,
+      name: line.name,
+      color: line.color,
+      lineNumber: line.lineNumber,
       stations: stationsByLineId[line.id] || [],
     }))
 

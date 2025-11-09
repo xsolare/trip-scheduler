@@ -75,7 +75,6 @@ export interface ImageMetadata {
     modifyDate?: string | Date // Дата последнего изменения файла (ISO string или Date)
   }
 
-  // Новые добавленные структуры
   gps?: GpsMetadata
   iptc?: IptcMetadata
 

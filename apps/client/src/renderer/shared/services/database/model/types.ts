@@ -1,5 +1,5 @@
 import type { Activity, Day } from '~/shared/types/models/activity'
-import type { SignInPayload, SignUpPayload, TokenPair, User } from '~/shared/types/models/auth'
+import type { SignInPayload, SignUpPayload, TelegramAuthPayload, TokenPair, User } from '~/shared/types/models/auth'
 import type { CreateCommentInput, UpdateCommentInput } from '~/shared/types/models/comment'
 import type { Community, CreateCommunityInput, ListCommunitiesInput } from '~/shared/types/models/community'
 import type { CreateMemoryInput, Memory, UpdateMemoryInput } from '~/shared/types/models/memory'
@@ -80,6 +80,7 @@ export interface IFileRepository {
 export interface IAuthRepository {
   signUp: (payload: SignUpPayload) => Promise<{ success: boolean, message: string }>
   verifyEmail: (payload: { email: string, token: string }) => Promise<{ user: User, token: TokenPair }>
+  signInWithTelegram: (authData: TelegramAuthPayload) => Promise<{ user: User, token: TokenPair }>
   signIn: (payload: SignInPayload) => Promise<{ user: User, token: TokenPair }>
   signOut: () => Promise<void>
   refresh: (refreshToken: string) => Promise<{ token: TokenPair }>

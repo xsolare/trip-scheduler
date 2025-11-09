@@ -41,6 +41,7 @@ export interface MetroRide {
   endStation: string
   lineId: string | null
   lineName: string
+  lineNumber: string | null
   lineColor: string
   direction: string
   stops: number

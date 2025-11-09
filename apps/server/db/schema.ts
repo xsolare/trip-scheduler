@@ -59,6 +59,7 @@ interface MetroRide {
   endStation: string
   lineId: string | null
   lineName: string
+  lineNumber: string | null
   lineColor: string
   direction: string
   stops: number
@@ -115,6 +116,7 @@ export const users = pgTable('users', {
   // Поля для OAuth
   githubId: text('github_id').unique(),
   googleId: text('google_id').unique(),
+  telegramId: text('telegram_id').unique(),
 
   // --- ПОЛЯ ДЛЯ КВОТ ---
   planId: integer('plan_id').references(() => plans.id).notNull().default(1),
@@ -337,6 +339,7 @@ export const metroLines = pgTable('metro_lines', {
   id: text('id').primaryKey(),
   systemId: text('system_id').notNull().references(() => metroSystems.id, { onDelete: 'cascade' }),
   name: text('name').notNull(), // e.g., 'Сокольническая линия'
+  lineNumber: text('line_number'),
   color: text('color').notNull(), // e.g., '#EF161E'
 })
 
@@ -487,7 +490,6 @@ export const communityMembersRelations = relations(communityMembers, ({ one }) =
   }),
 }))
 
-// --- Новые связи для Метро ---
 export const metroSystemsRelations = relations(metroSystems, ({ many }) => ({
   lines: many(metroLines),
   stations: many(metroStations),

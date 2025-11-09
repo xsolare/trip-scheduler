@@ -75,6 +75,7 @@ const MetroRideSchema = z.object({
   endStation: z.string(),
   lineId: z.string().nullable().optional(),
   lineName: z.string(),
+  lineNumber: z.string().nullable().optional(),
   lineColor: z.string(),
   direction: z.string(),
   stops: z.number(),

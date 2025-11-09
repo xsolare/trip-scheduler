@@ -1,5 +1,5 @@
 import type { IAuthRepository } from '../../model/types'
-import type { SignInPayload, SignUpPayload, User } from '~/shared/types/models/auth'
+import type { SignInPayload, SignUpPayload, TelegramAuthPayload, User } from '~/shared/types/models/auth'
 import { trpc } from '~/shared/services/trpc/trpc.service'
 import { TOKEN_KEY } from '~/shared/store/auth.store'
 import { throttle } from '../../lib/decorators'
@@ -23,6 +23,11 @@ export class AuthRepository implements IAuthRepository {
   @throttle(1000)
   async signOut() {
     await trpc.user.signOut.mutate()
+  }
+
+  @throttle(1000)
+  async signInWithTelegram(authData: TelegramAuthPayload) { // Убедитесь, что тип здесь - объект
+    return trpc.user.signInWithTelegram.mutate(authData) // Передаем объект
   }
 
   @throttle(1000)

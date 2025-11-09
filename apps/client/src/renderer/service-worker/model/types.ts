@@ -103,6 +103,20 @@ const API_CACHE_RULES: ApiCacheRule[] = [
     maxAgeSeconds: 1 * 60 * 60 * 24, // 24 часа
     maxEntries: 50,
   },
+  {
+    path: 'metro.listSystems',
+    cacheName: 'trip-scheduler-api-metro-systems',
+    strategy: 'CacheFirst',
+    maxAgeSeconds: 30 * 24 * 60 * 60, // 30 дней
+    maxEntries: 25,
+  },
+  {
+    path: 'metro.getDetails',
+    cacheName: 'trip-scheduler-api-metro-details',
+    strategy: 'CacheFirst',
+    maxAgeSeconds: 30 * 24 * 60 * 60, // 30 дней
+    maxEntries: 50,
+  },
 ]
 
 interface MessageHandlers {

@@ -33,6 +33,7 @@ authController.get('/google/callback', async (c) => {
   const { token } = await oAuthService.handleGoogle(code!)
   const redirectUrl = new URL(`${process.env.FRONTEND_URL}/auth/callback`)
   redirectUrl.searchParams.set('token', token.accessToken)
+  redirectUrl.searchParams.set('refreshToken', token.refreshToken)
 
   setCookie(c, 'refresh_token', token.refreshToken, {
     httpOnly: true,
@@ -72,6 +73,7 @@ authController.get('/github/callback', async (c) => {
   const { token } = await oAuthService.handleGithub(code!)
   const redirectUrl = new URL(`${process.env.FRONTEND_URL}/auth/callback`)
   redirectUrl.searchParams.set('token', token.accessToken)
+  redirectUrl.searchParams.set('refreshToken', token.refreshToken)
 
   setCookie(c, 'refresh_token', token.refreshToken, {
     httpOnly: true,

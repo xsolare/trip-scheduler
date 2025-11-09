@@ -38,7 +38,7 @@ const metroSystems = ref<{ id: string, city: string }[]>([])
 const activeSystemDetails = ref<{
   id: string
   city: string
-  lines: { id: string, name: string, color: string, stations: { id: string, name: string }[] }[]
+  lines: { id: string, name: string, lineNumber: string | null, color: string, stations: { id: string, name: string }[] }[]
 } | null>(null)
 
 const isLoadingSystems = ref(false)
@@ -49,7 +49,7 @@ const systemOptions = computed((): KitDropdownItem<string>[] =>
 )
 
 const lineOptions = computed((): KitDropdownItem<string>[] =>
-  activeSystemDetails.value?.lines.map(l => ({ value: l.id, label: l.name })) || [],
+  activeSystemDetails.value?.lines.map(l => ({ value: l.id, label: `${l.lineNumber ? `${l.lineNumber} ` : ''}${l.name}` })) || [],
 )
 
 function getStationOptionsForLine(lineId: string | null): KitDropdownItem<string>[] {
@@ -131,8 +131,10 @@ function updateRide(rideId: string, updatedRide: Partial<MetroRide>) {
 
 function handleLineChange(ride: MetroRide, newLineId: string | null) {
   const line = activeSystemDetails.value?.lines.find(l => l.id === newLineId)
+
   updateRide(ride.id, {
     lineId: newLineId,
+    lineNumber: line?.lineNumber || null,
     lineName: line?.name || '',
     lineColor: line?.color || '#808080',
     startStationId: null,
@@ -159,6 +161,7 @@ function addRide() {
     startStation: '',
     endStation: '',
     lineName: '',
+    lineNumber: null,
     lineColor: '#808080',
     direction: '',
     stops: 1,
@@ -196,7 +199,7 @@ watch(() => sectionData.value.systemId, (newId) => {
     <div v-if="!readonly" class="controls-header">
       <KitViewSwitcher
         :model-value="sectionData.mode"
-        :items="[{ id: 'free', label: 'Свободный' }, { id: 'city', label: 'По городу' }]"
+        :items="[{ id: 'free', label: 'Свободный ввод' }, { id: 'city', label: 'По городу' }]"
         @update:model-value="handleModeChange($event as 'free' | 'city')"
       />
       <KitSelectWithSearch
@@ -213,24 +216,30 @@ watch(() => sectionData.value.systemId, (newId) => {
     <div class="rides-container">
       <div v-for="(ride, index) in sectionData.rides" :key="ride.id" class="ride-wrapper">
         <div class="ride-segment" :class="{ editable: !readonly }">
-          <div class="line-indicator" :style="{ backgroundColor: ride.lineColor }" />
-
           <!-- Editable City Mode -->
           <div v-if="sectionData.mode === 'city' && !readonly" class="ride-content city-mode editable">
-            <KitSelectWithSearch :model-value="ride.lineId" :items="lineOptions" :loading="isLoadingDetails" placeholder="Линия" @update:model-value="handleLineChange(ride, $event as string)" />
-            <KitSelectWithSearch :model-value="ride.startStationId" :items="getStationOptionsForLine(ride.lineId)" placeholder="Откуда" @update:model-value="handleStationChange(ride, 'startStation', $event as string)" />
-            <KitSelectWithSearch :model-value="ride.endStationId" :items="getStationOptionsForLine(ride.lineId)" placeholder="Куда" @update:model-value="handleStationChange(ride, 'endStation', $event as string)" />
+            <div class="line-indicator" :style="{ backgroundColor: ride.lineColor }">
+              <span class="line-number">{{ ride.lineNumber }}</span>
+            </div>
+            <div class="city-inputs">
+              <KitSelectWithSearch :model-value="ride.lineId" :items="lineOptions" :loading="isLoadingDetails" placeholder="Линия" @update:model-value="handleLineChange(ride, $event as string)" />
+              <KitSelectWithSearch :model-value="ride.startStationId" :items="getStationOptionsForLine(ride.lineId)" placeholder="Откуда" @update:model-value="handleStationChange(ride, 'startStation', $event as string)" />
+              <KitSelectWithSearch :model-value="ride.endStationId" :items="getStationOptionsForLine(ride.lineId)" placeholder="Куда" @update:model-value="handleStationChange(ride, 'endStation', $event as string)" />
+            </div>
           </div>
 
           <!-- Editable Free Mode -->
           <div v-else-if="sectionData.mode === 'free' && !readonly" class="ride-content free-mode editable">
+            <div class="line-indicator" :style="{ backgroundColor: ride.lineColor }">
+              <span class="line-number">{{ ride.lineNumber }}</span>
+            </div>
             <div class="free-mode-grid">
               <KitInput :model-value="ride.startStation" placeholder="Откуда" size="sm" @update:model-value="updateRide(ride.id, { startStation: $event as string })" />
               <KitInput :model-value="ride.endStation" placeholder="Куда" size="sm" @update:model-value="updateRide(ride.id, { endStation: $event as string })" />
-              <KitInput :model-value="ride.lineName" placeholder="Линия" size="sm" @update:model-value="updateRide(ride.id, { lineName: $event as string })" />
+              <KitInput :model-value="ride.lineName" placeholder="Название линии" size="sm" @update:model-value="updateRide(ride.id, { lineName: $event as string })" />
+              <KitInput :model-value="ride.lineNumber" placeholder="№" size="sm" @update:model-value="updateRide(ride.id, { lineNumber: $event as string })" />
               <div class="line-color-picker">
                 <input type="color" :value="ride.lineColor" class="color-input" @input="updateRide(ride.id, { lineColor: ($event.target as HTMLInputElement).value })">
-                <div class="color-preview" :style="{ backgroundColor: ride.lineColor }" />
               </div>
               <KitInput :model-value="ride.direction" placeholder="Направление (необяз.)" size="sm" @update:model-value="updateRide(ride.id, { direction: $event as string })" />
               <KitInput :model-value="ride.stops" placeholder="Остановки" type="number" size="sm" @update:model-value="updateRide(ride.id, { stops: Number($event) || 0 })" />
@@ -238,17 +247,24 @@ watch(() => sectionData.value.systemId, (newId) => {
           </div>
 
           <!-- Readonly View (for both modes) -->
-          <div v-else class="ride-content free-mode readonly">
-            <div class="station-info">
-              <span class="station-name">{{ ride.startStation || '...' }}</span>
-              <span class="line-info">Линия «{{ ride.lineName || '...' }}»</span>
+          <div v-else class="ride-content readonly">
+            <div class="line-indicator" :style="{ backgroundColor: ride.lineColor }">
+              <span class="line-number">{{ ride.lineNumber }}</span>
             </div>
-            <div class="path-details">
-              <Icon icon="mdi:arrow-right" />
-              <span>{{ getDirectionText(ride) }} ({{ ride.stops }} {{ ride.stops === 1 ? 'ост.' : (ride.stops > 1 && ride.stops < 5 ? 'ост.' : 'ост.') }})</span>
-            </div>
-            <div class="station-info end">
-              <span class="station-name">{{ ride.endStation || '...' }}</span>
+            <div class="ride-info">
+              <div class="station start">
+                <span class="station-name">{{ ride.startStation || '...' }}</span>
+              </div>
+              <div class="ride-path">
+                <div class="path-line" />
+                <div class="path-details">
+                  <span>{{ getDirectionText(ride) }}</span>
+                  <span v-if="ride.stops > 0">{{ ride.stops }} {{ ride.stops === 1 ? 'ост.' : (ride.stops > 1 && ride.stops < 5 ? 'ост-ки' : 'ост-ок') }}</span>
+                </div>
+              </div>
+              <div class="station end">
+                <span class="station-name">{{ ride.endStation || '...' }}</span>
+              </div>
             </div>
           </div>
 
@@ -305,22 +321,48 @@ watch(() => sectionData.value.systemId, (newId) => {
   min-height: 54px;
 }
 .line-indicator {
-  width: 4px;
+  width: 24px;
+  opacity: 0.5;
   height: 100%;
   position: absolute;
-  left: -16px;
+  left: -8px;
   top: 0;
   bottom: 0;
-  background-color: grey;
+  border-radius: var(--r-s) 0 0 var(--r-s);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .line-number {
+    color: white;
+    border-radius: 100%;
+    background-color: #20202050;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'Sansation';
+  }
+}
+.ride-segment.editable .line-indicator {
+  height: 54px;
+  top: 50%;
+  left: -8px;
+  transform: translateY(-50%);
+  border-radius: var(--r-s);
+
+  .line-number {
+    display: none;
+  }
 }
 .ride-content {
   flex-grow: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
 }
-.city-mode.editable {
+.city-mode.editable .city-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
@@ -328,49 +370,59 @@ watch(() => sectionData.value.systemId, (newId) => {
 }
 .free-mode.editable .free-mode-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 44px;
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
   gap: 8px;
   width: 100%;
   align-items: center;
-
-  // Растягиваем поля на 2 колонки
-  > :nth-child(5) {
-    grid-column: span 2;
-  }
-  > :nth-child(6) {
-    grid-column: span 2;
+  :deep(.kit-input-group) {
+    gap: 4px;
   }
 }
 .line-color-picker {
   position: relative;
-  width: 36px;
+  width: 100%;
   height: 36px;
   flex-shrink: 0;
   align-self: center;
   justify-self: center;
+  border-radius: var(--r-s);
+  overflow: hidden;
+  border: 1px solid var(--border-secondary-color);
   .color-input {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;
     cursor: pointer;
-  }
-  .color-preview {
-    width: 100%;
-    height: 100%;
-    border-radius: var(--r-s);
-    border: 1px solid var(--border-secondary-color);
+    padding: 0;
+    border: none;
   }
 }
-.station-info {
+.ride-content.readonly {
+  padding-left: 32px;
+}
+.ride-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-
-  &.end {
-    text-align: right;
+  gap: 4px;
+  width: 100%;
+}
+.station {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  &::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--border-primary-color);
+    background-color: var(--bg-secondary-color);
+  }
+  &.end::before {
+    background-color: var(--border-primary-color);
   }
 }
 .station-name {
@@ -380,15 +432,23 @@ watch(() => sectionData.value.systemId, (newId) => {
   font-size: 0.8rem;
   color: var(--fg-secondary-color);
 }
-.path-details {
+.ride-path {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  padding-left: 3px;
+  gap: 8px;
+  height: 32px;
+}
+.path-line {
+  width: 2px;
+  height: 100%;
+  background-color: var(--border-secondary-color);
+}
+.path-details {
   font-size: 0.8rem;
   color: var(--fg-secondary-color);
-  flex-shrink: 0;
-  min-width: 100px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 .transfer-info {
   display: flex;

@@ -13,14 +13,15 @@ async function authorizationCallback() {
   const token = route.query.token as string
   const refreshToken = route.query.refreshToken as string
 
-  if (!token || !refreshToken) {
+  if (!token) {
     return router.push({
       path: AppRoutePaths.Auth.SignIn,
       query: { oa_error: OAuthErrors.MissingToken },
     })
   }
 
-  await store.refresh()
+  store.saveTokens({ accessToken: token, refreshToken })
+
   await nextTick()
   await validateUser()
 }
@@ -28,12 +29,16 @@ async function authorizationCallback() {
 async function validateUser() {
   try {
     await store.me()
-    router.push({ path: AppRoutePaths.Trip.List })
+    router.push({
+      path: AppRoutePaths.Trip.List,
+    })
   }
   catch {
     router.push({
       path: AppRoutePaths.Auth.SignIn,
-      query: { oa_error: OAuthErrors.MeError },
+      query: {
+        oa_error: OAuthErrors.MeError,
+      },
     })
   }
 }

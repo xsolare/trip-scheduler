@@ -11,9 +11,10 @@ export const MetroStationSchema = createSelectSchema(metroStations)
 export const MetroLineSchema = createSelectSchema(metroLines)
 
 export const MetroSystemDetailsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   city: z.string(),
   lines: z.array(MetroLineSchema.extend({
+    lineNumber: z.string().nullable(),
     stations: z.array(MetroStationSchema),
   })),
 })
@@ -21,5 +22,5 @@ export const MetroSystemDetailsSchema = z.object({
 // --- Input Schemas ---
 
 export const GetMetroSystemDetailsInputSchema = z.object({
-  systemId: z.string().uuid(),
+  systemId: z.string(),
 })

@@ -1,4 +1,4 @@
-import type { SignInPayload, SignUpPayload, TokenPair, User } from '../types/models/auth'
+import type { SignInPayload, SignUpPayload, TelegramAuthPayload, TokenPair, User } from '../types/models/auth'
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { useRequest, useRequestStatus } from '~/plugins/request'
@@ -11,6 +11,7 @@ export enum EAuthRequestKeys {
   REFRESH = 'auth:refresh',
   SIGN_IN = 'auth:sign-in',
   SIGN_UP = 'auth:sign-up',
+  SIGN_IN_TG = 'auth:sign-in-telegram',
   VERIFY_EMAIL = 'auth:verify-email',
   SIGN_OUT = 'auth:sign-out',
   UPDATE_STATUS = 'auth:update-status',
@@ -112,6 +113,24 @@ export const useAuthStore = defineStore('auth', {
     },
 
     /**
+     * Авторизует пользователя через Telegram.
+     */
+    async signInWithTelegram(authData: TelegramAuthPayload) {
+      return useRequest({
+        key: EAuthRequestKeys.SIGN_IN_TG,
+        fn: db => db.auth.signInWithTelegram(authData),
+        onSuccess: (data) => {
+          this.user = data.user
+          this.saveTokens(data.token)
+        },
+        onError: (error) => {
+          this.clearAuth()
+          throw error
+        },
+      })
+    },
+
+    /**
      * Авторизует пользователя по email и паролю через tRPC.
      */
     async signIn(payload: SignInPayload) {
@@ -193,7 +212,10 @@ export const useAuthStore = defineStore('auth', {
      * Очищает токены из состояния и из localStorage.
      */
     clearTokens() {
-      this.tokenPair = null
+      this.tokenPair = {
+        accessToken: '',
+        refreshToken: '',
+      }
       useStorage(TOKEN_KEY, null).value = null
       useStorage(REFRESH_TOKEN_KEY, null).value = null
     },

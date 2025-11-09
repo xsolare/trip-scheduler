@@ -3,11 +3,9 @@ import type { SignUpPayload } from '~/shared/types/models/auth'
 import { Icon } from '@iconify/vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
-import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitInput } from '~/components/01.kit/kit-input'
+import AuthSignLayout from '~/components/06.layouts/auth-sign/ui/auth-sign.vue'
 import { AppRoutePaths } from '~/shared/constants/routes'
-
-enum OAuthProviders { GitHub = 'github', Google = 'google' }
 
 const store = useAppStore(['auth'])
 const toast = useToast()
@@ -121,14 +119,6 @@ const isLoading = computed(() => store.auth.isLoading)
 const passwordInputType = computed(() => (isPasswordVisible.value ? 'text' : 'password'))
 const passwordToggleIcon = computed(() => (isPasswordVisible.value ? 'mdi:eye-off-outline' : 'mdi:eye-outline'))
 
-async function handleOAuth(_provider: OAuthProviders) {
-  toast.warn(`В процессе разработки :)`)
-  await router.push(AppRoutePaths.Trip.List)
-
-  // const targetUrl = `${import.meta.env.VITE_APP_SERVER_URL}/v1/auth/${provider}`
-  // await router.push(targetUrl)
-}
-
 watch(formError, (newError) => {
   if (newError) {
     toast.error(newError, { expire: 4000 })
@@ -137,16 +127,8 @@ watch(formError, (newError) => {
 </script>
 
 <template>
-  <section class="content">
-    <div class="card">
-      <div v-if="isLoading" class="loader-overlay">
-        <Icon icon="mdi:loading" class="spinner" />
-      </div>
-      <router-link :to="AppRoutePaths.Root" class="logo">
-        <Icon icon="mdi:map-marker-path" class="logo-icon" />
-        <span class="logo-text">Trip Scheduler</span>
-      </router-link>
-
+  <AuthSignLayout :is-loading="isLoading">
+    <template #form>
       <!-- Step 1: Details Form -->
       <form v-if="step === 'details'" class="form" @submit.prevent="submitSignUp">
         <KitInput
@@ -235,109 +217,18 @@ watch(formError, (newError) => {
           Изменить email
         </button>
       </form>
-
+    </template>
+    <template #utils>
       <div class="utils">
         <router-link :to="{ path: AppRoutePaths.Auth.SignIn, query: route.query }" class="util-link">
           Уже есть аккаунт? Войти
         </router-link>
       </div>
-
-      <KitDivider :is-loading="isLoading">
-        ИЛИ
-      </KitDivider>
-
-      <div class="additional-oauth">
-        <KitBtn
-          variant="outlined"
-          color="secondary"
-          :disabled="isLoading"
-          icon="mdi:google"
-          style="flex-grow: 1;"
-          @click="handleOAuth(OAuthProviders.Google)"
-        >
-          Google
-        </KitBtn>
-        <KitBtn
-          variant="outlined"
-          color="secondary"
-          :disabled="isLoading"
-          icon="mdi:github"
-          style="flex-grow: 1;"
-          @click="handleOAuth(OAuthProviders.GitHub)"
-        >
-          GitHub
-        </KitBtn>
-      </div>
-    </div>
-  </section>
+    </template>
+  </AuthSignLayout>
 </template>
 
 <style scoped lang="scss">
-.content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  width: 100%;
-  padding: 16px;
-}
-.card {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  margin: 16px;
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border-secondary-color);
-  box-shadow: var(--s-l);
-  border-radius: var(--r-l);
-  padding: 32px;
-  overflow: hidden;
-  @include media-down(xs) {
-    padding: 24px;
-  }
-}
-.loader-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-tertiary-color);
-  z-index: 20;
-  .spinner {
-    font-size: 3rem;
-    color: var(--fg-accent-color);
-    animation: spin 1s linear infinite;
-  }
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 32px;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-  &:hover {
-    opacity: 0.8;
-  }
-  color: var(--fg-primary-color);
-  .logo-icon {
-    font-size: 2.5rem;
-    color: var(--fg-accent-color);
-  }
-  .logo-text {
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-}
-
 .form {
   display: flex;
   flex-direction: column;
@@ -391,10 +282,5 @@ watch(formError, (newError) => {
   &:hover {
     text-decoration: underline;
   }
-}
-.additional-oauth {
-  display: flex;
-  gap: 16px;
-  margin-top: 24px;
 }
 </style>

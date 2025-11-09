@@ -2,12 +2,21 @@
 import { Icon } from '@iconify/vue'
 import { KitBtn } from '~/components/01.kit/kit-btn'
 import { KitCheckbox } from '~/components/01.kit/kit-checkbox'
-import { KitDivider } from '~/components/01.kit/kit-divider'
 import { KitInput } from '~/components/01.kit/kit-input'
+import AuthSignLayout from '~/components/06.layouts/auth-sign/ui/auth-sign.vue'
 import { AppRoutePaths } from '~/shared/constants/routes'
 
-enum OAuthProviders { GitHub = 'github', Google = 'google' }
 enum OAuthErrors { MissingToken = 'missing_token', MeError = 'me_error' }
+
+const emailRules = [
+  (v: string) => !!v || 'Почтовый адрес обязателен',
+  (v: string) => /.[^\n\r@\u2028\u2029]*@.+\..+/.test(v) || 'Неверный формат почты',
+]
+
+const passwordRules = [
+  (v: string) => !!v || 'Пароль обязателен',
+  (v: string) => v.length >= 8 || 'Пароль должен быть не менее 8 символов',
+]
 
 const store = useAppStore(['auth'])
 const toast = useToast()
@@ -21,15 +30,10 @@ const formError = ref<string | null>(null)
 
 const isPasswordVisible = ref(false)
 
-const emailRules = [
-  (v: string) => !!v || 'Почтовый адрес обязателен',
-  (v: string) => /.[^\n\r@\u2028\u2029]*@.+\..+/.test(v) || 'Неверный формат почты',
-]
+const isLoading = computed(() => store.auth.isLoading)
 
-const passwordRules = [
-  (v: string) => !!v || 'Пароль обязателен',
-  (v: string) => v.length >= 8 || 'Пароль должен быть не менее 8 символов',
-]
+const passwordInputType = computed(() => isPasswordVisible.value ? 'text' : 'password')
+const passwordToggleIcon = computed(() => isPasswordVisible.value ? 'mdi-eye-off-outline' : 'mdi-eye-outline')
 
 async function submitSignIn() {
   formError.value = null
@@ -61,20 +65,6 @@ async function submitSignIn() {
   }
 }
 
-async function handleOAuth(_provider: OAuthProviders) {
-  toast.warn(`В процессе разработки :)`)
-  const returnUrl = route.query.returnUrl as string
-  await router.push(returnUrl || AppRoutePaths.Trip.List)
-
-  // const targetUrl = `${import.meta.env.VITE_APP_SERVER_URL}/v1/auth/${provider}`
-  // await router.push(targetUrl)
-}
-
-const isLoading = computed(() => store.auth.isLoading)
-
-const passwordInputType = computed(() => isPasswordVisible.value ? 'text' : 'password')
-const passwordToggleIcon = computed(() => isPasswordVisible.value ? 'mdi-eye-off-outline' : 'mdi-eye-outline')
-
 watch(formError, (newError) => {
   if (newError) {
     toast.error(newError, { expire: 4000 })
@@ -100,16 +90,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="content">
-    <div class="card">
-      <div v-if="isLoading" class="loader-overlay">
-        <Icon icon="mdi:loading" class="spinner" />
-      </div>
-      <router-link :to="AppRoutePaths.Root" class="logo">
-        <Icon icon="mdi:map-marker-path" class="logo-icon" />
-        <span class="logo-text">Trip Scheduler</span>
-      </router-link>
-
+  <AuthSignLayout :is-loading="isLoading">
+    <template #form>
       <form class="form" @submit.prevent="submitSignIn">
         <KitInput
           v-model="email"
@@ -153,7 +135,8 @@ onMounted(() => {
           Авторизоваться
         </KitBtn>
       </form>
-
+    </template>
+    <template #utils>
       <div class="utils">
         <router-link :to="AppRoutePaths.Auth.ForgotPassword" class="util-link">
           Забыли пароль?
@@ -162,110 +145,11 @@ onMounted(() => {
           Создать аккаунт
         </router-link>
       </div>
-
-      <KitDivider :is-loading="isLoading">
-        ИЛИ
-      </KitDivider>
-
-      <div class="additional-oauth">
-        <KitBtn
-          variant="outlined"
-          color="secondary"
-          :disabled="isLoading"
-          icon="mdi:google"
-          style="flex-grow: 1;"
-          @click="handleOAuth(OAuthProviders.Google)"
-        >
-          Google
-        </KitBtn>
-        <KitBtn
-          variant="outlined"
-          color="secondary"
-          :disabled="isLoading"
-          icon="mdi:github"
-          style="flex-grow: 1;"
-          @click="handleOAuth(OAuthProviders.GitHub)"
-        >
-          GitHub
-        </KitBtn>
-      </div>
-    </div>
-  </section>
+    </template>
+  </AuthSignLayout>
 </template>
 
 <style scoped lang="scss">
-.content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  width: 100%;
-  padding: 16px;
-}
-
-.card {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  margin: 16px;
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border-secondary-color);
-  box-shadow: var(--s-l);
-  border-radius: var(--r-l);
-  padding: 32px;
-  overflow: hidden;
-
-  @include media-down(xs) {
-    padding: 24px;
-  }
-}
-
-.loader-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-tertiary-color);
-  z-index: 20;
-
-  .spinner {
-    font-size: 3rem;
-    color: var(--fg-accent-color);
-    animation: spin 1s linear infinite;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 32px;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-
-  &:hover {
-    opacity: 0.8;
-  }
-  color: var(--fg-primary-color);
-
-  .logo-icon {
-    font-size: 2.5rem;
-    color: var(--fg-accent-color);
-  }
-  .logo-text {
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-}
-
 .form {
   display: flex;
   flex-direction: column;
@@ -288,52 +172,14 @@ onMounted(() => {
   }
 }
 
-.input-group {
+.icon-btn {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--fg-secondary-color);
-  }
-}
-
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .input-icon {
-    position: absolute;
-    left: 12px;
-    color: var(--fg-tertiary-color);
-  }
-
-  input {
-    width: 100%;
-    padding: 12px 12px 12px 40px;
-    background-color: var(--bg-secondary-color);
-    border: 1px solid var(--border-primary-color);
-    border-radius: var(--r-s);
+  color: var(--fg-secondary-color);
+  padding: 4px;
+  border-radius: 50%;
+  &:hover {
     color: var(--fg-primary-color);
-    font-size: 1rem;
-    transition: border-color 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: var(--border-focus-color);
-    }
-  }
-
-  .icon-btn {
-    position: absolute;
-    right: 8px;
-    color: var(--fg-secondary-color);
-    &:hover {
-      color: var(--fg-primary-color);
-    }
+    background-color: rgba(var(--fg-primary-color-rgb), 0.1);
   }
 }
 
@@ -350,11 +196,5 @@ onMounted(() => {
   &:hover {
     text-decoration: underline;
   }
-}
-
-.additional-oauth {
-  display: flex;
-  gap: 16px;
-  margin-top: 24px;
 }
 </style>

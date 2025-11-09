@@ -31,6 +31,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ['2b9c3075ee15.ngrok-free.app'],
     port: 1420,
     proxy: {
       '/api': {
