@@ -68,9 +68,6 @@ class Server {
       }
     })
 
-    // Middleware для сжатия Gzip/Brotli
-    this.app.use('*', compress())
-
     // Middleware для CORS
     this.app.use(
       '*',
