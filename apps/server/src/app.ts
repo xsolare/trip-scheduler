@@ -2,6 +2,7 @@ import { trpcServer } from '@hono/trpc-server'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { serveStatic } from 'hono/bun'
+import { compress } from 'hono/compress'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { Logger } from '~/lib/logger'
@@ -66,6 +67,9 @@ class Server {
         }
       }
     })
+
+    // Middleware для сжатия Gzip/Brotli
+    this.app.use('*', compress())
 
     // Middleware для CORS
     this.app.use(
